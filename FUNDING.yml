@@ -1,0 +1,11 @@
+# Funding platforms for SenseBridge.
+#
+# The plan's actual funding strategy (see docs/planning/SenseBridge-01-Strategy-and-Product.md)
+# prioritizes grants (e.g. Microsoft AI for Accessibility) and fiscal
+# sponsorship over community micro-funding, and explicitly rules out equity.
+# GitHub Sponsors/Open Collective below are a low-effort supplementary channel,
+# not the primary funding plan.
+github:
+  - kevinle3212
+custom:
+  - https://github.com/kevinle3212/sensebridge

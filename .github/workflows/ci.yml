@@ -1,0 +1,92 @@
+name: CI
+
+# Build and test the SenseBridge iOS app. Until the Swift app is scaffolded
+# under app/ (see SETUP-STATUS.md), the build and test jobs detect the absence
+# of a Swift package / Xcode project and no-op so main stays green; they start
+# doing real work automatically once the project lands.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build and test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_16.app || true
+
+      - name: Detect project layout
+        id: detect
+        run: |
+          if ls Package.swift app/Package.swift >/dev/null 2>&1; then
+            echo "kind=spm" >> "$GITHUB_OUTPUT"
+          elif ls app/*.xcodeproj app/*.xcworkspace >/dev/null 2>&1; then
+            echo "kind=xcode" >> "$GITHUB_OUTPUT"
+          else
+            echo "kind=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Swift build and test
+        if: steps.detect.outputs.kind == 'spm'
+        run: |
+          swift build
+          swift test
+
+      - name: Xcode build and test
+        if: steps.detect.outputs.kind == 'xcode'
+        run: |
+          PROJ=$(ls -d app/*.xcworkspace app/*.xcodeproj 2>/dev/null | head -1)
+          FLAG=$([[ "$PROJ" == *.xcworkspace ]] && echo -workspace || echo -project)
+          xcodebuild build test \
+            "$FLAG" "$PROJ" \
+            -scheme SenseBridge \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            CODE_SIGNING_ALLOWED=NO | xcpretty && exit "${PIPESTATUS[0]}"
+
+      - name: No app yet
+        if: steps.detect.outputs.kind == 'none'
+        run: echo "No Swift package or Xcode project found under app/ yet — skipping build. See SETUP-STATUS.md."
+
+  lint:
+    name: Lint (SwiftFormat + SwiftLint)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SwiftLint and SwiftFormat
+        run: brew install swiftlint swiftformat
+      - name: Run scripts/lint.sh
+        run: scripts/lint.sh
+
+  docs-links:
+    name: Docs link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check relative Markdown links resolve
+        run: |
+          fail=0
+          while IFS= read -r -d '' file; do
+            grep -oE '\]\(([^)#]+)' "$file" | sed -E 's/^\]\(//' | while read -r link; do
+              case "$link" in
+                http*|mailto:*|//*) continue ;;
+              esac
+              target="$(dirname "$file")/$link"
+              if [ ! -e "$target" ]; then
+                echo "::warning file=$file::broken relative link -> $link"
+              fi
+            done
+          done < <(find . -path ./.git -prune -o -name '*.md' -print0)
+          exit $fail

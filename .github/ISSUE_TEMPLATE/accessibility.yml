@@ -1,0 +1,57 @@
+name: Accessibility issue
+description: Report a VoiceOver, Dynamic Type, contrast, focus, or other accessibility barrier. These are high-priority.
+title: "[a11y]: "
+labels: ["accessibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Accessibility is the product here, not a feature. You do **not** need Swift
+        experience to file a sharp accessibility report — a clear description of the
+        barrier is a real, valued contribution. Thank you.
+  - type: textarea
+    id: barrier
+    attributes:
+      label: What barrier did you hit?
+      description: What could you not do, or what was confusing/unlabeled?
+      placeholder: "On the Scan screen, the capture button has no VoiceOver label — it just says 'button'."
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which accessibility surface?
+      multiple: true
+      options:
+        - VoiceOver (labels, hints, traits)
+        - Focus order / navigation
+        - Dynamic Type (text size)
+        - Contrast / color
+        - Rotor
+        - Spoken output clarity
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: assistive-tech
+    attributes:
+      label: Assistive technology and settings
+      placeholder: "VoiceOver on, iOS 18.1, iPhone 15, largest Dynamic Type"
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen instead?
+    validations:
+      required: false
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the app with VoiceOver on
+        2. Navigate to ...
+        3. ...
+    validations:
+      required: false

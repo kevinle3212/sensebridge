@@ -1,0 +1,16 @@
+# SenseBridge-specific Codex settings. Global defaults live in
+# `~/.codex/config.toml`; keep this file limited to repository behavior.
+# Never add API keys, tokens, or machine-local credentials here.
+
+[features]
+hooks = true
+
+# Serena provides symbolic code navigation/editing, project-scoped. NO_COLOR
+# keeps ANSI codes out of the stdio JSON-RPC stream.
+[mcp_servers.serena]
+command = "serena"
+args = ["start-mcp-server", "--project-from-cwd", "--context=codex"]
+startup_timeout_sec = 15
+
+[mcp_servers.serena.env]
+NO_COLOR = "1"
