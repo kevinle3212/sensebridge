@@ -1,0 +1,57 @@
+---
+name: update-context
+description:
+    Keep docs, comments, agent instructions, and visible project surfaces
+    synchronized after code, config, workflow, or documentation changes.
+---
+
+## Tool Fallback <!-- tool-fallback -->
+
+- If a preferred tool, command, or skill is unavailable, failing, or a worse fit
+  for the task, use the best available alternative rather than stopping or
+  forcing it. Note which tool you used and why. Never fall back to a tool the
+  repository or user has explicitly prohibited.
+
+## Clarify Before Acting <!-- clarify-before-acting -->
+
+Before running this skill or producing output, if the request is ambiguous or the
+desired outcome is unclear, interview the user with focused questions until intent
+is unambiguous. State assumptions and confirm them before proceeding.
+
+# Update Context
+
+Use this skill after a prompt causes repository changes, especially when the
+change affects behaviour, build steps, models, permissions, workflows, tests,
+user-facing copy, or agent guidance.
+
+## Workflow
+
+1. Identify the changed surface: Swift code, build/project config, workflow,
+   docs, models, tests, permissions, or agent instructions.
+2. Update the nearest authoritative documentation instead of duplicating long
+   guidance. Prefer `docs/`, `README.md`, `.cursor/rules/`, `.codex/AGENTS.md`,
+   `CLAUDE.md`, or the relevant `.agents/` file based on scope.
+3. Remove or update stale references to moved or renamed code, screens, scripts,
+   models, workflows, or legal/doc files. `CONTRIBUTING.md` links to `app/`,
+   `.github/` templates, `docs/ENVIRONMENT.md`, and `docs/TESTING.md` — keep
+   those targets real.
+4. Update comments only when the surrounding code would otherwise mislead.
+   Remove stale comments rather than adding new ones.
+5. Add or adjust tests and validation steps when behaviour or tooling changes.
+6. For user-facing copy, follow `AGENTS.md`: Title Case for non-sentence labels,
+   buttons, headings, and status chips; sentence case with grammar/clarity checks
+   for full sentences; preserve acronyms (`VoiceOver`, `OCR`, `HIG`, `ANE`,
+   `FAQ`, `URL`).
+7. Anything describing spoken output or the physical world must honour the
+   awareness-not-safety doctrine (`docs/safety-framing.md`).
+8. If a complex agent mistake took substantial debugging to fix, add one concise
+   prevention note to the nearest relevant skill or agent file. Do not record
+   typos or routine fixes.
+9. Keep run notes under `logs/` as readable Markdown (see the `log-markdown`
+   skill).
+
+## Validation
+
+Run the narrowest checks that prove context stayed current — e.g. confirm links
+resolve and any changed build/test step still runs (`xcodebuild build`,
+`swift test`) — and note honestly what was not verified.

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+#
+# setup.sh — check the local toolchain matches docs/ENVIRONMENT.md.
+#
+# Required tooling (blocks): Xcode/xcodebuild, Swift, Git.
+# Swift lint/format tooling (advisory only until app/ exists — see
+# SETUP-STATUS.md; scripts/lint.sh no-ops the same way ci.yml does).
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+FAIL=0
+
+check_required() {
+	local name="$1" cmd="$2"
+	if command -v "$cmd" >/dev/null 2>&1; then
+		echo "ok   $name ($("$cmd" --version 2>&1 | head -1))"
+	else
+		echo "MISSING  $name — required, see docs/ENVIRONMENT.md" >&2
+		FAIL=1
+	fi
+}
+
+check_advisory() {
+	local name="$1" cmd="$2"
+	if command -v "$cmd" >/dev/null 2>&1; then
+		echo "ok   $name ($("$cmd" --version 2>&1 | head -1))"
+	else
+		echo "advisory  $name not found — needed by scripts/lint.sh once app/ lands (brew install $cmd)"
+	fi
+}
+
+echo "== Required =="
+check_required "Xcode command line tools" xcodebuild
+check_required "Swift" swift
+check_required "Git" git
+
+echo
+echo "== Advisory (Swift lint/format, not yet required — app/ is unscaffolded) =="
+check_advisory "SwiftLint" swiftlint
+check_advisory "SwiftFormat" swiftformat
+check_advisory "xcbeautify" xcbeautify
+
+echo
+if [ "$FAIL" -ne 0 ]; then
+	echo "One or more required tools are missing. See docs/ENVIRONMENT.md." >&2
+	exit 1
+fi
+echo "Toolchain OK."

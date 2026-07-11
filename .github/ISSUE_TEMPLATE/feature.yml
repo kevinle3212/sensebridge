@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest a capability or improvement.
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        SenseBridge is on-device by default and framed as an awareness aid, never a
+        safety or navigation device. Requests are weighed against those doctrines and
+        the roadmap (`docs/roadmap.md`).
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user need, ideally from lived experience.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed capability
+    validations:
+      required: true
+  - type: checkboxes
+    id: doctrines
+    attributes:
+      label: Doctrine fit
+      description: Check the ones you believe hold. The maintainer will confirm.
+      options:
+        - label: Can run on-device without sending the user's surroundings off the phone.
+        - label: Keeps awareness-not-safety framing (no safety/navigation guarantee).
+        - label: Does not require a model or dependency under AGPL or apple-amlr.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

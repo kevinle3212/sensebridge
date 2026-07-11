@@ -60,3 +60,13 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# macOS
+.DS_Store
+
+# Generated analysis output (graphify, etc.)
+graphify-out/
+
+# Claude Code local state
+.claude/worktrees/
+.claude/settings.local.json

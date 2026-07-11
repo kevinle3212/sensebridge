@@ -1,0 +1,44 @@
+name: Claude Code Review
+
+# Automated first-pass review on every PR. Requires the repo secret
+# ANTHROPIC_API_KEY. The prompt centres the three SenseBridge doctrines so the
+# review catches the defects that matter most here.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
+  id-token: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Claude review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this pull request as a SenseBridge maintainer. The project is a
+            free, on-device iOS accessibility app. Prioritise, in order:
+
+            1. Safety-framing: any spoken/caption/haptic or physical-world text must
+               hedge and must never assert unearned certainty. A confidently-wrong
+               statement is the worst-case defect here — flag it as blocking.
+            2. Accessibility: every screen fully VoiceOver-navigable, zero unlabeled
+               elements. Treat regressions as blocking.
+            3. On-device / privacy: no new network round-trip for perception or
+               reasoning; no user surroundings leaving the device without explicit
+               consent and a privacy-doc update.
+            4. Model/dependency licensing: AGPL and Apple's apple-amlr are hard
+               blockers.
+
+            Then apply normal Swift correctness, concurrency (no perception/model work
+            on the main thread), and maintainability review. Be concise; cite file and
+            line; distinguish blocking from nice-to-have.
