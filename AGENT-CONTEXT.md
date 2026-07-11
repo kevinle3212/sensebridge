@@ -55,6 +55,9 @@ it.
 | Model licensing | [`docs/ai-models.md`](docs/ai-models.md), [`models/README.md`](models/README.md) |
 | Conventions | [`AGENTS.md`](AGENTS.md) |
 | What's set up vs. pending | [`SETUP-STATUS.md`](SETUP-STATUS.md) |
+| Tooling decisions, MCP inventory | [`docs/TOOLING.md`](docs/TOOLING.md) |
+| Known defects and debt | [`GAPS.md`](GAPS.md) |
+| Where knowledge lives (repo vs. vault) | [`MEMORY.md`](MEMORY.md) |
 
 ## Working here
 

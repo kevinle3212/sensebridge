@@ -68,7 +68,11 @@ Developer Program — see [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
 | [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) | Dev environment setup |
 | [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md) | TestFlight / App Store distribution |
 | [`docs/FAQ.md`](docs/FAQ.md) | Common questions |
+| [`docs/TOOLING.md`](docs/TOOLING.md) | Tooling decisions (global vs. project) |
 | [`docs/planning/`](docs/planning/) | The original research and planning documents |
+
+The full index, including root orientation docs (`PROJECT_OVERVIEW.md`,
+`GAPS.md`, `MEMORY.md`, `LEARNING.md`), lives in [`WIKI.md`](WIKI.md).
 
 ## Contributing
 

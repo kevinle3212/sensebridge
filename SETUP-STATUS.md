@@ -2,7 +2,7 @@
 
 Where the repository stands and what to do next. Honest by design: it
 distinguishes what is set up from what is planned but not yet built. Last
-reviewed 2026-07-10.
+reviewed 2026-07-11.
 
 ## Set up and ready
 
@@ -21,6 +21,13 @@ reviewed 2026-07-10.
   rubric and rules in `audits/AGENT-GUIDE.md` and `audits/GOVERNANCE.md`.
 - **CI/CD and repo hygiene** — `.github/workflows/` (CI, security, Claude review),
   `dependabot.yml`, auto-merge, `CODEOWNERS`, PR template, issue forms.
+- **Local quality gates** — `.githooks/` (pre-commit secret/sensitive-file
+  scan + lint; conventional-commit check), enabled by `scripts/setup.sh`;
+  shared `.gitleaks.toml`.
+- **Agent interop and orientation** — `.mcp.json` (Serena), pointers for
+  Gemini/Cursor/Copilot into `AGENTS.md`, root docs (`PROJECT_OVERVIEW.md`,
+  `WIKI.md`, `GAPS.md`, `MEMORY.md`, `LEARNING.md`), and the tooling decision
+  matrix in `docs/TOOLING.md`.
 
 ## Pending — the real next steps
 
