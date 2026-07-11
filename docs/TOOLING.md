@@ -47,7 +47,7 @@ Installed globally (user scope, 2026-07-11) from source-verified marketplaces:
 | Plugin | Source | Why |
 | --- | --- | --- |
 | superpowers 6.x | `obra/superpowers-marketplace` | Battle-tested engineering-workflow skills (`/brainstorm`, `/write-plan`, `/execute-plan`, skill search) |
-| claude-mem 13.x | `thedotmack/claude-mem` | Cross-session memory capture/injection; overlaps the harness's built-in auto-memory — if the two ever conflict, disable with `claude plugin disable claude-mem` |
+| claude-mem 13.x | `thedotmack/claude-mem` | Cross-session memory capture/injection. **Disabled at project scope for SenseBridge** (`.claude/settings.json` → `enabledPlugins`) because the harness's built-in auto-memory already persists here — running both would inject duplicated context. It stays available globally; re-enable per-project deliberately, never both memory systems at once |
 | humanizer 2.x | `blader/humanizer` | Strips AI-writing tells from prose/docs |
 
 Built-in harness skills already cover code review, security review, deep

@@ -31,23 +31,34 @@ user-facing copy, or agent guidance.
 2. Update the nearest authoritative documentation instead of duplicating long
    guidance. Prefer `docs/`, `README.md`, `.cursor/rules/`, `.codex/AGENTS.md`,
    `CLAUDE.md`, or the relevant `.agents/` file based on scope.
-3. Remove or update stale references to moved or renamed code, screens, scripts,
+3. Keep the root orientation docs current — mandatory, not optional, whenever
+   the change makes them stale:
+   - `GAPS.md` — a defect/debt item was fixed (move it to `## Resolved` with
+     the date), a new gap was discovered (add it with severity + evidence),
+     or something planned was completed or deferred.
+   - `PROJECT_OVERVIEW.md` — the layout, milestones, or state of the ground
+     changed (e.g. `app/` scaffolded, a new top-level directory or gate).
+   - `WIKI.md` — any doc was added, removed, moved, or renamed.
+   - Also: `SETUP-STATUS.md` when set-up/pending status shifts,
+     `docs/TOOLING.md` when a tool or MCP server is added or removed, and
+     `LEARNING.md` when a lesson changed how we work.
+4. Remove or update stale references to moved or renamed code, screens, scripts,
    models, workflows, or legal/doc files. `CONTRIBUTING.md` links to `app/`,
    `.github/` templates, `docs/ENVIRONMENT.md`, and `docs/TESTING.md` — keep
    those targets real.
-4. Update comments only when the surrounding code would otherwise mislead.
+5. Update comments only when the surrounding code would otherwise mislead.
    Remove stale comments rather than adding new ones.
-5. Add or adjust tests and validation steps when behaviour or tooling changes.
-6. For user-facing copy, follow `AGENTS.md`: Title Case for non-sentence labels,
+6. Add or adjust tests and validation steps when behaviour or tooling changes.
+7. For user-facing copy, follow `AGENTS.md`: Title Case for non-sentence labels,
    buttons, headings, and status chips; sentence case with grammar/clarity checks
    for full sentences; preserve acronyms (`VoiceOver`, `OCR`, `HIG`, `ANE`,
    `FAQ`, `URL`).
-7. Anything describing spoken output or the physical world must honour the
+8. Anything describing spoken output or the physical world must honour the
    awareness-not-safety doctrine (`docs/safety-framing.md`).
-8. If a complex agent mistake took substantial debugging to fix, add one concise
+9. If a complex agent mistake took substantial debugging to fix, add one concise
    prevention note to the nearest relevant skill or agent file. Do not record
    typos or routine fixes.
-9. Keep run notes under `logs/` as readable Markdown (see the `log-markdown`
+10. Keep run notes under `logs/` as readable Markdown (see the `log-markdown`
    skill).
 
 ## Validation

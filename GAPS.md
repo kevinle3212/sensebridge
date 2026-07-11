@@ -33,12 +33,65 @@ Deliberately deferred: add a Semgrep job (`p/swift`) to
 `.github/workflows/security.yml` when `app/` lands, alongside SwiftLint in CI.
 Adding it now would scan nothing and cost CI minutes.
 
+### M4 — Bootstrap branch is local-only
+
+`chore/ai-workspace-bootstrap` has never been pushed; no PR exists, CI has
+never run on this work, and the GitHub-side workflows (Claude review,
+security scans) are unproven. Push + PR are the next concrete action.
+
 ## Low
 
 ### L1 — Leftover empty `.cursor` stub subdirectories
 
 `.cursor/{context,instructions,settings}/` are empty untracked noise (the
 live config is `.cursor/rules/` + `.cursor/mcp.json`). Delete locally at will.
+
+## Not yet done (full inventory, 2026-07-11)
+
+Everything known to be incomplete, uninstalled, or unverified — so nothing
+hides behind "bootstrap complete". Cross-references: `SETUP-STATUS.md`
+(milestones), `docs/TOOLING.md` (tool decisions).
+
+**Repository / GitHub (needs owner or push access)**
+
+- Push `chore/ai-workspace-bootstrap` + open/merge the PR (M4).
+- `ANTHROPIC_API_KEY` repo secret (M1); branch protection + auto-merge (M2).
+- Enable GitHub Discussions (the issue-template support link points there).
+
+**Application (the real work)**
+
+- `app/` Xcode project / Swift package — not scaffolded (H1).
+- SwiftLint/SwiftFormat config files — land with `app/`.
+- Test targets per `docs/TESTING.md` — none exist.
+- First on-device model — nothing vendored; must pass `model-license-audit`.
+- TestFlight / App Store distribution — requires the paid Apple Developer
+  Program (`docs/DISTRIBUTION.md`).
+
+**CI additions deferred until `app/` exists**
+
+- Semgrep `p/swift` job (M3); SwiftLint job in `ci.yml`.
+
+**This machine**
+
+- `xcode-select` points at CommandLineTools, not full Xcode — must be fixed
+  before scaffolding `app/` (`sudo xcode-select -s /Applications/Xcode.app`).
+- Agent CLIs not installed: `gemini`, `copilot`, `windsurf`, `openclaw`
+  (project configs are committed and activate when/if installed; `.sixth/`
+  deliberately not configured — tool absent and TrustLedger-specific).
+
+**Plugins / integrations evaluated but not installed**
+
+- Stop Slop, The Council, Caveman, Hyperframes, AI Second Brain, NotebookLM —
+  no verifiable canonical source (see `docs/TOOLING.md`); revisit with a
+  trusted repo URL.
+- Granola, Higgsfield, Perplexity, Agent Browser — no SenseBridge use case;
+  add as MCP connectors only when a need exists.
+
+**Validation no machine can provide**
+
+- On-device latency / battery / thermal benchmarks.
+- Blind-tester (VoiceOver, eyes-free) validation — the only validation that
+  ultimately counts; see the `ci-green-gate` skill.
 
 ## Resolved
 

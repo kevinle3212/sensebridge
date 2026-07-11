@@ -1,0 +1,22 @@
+{
+  "enabledPlugins": {
+    "claude-mem@thedotmack": false
+  },
+  "permissions": {
+    "deny": [
+      "Edit(legal/**)",
+      "Write(legal/**)"
+    ],
+    "allow": [
+      "Bash(scripts/setup.sh)",
+      "Bash(./scripts/setup.sh)",
+      "Bash(scripts/lint.sh)",
+      "Bash(./scripts/lint.sh)",
+      "Bash(audits/scripts/new-audit.sh:*)",
+      "Bash(swift build:*)",
+      "Bash(swift test:*)",
+      "Bash(node tools/check-sensitive-files.mjs:*)",
+      "Bash(gitleaks:*)"
+    ]
+  }
+}

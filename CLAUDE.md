@@ -75,6 +75,10 @@ change needs legal review.
 - Never commit to `main`; branch as `feat/...`, `fix/...`, `chore/...`.
 - Conventional commit headers `type(scope): subject`.
 - Keep `main` deployable; prefer a PR so CI runs.
+- **No worktrees unless explicitly requested.** Work directly in the actual
+  checkout on a branch. Create a git worktree only when the user says
+  "worktree" (or the harness mandates isolation, e.g. background jobs) — and
+  say so when that happens.
 
 ## Docs sync (per change)
 
