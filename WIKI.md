@@ -9,7 +9,8 @@ Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 | `PROJECT_OVERVIEW.md` | What exists and where to look |
 | `AGENTS.md` | Canonical conventions for humans and agents |
 | `AGENT-CONTEXT.md` | Current state of the ground for agents |
-| `CLAUDE.md` / `GEMINI.md` / `.github/copilot-instructions.md` / `.cursor/rules/` | Per-agent pointers into `AGENTS.md` |
+| `CLAUDE.md` / `GEMINI.md` / `.github/copilot-instructions.md` | Per-agent pointers into `AGENTS.md` |
+| `.codex/` `.gemini/` `.copilot/` `.continue/` `.windsurf/` `.cursor/` `.openclaw/` | Per-agent config (Serena MCP + rules), all deferring to `AGENTS.md` |
 | `SETUP-STATUS.md` | What is set up vs. pending, next milestones |
 | `GAPS.md` | Verified defects, debt, risks |
 | `MEMORY.md` | Where each kind of knowledge lives |

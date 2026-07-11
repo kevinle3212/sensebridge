@@ -19,6 +19,7 @@ SenseBridge is a Swift/SwiftUI iOS app with **no Node, Python, or web stack**
 | Serena MCP | `.mcp.json` | Per-project semantic indexing; least privilege — local process, no network, project-scoped |
 | CI/CD | `.github/workflows/` | CI, security scanning (TruffleHog + OSV + sensitive files), Claude PR review, Dependabot auto-merge |
 | Agent instructions | `AGENTS.md` + thin pointers (`CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.github/copilot-instructions.md`) | One canonical instruction file, agent-agnostic; pointers prevent lock-in and duplication |
+| Per-agent configs | `.codex/` (AGENTS.md, `config.toml`, `hooks.json`), `.gemini/settings.json`, `.copilot/` (instructions + MCP), `.continue/rules/`, `.windsurf/` (rules + MCP), `.openclaw/README.md`, `.cursor/mcp.json` | Each wires Serena MCP and defers to root `AGENTS.md` — configuration without instruction duplication |
 | Skills / reviewer personas | `.agents/`, `.claude/skills/` | Project-doctrine-specific (safety framing, accessibility, model licensing) |
 | Audit system | `audits/` | Append-only governance artifacts |
 
@@ -39,23 +40,33 @@ SenseBridge is a Swift/SwiftUI iOS app with **no Node, Python, or web stack**
 | Node, bun, uv, python3 | installed | Script runtimes only; no project package manifests |
 | Obsidian vault (`~/Vault`) | present | Cross-project knowledge via the `vault-capture` skill (see `MEMORY.md`) |
 
-## Claude skills — evaluated against fit
+## Claude skills and plugins
 
-Kept global and minimal. The Karpathy principles (think-before-coding,
-simplicity-first, surgical-changes, goal-driven execution) are already encoded
-in the global `~/.claude/CLAUDE.md` — installing the plugin would duplicate
-them, so it is deliberately **not** installed. Built-in harness skills already
-cover code review, security review, deep research, and scheduling.
+Installed globally (user scope, 2026-07-11) from source-verified marketplaces:
 
-Third-party marketplace skills evaluated and **declined for now** (install is
-a one-line `/plugin` command if ever needed; each adds context-window cost and
-supply-chain surface): claude-mem (harness auto-memory already persists),
-codex-plugin-cc, find-skills, The Council, Stop Slop, Superpowers, Humanizer,
-Caveman, Hyperframes, AI Second Brain, NotebookLM, Granola, Higgsfield,
-Perplexity, Agent Browser (gstack `/browse` covers it), UI/UX Pro / Frontend
-Design (web-oriented; iOS UI is reviewed by `.agents/agents/ui-reviewer.md` +
-accessibility skill), SEO / Marketing / Social Media / Legal packs (no
-marketing surface; `legal/` is owner-gated).
+| Plugin | Source | Why |
+| --- | --- | --- |
+| superpowers 6.x | `obra/superpowers-marketplace` | Battle-tested engineering-workflow skills (`/brainstorm`, `/write-plan`, `/execute-plan`, skill search) |
+| claude-mem 13.x | `thedotmack/claude-mem` | Cross-session memory capture/injection; overlaps the harness's built-in auto-memory — if the two ever conflict, disable with `claude plugin disable claude-mem` |
+| humanizer 2.x | `blader/humanizer` | Strips AI-writing tells from prose/docs |
+
+Built-in harness skills already cover code review, security review, deep
+research, and scheduling — nothing to install for those. The Karpathy
+principles (think-before-coding, simplicity-first, surgical-changes,
+goal-driven execution) are already encoded in the global `~/.claude/CLAUDE.md`
+— the plugin would duplicate them, so it is deliberately **not** installed.
+
+Evaluated and **not installed**, with reasons: Stop Slop / The Council /
+Caveman / Hyperframes / AI Second Brain / NotebookLM (no verifiable canonical,
+maintained source — do not install hook-running plugins from unvetted repos);
+UI/UX Pro & Frontend Design (web/Compose-oriented; iOS UI is reviewed by
+`.agents/agents/ui-reviewer.md` + accessibility skill); Granola / Higgsfield /
+Perplexity (external-service integrations with no SenseBridge use; add as MCP
+connectors when a need exists); Agent Browser (gstack `/browse` covers it);
+codex-plugin-cc / find-skills (superpowers ships skill search); SEO /
+Marketing / Social Media / Legal packs (no marketing surface; `legal/` is
+owner-gated). Revisit any row with `claude plugin marketplace add <repo>` +
+`claude plugin install` once a trusted source exists.
 
 ## Not needed (and why)
 
@@ -74,7 +85,7 @@ marketing surface; `legal/` is owner-gated).
 
 | Server | Scope | Permissions | Status |
 | --- | --- | --- | --- |
-| serena | project (`.mcp.json`) | Local process, project files only | Active |
+| serena | project (`.mcp.json` for Claude; `.codex/config.toml`, `.gemini/settings.json`, `.copilot/mcp-config.json`, `.windsurf/mcp_config.json`, `.cursor/mcp.json` for the others) | Local process, project files only | Active |
 | dune | user-global (`~/.claude.json`) | Remote, read-only analytics | Unrelated to SenseBridge; left global, nothing to remove here |
 | claude-in-chrome | user-global (extension) | Site-gated browser automation | Available; gstack `/browse` preferred per global CLAUDE.md |
 

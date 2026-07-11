@@ -35,13 +35,19 @@ Adding it now would scan nothing and cost CI minutes.
 
 ## Low
 
-### L1 — Empty agent-interop stub directories
+### L1 — Leftover empty `.cursor` stub subdirectories
 
-`.codex/` and `.cursor/{context,instructions,settings}/` are empty. Codex
-reads root `AGENTS.md` natively, and `.cursor/rules/sensebridge.mdc` now
-covers Cursor; the empty dirs are untracked noise. Delete locally at will.
+`.cursor/{context,instructions,settings}/` are empty untracked noise (the
+live config is `.cursor/rules/` + `.cursor/mcp.json`). Delete locally at will.
 
 ## Resolved
+
+- **2026-07-11** — Per-agent configuration was Claude-only → `.codex/`
+  (AGENTS.md, `config.toml`, `hooks.json`), `.gemini/settings.json`,
+  `.copilot/` (instructions + MCP), `.continue/rules/`, `.windsurf/` (rules +
+  MCP), `.openclaw/README.md`, `.cursor/mcp.json`; verified Claude plugins
+  (superpowers, claude-mem, humanizer) installed at user scope. See
+  `docs/TOOLING.md`.
 
 - **2026-07-11** — No pre-commit gate existed → `.githooks/` (gitleaks staged
   scan, sensitive-file check, lint, conventional-commit header) enabled via

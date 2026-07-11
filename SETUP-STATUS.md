@@ -24,10 +24,12 @@ reviewed 2026-07-11.
 - **Local quality gates** — `.githooks/` (pre-commit secret/sensitive-file
   scan + lint; conventional-commit check), enabled by `scripts/setup.sh`;
   shared `.gitleaks.toml`.
-- **Agent interop and orientation** — `.mcp.json` (Serena), pointers for
-  Gemini/Cursor/Copilot into `AGENTS.md`, root docs (`PROJECT_OVERVIEW.md`,
-  `WIKI.md`, `GAPS.md`, `MEMORY.md`, `LEARNING.md`), and the tooling decision
-  matrix in `docs/TOOLING.md`.
+- **Agent interop and orientation** — Serena MCP wired for every agent
+  (`.mcp.json` plus per-agent configs in `.codex/`, `.gemini/`, `.copilot/`,
+  `.continue/`, `.windsurf/`, `.cursor/`, `.openclaw/`, all deferring to
+  `AGENTS.md`), root docs (`PROJECT_OVERVIEW.md`, `WIKI.md`, `GAPS.md`,
+  `MEMORY.md`, `LEARNING.md`), and the tooling decision matrix in
+  `docs/TOOLING.md`.
 
 ## Pending — the real next steps
 
