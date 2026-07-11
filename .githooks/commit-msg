@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# commit-msg — enforce conventional commit headers (type(scope): subject)
+# without a Node/commitlint dependency. Types mirror CONTRIBUTING.md.
+# Merge, revert, and fixup/squash commits are exempt.
+set -euo pipefail
+
+MSG_FILE="$1"
+HEADER="$(head -1 "$MSG_FILE")"
+
+case "$HEADER" in
+	Merge\ * | Revert\ * | fixup!\ * | squash\ *) exit 0 ;;
+esac
+
+PATTERN='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9./-]+\))?!?: .{1,72}$'
+
+if ! printf '%s' "$HEADER" | grep -Eq "$PATTERN"; then
+	echo "commit-msg: header does not follow conventional commits:" >&2
+	echo "  $HEADER" >&2
+	echo "Expected: type(scope): subject  — e.g. 'feat(perception): add LiDAR distance hedging'" >&2
+	echo "Types: feat fix docs style refactor perf test build ci chore revert (max 72 chars)." >&2
+	exit 1
+fi

@@ -41,6 +41,16 @@ check_advisory "SwiftFormat" swiftformat
 check_advisory "xcbeautify" xcbeautify
 
 echo
+echo "== Advisory (pre-commit secret/sensitive-file scanning) =="
+check_advisory "gitleaks" gitleaks
+check_advisory "Node (runs tools/check-sensitive-files.mjs)" node
+
+echo
+echo "== Git hooks =="
+git -C "$REPO_ROOT" config core.hooksPath .githooks
+echo "ok   core.hooksPath -> .githooks (secret scan + lint on commit, conventional-commit header check)"
+
+echo
 if [ "$FAIL" -ne 0 ]; then
 	echo "One or more required tools are missing. See docs/ENVIRONMENT.md." >&2
 	exit 1

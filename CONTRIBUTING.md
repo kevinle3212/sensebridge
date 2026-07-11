@@ -12,6 +12,14 @@ requirements) lives in [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) — read it
 before opening the Xcode project in [`app/`](app). Testing strategy and how to
 run each test layer is in [`docs/TESTING.md`](docs/TESTING.md).
 
+## Branches, commits, and hooks
+
+Never commit to `main`. Branch as `feat/...`, `fix/...`, or `chore/...`, use
+conventional commit headers (`type(scope): subject`), and open a PR so CI
+runs. `scripts/setup.sh` enables the repo git hooks (`.githooks/`), which
+enforce the commit format and run a secret/sensitive-file scan plus lint
+before every commit.
+
 ## Before you open a PR
 
 - **Accessibility is not optional.** Every screen must be fully VoiceOver-

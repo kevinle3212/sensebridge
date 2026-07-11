@@ -37,8 +37,11 @@ committed file, an environment variable, or a log — see
 4. Build and run on a physical device for anything touching camera, LiDAR,
    microphone, or on-device model performance; the simulator is fine for
    pure UI/VoiceOver-label work but cannot validate the perception pipeline.
-5. Run `scripts/setup.sh` to check your toolchain, and `scripts/lint.sh`
-   before committing.
+5. Run `scripts/setup.sh` once — it checks your toolchain and enables the
+   repo's git hooks (`.githooks/`): a pre-commit secret/sensitive-file scan
+   plus lint, and a conventional-commit header check. `gitleaks` and Node are
+   advisory for the hooks (`brew install gitleaks`; CI scans regardless).
+   `scripts/lint.sh` can also be run directly before committing.
 
 ## Secret handling
 
