@@ -1,0 +1,9 @@
+---
+description: SenseBridge conventions — always read AGENTS.md first
+alwaysApply: true
+---
+
+All conventions for this repository live in `AGENTS.md` (doctrines, coding
+rules, quality gates) and `AGENT-CONTEXT.md` (current repo state — the Swift
+app is not scaffolded yet; do not assume code exists). Follow them exactly.
+Never edit `legal/` without owner approval. Never commit to `main`.

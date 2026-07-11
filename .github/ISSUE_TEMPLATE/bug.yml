@@ -1,0 +1,47 @@
+name: Bug report
+description: Report a crash or incorrect behaviour. For accessibility barriers, use the Accessibility template instead.
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If this is an accessibility barrier, please use the **Accessibility issue**
+        template. If the app spoke something confidently wrong about the physical
+        world, say so clearly — that is our highest-severity class of bug.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include what you expected instead.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confidently-wrong
+    attributes:
+      label: Safety-framing
+      options:
+        - label: The app asserted something about my surroundings that was wrong or overconfident (not hedged).
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Device and iOS version
+      placeholder: "iPhone 15, iOS 18.1"
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Do not include anything private. The app does not collect telemetry, so a manual description helps.
+    validations:
+      required: false

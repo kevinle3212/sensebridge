@@ -1,0 +1,52 @@
+name: Security
+
+# Lightweight, serverless-appropriate security scanning: secret detection and
+# dependency vulnerability scanning. Scope is deliberately narrow — an on-device
+# Swift app with no backend has no server or web attack surface to scan.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 7 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret scan (TruffleHog)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+  osv-scan:
+    name: Dependency scan (OSV)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: OSV Scanner
+        # Pinned exactly: this repo publishes no moving v2 major tag.
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        with:
+          scan-args: |-
+            --recursive
+            --skip-git
+            ./
+        continue-on-error: true
+
+  sensitive-files:
+    name: Sensitive file scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for signing/credential material
+        run: node tools/check-sensitive-files.mjs --all

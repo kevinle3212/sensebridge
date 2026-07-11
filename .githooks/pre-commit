@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# pre-commit — dependency-free local gate before every commit.
+#
+# Runs, in order: secret scan of staged changes (gitleaks, advisory if not
+# installed), the sensitive-file check (tools/check-sensitive-files.mjs), and
+# Swift lint/format (scripts/lint.sh, which no-ops until app/ exists).
+#
+# Enabled by `git config core.hooksPath .githooks` — scripts/setup.sh does
+# this. Bypass in an emergency with `git commit --no-verify` and say so in
+# the PR.
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+if command -v gitleaks >/dev/null 2>&1; then
+	gitleaks protect --staged --redact --config .gitleaks.toml
+else
+	echo "pre-commit: gitleaks not installed (brew install gitleaks) — skipping local secret scan; CI still scans." >&2
+fi
+
+if command -v node >/dev/null 2>&1; then
+	node tools/check-sensitive-files.mjs
+else
+	echo "pre-commit: node not installed — skipping sensitive-file check; CI still scans." >&2
+fi
+
+./scripts/lint.sh

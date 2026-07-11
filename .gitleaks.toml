@@ -1,0 +1,15 @@
+# .gitleaks.toml — secret-scanning config shared by the pre-commit hook
+# (.githooks/pre-commit) and any local `gitleaks detect` sweep. CI uses
+# TruffleHog (--only-verified) in .github/workflows/security.yml; the two are
+# complementary — gitleaks catches pattern matches before they are committed,
+# TruffleHog verifies live credentials on push.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documentation examples and fixtures"
+paths = [
+    '''docs/.*\.md''',
+    '''audits/.*\.md''',
+]
