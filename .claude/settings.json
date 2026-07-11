@@ -18,5 +18,8 @@
       "Bash(node tools/check-sensitive-files.mjs:*)",
       "Bash(gitleaks:*)"
     ]
+  },
+  "worktree": {
+    "bgIsolation": "none"
   }
 }

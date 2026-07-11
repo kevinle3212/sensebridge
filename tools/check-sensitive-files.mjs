@@ -32,6 +32,10 @@ const SECRET_PATTERNS = [
 
 const MAX_SCAN_BYTES = 1_000_000;
 
+// This file contains the detection patterns as literals, so scanning it
+// always self-matches (e.g. the OpenSSH marker). Exempt exactly this path.
+const SELF = "tools/check-sensitive-files.mjs";
+
 function gitFiles(all) {
 	const args = all
 		? ["ls-files"]
@@ -76,6 +80,7 @@ function main() {
 
 	const findings = [];
 	for (const file of files) {
+		if (file === SELF) continue;
 		if (isSensitiveByName(file)) {
 			findings.push({ file, reason: "sensitive file extension/name" });
 			continue;

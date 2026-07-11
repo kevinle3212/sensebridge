@@ -17,10 +17,12 @@ oversight; it is listed here because every other gate is moot until it closes.
 
 ## Medium
 
-### M1 — `ANTHROPIC_API_KEY` repo secret not configured
+### M1 — `ANTHROPIC_API_KEY` / Claude workflow auth unverified
 
-`claude.yml` and `claude-code-review.yml` fail until it is set (GitHub →
-Settings → Secrets → Actions). Core CI and security workflows are unaffected.
+The `review` check **passed on PR #1** (2026-07-11), so auth for
+`claude-code-review.yml` appears to be working (repo secret or Claude GitHub
+App). Owner should confirm which, and that `claude.yml` (@claude mentions)
+works too, then close this item.
 
 ### M2 — Branch protection and auto-merge not enabled
 
@@ -94,6 +96,11 @@ hides behind "bootstrap complete". Cross-references: `SETUP-STATUS.md`
   ultimately counts; see the `ci-green-gate` skill.
 
 ## Resolved
+
+- **2026-07-11** — First real CI run (PR #1) surfaced two defects: the OSV
+  action pin `@v2` doesn't exist (→ pinned `v2.3.8`) and
+  `check-sensitive-files.mjs --all` self-matched its own detection patterns
+  (→ scanner exempts exactly its own path).
 
 - **2026-07-11** — Per-agent configuration was Claude-only → `.codex/`
   (AGENTS.md, `config.toml`, `hooks.json`), `.gemini/settings.json`,
