@@ -70,3 +70,6 @@ graphify-out/
 # Claude Code local state
 .claude/worktrees/
 .claude/settings.local.json
+
+# Local scratch notes (mirrors TrustLedger convention)
+NOTES.local.md
