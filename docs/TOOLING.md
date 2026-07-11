@@ -33,7 +33,7 @@ SenseBridge is a Swift/SwiftUI iOS app with **no Node, Python, or web stack**
 | semgrep | installed | Ad-hoc static analysis; add a `p/swift` CI job when `app/` lands (see `GAPS.md`) |
 | gh | installed | GitHub workflows |
 | Serena | installed (`uv` tool) | Semantic code navigation via `.mcp.json` |
-| Graphify | installed | Knowledge-graph queries; output (`graphify-out/`) is gitignored |
+| Graphify | installed | Knowledge-graph queries; output (`graphify-out/`) is gitignored. Auto-rebuilds via versioned `.githooks/post-commit` + `post-checkout` (installed by `graphify hook install`, detached/non-blocking, skips rebases and graph-only changes); optional live mode: `graphify watch .` (needs `watchdog` in graphify's env) |
 | RTK | installed | Token-efficient repo indexing |
 | gstack | installed (`~/.claude/skills/gstack`) | Web browsing + review/ship skill suite |
 | Ollama | installed | Local LLM experiments only — **not** an app dependency; on-device inference uses Core ML/ANE, never a local server |
