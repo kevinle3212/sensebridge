@@ -28,7 +28,6 @@ playground.xcworkspace
 # Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
 # hence it is not needed unless you have added a package configuration file to your project
 # .swiftpm
-
 .build/
 
 # CocoaPods
@@ -46,7 +45,6 @@ playground.xcworkspace
 #
 # Add this line if you want to avoid checking in source code from Carthage dependencies.
 # Carthage/Checkouts
-
 Carthage/Build/
 
 # fastlane
@@ -55,7 +53,6 @@ Carthage/Build/
 # Instead, use fastlane to re-generate the screenshots whenever they are needed.
 # For more information about the recommended setup visit:
 # https://docs.fastlane.tools/best-practices/source-control/#source-control
-
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
@@ -67,9 +64,95 @@ fastlane/test_output
 # Generated analysis output (graphify, etc.)
 graphify-out/
 
+# GitNexus knowledge-graph index (local-only, no network calls — see
+# docs/TOOLING.md's Nexus row). Regenerate any time with `gitnexus analyze`.
+.gitnexus/
+
 # Claude Code local state
 .claude/worktrees/
 .claude/settings.local.json
 
-# Local scratch notes (mirrors TrustLedger convention)
+# Private notes (mirrors TrustLedger convention). Deliberate two-file split:
+# NOTES.md is public/committed/secret-scanned; NOTES.local.md is personal and
+# machine-specific (local setup, absolute paths, session handoffs) and must
+# never be committed. See NOTES.md for what belongs where.
 NOTES.local.md
+
+# Agent scratch space and local logs — see tmp/README.md and logs/README.md
+tmp/*
+!tmp/.gitkeep
+!tmp/README.md
+logs/*.log
+!logs/.gitkeep
+!logs/README.md
+
+# website/ (Node tooling — Stylelint, Prettier)
+website/node_modules/
+
+# Impeccable skill — local/generated state, not project source
+# (.impeccable/design.json and .impeccable/live/config.json ARE committed —
+# see .agents/skills/impeccable/reference/document.md and live.md)
+#
+# `**/` on purpose: impeccable roots `.impeccable/` at its resolved project
+# root, which (absent a monorepo marker) is just the cwd it was invoked from —
+# so running it from any subdirectory creates a stray nested `.impeccable/`.
+# Repo root is the only supported root here (the editor hook hard-keys to it
+# via the `.git` marker), but these patterns ignore local state at any depth so
+# a stray can never become git noise. See docs/TOOLING.md.
+**/.impeccable/hook.cache.json
+**/.impeccable/hook.pending.json
+**/.impeccable/config.local.json
+**/.impeccable/live/server.json
+**/.impeccable/live/sessions/
+**/.impeccable/live/previews/
+**/.impeccable/live/annotations/
+**/.impeccable/live/cache/
+**/.impeccable/live/manual-edit-apply-transaction.json
+**/.impeccable/live/manual-edit-events.jsonl
+**/.impeccable/live/manual-edit-evidence/
+**/.impeccable/live/pending-manual-edits.json
+**/.impeccable/live/deferred-svelte-component-accepts.json
+.impeccable-live.json
+.impeccable-live/
+node_modules/.impeccable-live/
+src/lib/impeccable/ImpeccableLiveRoot.svelte
+src/lib/impeccable/__runtime.js
+src/lib/impeccable/[0-9a-f]*/
+
+# GAPS.md catalogs known defects/debt/risks in prose specific enough to double
+# as an attacker checklist if this repo is ever made public — keep it local.
+# NOTE: GAPS.md is already committed (tracked since the initial commit). This
+# entry only stops *future* changes from being re-added — it does not untrack
+# the file (needs `git rm --cached GAPS.md`) or purge it from existing git
+# history (needs a history rewrite, e.g. git filter-repo — destructive, do not
+# run without explicit sign-off).
+GAPS.md
+
+# Same reasoning as GAPS.md above: keep specific-findings documents local so
+# they can't double as an attacker checklist if this repo goes public.
+# `security/CHECKLIST.md` and the audits/ process docs (README, GOVERNANCE,
+# AGENT-GUIDE, scripts/, templates/, markdownlint config) stay tracked —
+# they're process descriptions, not findings. Same untrack/history caveat as
+# GAPS.md applies: `security/THREAT-MODEL.md` and the two
+# `audits/general/2026*.md` reports are already committed; this only stops
+# future re-adds.
+security/THREAT-MODEL.md
+audits/**
+!audits/README.md
+!audits/GOVERNANCE.md
+!audits/AGENT-GUIDE.md
+!audits/scripts/
+!audits/scripts/**
+!audits/templates/
+!audits/templates/**
+
+# docs/planning/ is the original research/strategy series (SENSEBRIDGE-01..07,
+# -COMPLETE-PLAN.md) — kept local only, per explicit request. NOTE: it is
+# already committed (tracked since the initial bootstrap commit and pushed to
+# origin/main). This entry plus `git rm --cached -r docs/planning` stops
+# future re-adds and drops it from the tip going forward, but does NOT purge
+# it from existing git history — that needs a history rewrite (e.g. git
+# filter-repo), which is destructive and force-pushes; do not run without
+# explicit separate sign-off.
+docs/planning/
+!audits/.markdownlint.jsonc
