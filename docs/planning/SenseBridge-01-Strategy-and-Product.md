@@ -42,7 +42,7 @@ The strongest parts of the proposal are the principles, not the feature list.
 ### What should be removed (from the MVP, not necessarily forever)
 
 | Item | Action | Reason |
-|---|---|---|
+| --- | --- | --- |
 | React Native | Remove | Native Swift is the stronger path for an iPhone-only on-device MVP (Document 3) |
 | Real-time navigation guidance | Remove and reframe | Safety-critical, contradicts the awareness principle; reframe as obstacle/landmark awareness |
 | Facial recognition | Defer | Biometric legal exposure; not MVP-critical |
@@ -91,7 +91,7 @@ Stating the large vision is fine. The discipline is in refusing to build it all 
 Vanity metrics (GitHub stars, downloads) are not success here. Use these instead.
 
 | Metric | What it tells you | MVP-stage target |
-|---|---|---|
+| --- | --- | --- |
 | Eyes-free task completion rate | Can a blind user actually finish a task without sighted help | A blind tester can read a document and identify common objects unaided |
 | Repeat usage by real blind testers | Whether it is useful, not just functional | At least 1 to 2 testers choosing to use it in real life |
 | On-device processing share | Whether the privacy promise holds | 100% of MVP features run with no network call |

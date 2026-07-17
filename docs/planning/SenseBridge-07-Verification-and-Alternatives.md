@@ -9,7 +9,7 @@
 ### Confirmed (load-bearing claims that held up)
 
 | Claim | Status | Source basis |
-|---|---|---|
+| --- | --- | --- |
 | Apple Foundation Models on-device LLM is ~3B parameters, 2-bit quantized, with a 4,096-token context window shared across input and output | Confirmed | Apple WWDC25 session 286; Apple 2025 tech report |
 | It requires Apple Intelligence (iPhone 15 Pro and later), is text-only (cannot take images), and uses SystemLanguageModel / LanguageModelSession with @Generable guided generation | Confirmed | Apple Developer documentation |
 | iOS 26.4 added contextSize, tokenCount(for:), and the .exceededContextWindowSize error | Confirmed | Apple technical note; iOS 26.4 release |
@@ -62,7 +62,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Fallback (paid): Apple Developer Program, $99/year.** Required for TestFlight beta distribution and App Store publishing.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | Free provisioning (default) | Zero cost; full on-device testing on your own phone; enough to build and validate the entire MVP yourself | Certificates expire about every 7 days (re-run from Xcode to reinstall); limited to devices you physically connect; no TestFlight; no App Store; some entitlements unavailable |
 | Apple Developer Program ($99/yr) | TestFlight for real external testers; App Store publishing; full entitlements; the only practical way to put it in blind testers' hands remotely | $99/year; auto-renews; waiver only for nonprofit/education/government legal entities shipping free apps, not solo individuals |
 | Sideloading tools (AltStore / SideStore) | Free; can get a build onto another person's device without the App Store | Still tied to free-provisioning style 7-day re-signing; fiddly setup; impractical to ask a blind or low-vision tester to maintain; not a real distribution channel |
@@ -74,7 +74,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Default (free): GitHub public repository plus GitHub Actions.** Free, with unlimited standard-runner minutes for public repositories. GitHub Pages (free) covers a project website.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | GitHub public repo + Actions + Pages (default) | Free including unlimited CI minutes for public repos; matches the open-source mission; Dependabot and secret scanning included; free project site | Public by definition (fine for open source); macOS runner minutes are the constrained resource if you ever go private |
 | Paid CI (e.g., dedicated Mac CI services) | Faster/parallel macOS builds; useful at scale | Recurring cost; unnecessary for a solo MVP |
 
@@ -85,7 +85,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Default (free): Xcode Organizer and TestFlight crash reports.** Free, Apple-native, no extra SDK, no extra data collection (which fits the privacy stance).
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | Xcode Organizer / TestFlight (default) | Free; no third-party SDK; respects privacy; sufficient for an MVP | Less rich than dedicated tools; tied to Apple's reporting |
 | Open-source self-hosted (e.g., Sentry self-hosted) | Free software; full control; can self-host | You run and maintain a server, which contradicts the no-backend MVP stance; added complexity |
 | Hosted error-reporting SaaS | Rich features; easy | Recurring cost and/or data leaving the device; conflicts with privacy-first |
@@ -97,7 +97,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Default (free): no cloud at all.** The MVP is fully on-device. If you ever add the opt-in cloud path, the default should still be free or self-hosted.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | No cloud (default for MVP) | Free; private; offline; nothing to run | On-device reasoning quality ceiling (the label-composition limit from Document 3) |
 | User self-hosts their own model, or supplies their own provider key | Free to you; user controls their data and cost; fits "configurable provider" | Setup burden on the user; not all users can self-host |
 | Free-tier cloud API | More capable scene reasoning | Free tiers are rate-limited and change; data leaves the device; must be opt-in and disclosed |
@@ -110,7 +110,7 @@ You asked that for anything potentially paid, the free option be the default for
 There is no free software path around this: iOS development requires Xcode, which requires a Mac. This is the one cost the project cannot design away.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | A Mac you already own (default if you have one) | No new cost | Must be recent enough to run current Xcode |
 | Borrowed / institutional / library Mac | Free or low cost | Access and continuity limits |
 | Cheapest current Apple Silicon Mac | Runs Xcode well | A real one-time hardware cost |

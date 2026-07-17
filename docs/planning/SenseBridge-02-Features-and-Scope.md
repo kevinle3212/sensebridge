@@ -13,7 +13,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Reading and text (the MVP's strongest bet)
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Document and text reading (OCR to speech) |
 | Purpose | Read physical mail, packaging, signs, and documents aloud |
 | User value | Very high. This is the feature most likely to earn daily use. Reading mail unaided is a concrete independence win |
@@ -25,7 +25,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Object and scene labeling
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Identify objects and surfaces in view |
 | Purpose | "What am I holding," "what is on this table" |
 | User value | High |
@@ -37,7 +37,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Natural-language scene description
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | A spoken sentence describing the scene, not just a label list |
 | Purpose | "There appears to be a kitchen counter with a mug and a phone on it" |
 | User value | High, and a clear differentiator over bare labels |
@@ -49,7 +49,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Obstacle awareness (LiDAR)
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Awareness of nearby obstacles using LiDAR depth |
 | Purpose | "Possible obstacle ahead, roughly one meter" |
 | User value | High if framed honestly, dangerous if oversold |
@@ -61,7 +61,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Sound event detection
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Alert the user to sounds (alarms, doorbells, a name being called) |
 | Purpose | Awareness of audio events |
 | User value | Moderate to high. More central to the deaf use case, but useful for blind users too (for example, an alarm behind them) |
@@ -73,7 +73,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Live speech captioning
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Real-time speech-to-text captions |
 | Purpose | Core deaf-user feature |
 | User value | High for deaf users, marginal for the blind MVP |
@@ -85,7 +85,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Haptic notification language
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Structured vibration patterns conveying meaning |
 | Purpose | Core deaf-blind feature |
 | User value | High for deaf-blind users, low for the blind MVP |
@@ -97,7 +97,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Facial recognition and enrollment
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Recognize consent-enrolled known people by name; label everyone else "person" |
 | Purpose | "Your friend Sam is approaching" for enrolled, consented contacts only |
 | User value | Moderate. Pleasant, not essential |
@@ -109,7 +109,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Real-time navigation guidance
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Turn-by-turn guidance for a blind person |
 | Purpose | Get from A to B |
 | User value | Would be high if it worked safely; it largely cannot at this scope |
@@ -121,7 +121,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Wearable and AR-glasses output
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Output on Apple Watch, Vision Pro, Meta glasses |
 | Purpose | Hands-free and glanceable delivery |
 | User value | High eventually |
@@ -133,7 +133,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Feature audit summary
 
 | Priority | Features |
-|---|---|
+| --- | --- |
 | Must Have (MVP increment 1) | Document/text reading, object/scene labeling, VoiceOver-accessible app shell |
 | Should Have (MVP increment 2) | Natural-language scene description, LiDAR obstacle awareness, sound-event detection |
 | Nice To Have (post-MVP) | Consent-based facial enrollment |

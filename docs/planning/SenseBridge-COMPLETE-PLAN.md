@@ -58,7 +58,7 @@ Other notes in Part One: [The framework decision](#the-framework-decision-stated
 > **Note on the links (please read before converting to PDF):** the entries above are clickable anchors that use GitHub-style heading IDs. They work out of the box when the file is viewed as a web page on GitHub, in VS Code's markdown preview, and in most static-site renderers. Two caveats for PDF:
 >
 > - **Browser "print to PDF":** open the rendered page (for example on GitHub) and print to PDF. Internal anchor links are preserved by most current browsers, so the TOC stays clickable.
-> - **Pandoc:** Pandoc computes heading IDs differently from GitHub (it strips the leading section number, so its ID for "1. Executive Review" is `executive-review`, not `1-executive-review`). Because of that, the manual links above will not all resolve under Pandoc. The reliable fix is to let Pandoc build its own clickable table of contents and PDF bookmarks: `pandoc SenseBridge-COMPLETE-PLAN.md -o SenseBridge.pdf --toc --pdf-engine=xelatex`. That generates a navigable PDF regardless of the manual TOC.
+> - **Pandoc:** Pandoc computes heading IDs differently from GitHub (it strips the leading section number, so its ID for "1. Executive Review" is `executive-review`, not `1-executive-review`). Because of that, the manual links above will not all resolve under Pandoc. The reliable fix is to let Pandoc build its own clickable table of contents and PDF bookmarks: `pandoc SENSEBRIDGE-COMPLETE-PLAN.md -o SenseBridge.pdf --toc --pdf-engine=xelatex`. That generates a navigable PDF regardless of the manual TOC.
 >
 > If you would like, I can generate the PDF for you directly with a working clickable contents, so you do not have to install anything.
 
@@ -110,7 +110,7 @@ The strongest parts of the proposal are the principles, not the feature list.
 ### What should be removed (from the MVP, not necessarily forever)
 
 | Item | Action | Reason |
-|---|---|---|
+| --- | --- | --- |
 | React Native | Remove | Native Swift is the stronger path for an iPhone-only on-device MVP (the Technical Architecture sections) |
 | Real-time navigation guidance | Remove and reframe | Safety-critical, contradicts the awareness principle; reframe as obstacle/landmark awareness |
 | Facial recognition | Defer | Biometric legal exposure; not MVP-critical |
@@ -159,7 +159,7 @@ Stating the large vision is fine. The discipline is in refusing to build it all 
 Vanity metrics (GitHub stars, downloads) are not success here. Use these instead.
 
 | Metric | What it tells you | MVP-stage target |
-|---|---|---|
+| --- | --- | --- |
 | Eyes-free task completion rate | Can a blind user actually finish a task without sighted help | A blind tester can read a document and identify common objects unaided |
 | Repeat usage by real blind testers | Whether it is useful, not just functional | At least 1 to 2 testers choosing to use it in real life |
 | On-device processing share | Whether the privacy promise holds | 100% of MVP features run with no network call |
@@ -310,7 +310,6 @@ The harshest and most useful thing to say: the difference between this project s
 
 ---
 
-
 ## Features & Scope (Sections 6 to 9)
 
 *This group of sections covers the Feature Audit, Feature Decomposition, MVP Definition, and Roadmap.*
@@ -326,7 +325,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Reading and text (the MVP's strongest bet)
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Document and text reading (OCR to speech) |
 | Purpose | Read physical mail, packaging, signs, and documents aloud |
 | User value | Very high. This is the feature most likely to earn daily use. Reading mail unaided is a concrete independence win |
@@ -338,7 +337,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Object and scene labeling
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Identify objects and surfaces in view |
 | Purpose | "What am I holding," "what is on this table" |
 | User value | High |
@@ -350,7 +349,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Natural-language scene description
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | A spoken sentence describing the scene, not just a label list |
 | Purpose | "There appears to be a kitchen counter with a mug and a phone on it" |
 | User value | High, and a clear differentiator over bare labels |
@@ -362,7 +361,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Obstacle awareness (LiDAR)
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Awareness of nearby obstacles using LiDAR depth |
 | Purpose | "Possible obstacle ahead, roughly one meter" |
 | User value | High if framed honestly, dangerous if oversold |
@@ -374,7 +373,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Sound event detection
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Alert the user to sounds (alarms, doorbells, a name being called) |
 | Purpose | Awareness of audio events |
 | User value | Moderate to high. More central to the deaf use case, but useful for blind users too (for example, an alarm behind them) |
@@ -386,7 +385,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Live speech captioning
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Real-time speech-to-text captions |
 | Purpose | Core deaf-user feature |
 | User value | High for deaf users, marginal for the blind MVP |
@@ -398,7 +397,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Haptic notification language
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Structured vibration patterns conveying meaning |
 | Purpose | Core deaf-blind feature |
 | User value | High for deaf-blind users, low for the blind MVP |
@@ -410,7 +409,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Facial recognition and enrollment
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Recognize consent-enrolled known people by name; label everyone else "person" |
 | Purpose | "Your friend Sam is approaching" for enrolled, consented contacts only |
 | User value | Moderate. Pleasant, not essential |
@@ -422,7 +421,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Real-time navigation guidance
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Turn-by-turn guidance for a blind person |
 | Purpose | Get from A to B |
 | User value | Would be high if it worked safely; it largely cannot at this scope |
@@ -434,7 +433,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Wearable and AR-glasses output
 
 | Field | Detail |
-|---|---|
+| --- | --- |
 | Feature | Output on Apple Watch, Vision Pro, Meta glasses |
 | Purpose | Hands-free and glanceable delivery |
 | User value | High eventually |
@@ -446,7 +445,7 @@ A blunt note before the table: the original proposal's feature list spans three 
 ### Feature audit summary
 
 | Priority | Features |
-|---|---|
+| --- | --- |
 | Must Have (MVP increment 1) | Document/text reading, object/scene labeling, VoiceOver-accessible app shell |
 | Should Have (MVP increment 2) | Natural-language scene description, LiDAR obstacle awareness, sound-event detection |
 | Nice To Have (post-MVP) | Consent-based facial enrollment |
@@ -591,7 +590,6 @@ Phases 1 and 2 are a commitment. Phases 3 through 5 are a direction, not a sched
 
 ---
 
-
 ## Technical Architecture (Sections 10 to 14)
 
 *This group of sections covers System Architecture, AI Architecture, Mobile Architecture, Backend Architecture, and Infrastructure. This is the technical core. The Governance, Security & Legal sections cover model licensing law in more depth.*
@@ -621,7 +619,7 @@ The legitimate worry is lock-in: does going native trap you on iPhone forever an
 
 ### High-level view
 
-```
+```text
 +-------------------------------------------------------------+
 |                      SenseBridge App                         |
 |                  (native Swift / SwiftUI)                    |
@@ -668,7 +666,7 @@ The legitimate worry is lock-in: does going native trap you on iPhone forever an
 
 ### Data flow for "read this document"
 
-```
+```text
 Camera --frame--> Perception(Vision OCR + structure)
    --recognized text + layout--> Reasoning(reading-order)
    --ordered text--> Output(Speech RenderTarget) --audio--> User
@@ -678,7 +676,7 @@ No network. No server. Everything between camera and ear stays on the phone.
 
 ### Data flow for "describe this scene"
 
-```
+```text
 Camera --frame--> Perception(Vision detect + OCR)
                        |
                        v
@@ -724,7 +722,7 @@ Be honest about the ceiling: composing from a "bag of labels" is weaker than a t
 ### On-device perception models (all free, on-device)
 
 | Need | Recommended | Why | License | Notes |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | OCR | Apple Vision text recognition | Best on-device quality, iOS 26 adds document/table structure | Apple SDK | Primary |
 | OCR fallback (cross-platform later) | Tesseract | Mature, portable | Apache 2.0 | Only if leaving Apple frameworks |
 | Object detection/classification | Apple Vision built-in | No model to bundle, no license risk | Apple SDK | Primary; avoid Ultralytics YOLO (AGPL) |
@@ -758,7 +756,7 @@ When it arrives: Apple Vision detects faces; you compute embeddings on-device; y
 
 ### Project shape (native Swift / SwiftUI)
 
-```
+```text
 SenseBridge/
   App/
     SenseBridgeApp.swift          # entry point
@@ -874,7 +872,7 @@ What you actually need:
 
 ### Migration path (stated honestly)
 
-```
+```text
 MVP:        Xcode + iPhone + GitHub Actions  (no server)
                          |
                          v  (only if optional cloud reasoning is ever added)
@@ -887,7 +885,6 @@ Scale:      container orchestration, revisited then with real numbers
 The discipline: do not build infrastructure for problems you do not have. The MVP's correct infrastructure footprint is close to nothing, and that is a direct result of the privacy-first design paying off.
 
 ---
-
 
 ## Engineering Quality (Sections 15 to 18)
 
@@ -934,7 +931,7 @@ For the eventual deaf-blind work, haptics must be a designed language, not arbit
 ### Accessibility risks and how to catch them
 
 | Risk | Consequence | Mitigation |
-|---|---|---|
+| --- | --- | --- |
 | Unlabeled or poorly labeled controls | App is unusable via VoiceOver | Label everything; audit each screen with VoiceOver on |
 | Focus lost after actions | User stranded after a result | Explicit focus management and announcements |
 | Output too verbose or too terse | Cognitive load or missing info | Tune phrasing with real testers; make verbosity configurable |
@@ -958,13 +955,13 @@ Coverage targets below are pragmatic for a solo developer, not enterprise dogma.
 ### Unit tests
 
 - **What.** Pure logic: reading-order from OCR structure, phrasing and hedging rules, awareness thresholds and hysteresis, output-profile selection.
-- **How.** XCTest, fast, no device needed. Mock `SensingSource` inputs with fixture perception records.
+- **How.** Swift Testing, fast, no device needed. Mock `SensingSource` inputs with fixture perception records.
 - **Target.** High coverage on the Reasoning layer specifically (phrasing, awareness logic, profile selection), because that is where a subtle bug produces a confidently wrong or unsafe-sounding statement. Aim high here even if other layers are lower.
 
 ### Integration tests
 
 - **What.** Perception services against fixed inputs: feed known images to the OCR and detection services and assert sensible structured output; feed known audio to the sound classifier.
-- **How.** XCTest with bundled test fixtures (sample documents, sample audio).
+- **How.** Swift Testing with bundled test fixtures (sample documents, sample audio).
 - **Target.** Cover each perception service's happy path and key failure modes (blurry image, no text found, ambiguous object).
 
 ### Accessibility tests
@@ -1060,7 +1057,7 @@ Because all processing happens on each user's own phone, adding users adds zero 
 So the analysis is not about server bottlenecks. It is about the things that actually get harder as the user base grows.
 
 | Users | What is actually hard at this level | Bottleneck | Solution |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 100 | Getting real feedback, fixing core bugs | Your time and attention | Tight tester relationships; triage ruthlessly |
 | 1,000 | Support volume, device/iOS-version variety | Your time; edge cases across devices | Good docs, FAQ, issue templates; clear minimum-OS support |
 | 10,000 | Sustaining solo effort; contribution management | You as a single point of failure | Recruit contributors; strong CONTRIBUTING docs; automate CI |
@@ -1077,7 +1074,6 @@ If the optional, opt-in cloud-reasoning service is ever built and somehow attrac
 
 ---
 
-
 ## Governance, Security & Legal (Sections 19 to 22)
 
 *This group of sections covers Open Source Strategy, Security Review, Legal & Compliance, and Repository Design. The legal section is informational only and is not legal advice; verify everything with qualified counsel before enabling any biometric feature or shipping.*
@@ -1093,7 +1089,7 @@ The license choice matters more than it looks, because it interacts with the mod
 Comparison of the realistic options:
 
 | License | Effect | Fit for SenseBridge |
-|---|---|---|
+| --- | --- | --- |
 | MIT | Permissive, minimal, no explicit patent grant | Good, but Apache's patent grant is worth having for an AI project |
 | Apache 2.0 | Permissive, explicit patent grant, contributor terms | **Recommended.** Permissive enough for adoption and future flexibility; patent grant protects users and contributors |
 | GPL-3.0 | Copyleft; derivatives must be GPL | Possible if you want to force openness, but limits flexibility |
@@ -1197,7 +1193,7 @@ This is where a solo open-source project is most exposed, because dependencies a
 ### Security review summary
 
 | Area | MVP risk | Control |
-|---|---|---|
+| --- | --- | --- |
 | Backend breach | None (no backend) | Architectural; keep it that way |
 | User content leak | Low (transient, on-device) | Do not persist or log content |
 | Biometric data (later) | High if mishandled | Encrypted, on-device-only, deletable, consent-gated |
@@ -1245,7 +1241,7 @@ A plain-language ToS and disclaimer should: state it is not a safety or medical 
 ### Compliance summary
 
 | Area | Obligation | Status in plan |
-|---|---|---|
+| --- | --- | --- |
 | Safety framing | Never claim safety | Built in as a hard rule across all surfaces |
 | Biometric (later) | Consent, on-device, deletable, retention policy | Designed; needs counsel before shipping |
 | Camera/mic | Clear permission purpose strings | Standard iOS handling |
@@ -1259,7 +1255,7 @@ A plain-language ToS and disclaimer should: state it is not a safety or medical 
 
 A clean, well-documented repository is part of the product for an open-source project: it is how contributors arrive and how the bus-factor problem is mitigated. Recommended monorepo layout (the app is one Swift project; supporting material lives alongside it):
 
-```
+```text
 sensebridge/
   README.md                      # mission, scope, non-scope, build/run
   LICENSE                        # Apache 2.0
@@ -1282,12 +1278,12 @@ sensebridge/
     SenseBridge.xcodeproj
     Tests/
   docs/
-    architecture.md              # layering, protocols, data flow
-    accessibility.md             # VoiceOver testing, labeling standards
-    ai-models.md                 # model choices, licenses, the two traps
-    safety-framing.md            # the awareness-not-safety doctrine
-    roadmap.md                   # phases, deferred scope
-    privacy.md                   # data handling, on-device guarantees
+    ARCHITECTURE.md              # layering, protocols, data flow
+    ACCESSIBILITY.md             # VoiceOver testing, labeling standards
+    AI-MODELS.md                 # model choices, licenses, the two traps
+    SAFETY-FRAMING.md            # the awareness-not-safety doctrine
+    ROADMAP.md                   # phases, deferred scope
+    PRIVACY.md                   # data handling, on-device guarantees
   models/
     README.md                    # provenance and licenses of any bundled models
     sound/                       # Create ML classifiers (permissive only)
@@ -1299,12 +1295,11 @@ sensebridge/
 Notes on the design:
 
 - **Docs are first-class,** in their own directory, because for this project documentation is adoption and continuity.
-- **`docs/safety-framing.md` and `docs/ai-models.md` are not optional.** The safety doctrine and the licensing traps are the two things a new contributor most needs to understand before touching code.
+- **`docs/SAFETY-FRAMING.md` and `docs/AI-MODELS.md` are not optional.** The safety doctrine and the licensing traps are the two things a new contributor most needs to understand before touching code.
 - **`models/README.md`** records provenance and license of every bundled model, so the AGPL/AMLR traps are documented and enforced at the repo level.
 - **The infrastructure directories the original prompt imagined** (Docker, Kubernetes, infra) are deliberately absent, because the MVP has no server. If the optional cloud service is ever built, it gets its own directory or its own repo at that time, not before.
 
 ---
-
 
 ## Miscellaneous & Remarks
 
@@ -1317,7 +1312,7 @@ Notes on the design:
 The structured documents kept feature discussion tied to the MVP. Here is the standalone case for what makes SenseBridge different, and the evidence behind each, because "what makes this stand out" was one of your direct questions.
 
 | Differentiator | The pain point it answers | Evidence |
-|---|---|---|
+| --- | --- | --- |
 | Offline by default | Cloud apps feel slow and raise privacy fears for sensitive documents | Be My AI sends images to OpenAI; security guidance tells blind users to prefer on-device tools for confidential material |
 | Open-source and auditable | "This tool could change its terms, raise prices, or disappear" | Every leading competitor is closed; users have no recourse or insight |
 | Self-hostable | Trust and continuity for a tool people depend on | No competitor offers this |
@@ -1416,7 +1411,6 @@ You came in with a strong instinct (open, private, multi-sense accessibility) wr
 
 *This concludes Part One, the plan itself. Part Two follows: an independent verification log, the free-versus-paid alternatives, and the licensing and legal rationale. Where Part Two corrects a figure or claim from Part One, those corrections have already been folded into the relevant sections above as inline accuracy notes.*
 
-
 # Part Two: Verification, Alternatives & Rationale
 
 *This part was produced after independent source verification (June 2026) of the load-bearing claims in Part One. It records what was confirmed and corrected, lays out every free-versus-paid choice with the free option set as the default for this project, and states the reasoning behind the licensing and legal recommendations.*
@@ -1430,7 +1424,7 @@ You came in with a strong instinct (open, private, multi-sense accessibility) wr
 ### Confirmed (load-bearing claims that held up)
 
 | Claim | Status | Source basis |
-|---|---|---|
+| --- | --- | --- |
 | Apple Foundation Models on-device LLM is ~3B parameters, 2-bit quantized, with a 4,096-token context window shared across input and output | Confirmed | Apple WWDC25 session 286; Apple 2025 tech report |
 | It requires Apple Intelligence (iPhone 15 Pro and later), is text-only (cannot take images), and uses SystemLanguageModel / LanguageModelSession with @Generable guided generation | Confirmed | Apple Developer documentation |
 | iOS 26.4 added contextSize, tokenCount(for:), and the .exceededContextWindowSize error | Confirmed | Apple technical note; iOS 26.4 release |
@@ -1483,7 +1477,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Fallback (paid): Apple Developer Program, $99/year.** Required for TestFlight beta distribution and App Store publishing.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | Free provisioning (default) | Zero cost; full on-device testing on your own phone; enough to build and validate the entire MVP yourself | Certificates expire about every 7 days (re-run from Xcode to reinstall); limited to devices you physically connect; no TestFlight; no App Store; some entitlements unavailable |
 | Apple Developer Program ($99/yr) | TestFlight for real external testers; App Store publishing; full entitlements; the only practical way to put it in blind testers' hands remotely | $99/year; auto-renews; waiver only for nonprofit/education/government legal entities shipping free apps, not solo individuals |
 | Sideloading tools (AltStore / SideStore) | Free; can get a build onto another person's device without the App Store | Still tied to free-provisioning style 7-day re-signing; fiddly setup; impractical to ask a blind or low-vision tester to maintain; not a real distribution channel |
@@ -1495,7 +1489,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Default (free): GitHub public repository plus GitHub Actions.** Free, with unlimited standard-runner minutes for public repositories. GitHub Pages (free) covers a project website.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | GitHub public repo + Actions + Pages (default) | Free including unlimited CI minutes for public repos; matches the open-source mission; Dependabot and secret scanning included; free project site | Public by definition (fine for open source); macOS runner minutes are the constrained resource if you ever go private |
 | Paid CI (e.g., dedicated Mac CI services) | Faster/parallel macOS builds; useful at scale | Recurring cost; unnecessary for a solo MVP |
 
@@ -1506,7 +1500,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Default (free): Xcode Organizer and TestFlight crash reports.** Free, Apple-native, no extra SDK, no extra data collection (which fits the privacy stance).
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | Xcode Organizer / TestFlight (default) | Free; no third-party SDK; respects privacy; sufficient for an MVP | Less rich than dedicated tools; tied to Apple's reporting |
 | Open-source self-hosted (e.g., Sentry self-hosted) | Free software; full control; can self-host | You run and maintain a server, which contradicts the no-backend MVP stance; added complexity |
 | Hosted error-reporting SaaS | Rich features; easy | Recurring cost and/or data leaving the device; conflicts with privacy-first |
@@ -1518,7 +1512,7 @@ You asked that for anything potentially paid, the free option be the default for
 **Default (free): no cloud at all.** The MVP is fully on-device. If you ever add the opt-in cloud path, the default should still be free or self-hosted.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | No cloud (default for MVP) | Free; private; offline; nothing to run | On-device reasoning quality ceiling (the label-composition limit from the Technical Architecture sections) |
 | User self-hosts their own model, or supplies their own provider key | Free to you; user controls their data and cost; fits "configurable provider" | Setup burden on the user; not all users can self-host |
 | Free-tier cloud API | More capable scene reasoning | Free tiers are rate-limited and change; data leaves the device; must be opt-in and disclosed |
@@ -1531,7 +1525,7 @@ You asked that for anything potentially paid, the free option be the default for
 There is no free software path around this: iOS development requires Xcode, which requires a Mac. This is the one cost the project cannot design away.
 
 | Option | Pros | Cons |
-|---|---|---|
+| --- | --- | --- |
 | A Mac you already own (default if you have one) | No new cost | Must be recent enough to run current Xcode |
 | Borrowed / institutional / library Mac | Free or low cost | Access and continuity limits |
 | Cheapest current Apple Silicon Mac | Runs Xcode well | A real one-time hardware cost |
@@ -1581,7 +1575,6 @@ The reasoning is that biometric-identification law (BIPA, CUBI, Washington, GDPR
 
 *End of the SenseBridge plan. Part Two supersedes any conflicting detail in Part One where verification corrected a figure or claim. The legal and licensing content is factual verification, not legal advice; confirm the flagged items and consult a licensed attorney, and clarify the MobileCLIP license with Apple, before relying on any of it in a shipped product. Linked primary sources for the verified claims follow in the References section below.*
 
-
 ---
 
 # References
@@ -1590,64 +1583,64 @@ The reasoning is that biometric-identification law (BIPA, CUBI, Washington, GDPR
 
 ## Apple frameworks and on-device AI
 
-- Apple Foundation Models, official documentation: https://developer.apple.com/documentation/foundationmodels
-- Apple, "Foundation Models framework unlocks new intelligent app experiences" (newsroom, Sept 2025): https://www.apple.com/newsroom/2025/09/apples-foundation-models-framework-unlocks-new-intelligent-app-experiences/
-- WWDC25 session 286, "Meet the Foundation Models framework": https://developer.apple.com/videos/play/wwdc2025/286/
-- Independent analysis of the on-device model (~3B parameters, 2-bit quantized): https://github.com/fguzman82/apple-foundation-model-analysis
-- Apple Vision framework (OCR, document and object recognition): https://developer.apple.com/documentation/vision
-- Apple Speech framework (SpeechAnalyzer, SpeechTranscriber): https://developer.apple.com/documentation/speech
-- Whisper-vs-Apple speed comparison (one informal single-file test): https://www.macstories.net/stories/hands-on-how-apples-new-speech-apis-outpace-whisper-for-lightning-fast-transcription/ and https://www.macrumors.com/2025/06/18/apple-transcription-api-faster-than-whisper/
-- Apple Sound Analysis framework: https://developer.apple.com/documentation/soundanalysis
-- WWDC21 session 10036, Sound Analysis (300+ built-in classes): https://developer.apple.com/videos/play/wwdc2021/10036/
-- Sound Analysis with a custom Create ML model, worked example: https://medium.com/@narner/classification-of-sound-files-on-ios-with-the-soundanalysis-framework-and-esc-10-coreml-model-3a5154db903f
-- ARKit and scene depth / LiDAR: https://developer.apple.com/documentation/arkit
-- Core Haptics: https://developer.apple.com/documentation/corehaptics
+- Apple Foundation Models, official documentation: <https://developer.apple.com/documentation/foundationmodels>
+- Apple, "Foundation Models framework unlocks new intelligent app experiences" (newsroom, Sept 2025): <https://www.apple.com/newsroom/2025/09/apples-foundation-models-framework-unlocks-new-intelligent-app-experiences/>
+- WWDC25 session 286, "Meet the Foundation Models framework": <https://developer.apple.com/videos/play/wwdc2025/286/>
+- Independent analysis of the on-device model (~3B parameters, 2-bit quantized): <https://github.com/fguzman82/apple-foundation-model-analysis>
+- Apple Vision framework (OCR, document and object recognition): <https://developer.apple.com/documentation/vision>
+- Apple Speech framework (SpeechAnalyzer, SpeechTranscriber): <https://developer.apple.com/documentation/speech>
+- Whisper-vs-Apple speed comparison (one informal single-file test): <https://www.macstories.net/stories/hands-on-how-apples-new-speech-apis-outpace-whisper-for-lightning-fast-transcription/> and <https://www.macrumors.com/2025/06/18/apple-transcription-api-faster-than-whisper/>
+- Apple Sound Analysis framework: <https://developer.apple.com/documentation/soundanalysis>
+- WWDC21 session 10036, Sound Analysis (300+ built-in classes): <https://developer.apple.com/videos/play/wwdc2021/10036/>
+- Sound Analysis with a custom Create ML model, worked example: <https://medium.com/@narner/classification-of-sound-files-on-ios-with-the-soundanalysis-framework-and-esc-10-coreml-model-3a5154db903f>
+- ARKit and scene depth / LiDAR: <https://developer.apple.com/documentation/arkit>
+- Core Haptics: <https://developer.apple.com/documentation/corehaptics>
 
 ## Model licenses (the load-bearing licensing claims)
 
-- Ultralytics licensing (AGPL-3.0 and Enterprise License): https://www.ultralytics.com/license and the repository https://github.com/ultralytics/ultralytics
-- Apple FastVLM (apple-amlr, non-commercial research): https://huggingface.co/apple/FastVLM-0.5B and the project https://github.com/apple/ml-fastvlm
-- Apple MobileCLIP, mixed/ambiguous license signals (apple-amlr LICENSE alongside Apple Sample Code License): https://huggingface.co/apple/MobileCLIP-S1/blob/main/README.md and https://huggingface.co/apple/coreml-mobileclip
-- SmolVLM and SmolVLM2 (Apache 2.0): https://huggingface.co/HuggingFaceTB/SmolVLM-Instruct and https://huggingface.co/HuggingFaceTB/SmolVLM2-2.2B-Instruct
-- whisper.cpp (MIT): https://github.com/ggml-org/whisper.cpp ; iOS real-time usage discussion: https://github.com/ggml-org/whisper.cpp/discussions/1093
-- YAMNet (Apache 2.0, 521 classes): https://github.com/tensorflow/models/tree/master/research/audioset/yamnet
-- Tesseract OCR (Apache 2.0): https://github.com/tesseract-ocr/tesseract
-- Small on-device model landscape (context for RAM/feasibility): https://localaimaster.com/blog/small-language-models-guide-2026
+- Ultralytics licensing (AGPL-3.0 and Enterprise License): <https://www.ultralytics.com/license> and the repository <https://github.com/ultralytics/ultralytics>
+- Apple FastVLM (apple-amlr, non-commercial research): <https://huggingface.co/apple/FastVLM-0.5B> and the project <https://github.com/apple/ml-fastvlm>
+- Apple MobileCLIP, mixed/ambiguous license signals (apple-amlr LICENSE alongside Apple Sample Code License): <https://huggingface.co/apple/MobileCLIP-S1/blob/main/README.md> and <https://huggingface.co/apple/coreml-mobileclip>
+- SmolVLM and SmolVLM2 (Apache 2.0): <https://huggingface.co/HuggingFaceTB/SmolVLM-Instruct> and <https://huggingface.co/HuggingFaceTB/SmolVLM2-2.2B-Instruct>
+- whisper.cpp (MIT): <https://github.com/ggml-org/whisper.cpp> ; iOS real-time usage discussion: <https://github.com/ggml-org/whisper.cpp/discussions/1093>
+- YAMNet (Apache 2.0, 521 classes): <https://github.com/tensorflow/models/tree/master/research/audioset/yamnet>
+- Tesseract OCR (Apache 2.0): <https://github.com/tesseract-ocr/tesseract>
+- Small on-device model landscape (context for RAM/feasibility): <https://localaimaster.com/blog/small-language-models-guide-2026>
 
 ## Biometric and privacy law
 
-- Texas CUBI statute, Tex. Bus. & Com. Code 503.001 ($25,000 per violation, AG enforcement): https://codes.findlaw.com/tx/business-and-commerce-code/bus-com-sect-503-001/
-- Texas biometric privacy overview (consent, penalties, 2026 context): https://www.recordinglaw.com/us-laws/data-privacy-laws/texas-data-privacy-laws/biometric-privacy/
-- Texas Attorney General (Google $1.375B settlement, finalized Oct 31, 2025; confirm the specific release at the live site): https://www.texasattorneygeneral.gov
+- Texas CUBI statute, Tex. Bus. & Com. Code 503.001 ($25,000 per violation, AG enforcement): <https://codes.findlaw.com/tx/business-and-commerce-code/bus-com-sect-503-001/>
+- Texas biometric privacy overview (consent, penalties, 2026 context): <https://www.recordinglaw.com/us-laws/data-privacy-laws/texas-data-privacy-laws/biometric-privacy/>
+- Texas Attorney General (Google $1.375B settlement, finalized Oct 31, 2025; confirm the specific release at the live site): <https://www.texasattorneygeneral.gov>
 - Illinois BIPA: the $650M Meta/Facebook settlement (2021) and the August 2024 SB 2979 amendment are widely documented; confirm current status with primary court records and the Illinois statute (740 ILCS 14). Texas Meta $1.4B settlement (July 2024) reported by Vinson & Elkins and others.
-- GDPR Article 9 (special-category biometric data): https://gdpr-info.eu/art-9-gdpr/
+- GDPR Article 9 (special-category biometric data): <https://gdpr-info.eu/art-9-gdpr/>
 
 ## Apple Developer Program and free tooling
 
-- Apple Developer Program: https://developer.apple.com/programs/
-- Fee waivers (nonprofit, education, government only): https://developer.apple.com/help/account/membership/fee-waivers/
-- GitHub Actions free minutes for public repositories (community discussion): https://github.com/orgs/community/discussions/156389
-- GitHub Pages: https://pages.github.com
+- Apple Developer Program: <https://developer.apple.com/programs/>
+- Fee waivers (nonprofit, education, government only): <https://developer.apple.com/help/account/membership/fee-waivers/>
+- GitHub Actions free minutes for public repositories (community discussion): <https://github.com/orgs/community/discussions/156389>
+- GitHub Pages: <https://pages.github.com>
 
 ## Funding and open-source sustainability
 
-- Microsoft AI for Accessibility: https://www.microsoft.com/en-us/ai/ai-for-accessibility
-- GitHub Sponsors (zero platform fees): https://github.com/sponsors
-- Open Collective (fiscal-host model): https://opencollective.com
-- Open Source Collective (fiscal host): https://oscollective.org
-- Software Freedom Conservancy: https://sfconservancy.org
-- NumFOCUS: https://numfocus.org
-- NV Access / NVDA (donations-and-services precedent): https://www.nvaccess.org
+- Microsoft AI for Accessibility: <https://www.microsoft.com/en-us/ai/ai-for-accessibility>
+- GitHub Sponsors (zero platform fees): <https://github.com/sponsors>
+- Open Collective (fiscal-host model): <https://opencollective.com>
+- Open Source Collective (fiscal host): <https://oscollective.org>
+- Software Freedom Conservancy: <https://sfconservancy.org>
+- NumFOCUS: <https://numfocus.org>
+- NV Access / NVDA (donations-and-services precedent): <https://www.nvaccess.org>
 
 ## Disability employment context
 
-- American Foundation for the Blind, employment statistics (only roughly a third of working-age blind/visually impaired adults employed; correcting the "70% unemployment" framing): https://www.afb.org/research-and-initiatives/statistics
-- Peer-reviewed employment-rate data on visual impairment is available via PubMed Central: https://pmc.ncbi.nlm.nih.gov (search visual impairment employment rate)
+- American Foundation for the Blind, employment statistics (only roughly a third of working-age blind/visually impaired adults employed; correcting the "70% unemployment" framing): <https://www.afb.org/research-and-initiatives/statistics>
+- Peer-reviewed employment-rate data on visual impairment is available via PubMed Central: <https://pmc.ncbi.nlm.nih.gov> (search visual impairment employment rate)
 
 ## Accessibility standards
 
-- WCAG 2.2: https://www.w3.org/TR/WCAG22/
-- Apple Human Interface Guidelines, Accessibility: https://developer.apple.com/design/human-interface-guidelines/accessibility
+- WCAG 2.2: <https://www.w3.org/TR/WCAG22/>
+- Apple Human Interface Guidelines, Accessibility: <https://developer.apple.com/design/human-interface-guidelines/accessibility>
 
 ---
 

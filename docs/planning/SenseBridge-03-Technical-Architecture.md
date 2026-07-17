@@ -27,7 +27,7 @@ The legitimate worry is lock-in: does going native trap you on iPhone forever an
 
 ### High-level view
 
-```
+```text
 +-------------------------------------------------------------+
 |                      SenseBridge App                         |
 |                  (native Swift / SwiftUI)                    |
@@ -74,7 +74,7 @@ The legitimate worry is lock-in: does going native trap you on iPhone forever an
 
 ### Data flow for "read this document"
 
-```
+```text
 Camera --frame--> Perception(Vision OCR + structure)
    --recognized text + layout--> Reasoning(reading-order)
    --ordered text--> Output(Speech RenderTarget) --audio--> User
@@ -84,7 +84,7 @@ No network. No server. Everything between camera and ear stays on the phone.
 
 ### Data flow for "describe this scene"
 
-```
+```text
 Camera --frame--> Perception(Vision detect + OCR)
                        |
                        v
@@ -130,7 +130,7 @@ Be honest about the ceiling: composing from a "bag of labels" is weaker than a t
 ### On-device perception models (all free, on-device)
 
 | Need | Recommended | Why | License | Notes |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | OCR | Apple Vision text recognition | Best on-device quality, iOS 26 adds document/table structure | Apple SDK | Primary |
 | OCR fallback (cross-platform later) | Tesseract | Mature, portable | Apache 2.0 | Only if leaving Apple frameworks |
 | Object detection/classification | Apple Vision built-in | No model to bundle, no license risk | Apple SDK | Primary; avoid Ultralytics YOLO (AGPL) |
@@ -164,7 +164,7 @@ When it arrives: Apple Vision detects faces; you compute embeddings on-device; y
 
 ### Project shape (native Swift / SwiftUI)
 
-```
+```text
 SenseBridge/
   App/
     SenseBridgeApp.swift          # entry point
@@ -280,7 +280,7 @@ What you actually need:
 
 ### Migration path (stated honestly)
 
-```
+```text
 MVP:        Xcode + iPhone + GitHub Actions  (no server)
                          |
                          v  (only if optional cloud reasoning is ever added)

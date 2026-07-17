@@ -43,7 +43,7 @@ For the eventual deaf-blind work, haptics must be a designed language, not arbit
 ### Accessibility risks and how to catch them
 
 | Risk | Consequence | Mitigation |
-|---|---|---|
+| --- | --- | --- |
 | Unlabeled or poorly labeled controls | App is unusable via VoiceOver | Label everything; audit each screen with VoiceOver on |
 | Focus lost after actions | User stranded after a result | Explicit focus management and announcements |
 | Output too verbose or too terse | Cognitive load or missing info | Tune phrasing with real testers; make verbosity configurable |
@@ -67,13 +67,13 @@ Coverage targets below are pragmatic for a solo developer, not enterprise dogma.
 ### Unit tests
 
 - **What.** Pure logic: reading-order from OCR structure, phrasing and hedging rules, awareness thresholds and hysteresis, output-profile selection.
-- **How.** XCTest, fast, no device needed. Mock `SensingSource` inputs with fixture perception records.
+- **How.** Swift Testing, fast, no device needed. Mock `SensingSource` inputs with fixture perception records.
 - **Target.** High coverage on the Reasoning layer specifically (phrasing, awareness logic, profile selection), because that is where a subtle bug produces a confidently wrong or unsafe-sounding statement. Aim high here even if other layers are lower.
 
 ### Integration tests
 
 - **What.** Perception services against fixed inputs: feed known images to the OCR and detection services and assert sensible structured output; feed known audio to the sound classifier.
-- **How.** XCTest with bundled test fixtures (sample documents, sample audio).
+- **How.** Swift Testing with bundled test fixtures (sample documents, sample audio).
 - **Target.** Cover each perception service's happy path and key failure modes (blurry image, no text found, ambiguous object).
 
 ### Accessibility tests
@@ -169,7 +169,7 @@ Because all processing happens on each user's own phone, adding users adds zero 
 So the analysis is not about server bottlenecks. It is about the things that actually get harder as the user base grows.
 
 | Users | What is actually hard at this level | Bottleneck | Solution |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 100 | Getting real feedback, fixing core bugs | Your time and attention | Tight tester relationships; triage ruthlessly |
 | 1,000 | Support volume, device/iOS-version variety | Your time; edge cases across devices | Good docs, FAQ, issue templates; clear minimum-OS support |
 | 10,000 | Sustaining solo effort; contribution management | You as a single point of failure | Recruit contributors; strong CONTRIBUTING docs; automate CI |

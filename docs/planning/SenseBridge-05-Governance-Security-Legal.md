@@ -13,7 +13,7 @@ The license choice matters more than it looks, because it interacts with the mod
 Comparison of the realistic options:
 
 | License | Effect | Fit for SenseBridge |
-|---|---|---|
+| --- | --- | --- |
 | MIT | Permissive, minimal, no explicit patent grant | Good, but Apache's patent grant is worth having for an AI project |
 | Apache 2.0 | Permissive, explicit patent grant, contributor terms | **Recommended.** Permissive enough for adoption and future flexibility; patent grant protects users and contributors |
 | GPL-3.0 | Copyleft; derivatives must be GPL | Possible if you want to force openness, but limits flexibility |
@@ -117,7 +117,7 @@ This is where a solo open-source project is most exposed, because dependencies a
 ### Security review summary
 
 | Area | MVP risk | Control |
-|---|---|---|
+| --- | --- | --- |
 | Backend breach | None (no backend) | Architectural; keep it that way |
 | User content leak | Low (transient, on-device) | Do not persist or log content |
 | Biometric data (later) | High if mishandled | Encrypted, on-device-only, deletable, consent-gated |
@@ -165,7 +165,7 @@ A plain-language ToS and disclaimer should: state it is not a safety or medical 
 ### Compliance summary
 
 | Area | Obligation | Status in plan |
-|---|---|---|
+| --- | --- | --- |
 | Safety framing | Never claim safety | Built in as a hard rule across all surfaces |
 | Biometric (later) | Consent, on-device, deletable, retention policy | Designed; needs counsel before shipping |
 | Camera/mic | Clear permission purpose strings | Standard iOS handling |
@@ -179,7 +179,7 @@ A plain-language ToS and disclaimer should: state it is not a safety or medical 
 
 A clean, well-documented repository is part of the product for an open-source project: it is how contributors arrive and how the bus-factor problem is mitigated. Recommended monorepo layout (the app is one Swift project; supporting material lives alongside it):
 
-```
+```text
 sensebridge/
   README.md                      # mission, scope, non-scope, build/run
   LICENSE                        # Apache 2.0
@@ -202,12 +202,12 @@ sensebridge/
     SenseBridge.xcodeproj
     Tests/
   docs/
-    architecture.md              # layering, protocols, data flow
-    accessibility.md             # VoiceOver testing, labeling standards
-    ai-models.md                 # model choices, licenses, the two traps
-    safety-framing.md            # the awareness-not-safety doctrine
-    roadmap.md                   # phases, deferred scope
-    privacy.md                   # data handling, on-device guarantees
+    ARCHITECTURE.md              # layering, protocols, data flow
+    ACCESSIBILITY.md             # VoiceOver testing, labeling standards
+    AI-MODELS.md                 # model choices, licenses, the two traps
+    SAFETY-FRAMING.md            # the awareness-not-safety doctrine
+    ROADMAP.md                   # phases, deferred scope
+    PRIVACY.md                   # data handling, on-device guarantees
   models/
     README.md                    # provenance and licenses of any bundled models
     sound/                       # Create ML classifiers (permissive only)
@@ -219,7 +219,7 @@ sensebridge/
 Notes on the design:
 
 - **Docs are first-class,** in their own directory, because for this project documentation is adoption and continuity.
-- **`docs/safety-framing.md` and `docs/ai-models.md` are not optional.** The safety doctrine and the licensing traps are the two things a new contributor most needs to understand before touching code.
+- **`docs/SAFETY-FRAMING.md` and `docs/AI-MODELS.md` are not optional.** The safety doctrine and the licensing traps are the two things a new contributor most needs to understand before touching code.
 - **`models/README.md`** records provenance and license of every bundled model, so the AGPL/AMLR traps are documented and enforced at the repo level.
 - **The infrastructure directories the original prompt imagined** (Docker, Kubernetes, infra) are deliberately absent, because the MVP has no server. If the optional cloud service is ever built, it gets its own directory or its own repo at that time, not before.
 

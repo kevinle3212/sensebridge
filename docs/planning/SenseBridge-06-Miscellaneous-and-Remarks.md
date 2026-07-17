@@ -9,7 +9,7 @@
 The structured documents kept feature discussion tied to the MVP. Here is the standalone case for what makes SenseBridge different, and the evidence behind each, because "what makes this stand out" was one of your direct questions.
 
 | Differentiator | The pain point it answers | Evidence |
-|---|---|---|
+| --- | --- | --- |
 | Offline by default | Cloud apps feel slow and raise privacy fears for sensitive documents | Be My AI sends images to OpenAI; security guidance tells blind users to prefer on-device tools for confidential material |
 | Open-source and auditable | "This tool could change its terms, raise prices, or disappear" | Every leading competitor is closed; users have no recourse or insight |
 | Self-hostable | Trust and continuity for a tool people depend on | No competitor offers this |
