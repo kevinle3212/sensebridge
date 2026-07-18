@@ -1,0 +1,6 @@
+# Prettier ignore list for website/ (Astro site).
+node_modules
+dist
+.astro
+package-lock.json
+.impeccable/hook.cache.json

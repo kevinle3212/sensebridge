@@ -1,0 +1,40 @@
+---
+---
+
+<header class="site-header">
+  <div class="wrap">
+    <p class="logo">SenseBridge</p>
+    <nav aria-label="Primary">
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="https://github.com/kevinle3212/sensebridge">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<style lang="scss">
+  @use "@styles/abstracts" as *;
+
+  .site-header {
+    border-bottom: 1px solid color("hairline");
+  }
+
+  .site-header .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: space("1");
+    padding-block: space("2");
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space("2");
+  }
+
+  .logo {
+    font-weight: 700;
+  }
+</style>

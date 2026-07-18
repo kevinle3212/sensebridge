@@ -1,0 +1,218 @@
+@use "@styles/abstracts" as *;
+
+.hero {
+  padding-block: space("6") space("5");
+}
+
+.hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: space("4");
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: space("2");
+}
+
+.hero-heading {
+  font-family:
+    "Inter Variable",
+    "Inter Fallback",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 3vw, 3.5rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+// Structural only (needed so the JS word-reveal in src/scripts/motion.ts can
+// transform each word independently) — identical to plain inline text at
+// rest, so it carries no visual difference under reduce/no-JS.
+.word {
+  display: inline-block;
+}
+
+.lede,
+.status {
+  max-width: 40rem;
+}
+
+.lede {
+  color: color("text-secondary");
+  font-size: 1.125rem;
+}
+
+.cta {
+  display: inline-block;
+  width: fit-content;
+  margin-top: space("1");
+  padding: space("1") space("3");
+  border: 1px solid color("accent-primary");
+  border-radius: radius("md");
+  color: color("text-primary");
+  text-decoration: none;
+
+  &:hover {
+    background: color("surface-raised");
+  }
+
+  @include motion-safe {
+    transition: background-color duration("base") ease("standard");
+  }
+}
+
+// Cinematic hero visual ("First Light"): a stylized iPhone silhouette with a
+// LiDAR "sensing" point-field radiating from the camera and a slow light
+// sweep across the device. CSS/SVG only — no canvas, no WebGL. Three
+// absolutely-positioned depth layers (glow / device / field) are tagged
+// data-hero-layer in Hero.astro for the scroll-linked parallax in
+// src/scripts/motion.ts. Every layer's resting CSS state below (no
+// transform, finished opacity) is already the complete static frame shown
+// under prefers-reduced-motion/no-JS — the @include motion-safe blocks only
+// ever ADD motion on top of that finished picture, never create it.
+.hero-visual {
+  position: relative;
+  align-self: center;
+  overflow: hidden;
+  width: 100%;
+  max-width: 22rem;
+  aspect-ratio: 1;
+  border-radius: radius("lg");
+  box-shadow: shadow("glow-hero");
+}
+
+.visual-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 40%, rgb(255 179 122 / 18%), transparent 70%);
+
+  @include motion-safe {
+    will-change: transform;
+  }
+}
+
+.visual-device {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  overflow: hidden;
+  width: 44%;
+  aspect-ratio: 0.5;
+  background: linear-gradient(180deg, color("surface-raised"), color("ink"));
+  border: 1px solid color("hairline");
+  border-radius: radius("lg");
+  transform: translate(-50%, -50%);
+
+  @include motion-safe {
+    will-change: transform;
+  }
+}
+
+.device-camera {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  width: 9%;
+  aspect-ratio: 1;
+  background: color("hairline");
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+// Diffuse Perception Glow sheen sliding across the device — decorative
+// light only, never text/borders that carry meaning.
+.device-sweep {
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(105deg, transparent 42%, rgb(255 179 122 / 22%) 50%, transparent 58%);
+  transform: translateX(-10%);
+
+  @include motion-safe {
+    animation: hero-sweep 7s ease("in-out") infinite alternate;
+  }
+}
+
+// Signal Blue LiDAR sensing rings, radiating from the camera.
+.device-field {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  width: 60%;
+  overflow: visible;
+  transform: translateX(-50%);
+
+  @include motion-safe {
+    will-change: transform;
+  }
+}
+
+.field-ring {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.5;
+  transform-origin: center;
+
+  @include motion-safe {
+    animation: lidar-pulse 2.7s ease("in-out") infinite;
+  }
+}
+
+.field-ring:nth-of-type(1) {
+  opacity: 0.9;
+}
+
+.field-ring:nth-of-type(2) {
+  opacity: 0.5;
+
+  @include motion-safe {
+    animation-delay: 0.9s;
+  }
+}
+
+.field-ring:nth-of-type(3) {
+  opacity: 0.25;
+
+  @include motion-safe {
+    animation-delay: 1.8s;
+  }
+}
+
+@include motion-safe {
+  @keyframes hero-sweep {
+    from {
+      transform: translateX(-10%);
+    }
+
+    to {
+      transform: translateX(10%);
+    }
+  }
+
+  @keyframes lidar-pulse {
+    from {
+      opacity: 0.9;
+      transform: scale(0.6);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(1.9);
+    }
+  }
+}
+
+@media (width >= 48rem) {
+  .hero-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hero-copy {
+    flex: 1;
+  }
+}
