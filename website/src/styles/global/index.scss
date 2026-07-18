@@ -1,0 +1,6 @@
+// Single entry point for the global layer — imported once, in
+// BaseLayout.astro. Order matters: reset first, then element defaults, then
+// utility classes.
+@use "reset";
+@use "base";
+@use "utilities";

@@ -1,0 +1,95 @@
+@use "sass:map";
+@use "@styles/abstracts" as *;
+
+// Runtime-readable copies of the build-time SCSS tokens (e.g. for JS that
+// needs to read a token, or for anyone inspecting computed styles).
+:root {
+  @each $key, $value in $color {
+    --color-#{$key}: #{$value};
+  }
+
+  @each $key, $value in $space {
+    --space-#{$key}: #{$value};
+  }
+
+  @each $key, $value in $radius {
+    --radius-#{$key}: #{$value};
+  }
+
+  @each $key, $value in $shadow {
+    --shadow-#{$key}: #{$value};
+  }
+
+  @each $key, $value in $duration {
+    --duration-#{$key}: #{$value};
+  }
+
+  @each $key, $value in $ease {
+    --ease-#{$key}: #{$value};
+  }
+}
+
+html {
+  color-scheme: dark;
+}
+
+// Self-hosted display face, Hero H1/H2 only (body/UI text stays on the
+// zero-byte system stack below). `font-display: optional` means it never
+// blocks or reflows LCP: the browser either has it in time for first paint
+// or falls back permanently for that render. The paired "Inter Fallback"
+// face below is metric-matched (ascent/descent/size-adjust computed from
+// Inter's and Arial's actual font metrics via the same method as Vercel's
+// next/font and the "fontaine" package) so swapping between them, on the
+// rare repaint where it does happen, causes no layout shift.
+@font-face {
+  font-family: "Inter Variable";
+  src: url("/fonts/inter-variable-latin.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: optional;
+}
+
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 107.12%;
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+}
+
+body {
+  background-color: color("ink");
+  color: color("text-primary");
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+}
+
+a {
+  color: color("accent-primary");
+}
+
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  @include focus-visible-outline;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: -999px;
+  z-index: 10;
+  padding: space("1") space("2");
+  background: color("accent-primary");
+  color: color("ink");
+
+  &:focus {
+    top: space("2");
+    left: space("2");
+  }
+}
+
+.visually-hidden {
+  @include visually-hidden;
+}
