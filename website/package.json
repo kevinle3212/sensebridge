@@ -52,7 +52,7 @@
     "lint-staged": "^17.0.8",
     "pa11y-ci": "^4.1.1",
     "prettier": "^3.4.2",
-    "stylelint": "^17.14.0",
+    "stylelint": "^17.14.1",
     "stylelint-config-standard-scss": "^17.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
