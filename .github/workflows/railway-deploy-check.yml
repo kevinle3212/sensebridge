@@ -1,0 +1,62 @@
+name: Railway deploy check
+
+# Builds and smoke-tests docker/Dockerfile — the exact image Railway builds
+# for the website service (see railway.toml, docker/README.md's "Railway
+# deploy" section) — on every change that could break it, before it reaches
+# main and Railway's own auto-deploy picks it up. Railway deploys itself via
+# its GitHub App watching `main`; this workflow does not deploy anything, it
+# only proves the image still builds and serves.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - "website/**"
+      - "railway.toml"
+      - ".github/workflows/railway-deploy-check.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docker/**"
+      - "website/**"
+      - "railway.toml"
+      - ".github/workflows/railway-deploy-check.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: railway-deploy-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docker-build:
+    name: Build + smoke-test docker/Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate railway.toml points at docker/Dockerfile
+        run: |
+          grep -q 'builder = "DOCKERFILE"' railway.toml
+          grep -q 'dockerfilePath = "docker/Dockerfile"' railway.toml
+      - name: Build image
+        run: docker build -f docker/Dockerfile -t sensebridge-website-ci .
+      - name: Run container
+        run: docker run -d --name sensebridge-website-ci -p 8080:8080 sensebridge-website-ci
+      - name: Wait for healthy
+        run: |
+          for _ in $(seq 1 30); do
+            status="$(docker inspect --format '{{.State.Health.Status}}' sensebridge-website-ci)"
+            [ "$status" = "healthy" ] && exit 0
+            [ "$status" = "unhealthy" ] && { docker logs sensebridge-website-ci; exit 1; }
+            sleep 1
+          done
+          echo "Container never became healthy" >&2
+          docker logs sensebridge-website-ci
+          exit 1
+      - name: curl the served site
+        run: curl -sf http://localhost:8080/ > /dev/null
+      - name: Container logs (always, for debugging)
+        if: always()
+        run: docker logs sensebridge-website-ci || true

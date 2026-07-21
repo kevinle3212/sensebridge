@@ -1,0 +1,46 @@
+# React Doctor — finds security, performance, correctness, accessibility,
+# bundle-size, and architecture issues in React codebases. Scoped to
+# website/ (the only React code in this repo) via paths + the directory
+# input below, same pattern as website-ci.yml.
+#
+# Docs: https://www.react.doctor/ci
+# Source: https://github.com/millionco/react-doctor
+
+name: React Doctor
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths: ["website/**", ".github/workflows/react-doctor.yml"]
+  push:
+    branches: ["main"]
+    paths: ["website/**", ".github/workflows/react-doctor.yml"]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  statuses: write
+
+# Cancels any in-flight scan for the same PR (or branch, on push) the moment a new commit arrives, so reviewers only ever see the latest run.
+concurrency:
+  group: react-doctor-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  react-doctor:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 gives React Doctor the full git history it needs to find the merge base with the target branch. Without it a shallow checkout has no merge base, so PR runs can't compare against the base and fall back to reporting every issue in the changed files (pre-existing ones included) instead of only the ones the PR introduced.
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      # Pinned to the commit behind the v2 tag, not the mutable v2 ref —
+      # same rationale as the other pinned actions in this repo (see
+      # security.yml's ggshield job).
+      - uses: millionco/react-doctor@938008119a288f2fb47c66a69cd9279a21f31784
+        with:
+          directory: website # this repo's npm/React root; the git root is the repo root, one level up
+          blocking: error # fail the check on new error-severity findings; warnings still report but don't block

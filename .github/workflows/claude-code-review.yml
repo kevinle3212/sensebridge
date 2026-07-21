@@ -4,9 +4,16 @@ name: Claude Code Review
 # ANTHROPIC_API_KEY. The prompt centres the three SenseBridge doctrines so the
 # review catches the defects that matter most here.
 
-on:
-  pull_request:
-    types: [opened, synchronize]
+# TEMPORARILY DISABLED 2026-07-17 — paused until additional Anthropic API
+# budget is available (intentional, not a defect). To re-enable: restore the
+# original trigger below and confirm the ANTHROPIC_API_KEY repo secret is set
+# (Settings -> Secrets and variables -> Actions).
+#
+# on:
+#   pull_request:
+#     types: [opened, synchronize]
+
+on: workflow_dispatch
 
 permissions:
   contents: read

@@ -1,8 +1,9 @@
 name: Security
 
-# Lightweight, serverless-appropriate security scanning: secret detection and
-# dependency vulnerability scanning. Scope is deliberately narrow — an on-device
-# Swift app with no backend has no server or web attack surface to scan.
+# Lightweight, serverless-appropriate security scanning: secret detection
+# (TruffleHog + GitGuardian), dependency vulnerability scanning, and generic
+# static analysis (scripts, workflows, website/). The app itself has no
+# server or backend attack surface — this stays narrow on purpose.
 
 on:
   push:
@@ -24,9 +25,30 @@ jobs:
         with:
           fetch-depth: 0
       - name: TruffleHog
-        uses: trufflesecurity/trufflehog@main
+        # Pinned to a released tag, not the mutable @main ref: a moving action
+        # ref is a supply-chain risk (upstream could change under us between runs).
+        # Bump deliberately; Dependabot's github-actions ecosystem tracks it.
+        uses: trufflesecurity/trufflehog@v3.95.9
         with:
           extra_args: --only-verified
+
+  ggshield:
+    name: Secret scan (GitGuardian)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: ggshield
+        # Pinned to the commit behind the v1.52.2 tag, not the mutable v1
+        # ref — same rationale as the other pinned actions in this workflow.
+        uses: GitGuardian/ggshield-action@da20be06cafe5e8633dc24744efe1efe8d30f06b
+        env:
+          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
   osv-scan:
     name: Dependency scan (OSV)
@@ -41,7 +63,6 @@ jobs:
             --recursive
             --skip-git
             ./
-        continue-on-error: true
 
   sensitive-files:
     name: Sensitive file scan
@@ -50,3 +71,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check for signing/credential material
         run: node tools/check-sensitive-files.mjs --all
+
+  semgrep:
+    name: Semgrep (scripts, workflows, website, Swift)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep
+        # Pinned to the commit behind the v1 tag, not the mutable ref itself —
+        # same rationale as the other two scanners above. Bump deliberately.
+        uses: semgrep/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/owasp-top-ten
+            p/swift

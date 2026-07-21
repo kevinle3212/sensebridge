@@ -1,0 +1,101 @@
+name: Website CI
+
+# Lint and format-check the static marketing site under website/. Scoped to
+# that path so it never runs (and never blocks) app-only PRs.
+
+on:
+  push:
+    branches: [main]
+    paths: ["website/**", ".github/workflows/website-ci.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["website/**", ".github/workflows/website-ci.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Stylelint + ESLint + Prettier + typecheck + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Stylelint
+        run: npm run lint:css
+      - name: ESLint
+        run: npm run lint:js
+      - name: Prettier check
+        run: npm run format
+      - name: Astro type check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
+      - name: Safety disclaimer verbatim in built output
+        # Release-blocking safety surface, not copy — see docs/SAFETY-FRAMING.md.
+        # Asserts the pinned disclaimer reaches dist/ verbatim for every locale,
+        # so a copy edit can never silently weaken the framing.
+        run: npm run check:disclaimer
+      - name: Natural-voice narration freshness
+        # No network I/O, no secret needed — see website/README.md's
+        # "Read-aloud controls" section. Skips gracefully (exit 0) until the
+        # narration has been generated and committed for the first time.
+        run: npm run check:audio
+
+  a11y:
+    name: pa11y-ci accessibility gate
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Accessibility check (zero errors is the gate)
+        # Serves the built dist/ and runs pa11y-ci (WCAG2AA) against it.
+        # Automated checks are a floor — the manual VoiceOver/keyboard pass
+        # per docs/TESTING.md is still required for changed UI.
+        run: |
+          npx astro preview --port 4321 &
+          sleep 4
+          npm run test:a11y
+
+  design-qa:
+    name: Impeccable design detectors
+    runs-on: ubuntu-latest
+    needs: lint
+    continue-on-error: true
+    # No `working-directory: website` here, unlike the lint job above. Impeccable
+    # roots its state and ignore config at the cwd it runs from (no monorepo
+    # marker in this repo), so running it from website/ would key to a second,
+    # empty `website/.impeccable/` and silently miss the real ignore rules in the
+    # repo-root `.impeccable/`. Run from the root and pass website/ as the target.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run Impeccable detectors
+        run: npx --yes impeccable detect website
