@@ -1,12 +1,5 @@
 {
-  "enabledPlugins": {
-    "claude-mem@thedotmack": false
-  },
   "permissions": {
-    "deny": [
-      "Edit(legal/**)",
-      "Write(legal/**)"
-    ],
     "allow": [
       "Bash(scripts/setup.sh)",
       "Bash(./scripts/setup.sh)",
@@ -16,10 +9,136 @@
       "Bash(swift build:*)",
       "Bash(swift test:*)",
       "Bash(node tools/check-sensitive-files.mjs:*)",
-      "Bash(gitleaks:*)"
+      "Bash(gitleaks:*)",
+      "Bash(gh pr merge:*)"
+    ],
+    "deny": [
+      "Edit(legal/**)",
+      "Read(.build/**)",
+      "Read(Carthage/Build/**)",
+      "Read(graphify-out/**)",
+      "Read(.gitnexus/**)",
+      "Read(**/node_modules/**)",
+      "Grep(.build/**)",
+      "Grep(Carthage/Build/**)",
+      "Grep(graphify-out/**)",
+      "Grep(.gitnexus/**)",
+      "Grep(**/node_modules/**)"
+    ],
+    "ask": [
+      "Workflow"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "clear|startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f tmp/handoff.md && cat tmp/handoff.md || true"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/skills/impeccable/scripts/hook.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking UI changes"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-md-links.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking Markdown links"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/cap-large-read.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking read size cap"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/warn-duplicate-read.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking for duplicate read"
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/limit-agent-fanout.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking subagent fan-out cap"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-main-commit.sh\"",
+            "if": "Bash(git *)",
+            "timeout": 5,
+            "statusMessage": "Checking branch guard"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/session-log-reminder.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking session log"
+          }
+        ]
+      }
+    ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/react-doctor.mjs\""
+          }
+        ]
+      }
     ]
   },
   "worktree": {
     "bgIsolation": "none"
+  },
+  "workflowKeywordTriggerEnabled": false,
+  "enabledPlugins": {
+    "claude-mem@thedotmack": false,
+    "ponytail@ponytail": true
+  },
+  "extraKnownMarketplaces": {
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    }
   }
 }

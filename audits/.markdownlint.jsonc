@@ -1,0 +1,13 @@
+{
+  // Directory-scoped override. markdownlint-cli2 does NOT merge nested
+  // config with the parent directory automatically — "extends" is required
+  // or this file replaces the root ruleset (and reintroduces MD013/MD024/
+  // MD025/MD041 defaults the root config turns off).
+  "extends": "../.markdownlint.jsonc",
+  // Audit reports are append-only free-form findings, not hand-wrapped prose
+  // (see GOVERNANCE.md) — table columns come from whatever width the
+  // authoring pass produced, not markdownlint's "aligned"/"compact" styles.
+  // MD060 flags every one of them, and reports are never rewritten in place
+  // to fix it, so disable it here rather than leaving it as permanent noise.
+  "MD060": false
+}

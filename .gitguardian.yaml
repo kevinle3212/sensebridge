@@ -1,0 +1,26 @@
+# .gitguardian.yaml — ggshield config, shared by the pre-commit hook
+# (.githooks/pre-commit) and the CI job in .github/workflows/security.yml.
+# Complementary to .gitleaks.toml (pattern scan) and TruffleHog
+# (--only-verified, live-credential check): ggshield adds GitGuardian's
+# hosted detector set and dashboard-tracked incident history.
+version: 2
+
+# Strict: any finding fails the scan. Never flip this to true — a
+# secret-scanner that can't fail the build isn't a gate.
+exit_zero: false
+
+verbose: false
+
+max_commits_for_hook: 50
+
+secret:
+  # Deliberately no ignored_paths. .gitleaks.toml carries the same stance
+  # (see its Allowlist section) after a blanket docs/audits exclusion once
+  # hid a real leak — a path allowlist here would reopen that gap. Real
+  # false positives go in secret.ignored_matches below, by fingerprint, one
+  # reviewed finding at a time.
+  ignored_paths: []
+  ignored_matches: []
+  ignored_detectors: []
+  ignore_known_secrets: false
+  show_secrets: false

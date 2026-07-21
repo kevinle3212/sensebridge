@@ -1,0 +1,11 @@
+{
+  // MD024: allow repeated heading text (e.g. "## Resolved") as long as it
+  // isn't duplicated among sibling headings under the same parent.
+  "MD024": { "siblings_only": true },
+  // MD013: no line-length limit — prose is hand-wrapped, not machine-checked.
+  "MD013": false,
+  // MD025: allow more than one top-level heading per file.
+  "MD025": false,
+  // MD041: the first line doesn't have to be a top-level heading.
+  "MD041": false
+}

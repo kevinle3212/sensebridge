@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    "swiftlang.swift-vscode",
+    "stylelint.vscode-stylelint",
+    "esbenp.prettier-vscode",
+    "davidanson.vscode-markdownlint",
+    "redhat.vscode-yaml",
+    "editorconfig.editorconfig",
+    "github.vscode-github-actions",
+    "eamodio.gitlens",
+    "continue.continue"
+  ],
+  "unwantedRecommendations": [
+    "hookyqr.beautify",
+    "ms-vscode.vscode-typescript-tslint-plugin",
+    "vknabel.vscode-swiftformat",
+    "vknabel.vscode-swiftlint",
+    "sswg.swift-lang"
+  ]
+}
