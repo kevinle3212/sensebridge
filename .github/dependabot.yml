@@ -1,8 +1,11 @@
 version: 2
 
 # SenseBridge dependency ecosystems: SwiftPM (once app/ has a Package.swift or
-# an Xcode project with package dependencies) and GitHub Actions. Those are the
-# only ecosystems this serverless on-device Swift app depends on.
+# an Xcode project with package dependencies), npm (the website/ marketing
+# site — Stylelint/Prettier/ESLint devDependencies only, no runtime deps),
+# Docker (docker/Dockerfile's node:22-alpine and nginx-unprivileged:alpine
+# base images, deployed via Railway — see railway.toml and
+# docker/README.md), and GitHub Actions.
 
 updates:
   - package-ecosystem: swift
@@ -14,6 +17,32 @@ updates:
     labels:
       - dependencies
       - swift
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - website
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: docker
+    directory: /docker
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - website
     commit-message:
       prefix: chore
       include: scope
