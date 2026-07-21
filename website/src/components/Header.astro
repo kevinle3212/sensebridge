@@ -1,30 +1,177 @@
 ---
+/**
+ * Sticky site header: logo, primary nav, language switcher, theme toggle,
+ * and a scroll-progress bar. The theme toggle's behavior is wired up by
+ * the inline <script> below, kept outside the reduced-motion-gated motion
+ * bundle so it works before that bundle loads.
+ */
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { localeNames, translations, useTranslations, type Locale } from "../i18n";
+
+const locale = (Astro.currentLocale ?? "en") as Locale;
+const t = useTranslations(locale);
+const locales = Object.keys(translations) as Locale[];
 ---
 
 <header class="site-header">
   <div class="wrap">
     <p class="logo">SenseBridge</p>
     <nav aria-label="Primary">
-      <a href="#features">Features</a>
-      <a href="#privacy">Privacy</a>
-      <a href="https://github.com/kevinle3212/sensebridge">GitHub</a>
+      <a href="#features" data-magnetic-nav>{t.header.nav.features}</a>
+      <a href="#privacy" data-magnetic-nav>{t.header.nav.privacy}</a>
+      <a href="#accessibility" data-magnetic-nav>{t.header.nav.accessibility}</a>
+      <a href="https://github.com/kevinle3212/sensebridge" data-magnetic-nav>
+        {t.header.nav.github}
+      </a>
     </nav>
+    <!-- Language switcher: plain links (no JS needed — keyboard/screen-
+         reader support comes for free), current locale marked non-visually
+         via aria-current so it isn't a color-only signal. -->
+    <nav class="language-switcher" aria-label={t.header.languageSwitcher.label}>
+      {
+        locales.map((loc) => (
+          <a
+            href={getRelativeLocaleUrl(loc, "/")}
+            aria-current={loc === locale ? "page" : undefined}
+          >
+            {localeNames[loc]}
+          </a>
+        ))
+      }
+    </nav>
+    <!-- Theme toggle: deliberately outside the reduced-motion-gated motion
+           bundle (src/scripts/motion.ts) — its own always-loaded script below
+           so it works with reduced-motion and before the deferred motion
+           bundle ever loads. Cycles Light -> Dark -> System; the no-flash
+           script in BaseLayout.astro sets the initial data-theme before first
+           paint, this script only ever updates it on user activation. -->
+    <button
+      type="button"
+      class="theme-toggle"
+      data-theme-toggle
+      aria-label={t.header.themeToggle.ariaLabel("system", "light")}
+    >
+      <svg
+        class="theme-toggle-icon"
+        data-icon="light"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="12" cy="12" r="4"></circle>
+        <line x1="12" y1="2" x2="12" y2="4"></line>
+        <line x1="12" y1="20" x2="12" y2="22"></line>
+        <line x1="4.93" y1="4.93" x2="6.34" y2="6.34"></line>
+        <line x1="17.66" y1="17.66" x2="19.07" y2="19.07"></line>
+        <line x1="2" y1="12" x2="4" y2="12"></line>
+        <line x1="20" y1="12" x2="22" y2="12"></line>
+        <line x1="4.93" y1="19.07" x2="6.34" y2="17.66"></line>
+        <line x1="17.66" y1="6.34" x2="19.07" y2="4.93"></line>
+      </svg>
+      <svg
+        class="theme-toggle-icon"
+        data-icon="dark"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"></path>
+      </svg>
+      <svg
+        class="theme-toggle-icon"
+        data-icon="system"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"></path>
+      </svg>
+    </button>
   </div>
+  <!-- Page-scroll progress (Signal Blue: meaning-carrying, per the
+       Two-Accent Rule). Resting/no-JS/reduced-motion state is width 0 (i.e.
+       absent) — src/scripts/motion.ts → initScrollProgress() is the only
+       thing that ever gives it width, scrubbed to scroll position. -->
+  <div class="scroll-progress" data-scroll-progress aria-hidden="true"></div>
 </header>
+
+<script>
+  import { useTranslations } from "../i18n";
+
+  const STORAGE_KEY = "sb-theme";
+  type Mode = "system" | "light" | "dark";
+  const NEXT_MODE: Record<Mode, Mode> = { system: "light", light: "dark", dark: "system" };
+  const t = useTranslations(document.documentElement.lang);
+
+  // Reads the persisted theme mode, defaulting to "system" if unset/invalid.
+  function storedMode(): Mode {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored === "light" || stored === "dark" ? stored : "system";
+  }
+
+  // Resolves "system" mode to the OS-preferred light/dark scheme.
+  function resolveTheme(mode: Mode): "light" | "dark" {
+    if (mode === "light" || mode === "dark") {
+      return mode;
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  // Updates the toggle button's aria-label and visible icon to match the current mode.
+  function updateButton(button: HTMLButtonElement, mode: Mode): void {
+    button.setAttribute("aria-label", t.header.themeToggle.ariaLabel(mode, NEXT_MODE[mode]));
+    button.querySelectorAll<SVGElement>("[data-icon]").forEach((icon) => {
+      icon.style.display = icon.dataset.icon === mode ? "block" : "none";
+    });
+  }
+
+  // Persists the mode (or clears it for "system") and applies the resolved theme to the document.
+  function applyMode(mode: Mode): void {
+    if (mode === "system") {
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      localStorage.setItem(STORAGE_KEY, mode);
+    }
+    document.documentElement.dataset.theme = resolveTheme(mode);
+  }
+
+  const button = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+  if (button) {
+    updateButton(button, storedMode());
+    button.addEventListener("click", () => {
+      const next = NEXT_MODE[storedMode()];
+      applyMode(next);
+      updateButton(button, next);
+    });
+  }
+</script>
 
 <style lang="scss">
   @use "@styles/abstracts" as *;
 
   .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color("bg");
     border-bottom: 1px solid color("hairline");
+
+    @include theme-transition;
   }
 
   .site-header .wrap {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: space("1");
+    gap: space("1") space("2");
     padding-block: space("2");
   }
 
@@ -34,7 +181,91 @@
     gap: space("2");
   }
 
-  .logo {
+  // Below ~544px neither nav fits beside logo + toggle, and the 4-item
+  // primary nav and 3-item language switcher (longer still once localized —
+  // e.g. Spanish "Accesibilidad", Vietnamese "Quyền riêng tư") can't share a
+  // row without wrapping mid-item, so each gets its own full-width row below
+  // logo + toggle: three rows total, toggle staying up beside the logo
+  // instead of dropping with the navs.
+  @media (width < 34rem) {
+    nav[aria-label="Primary"],
+    .language-switcher {
+      order: 3;
+      flex-basis: 100%;
+    }
+  }
+
+  nav a {
+    padding-block: 0.75rem;
+  }
+
+  // Current language: aria-current="page" (set in frontmatter above) carries
+  // the non-visual signal; this is the matching visual one, so the active
+  // language isn't only distinguishable to assistive tech.
+  .language-switcher a[aria-current="page"] {
     font-weight: 700;
+  }
+
+  .logo {
+    margin-inline-end: auto;
+    font-weight: 700;
+  }
+
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid color("hairline");
+    border-radius: radius("md");
+    color: color("text-primary");
+    cursor: pointer;
+
+    &:hover {
+      background: color("surface");
+    }
+
+    @include theme-transition;
+  }
+
+  // Default (no-JS/pre-hydration) state shows the "system" glyph, matching
+  // the default unset-localStorage mode; the toggle's own script (above)
+  // corrects this to the stored mode via inline `display` once it runs.
+  .theme-toggle-icon {
+    display: none;
+    width: 18px;
+    height: 18px;
+
+    &[data-icon="system"] {
+      display: block;
+    }
+
+    @include motion-safe {
+      transition: transform duration("fast") ease("standard");
+    }
+  }
+
+  // Press feedback on whichever icon is showing, plus a subtle hover rotate
+  // on the sun glyph only (the interaction doesn't read naturally on the
+  // other two).
+  .theme-toggle:active .theme-toggle-icon {
+    transform: scale(0.85);
+  }
+
+  .theme-toggle:hover .theme-toggle-icon[data-icon="light"] {
+    transform: rotate(15deg);
+  }
+
+  .scroll-progress {
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    pointer-events: none;
+    background: color("accent-primary");
   }
 </style>

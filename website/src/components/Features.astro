@@ -1,17 +1,23 @@
 ---
+/**
+ * Features section: lists SenseBridge's core capabilities. Renders a
+ * Signal Spine stage marker for the "reasoning" stage.
+ */
 import styles from "./Features.module.scss";
+import SpineNode from "./SpineNode.astro";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 ---
 
-<section id="features" class={styles.features} aria-labelledby="features-heading">
+<section id="features" class={styles.features} aria-labelledby="features-heading" data-stage>
+  <!-- Signal Spine's "reasoning" stage marker (DESIGN.md "Signal Spine"). -->
+  <SpineNode top="4rem" />
   <div class="wrap">
-    <h2 id="features-heading">What it does today</h2>
-    <p class={styles.intro}>Five capabilities, all running entirely on the phone.</p>
+    <h2 id="features-heading">{t.features.heading}</h2>
+    <p class={styles.intro} data-reveal-item>{t.features.intro}</p>
     <ul class={styles.list}>
-      <li data-reveal-item>Reads printed text and documents aloud.</li>
-      <li data-reveal-item>Identifies common objects and surfaces.</li>
-      <li data-reveal-item>Describes a scene in a natural sentence.</li>
-      <li data-reveal-item>Gives cautious obstacle awareness using LiDAR — never navigation.</li>
-      <li data-reveal-item>Announces important sound events nearby.</li>
+      {t.features.items.map((item) => <li data-reveal-item>{item}</li>)}
     </ul>
   </div>
 </section>

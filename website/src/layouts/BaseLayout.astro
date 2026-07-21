@@ -1,6 +1,8 @@
 ---
+import { getRelativeLocaleUrl } from "astro:i18n";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import { translations, useTranslations, type Locale } from "../i18n";
 import "../styles/global/index.scss";
 
 interface Props {
@@ -8,14 +10,15 @@ interface Props {
   description?: string;
 }
 
-const {
-  title = "SenseBridge — open-source, on-device, private accessibility",
-  description = "SenseBridge is a free, open-source iPhone app that translates a blind or low-vision person's surroundings into clear spoken information, processed entirely on-device.",
-} = Astro.props;
+const locale = (Astro.currentLocale ?? "en") as Locale;
+const t = useTranslations(locale);
+const locales = Object.keys(translations) as Locale[];
+
+const { title = t.meta.title, description = t.meta.description } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -25,16 +28,50 @@ const {
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    {
+      locales.map((loc) => (
+        <link rel="alternate" hreflang={loc} href={getRelativeLocaleUrl(loc, "/")} />
+      ))
+    }
+    <link rel="alternate" hreflang="x-default" href={getRelativeLocaleUrl("en", "/")} />
     <link
       rel="preload"
-      href="/fonts/inter-variable-latin.woff2"
+      href="/fonts/fraunces-variable-latin.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
+    <link
+      rel="preload"
+      href="/fonts/geist-variable-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <script is:inline src="/theme-init.js"></script>
+    {
+      // react-scan (React render profiler) — gated on the frontmatter-level
+      // import.meta.env.DEV check, not inside the script body: since
+      // output: "static" prerenders this once at build time, the `false`
+      // branch means the <script> tag itself never appears in the built
+      // HTML, so zero bytes of it ship to a production visitor.
+      import.meta.env.DEV && (
+        <script>
+          import { scan } from "react-scan";
+
+          scan({ enabled: true });
+        </script>
+      )
+    }
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to main content</a>
+    <!-- "First Light" ambient 3D scene (scripts/scenes/ambient.ts): sits behind
+         every page's content (see _base.scss's .ambient-scene). Decorative
+         only, and only ever mounted once webglAllowed() (quality-gate.ts)
+         passes — the site's complete design with this absent is the static
+         CSS/SVG background it already has. -->
+    <div class="ambient-scene" data-scene="ambient" aria-hidden="true"></div>
+    <a class="skip-link" href="#main">{t.layout.skipLink}</a>
     <Header />
     <main id="main">
       <slot />
@@ -59,6 +96,29 @@ const {
             ((callback: IdleRequestCallback) => setTimeout(callback, 1));
           idle(() => {
             void import("../scripts/motion");
+          });
+        },
+        { once: true },
+      );
+    </script>
+    <script>
+      // "First Light" 3D scenes (scripts/scenes/index.ts) are decoration on
+      // top of decoration: same load-after-`load`, at-idle, reduced-motion
+      // gate as the motion loader above, so a reduced-motion visitor never
+      // even fetches this tiny entry chunk. scenes/index.ts's own
+      // webglAllowed() re-checks reduced-motion (plus WebGL2/saveData/
+      // deviceMemory) before it ever imports `three` itself.
+      window.addEventListener(
+        "load",
+        () => {
+          if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+            return;
+          }
+          const idle =
+            window.requestIdleCallback ??
+            ((callback: IdleRequestCallback) => setTimeout(callback, 1));
+          idle(() => {
+            void import("../scripts/scenes/index");
           });
         },
         { once: true },

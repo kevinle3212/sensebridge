@@ -1,15 +1,19 @@
 // Token getters. Wrapping `map-get` gives a clear build-time error (instead
 // of a silent `null`) when a component references a token key that doesn't
-// exist.
+// exist. color()/shadow() validate against the dark map (both theme maps
+// share the same key set, guarded in _tokens.scss) and return a CSS custom
+// property reference rather than a literal value, so every call site themes
+// automatically via the :root / [data-theme="light"] values emitted in
+// global/_base.scss.
 @use "sass:map";
 @use "tokens";
 
 @function color($key) {
-  @if not map.has-key(tokens.$color, $key) {
+  @if not map.has-key(tokens.$color-dark, $key) {
     @error "Unknown color token: '#{$key}'.";
   }
 
-  @return map.get(tokens.$color, $key);
+  @return var(--color-#{$key});
 }
 
 @function space($key) {
@@ -29,9 +33,19 @@
 }
 
 @function shadow($key) {
-  @if not map.has-key(tokens.$shadow, $key) {
+  @if not map.has-key(tokens.$shadow-dark, $key) {
     @error "Unknown shadow token: '#{$key}'.";
   }
 
-  @return map.get(tokens.$shadow, $key);
+  @return var(--shadow-#{$key});
+}
+
+// Horizontal inset for the Signal Spine rail and its stage-node markers
+// (DESIGN.md "Signal Spine"): sits in the wrap's outer gutter on wide
+// viewports (60rem wrap + 1.5rem/space-3 padding, see global/_utilities.scss
+// ".wrap"), a thin 10px inset on narrow ones — verified clear of the text
+// column at 320/390/768/1024/1440px. Shared here so SignalSpine.module.scss's
+// rail/pulse and SpineNode.module.scss's markers can never drift apart.
+@function spine-x() {
+  @return clamp(0.625rem, calc((100vw - 60rem) / 2 - 2.5rem), 50vw);
 }

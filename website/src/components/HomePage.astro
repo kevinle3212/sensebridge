@@ -1,0 +1,44 @@
+---
+// The site's single page composition, shared by every locale's page file
+// (src/pages/index.astro, src/pages/es/index.astro, src/pages/vi/index.astro)
+// so Astro's folder-based i18n routing doesn't require tripling this markup.
+// Astro.currentLocale is resolved from the request/route regardless of this
+// component's nesting depth, so every child component's own t() call below
+// still picks up the right dictionary.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "./Hero.astro";
+import SignalBridge from "./SignalBridge.astro";
+import PhoneExploded from "./PhoneExploded.astro";
+import Features from "./Features.astro";
+import Privacy from "./Privacy.astro";
+import Accessibility from "./Accessibility.astro";
+import SpatialFuture from "./SpatialFuture.astro";
+import Disclaimer from "./Disclaimer.astro";
+import FollowProgress from "./FollowProgress.astro";
+import SignalSpine from "./SignalSpine.astro";
+---
+
+<BaseLayout>
+  <!-- Plain positioning context (no landmark impact) so the Signal Spine
+       (DESIGN.md "Signal Spine") can span exactly Hero → #accessibility and
+       stop before the Disclaimer, which the Undecorated Disclaimer Rule
+       forbids decorating alongside. -->
+  <div class="pipeline">
+    <SignalSpine />
+    <Hero />
+    <SignalBridge />
+    <PhoneExploded />
+    <Features />
+    <Privacy />
+    <Accessibility />
+  </div>
+  <SpatialFuture />
+  <Disclaimer />
+  <FollowProgress />
+</BaseLayout>
+
+<style lang="scss">
+  .pipeline {
+    position: relative;
+  }
+</style>

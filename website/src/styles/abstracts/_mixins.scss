@@ -1,9 +1,19 @@
 @use "functions" as fn;
+@use "typography" as type;
+@use "motion";
 
 // Shared vertical rhythm + hairline divider used by every full-width content
 // section below the hero (features, privacy, accessibility, follow-progress).
-@mixin section-band {
-  padding-block: fn.space("5");
+// $size selects the padding-block rhythm: "default" (space-5) for most
+// sections, "generous" (space-7) for the one section that should read as a
+// deliberate pause rather than a repeat of the same fold.
+@mixin section-band($size: "default") {
+  @if $size == "generous" {
+    padding-block: fn.space("7");
+  } @else {
+    padding-block: fn.space("5");
+  }
+
   border-top: 1px solid fn.color("hairline");
 }
 
@@ -33,4 +43,30 @@
 @mixin glass-surface {
   background: fn.color("surface-glass");
   backdrop-filter: blur(16px);
+}
+
+// Mono uppercase label style (Geist Mono Variable) — exposed for later
+// batches' 3D scene annotations. Not applied to any section heading: DESIGN.md
+// forbids sprinkling uppercase eyebrows as decoration.
+@mixin type-label {
+  font-family: type.$font-mono;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+// "Theme Dawn" cross-fade: applied to the handful of large/cheap-to-repaint
+// surfaces that visibly flip color on a theme change (body, sticky header)
+// rather than blanket `transition: all`, which would also animate layout
+// properties on every element.
+@mixin theme-transition {
+  @include motion.motion-safe {
+    transition:
+      background-color motion.duration("slow") motion.ease("in-out"),
+      color motion.duration("slow") motion.ease("in-out"),
+      border-color motion.duration("slow") motion.ease("in-out"),
+      fill motion.duration("slow") motion.ease("in-out"),
+      stroke motion.duration("slow") motion.ease("in-out");
+  }
 }

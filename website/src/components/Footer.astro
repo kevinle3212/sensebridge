@@ -1,15 +1,17 @@
 ---
+/** Renders the site footer: tagline, GitHub link, and "not yet available" notice. */
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 ---
 
 <footer class="site-footer">
   <div class="wrap">
-    <p>SenseBridge is free and open source. No subscription, ever.</p>
+    <p>{t.footer.tagline}</p>
     <p>
-      <a href="https://github.com/kevinle3212/sensebridge">SenseBridge on GitHub</a>
+      <a href="https://github.com/kevinle3212/sensebridge">{t.footer.githubLink}</a>
     </p>
-    <p>
-      Not yet available on the App Store — SenseBridge is pre-launch and in open development.
-    </p>
+    <p>{t.footer.notAvailable}</p>
   </div>
 </footer>
 

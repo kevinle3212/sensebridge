@@ -1,17 +1,30 @@
 ---
+/**
+ * Accessibility section: describes SenseBridge's screen-reader-first
+ * approach and embeds the ReadAloud demo. Renders a Signal Spine stage
+ * marker for the "spoken output" stage.
+ */
 import styles from "./Accessibility.module.scss";
 import ReadAloud from "./ReadAloud.astro";
+import SpineNode from "./SpineNode.astro";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 ---
 
-<section id="accessibility" class={styles.accessibility} aria-labelledby="accessibility-heading">
-  <div class="wrap" data-reveal>
-    <h2 id="accessibility-heading">Built the way it asks to be judged</h2>
-    <p class={styles.body}>
-      This site is built screen-reader-first, to the same standard the app promises: semantic
-      structure, every control labeled, full keyboard support, WCAG 2.2 AA. If you use VoiceOver or
-      NVDA, this page should already feel like home.
-    </p>
-    <p class={styles["lead-in"]}>Prefer to listen? This page can read itself aloud.</p>
+<section
+  id="accessibility"
+  class={styles.accessibility}
+  aria-labelledby="accessibility-heading"
+  data-stage
+>
+  <!-- Signal Spine's "spoken output" stage marker (DESIGN.md "Signal
+       Spine"). -->
+  <SpineNode top="4rem" />
+  <div class="wrap">
+    <h2 id="accessibility-heading">{t.accessibility.heading}</h2>
+    <p class={styles.body} data-reveal-item>{t.accessibility.body}</p>
+    <p class={styles["lead-in"]} data-reveal-item>{t.accessibility.leadIn}</p>
     <ReadAloud />
   </div>
 </section>
