@@ -28,7 +28,7 @@ jobs:
     name: CodeQL (Swift)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Select Xcode
         run: |
@@ -46,7 +46,7 @@ jobs:
 
       - name: Initialize CodeQL
         if: steps.detect.outputs.kind == 'xcode'
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
         with:
           languages: swift
           build-mode: manual
@@ -66,7 +66,7 @@ jobs:
 
       - name: Perform CodeQL analysis
         if: steps.detect.outputs.kind == 'xcode'
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
         with:
           category: "/language:swift"
 
@@ -78,15 +78,15 @@ jobs:
     name: CodeQL (JavaScript/TypeScript)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
         with:
           languages: javascript-typescript
           queries: security-extended
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
         with:
           category: "/language:javascript-typescript"

@@ -23,7 +23,7 @@ jobs:
     name: Build and test
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Select Xcode
         run: |
@@ -76,7 +76,7 @@ jobs:
     name: Lint (SwiftFormat + SwiftLint)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install SwiftLint and SwiftFormat
         run: brew install swiftlint swiftformat
       - name: Run scripts/lint.sh
@@ -86,7 +86,7 @@ jobs:
     name: Docs link check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Check mirrored skills match canonical
         run: node tools/sync-skills.mjs --check
       - name: Check relative Markdown links resolve
