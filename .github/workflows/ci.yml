@@ -93,6 +93,10 @@ jobs:
         # Skips **/skills/* — skill/template content (e.g. vendored bmad-*
         # skills) intentionally contains placeholder links ({{path}},
         # ./filename.ext) that are examples, not real navigable docs.
+        # Also skips links to gitignored targets (GAPS.md, sessions/,
+        # docs/planning/, security/THREAT-MODEL.md, NOTES.local.md, ...):
+        # those are intentionally local-only reference docs that never reach
+        # the CI checkout, so their absence there isn't a broken link.
         run: |
           fail=0
           while IFS= read -r -d '' file; do
@@ -101,7 +105,7 @@ jobs:
                 http*|mailto:*|//*) continue ;;
               esac
               target="$(dirname "$file")/$link"
-              if [ ! -e "$target" ]; then
+              if [ ! -e "$target" ] && ! git check-ignore -q "$target"; then
                 echo "::error file=$file::broken relative link -> $link"
                 fail=1
               fi

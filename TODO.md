@@ -80,7 +80,7 @@ Full run log: [`sessions/2026-07-21/1100-PST.md`](sessions/2026-07-21/1100-PST.m
 
 ### Documentation & code-quality audit (2026-07-21)
 
-Full run log: [`HANDOFF.md`](HANDOFF.md). An unattended audit pass over
+Full run log: [`NOTES.local.md`](NOTES.local.md). An unattended audit pass over
 documentation, maintainability, and code quality. It found and fixed three
 defects — two of them in gates that were **already red before the run
 started**, so any recent "CI is green" impression was not trustworthy for
