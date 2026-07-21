@@ -3,9 +3,10 @@
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist"],
   "compilerOptions": {
-    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "paths": {
-      "@styles/*": ["src/styles/*"]
+      "@styles/*": ["./src/styles/*"]
     }
   }
 }

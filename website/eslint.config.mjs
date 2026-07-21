@@ -1,13 +1,16 @@
 // Strict ESLint flat config for the Astro-based marketing site. Lints
-// `.astro`, `.ts`, and `.js` (currently `scripts/generate-audio.js`).
+// `.astro`, `.ts`, `.tsx`, `.jsx`, and `.js` (currently
+// `scripts/generate-audio.js`).
 //
 // Type-aware typescript-eslint rules (`strictTypeChecked`) are scoped to
-// `.ts`/`.js` files only, where `parserOptions.project` gives them real type
-// information. Full type-aware linting inside `.astro` frontmatter isn't
-// reliably supported by astro-eslint-parser yet, so `.astro` files get
-// eslint-plugin-astro's own (non-type-aware) `recommended` +
-// `jsx-a11y-strict` configs instead — the latter is Astro's a11y rule set,
-// built on top of eslint-plugin-jsx-a11y.
+// `.ts`/`.js`/`.tsx`/`.jsx` files only, where `parserOptions.project` gives
+// them real type information. Full type-aware linting inside `.astro`
+// frontmatter isn't reliably supported by astro-eslint-parser yet, so
+// `.astro` files get eslint-plugin-astro's own (non-type-aware)
+// `recommended` + `jsx-a11y-strict` configs instead — the latter is Astro's
+// a11y rule set, built on top of eslint-plugin-jsx-a11y. React islands
+// (`.tsx`/`.jsx`) get eslint-plugin-jsx-a11y's own `strict` preset directly,
+// plus eslint-plugin-react-hooks' `recommended` for Hooks correctness.
 //
 // One carve-out from type-aware linting, non-type-aware
 // (`eslint:recommended` + the shared hardening rules) instead:
@@ -21,6 +24,8 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 import astro from "eslint-plugin-astro";
 import security from "eslint-plugin-security";
+import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import prettierConfig from "eslint-config-prettier";
 import globals from "globals";
 
@@ -35,7 +40,7 @@ const securityRulesAsErrors = Object.fromEntries(
 // Hardening/correctness rules shared by every file this config lints,
 // regardless of type-awareness.
 const sharedRules = {
-  // Safety-framing surface (docs/safety-framing.md): never let output
+  // Safety-framing surface (docs/SAFETY-FRAMING.md): never let output
   // strings ship un-reviewed.
   "no-console": ["error", { allow: ["warn", "error"] }],
 
@@ -71,9 +76,9 @@ export default defineConfig(
   ...astro.configs["flat/recommended"],
   ...astro.configs["flat/jsx-a11y-strict"],
   {
-    // Type-aware typescript-eslint rules — `.js`/`.mjs`/`.ts`, excluding the
-    // carve-out above (see file header).
-    files: ["**/*.{js,mjs,ts}"],
+    // Type-aware typescript-eslint rules — `.js`/`.mjs`/`.ts`/`.tsx`/`.jsx`,
+    // excluding the carve-out above (see file header).
+    files: ["**/*.{js,mjs,ts,tsx,jsx}"],
     ignores: ["eslint.config.mjs"],
     extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
     languageOptions: {
@@ -98,6 +103,15 @@ export default defineConfig(
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
       ],
     },
+  },
+  {
+    // React islands (`.tsx`/`.jsx`) — Hooks-correctness on top of the
+    // type-aware rules above, plus jsx-a11y's strict preset so React
+    // components carry the same accessibility bar as `.astro` templates
+    // (which get theirs from eslint-plugin-astro's own jsx-a11y-strict
+    // config, scoped to `.astro` only — that doesn't cover `.tsx`/`.jsx`).
+    files: ["**/*.{tsx,jsx}"],
+    extends: [reactHooks.configs.flat.recommended, jsxA11y.flatConfigs.strict],
   },
   {
     // `.astro` frontmatter/template — non-type-aware rules only (see file
