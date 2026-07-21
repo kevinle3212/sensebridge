@@ -25,6 +25,37 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Docker rewrite + website build/lint fixes (2026-07-20)
+
+Full session log: `sessions/2026-07-20/1800-PST.md`. Rewrote the website's
+Docker setup into a dedicated `docker/` directory (Dockerfile moved there,
+runtime stage switched from an unpinned `npm install --global serve@14` to
+digest-pinned `nginxinc/nginx-unprivileged:alpine`, no npm in the runtime
+image at all), plus a `docker-compose.yml`, allowlist `.dockerignore`, and
+`docker/README.md`. `railway.toml` moved to the repo root
+(`dockerfilePath = "docker/Dockerfile"`). Verified locally: `docker build`
+succeeds, the container serves `/` and `/es/` with 200s, healthcheck reaches
+`healthy`, `docker compose config` resolves cleanly. Also fixed the Astro
+build's 500kB-chunk warning (raised `chunkSizeWarningLimit`; the oversized
+chunk is three.js, already lazy-loaded) and an MD060 table-formatting error
+in `docs/superpowers/specs/2026-07-19-language-support-design.md`.
+
+- [ ] **[P1]** **[Needs owner]** Update the Railway service's **Root
+      Directory to the repo root** (dashboard → Settings → Source) before
+      the next push reaches `main`. It's currently set to `website` (from
+      the old layout); with the Dockerfile now at `docker/Dockerfile` and
+      the build context spanning both `docker/` and `website/`, leaving
+      Root Directory as `website` will make Railway unable to find
+      `railway.toml`/`docker/Dockerfile` and the next deploy will fail.
+- [ ] **[P3]** `docker compose -f docker/docker-compose.yml up dev` (the
+      hot-reload Astro dev service) was only config-validated
+      (`docker compose config`), not actually run — confirm it starts and
+      hot-reloads before relying on it.
+- [ ] **[P3]** Nothing from this session is committed yet (branch
+      `chore/bmad-method-setup` already has a large pre-existing uncommitted
+      diff) — review and commit the `docker/`, `railway.toml`, and doc
+      changes deliberately rather than folding them into an unrelated commit.
+
 ### Repo-hygiene pass — gitignore, SETUP-STATUS removal, SUPPORT.md footers, hook/CI fixes (2026-07-20)
 
 Full findings in `sessions/2026-07-20/1700-PST.md`. 9 commits landed on
@@ -55,13 +86,15 @@ were fixed directly in the same pass (`.gitignore` now covers
 `_bmad/**/*.user.toml`; `.github/dependabot.yml` now tracks the `docker`
 ecosystem for `website/Dockerfile`) — this is the one deferred nice-to-have.
 
-- [ ] **[P3]** Pin `website/Dockerfile`'s `node:22-alpine` base image to a
-      digest (`node:22-alpine@sha256:...`) instead of a mutable tag, for
-      supply-chain immutability — same rationale already applied to the
-      GitHub Actions pins in `.github/workflows/security.yml`. Needs a
-      registry lookup for the current correct digest (not fabricated this
-      session); the new Dependabot `docker` ecosystem entry added this
-      session will keep a pinned digest current automatically once set.
+- [x] **[P3]** Pin `website/Dockerfile`'s `node:22-alpine` base image to a
+      digest instead of a mutable tag. **Done 2026-07-20** — superseded by a
+      full Docker rewrite: the Dockerfile moved to `docker/Dockerfile`, both
+      the `node:22-alpine` build stage and the new
+      `nginxinc/nginx-unprivileged:alpine` runtime stage are pinned by
+      digest (registry lookups done this session, not fabricated), and the
+      previous unpinned `npm install --global serve@14` runtime install —
+      the likely source of prior "high" vulnerability scan findings — was
+      replaced entirely (no npm in the runtime image). See `docker/README.md`.
 
 ### Full markdown documentation sync sweep (2026-07-20)
 

@@ -1,0 +1,13 @@
+# Railway service config for the marketing site (website/). Lives at the
+# repo root — not inside website/ — because the Dockerfile build (docker/
+# Dockerfile) needs a build context that spans both docker/ and website/.
+# The service's Root Directory (Railway dashboard → Settings → Source) must
+# be the repo root for that context to be correct. See docker/README.md and
+# website/README.md's Deployment section for the full setup flow.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "docker/Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
