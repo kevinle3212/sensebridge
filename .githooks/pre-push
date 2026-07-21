@@ -17,6 +17,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 protected_ref='refs/heads/main'
+# shellcheck disable=SC2034 # names the pushed-refs stdin format for readability; only remote_ref is used
 while read -r local_ref local_sha remote_ref remote_sha; do
 	if [ "$remote_ref" = "$protected_ref" ]; then
 		echo "pre-push: refusing to push directly to main — branch as feat/fix/chore/... and open a PR (see CONTRIBUTING.md)." >&2
@@ -28,7 +29,7 @@ if compgen -G "Package.swift" >/dev/null || compgen -G "app/Package.swift" >/dev
 	echo "== swift build =="
 	swift build
 elif compgen -G "app/*.xcodeproj" >/dev/null || compgen -G "app/*.xcworkspace" >/dev/null; then
-	PROJ=$(ls -d app/*.xcworkspace app/*.xcodeproj 2>/dev/null | head -1)
+	PROJ=$(find app -maxdepth 1 \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -quit)
 	FLAG=-project
 	[ "${PROJ##*.}" = "xcworkspace" ] && FLAG=-workspace
 	echo "== xcodebuild build =="

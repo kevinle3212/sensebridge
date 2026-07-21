@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# post-merge — dependency-free equivalent of Husky's post-merge
+# ("reinstall if package.json changed"). Flags manifest/toolchain files that
+# just changed via merge/pull so they surface immediately instead of as a
+# mystery build failure later. Advisory only — never blocks.
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+CHANGED="$(git diff --name-only ORIG_HEAD HEAD 2>/dev/null || true)"
+[ -z "$CHANGED" ] && exit 0
+
+if echo "$CHANGED" | grep -qE '^(Package\.swift|Package\.resolved|app/Package\.swift|app/Package\.resolved)$'; then
+	echo "post-merge: Package manifest changed — open Xcode (or run 'swift package resolve') to pick up dependency changes." >&2
+fi
+
+if echo "$CHANGED" | grep -qE '^(docs/ENVIRONMENT\.md|scripts/setup\.sh)$'; then
+	echo "post-merge: toolchain/hook setup changed — re-run 'scripts/setup.sh' to pick it up." >&2
+fi
+
+# Advisory-only GitNexus staleness reminder — see .githooks/post-commit for
+# the rationale (no vendor `hook install` for GitNexus; never auto-reindexes).
+if [ -d .gitnexus ]; then
+	echo "post-merge: GitNexus knowledge graph may be stale — run 'gitnexus analyze' (or 'node .gitnexus/run.cjs analyze') to refresh it." >&2
+fi
+
+exit 0

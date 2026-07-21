@@ -1,4 +1,22 @@
 #!/bin/sh
+# gitnexus-staleness-notice-start
+# Hand-maintained — not installed by any `gitnexus hook install` (no such
+# command exists; unlike graphify below). Advisory only: never blocks, never
+# runs `analyze` itself. The vendor's own Claude Code PostToolUse hook
+# (~/.claude/hooks/gitnexus/gitnexus-hook.cjs) deliberately avoids driving
+# `analyze` from a hook — a full rebuild can take up to ~120s and an unclean
+# kill risks index corruption. This block only covers git activity outside a
+# Claude Code session (plain terminal, other editors, CI). See
+# docs/TOOLING.md's GitNexus row.
+if [ -d .gitnexus ]; then
+    _GITNEXUS_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD 2>/dev/null)
+    _GITNEXUS_NON_INDEX=$(echo "$_GITNEXUS_CHANGED" | grep -v '^\.gitnexus/' || true)
+    if [ -n "$_GITNEXUS_NON_INDEX" ]; then
+        echo "[gitnexus] knowledge graph may be stale — run 'gitnexus analyze' (or 'node .gitnexus/run.cjs analyze') to refresh it." >&2
+    fi
+fi
+# gitnexus-staleness-notice-end
+
 # graphify-hook-start
 # Auto-rebuilds the knowledge graph after each commit (code files only, no LLM needed).
 # Installed by: graphify hook install
@@ -39,7 +57,7 @@ fi
 # _PINNED was recorded at hook-install time; tried first so the hook works even
 # when the graphify launcher is not on PATH (common in GUI clients and CI).
 GRAPHIFY_PYTHON=""
-_PINNED='/Users/kevinkhanhle/.local/share/uv/tools/graphifyy/bin/python'
+_PINNED=''
 if [ -n "$_PINNED" ] && [ -x "$_PINNED" ] && "$_PINNED" -c "import graphify" 2>/dev/null; then
     GRAPHIFY_PYTHON="$_PINNED"
 fi
@@ -50,7 +68,7 @@ if [ -z "$GRAPHIFY_PYTHON" ]; then
     if [ -f "$_GFY_PYTHON_FILE" ]; then
         _FROM_FILE=$(cat "$_GFY_PYTHON_FILE" 2>/dev/null | tr -d '[:space:]')
         case "$_FROM_FILE" in
-            *[!a-zA-Z0-9/_.@:\-]*) _FROM_FILE="" ;;  # allowlist (covers Windows paths)
+            *[!a-zA-Z0-9/_.@:-]*) _FROM_FILE="" ;;  # allowlist (covers Windows paths)
         esac
         if [ -n "$_FROM_FILE" ] && [ -x "$_FROM_FILE" ] && "$_FROM_FILE" -c "import graphify" 2>/dev/null; then
             GRAPHIFY_PYTHON="$_FROM_FILE"
