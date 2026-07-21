@@ -41,6 +41,24 @@ Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 checklist), `audits/` (append-only reports; guide in `audits/AGENT-GUIDE.md`),
 `models/README.md` (model vendoring approach).
 
+## GitHub platform
+
+This page's rendered form is also published live at
+[GitHub Pages](https://kevinle3212.github.io/sensebridge) and the
+[GitHub Wiki](https://github.com/kevinle3212/sensebridge/wiki) (auto-synced by
+`.github/workflows/pages.yml` and `wiki-sync.yml` on every push to `main`).
+
+| File | Purpose |
+| --- | --- |
+| `docs/index.md`, `docs/_config.yml` | GitHub Pages site (Jekyll, zero-config theme) built from `docs/` |
+| `tools/generate-wiki-home.mjs` | Generates the Wiki's `Home.md` from this file |
+| `.github/workflows/codeql.yml` | Code scanning (Swift + JavaScript/TypeScript) |
+| `.github/workflows/pages.yml` | Docs site build and deploy |
+| `.github/workflows/wiki-sync.yml` | Keeps the Wiki's Home page current |
+| `.github/prompts/`, `.github/workflows/github-models.yml` | GitHub Models prompt files and manual-dispatch evaluation |
+| `.github/workflows/copilot-setup-steps.yml` | Copilot coding agent environment bootstrap (`website/` only — no macOS/Xcode) |
+| `.graphifyignore`, `.github/workflows/graphify.yml` | Knowledge-graph build scope and advisory CI rebuild |
+
 ---
 
 Need help? See [`SUPPORT.md`](SUPPORT.md).
