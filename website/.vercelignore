@@ -17,8 +17,10 @@ eslint.config.mjs
 # Offline, generation-time-only script — writes public/audio/main.mp3 ahead
 # of time on a developer machine; the output ships, this script never runs
 # during `npm run build`. See scripts/generate-audio.js and README.md's
-# Read-aloud controls section.
-scripts/
+# Read-aloud controls section. Anchored to the root (leading `/`) — a bare
+# `scripts/` also matches `src/scripts/`, which the build imports at
+# runtime (BaseLayout.astro's scene/motion dynamic imports) and must ship.
+/scripts/
 
 # Env template — informational only, not read by the build.
 .env.example
