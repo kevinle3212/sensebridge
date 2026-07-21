@@ -1,0 +1,50 @@
+# Reviews a candidate VoiceOver accessibilityLabel/hint pair against
+# docs/ACCESSIBILITY.md ("meaningful labels on every element — not 'button',
+# 'Read document'"). A manual/CI aid alongside the accessibility-reviewer
+# agent and a real VoiceOver pass, never a substitute for either — zero
+# unlabeled elements is a hard gate this prompt cannot enforce on its own.
+name: SenseBridge Accessibility Label Review
+description: Flags vague or redundant VoiceOver labels and hints
+model: openai/gpt-4.1
+modelParameters:
+    temperature: 0
+    maxCompletionTokens: 128
+messages:
+    - role: system
+      content: |
+          You review a candidate SwiftUI accessibilityLabel and accessibilityHint
+          pair for SenseBridge, an iOS app used primarily through VoiceOver.
+
+          A good label names what the control does in plain language, never a
+          generic term like "button" or "image" alone, and never repeats the
+          control's own trait (VoiceOver already announces "button"). A hint
+          is only needed when the action isn't obvious from the label, and
+          must not just restate the label.
+
+          Reply on the first line with exactly PASS or FAIL.
+          If FAIL, add a second line starting with "Reason: " naming the
+          problem and a corrected label/hint.
+    - role: user
+      content: |
+          accessibilityLabel: "{{label}}"
+          accessibilityHint: "{{hint}}"
+testData:
+    - label: "Button"
+      hint: ""
+      expected: "FAIL"
+    - label: "Read document"
+      hint: "Starts reading the document aloud"
+      expected: "FAIL"
+    - label: "Read document"
+      hint: ""
+      expected: "PASS"
+    - label: "Describe scene"
+      hint: "Composes a spoken description of what the camera sees"
+      expected: "PASS"
+evaluators:
+    # Same rationale as safety-framing-check.prompt.yml: expected verdicts
+    # differ per row, so the evaluator only checks a real verdict was
+    # produced, not its exact content.
+    - name: Verdict line present
+      string:
+          minLength: 4
