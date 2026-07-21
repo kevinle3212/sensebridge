@@ -5,8 +5,8 @@
 > It must be reviewed by qualified counsel before public launch.
 
 **Effective date:** 2026-07-09
-**Provider:** Kevin Khanh Le ("we", "us", "our")
-**Project:** SenseBridge (https://github.com/kevinle3212/sensebridge)
+**Provider:** Kevin K. Le ("we", "us", "our")
+**Project:** SenseBridge (<https://github.com/kevinle3212/sensebridge>)
 
 ## 1. What SenseBridge is
 
@@ -20,7 +20,7 @@ primarily for blind and low-vision users.
 detection of obstacles, stairs, vehicles, or any hazard. It does not replace
 a white cane, a guide dog, or orientation-and-mobility training. Its output
 is a cautious, probabilistic estimate, not a guarantee — see
-[`docs/safety-framing.md`](../docs/safety-framing.md) for why this framing
+[`docs/SAFETY-FRAMING.md`](../docs/SAFETY-FRAMING.md) for why this framing
 exists and why it is non-negotiable. Do not rely on SenseBridge as your only
 means of detecting hazards.
 
@@ -72,4 +72,4 @@ informational only, not a binding jurisdiction clause drafted by counsel.
 
 ## 11. Contact
 
-Questions: kevinle3212@gmail.com
+Questions: <kevinle3212@gmail.com>

@@ -13,7 +13,7 @@ stairs, curbs, vehicles, or any other hazard, and it must never be treated as
 a substitute for a white cane, a guide dog, or orientation-and-mobility
 training. This is the engineering doctrine behind every screen and every
 spoken sentence in the app — see
-[`docs/safety-framing.md`](../docs/safety-framing.md).
+[`docs/SAFETY-FRAMING.md`](../docs/SAFETY-FRAMING.md).
 
 ## No warranties
 
@@ -35,9 +35,9 @@ incidental, or consequential damages arising from use of SenseBridge.
 
 This is an actively developed, solo-maintained, open-source project.
 Features may change, be incomplete, or behave unexpectedly, especially in
-early releases. See [`docs/roadmap.md`](../docs/roadmap.md) for what's
+early releases. See [`docs/ROADMAP.md`](../docs/ROADMAP.md) for what's
 built, deferred, or deliberately out of scope.
 
 ## Contact
 
-kevinle3212@gmail.com
+<kevinle3212@gmail.com>
