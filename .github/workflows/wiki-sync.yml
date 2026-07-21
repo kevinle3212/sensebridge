@@ -1,0 +1,54 @@
+# Keeps the GitHub Wiki's Home page in sync with WIKI.md. Only publishes a
+# generated index (tools/generate-wiki-home.mjs); it never mirrors doc bodies
+# into the wiki, so there is exactly one canonical copy of each doc (in docs/,
+# also published to Pages) and the wiki stays a landing page that links out.
+#
+# One-time setup: the wiki git repo doesn't exist until its first page is
+# created via the GitHub UI (Wiki tab → "Create the first page"). Do that
+# once before this workflow's first run, or the clone step below will fail.
+
+name: Sync Docs to Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "WIKI.md"
+      - "docs/**"
+      - "tools/generate-wiki-home.mjs"
+      - ".github/workflows/wiki-sync.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Sync WIKI.md to GitHub Wiki
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Clone wiki
+        run: |
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git wiki
+
+      - name: Generate wiki home
+        run: node tools/generate-wiki-home.mjs > wiki/Home.md
+
+      - name: Remove other raw synced pages
+        run: find wiki -maxdepth 1 -type f -name '*.md' ! -name 'Home.md' -delete
+
+      - name: Commit and push
+        run: |
+          cd wiki
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --staged --quiet && echo "No changes to sync." || git commit -m "chore: sync Home from WIKI.md"
+          git push
