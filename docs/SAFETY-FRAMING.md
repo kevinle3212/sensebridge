@@ -1,3 +1,7 @@
+---
+title: "Safety Framing: Awareness, Not Safety"
+---
+
 # Safety Framing: Awareness, Not Safety
 
 This is the single most important design doctrine in SenseBridge, and the

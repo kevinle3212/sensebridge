@@ -1,3 +1,7 @@
+---
+title: Accessibility Standards for Contributors
+---
+
 # Accessibility Standards for Contributors
 
 For SenseBridge, an app being accessible is not a quality bar — it is the

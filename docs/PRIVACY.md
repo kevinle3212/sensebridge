@@ -1,3 +1,7 @@
+---
+title: Privacy (Engineering Doctrine)
+---
+
 # Privacy (Engineering Doctrine)
 
 This is the engineering-facing description of SenseBridge's data handling. For

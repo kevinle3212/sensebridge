@@ -1,3 +1,7 @@
+---
+title: Distribution
+---
+
 # Distribution
 
 *(Named "Distribution," not "Deployment" — there is no server to deploy. See

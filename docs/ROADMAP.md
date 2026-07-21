@@ -1,3 +1,7 @@
+---
+title: Roadmap
+---
+
 # Roadmap
 
 Source research: [`planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md`](planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md)

@@ -1,3 +1,7 @@
+---
+title: Testing Strategy
+---
+
 # Testing Strategy
 
 Coverage targets here are pragmatic for a solo developer, not enterprise

@@ -1,3 +1,7 @@
+---
+title: Product
+---
+
 # Product
 
 Source research: [`planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md`](planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md)

@@ -1,3 +1,7 @@
+---
+title: AI Models
+---
+
 # AI Models
 
 **Read this before adding any model to the project.** Model licensing is the
