@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "fraunces",
+        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\"",
+        "createdAt": "2026-07-21T21:17:15.989Z"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\"",
+        "createdAt": "2026-07-21T21:17:16.688Z"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist mono",
+        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\"",
+        "createdAt": "2026-07-21T21:17:17.360Z"
+      }
+    ]
+  }
+}

@@ -10,6 +10,7 @@
 }
 
 .text {
+  @include type-body;
+
   max-width: 44rem;
-  font-size: 1.0625rem;
 }
