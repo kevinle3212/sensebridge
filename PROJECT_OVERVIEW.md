@@ -11,20 +11,23 @@ VoiceOver-first, serverless) giving blind and low-vision users spoken awareness
 of their surroundings. Three non-negotiable doctrines constrain every change:
 awareness-not-safety, on-device-by-default, accessibility-is-the-product.
 
-## State: planning-complete, pre-implementation
+## State: early `app/` scaffold, no feature work yet
 
-There is **no Swift source yet**. `app/` is the intended location; CI,
-Dependabot, and CONTRIBUTING already point at it and no-op until it exists.
-Next milestones, in order (see `SETUP-STATUS.md`): scaffold `app/` along the
-`SensingSource` → perception → Reasoning → `RenderTarget` seams, vendor the
-first model through the `model-license-audit` skill, stand up test targets.
+`app/` holds a local Swift package (`app/Packages/SenseBridgeCore`) with the
+`SensingSource` → perception → Reasoning → `RenderTarget` protocol seams and a
+hedged `Phrasing`/`AwarenessEngine`, plus an Xcode project with app,
+unit-test, and UI-test targets. Builds and tests pass. This is scaffolding,
+not the product: real perception (Vision, Sound Analysis, ARKit, Foundation
+Models) and most UI are still unbuilt. Next milestones, in order (see
+`GAPS.md`): vendor the first model through the `model-license-audit`
+skill, then build the real perception/reasoning implementations behind the
+scaffolded protocols.
 
 ## Layout
 
 | Area | Where |
 | --- | --- |
 | Product, architecture, privacy, safety framing, accessibility, testing | `docs/` (index: `WIKI.md`) |
-| Planning research series | `docs/planning/` |
 | Agent instructions | `AGENTS.md` (canonical) + `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.github/copilot-instructions.md` (pointers) |
 | Skills and reviewer personas | `.agents/`, `.claude/skills/` |
 | Append-only audits | `audits/` (generate via `audits/scripts/new-audit.sh`) |
@@ -40,3 +43,7 @@ first model through the `model-license-audit` skill, stand up test targets.
 Run `scripts/setup.sh` once (checks toolchain, enables hooks). Branch as
 `feat/...`/`fix/...`/`chore/...`, conventional commits, PR into `main` so CI
 runs. Clear the `ci-green-gate` skill before any PR.
+
+---
+
+Need help? See [`SUPPORT.md`](SUPPORT.md).

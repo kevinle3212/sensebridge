@@ -15,11 +15,10 @@ accessibility-is-the-product — constrain every change.
 
 ## Current repo state (read before assuming code exists)
 
-This repository is **planning- and governance-complete but pre-implementation**.
 What exists today:
 
 - **Docs** — product, architecture, privacy, accessibility, safety-framing,
-  testing, distribution, environment, and the full `docs/planning/` set.
+  testing, distribution, and environment.
 - **Governance and legal** — `GOVERNANCE.md`, `MAINTAINERS.md`,
   `CODE_OF_CONDUCT.md`, `COMMUNITY_GUIDELINES.md`, `SECURITY.md`, and `legal/`.
 - **Agent tooling** — reviewer personas (`.agents/agents/`), skills
@@ -27,13 +26,25 @@ What exists today:
   (`audits/`).
 - **Community scaffolding** — `CONTRIBUTING.md`, `SUPPORT.md`, `.github/`
   workflows and templates, `CREDITS.md`, `CHANGELOG.md`.
+- **An early `app/` scaffold.** A local Swift package
+  (`app/Packages/SenseBridgeCore`) with the Sensing/Perception/Reasoning/
+  Output/Storage/CloudOptional protocol seams and a hedged `Phrasing`/
+  `AwarenessEngine`, plus an Xcode project (`app/SenseBridge.xcodeproj`,
+  generated via `xcodegen` from `app/project.yml`) with app, unit-test, and
+  UI-test targets. Builds and tests pass (`swift test`, `xcodebuild
+  build`/`test`, `swiftlint`, `swiftformat`, Semgrep `p/swift`). This is
+  scaffolding, not the product: real perception
+  (Vision, Sound Analysis, ARKit, Foundation Models) and most UI are still
+  unbuilt, and nothing has been distributed to TestFlight or the App Store.
 
 What does **not** exist yet — do not assume, reference as built, or fabricate:
 
-- **The Swift app itself.** There is no `app/` Xcode project or Swift source
-  tree yet. `CONTRIBUTING.md` and `docs/` reference `app/` as the intended
-  location; treat that as a target, not an existing artifact. Scaffolding the app
-  is the next major milestone — see [`SETUP-STATUS.md`](SETUP-STATUS.md).
+- **Real perception, reasoning, and feature UI.** The protocols exist; Vision
+  OCR/detection, Sound Analysis, ARKit depth, and the Foundation Models scene
+  composer are all still real feature work — see [`GAPS.md`](GAPS.md) →
+  "Not yet done" → "Application".
+- **A distributable build.** No TestFlight or App Store artifact exists; the
+  bundle ID and signing team in `app/project.yml` are placeholders.
 - **Bundled models.** `models/README.md` describes the intended approach;
   no model is vendored yet. Any addition goes through the
   [model-license-audit](.agents/skills/model-license-audit/SKILL.md) skill.
@@ -46,15 +57,14 @@ it.
 | Need | Path |
 | --- | --- |
 | Product and scope | [`docs/PRODUCT.md`](docs/PRODUCT.md) |
-| Architecture and module seams | [`docs/architecture.md`](docs/architecture.md), [`docs/planning/SenseBridge-03-Technical-Architecture.md`](docs/planning/SenseBridge-03-Technical-Architecture.md) |
-| Awareness-not-safety doctrine | [`docs/safety-framing.md`](docs/safety-framing.md) |
-| Privacy / on-device guarantee | [`docs/privacy.md`](docs/privacy.md) |
-| Accessibility bar | [`docs/accessibility.md`](docs/accessibility.md) |
+| Architecture and module seams | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
+| Awareness-not-safety doctrine | [`docs/SAFETY-FRAMING.md`](docs/SAFETY-FRAMING.md) |
+| Privacy / on-device guarantee | [`docs/PRIVACY.md`](docs/PRIVACY.md) |
+| Accessibility bar | [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md) |
 | Testing strategy | [`docs/TESTING.md`](docs/TESTING.md) |
 | Setup / toolchain | [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) |
-| Model licensing | [`docs/ai-models.md`](docs/ai-models.md), [`models/README.md`](models/README.md) |
+| Model licensing | [`docs/AI-MODELS.md`](docs/AI-MODELS.md), [`models/README.md`](models/README.md) |
 | Conventions | [`AGENTS.md`](AGENTS.md) |
-| What's set up vs. pending | [`SETUP-STATUS.md`](SETUP-STATUS.md) |
 | Tooling decisions, MCP inventory | [`docs/TOOLING.md`](docs/TOOLING.md) |
 | Known defects and debt | [`GAPS.md`](GAPS.md) |
 | Where knowledge lives (repo vs. vault) | [`MEMORY.md`](MEMORY.md) |
