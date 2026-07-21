@@ -81,6 +81,9 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
   },
+  "overrides": {
+    "tar": "^7.5.20"
+  },
   "lint-staged": {
     "**/*.{js,ts,tsx,jsx,astro}": "eslint --fix",
     "**/*.scss": "stylelint --fix",
