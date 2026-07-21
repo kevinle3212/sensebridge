@@ -3,6 +3,7 @@ import XCTest
 /// Covers the in-app language picker (`SettingsView`) and the OS-level
 /// per-app language mechanism it depends on — see
 /// docs/superpowers/specs/2026-07-19-language-support-design.md "Unit B".
+@MainActor
 final class LanguageSelectionUITests: XCTestCase {
     /// Happy path: picking Spanish in Settings updates the Home screen's
     /// visible labels immediately, no relaunch required.

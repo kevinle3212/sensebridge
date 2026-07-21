@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class SenseBridgeUITests: XCTestCase {
     func testHomeScreenShowsAllModes() {
         let app = XCUIApplication()

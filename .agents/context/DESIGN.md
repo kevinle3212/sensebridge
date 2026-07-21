@@ -45,6 +45,11 @@ typography:
     fontSize: "clamp(1rem, 0.97rem + 0.15vw, 1.0625rem)"
     fontWeight: 400
     lineHeight: 1.6
+  small:
+    fontFamily: "'Geist Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.5
   label:
     fontFamily: "'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "0.8125rem"
@@ -173,7 +178,9 @@ Three self-hosted variable families (latin-subset woff2 in `public/fonts/`,
   (`clamp(2rem, …, 3.25rem)`), h3 (`clamp(1.375rem, …, 1.75rem)`). A warm
   serif against cold wireframes is the identity pairing.
 - **Body — Geist Variable.** Fluid body (`clamp(1rem, …, 1.0625rem)`, 1.6)
-  and lede (`clamp(1.125rem, …, 1.375rem)`).
+  and lede (`clamp(1.125rem, …, 1.375rem)`). The `type-small` mixin (0.875rem,
+  1.5) covers footnotes, captions, and the footer — smaller than body,
+  distinct from the mono `type-label` step below.
 - **Annotation — Geist Mono Variable.** The `type-label` mixin (uppercase,
   tracked, 0.8125rem): technical annotations tied to the 3D hardware scenes
   (e.g. `01 · SENSING`). This is a deliberate, single-purpose voice — used
