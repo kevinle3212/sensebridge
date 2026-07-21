@@ -1,8 +1,9 @@
 # Codex Agent Notes — SenseBridge
 
 Read root `AGENTS.md` first (doctrines, conventions, quality gates), then
-`AGENT-CONTEXT.md` (current state — the Swift app is not scaffolded yet; never
-assume code exists). This file adds Codex-specific mechanics only; global
+`AGENT-CONTEXT.md` (current state — `app/` has an early scaffold but no
+distributable build; never assume more exists than that file describes). This
+file adds Codex-specific mechanics only; global
 Codex defaults live in `~/.codex/`.
 
 ## MCP and navigation
@@ -16,10 +17,10 @@ Codex defaults live in `~/.codex/`.
 ## Non-negotiables
 
 - Awareness-not-safety wording for any physical-world output
-  (`docs/safety-framing.md`) — route through the safety-framing-reviewer
+  (`docs/SAFETY-FRAMING.md`) — route through the safety-framing-reviewer
   persona in `.agents/agents/`.
 - On-device by default: no backend, no telemetry, no network round-trip for
-  perception or reasoning (`docs/privacy.md`).
+  perception or reasoning (`docs/PRIVACY.md`).
 - Zero unlabeled UI elements; VoiceOver pass on changed UI.
 - Never commit to `main`; conventional commit headers (enforced by
   `.githooks/commit-msg`). Never edit `legal/` without owner approval.

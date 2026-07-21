@@ -20,8 +20,7 @@ an interface. State assumptions first.
 # API Design
 
 "API" here means **internal Swift module boundaries**, not a network API —
-SenseBridge is serverless. See
-`docs/planning/SenseBridge-03-Technical-Architecture.md`.
+SenseBridge is serverless. See [`docs/ARCHITECTURE.md`](../../../docs/ARCHITECTURE.md).
 
 ## Principles
 

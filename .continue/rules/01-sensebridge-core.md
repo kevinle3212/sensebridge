@@ -14,9 +14,9 @@ alwaysApply: true
   scaffolded yet** — never assume, reference, or fabricate source that isn't
   there.
 - Three non-negotiable doctrines: awareness-not-safety (all physical-world
-  output hedges — `docs/safety-framing.md`), on-device-by-default (no backend,
-  no telemetry — `docs/privacy.md`), accessibility-is-the-product (zero
-  unlabeled elements — `docs/accessibility.md`).
+  output hedges — `docs/SAFETY-FRAMING.md`), on-device-by-default (no backend,
+  no telemetry — `docs/PRIVACY.md`), accessibility-is-the-product (zero
+  unlabeled elements — `docs/ACCESSIBILITY.md`).
 - Reliability priority order: correct hedging first, then not crashing, then
   performance. No perception or model work on the main thread.
 - AGPL and Apple `apple-amlr` licenses are hard blockers. Never edit `legal/`

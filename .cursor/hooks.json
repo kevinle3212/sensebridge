@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "node \".cursor/skills/impeccable/scripts/hook-before-edit.mjs\"",
+        "timeout": 5
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "node .cursor/hooks/react-doctor.mjs",
+        "matcher": "Write|Edit|MultiEdit|ApplyPatch",
+        "timeout": 120
+      }
+    ]
+  }
+}

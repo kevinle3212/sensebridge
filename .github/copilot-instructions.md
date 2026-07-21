@@ -1,4 +1,4 @@
-# Copilot instructions — SenseBridge
+# Copilot Instructions — SenseBridge
 
 All conventions live in [`AGENTS.md`](../AGENTS.md); current repo state in
 [`AGENT-CONTEXT.md`](../AGENT-CONTEXT.md). Highlights that must never be

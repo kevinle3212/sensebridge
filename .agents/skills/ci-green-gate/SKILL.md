@@ -26,9 +26,10 @@ with `.github/workflows/` and the reviewer personas under `.agents/agents/`.
 
 - **Build.** `xcodebuild build` (app scheme) and, where a package target
   exists, `swift build` complete with no errors.
-- **Tests.** The XCTest suites in `docs/TESTING.md` pass — unit (reasoning,
-  hedging, thresholds), integration (perception against fixtures), and any
-  AI-evaluation checks wired into CI.
+- **Tests.** The suites in `docs/TESTING.md` pass — unit (reasoning, hedging,
+  thresholds), integration (perception against fixtures), e2e (at least three
+  per feature: happy path, error path, edge case), and any AI-evaluation
+  checks wired into CI.
 - **Accessibility.** Zero unlabeled elements on every screen; a VoiceOver pass
   on changed UI. This is a hard gate, not a coverage percentage — see the
   [accessibility](../accessibility/SKILL.md) skill.
