@@ -1,7 +1,6 @@
 # the name by which the project can be referenced within Serena
 project_name: "sensebridge"
 
-
 # list of languages for which language servers are started; choose from:
 #   al                  angular             ansible             bash                clojure
 #   cpp                 cpp_ccls            crystal             csharp              csharp_omnisharp
@@ -31,7 +30,7 @@ project_name: "sensebridge"
 # When using multiple languages, the first language server that supports a given file will be used for that file.
 # The first language is the default language and the respective language server will be used as a fallback.
 # Note that when using the JetBrains backend, language servers are not used and this list is correspondingly ignored.
-languages: []
+languages: [markdown, html, scss, bash, swift, typescript, yaml, json, toml]
 
 # the encoding used by text files in the project
 # For a list of possible encodings, see https://docs.python.org/3.11/library/codecs.html#standard-encodings
@@ -40,7 +39,7 @@ encoding: "utf-8"
 # line ending convention to use when writing source files.
 # Possible values: unset (use global setting), "lf", "crlf", or "native" (platform default)
 # This does not affect Serena's own files (e.g. memories and configuration files), which always use native line endings.
-line_ending:
+line_ending: "native"
 
 # The language backend to use for this project.
 # If not set, the global setting from serena_config.yml is used.
