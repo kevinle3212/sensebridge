@@ -1,0 +1,76 @@
+name: SenseBridge
+options:
+  bundleIdPrefix: com.sensebridge
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: en
+
+packages:
+  SenseBridgeCore:
+    path: Packages/SenseBridgeCore
+
+targets:
+  SenseBridge:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: SenseBridge
+    dependencies:
+      - package: SenseBridgeCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sensebridge.app
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_NSCameraUsageDescription: "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device."
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_VERSION: "6"
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGN_STYLE: Automatic
+
+  SenseBridgeTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: SenseBridgeTests
+    dependencies:
+      - target: SenseBridge
+      - package: SenseBridgeCore
+    settings:
+      base:
+        SWIFT_VERSION: "6"
+        GENERATE_INFOPLIST_FILE: YES
+
+  SenseBridgeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: SenseBridgeUITests
+    dependencies:
+      - target: SenseBridge
+    settings:
+      base:
+        SWIFT_VERSION: "6"
+        TEST_TARGET_NAME: SenseBridge
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  SenseBridge:
+    build:
+      targets:
+        SenseBridge: all
+        SenseBridgeTests: [test]
+        SenseBridgeUITests: [test]
+    test:
+      targets:
+        - SenseBridgeTests
+        - SenseBridgeUITests
+    run:
+      config: Debug

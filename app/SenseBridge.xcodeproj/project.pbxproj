@@ -1,0 +1,699 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73B9444B53F2DD88AD973EA /* HomeView.swift */; };
+		1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */; };
+		2F02E08A4B22B4E8836E8DDD /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3030507FD05945D3B89734B5 /* SenseBridgeCore */; };
+		311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */; };
+		45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */; };
+		608A9FB837FD1E25D7527BD5 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */; };
+		76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */; };
+		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
+		97465151AB4FA48835E0174E /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */; };
+		9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03597A1D36C216848B88E81D /* ReadingView.swift */; };
+		A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */; };
+		A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */; };
+		A4130055EDBE13F4F595E785 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */; };
+		A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66C553969EFB2A7DED18325B /* LabelingView.swift */; };
+		B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */; };
+		B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */; };
+		B62B6F726B5A68E041AADB00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */; };
+		CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4814D055CEF4C8017859ACFE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2EE5A08621EAFB090016B43E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B593D1286984F454EBA4A3C8;
+			remoteInfo = SenseBridge;
+		};
+		6BFD9E6A7CF56335310EC355 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2EE5A08621EAFB090016B43E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B593D1286984F454EBA4A3C8;
+			remoteInfo = SenseBridge;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		03597A1D36C216848B88E81D /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
+		0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverAnnouncement.swift; sourceTree = "<group>"; };
+		1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeApp.swift; sourceTree = "<group>"; };
+		1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentTests.swift; sourceTree = "<group>"; };
+		509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeUITests.swift; sourceTree = "<group>"; };
+		50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionUITests.swift; sourceTree = "<group>"; };
+		53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		60602C61EB43396734122316 /* SenseBridgeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		66C553969EFB2A7DED18325B /* LabelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingView.swift; sourceTree = "<group>"; };
+		8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		91ABE54B3D488D3FD6947263 /* SenseBridge.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SenseBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAlertsView.swift; sourceTree = "<group>"; };
+		B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObstacleAwarenessView.swift; sourceTree = "<group>"; };
+		D73B9444B53F2DD88AD973EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionView.swift; sourceTree = "<group>"; };
+		F590D9D32D5528105C06EC89 /* SenseBridgeCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SenseBridgeCore; path = Packages/SenseBridgeCore; sourceTree = SOURCE_ROOT; };
+		FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6964BD15F75EE06E71D1FDD3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				97465151AB4FA48835E0174E /* SenseBridgeCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CDE1D005DC89CAF05EBDCBEC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2F02E08A4B22B4E8836E8DDD /* SenseBridgeCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		114995AA7FA498C393902668 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */,
+				D73B9444B53F2DD88AD973EA /* HomeView.swift */,
+				1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */,
+				212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		167BD6B707F5CD3F5FED1BF9 /* SceneDescription */ = {
+			isa = PBXGroup;
+			children = (
+				E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */,
+			);
+			path = SceneDescription;
+			sourceTree = "<group>";
+		};
+		17CFC050C0ED11ADC4123CC8 /* ObstacleAwareness */ = {
+			isa = PBXGroup;
+			children = (
+				C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */,
+			);
+			path = ObstacleAwareness;
+			sourceTree = "<group>";
+		};
+		3EBC69DB8F2361D9C073B8C9 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */,
+				8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */,
+				FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		59F08F74B9E6D8A4F9346606 /* SenseBridge */ = {
+			isa = PBXGroup;
+			children = (
+				BE9DEFCCF8F1FE8E828A4CE2 /* Accessibility */,
+				114995AA7FA498C393902668 /* App */,
+				A8D2ED2B5A7CCBD36D5B5CFF /* Features */,
+				3EBC69DB8F2361D9C073B8C9 /* Resources */,
+			);
+			path = SenseBridge;
+			sourceTree = "<group>";
+		};
+		5B4CCA89F1AB81F1218D7F0C /* SenseBridgeUITests */ = {
+			isa = PBXGroup;
+			children = (
+				50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */,
+				509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */,
+			);
+			path = SenseBridgeUITests;
+			sourceTree = "<group>";
+		};
+		7D27507FB965F45DAB7E0D83 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				F590D9D32D5528105C06EC89 /* SenseBridgeCore */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		9618DD4D4C1568F04C6D7A72 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				91ABE54B3D488D3FD6947263 /* SenseBridge.app */,
+				60602C61EB43396734122316 /* SenseBridgeTests.xctest */,
+				1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A8D2ED2B5A7CCBD36D5B5CFF /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				BA5152B824E40A94F9DBC660 /* Labeling */,
+				17CFC050C0ED11ADC4123CC8 /* ObstacleAwareness */,
+				F72FA9A23C21D154DC914D16 /* Reading */,
+				167BD6B707F5CD3F5FED1BF9 /* SceneDescription */,
+				D25363759E83B808857037EF /* SoundAlerts */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		BA5152B824E40A94F9DBC660 /* Labeling */ = {
+			isa = PBXGroup;
+			children = (
+				66C553969EFB2A7DED18325B /* LabelingView.swift */,
+			);
+			path = Labeling;
+			sourceTree = "<group>";
+		};
+		BC56C0FDC55E64F74C1BF52B /* SenseBridgeTests */ = {
+			isa = PBXGroup;
+			children = (
+				274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */,
+			);
+			path = SenseBridgeTests;
+			sourceTree = "<group>";
+		};
+		BE9DEFCCF8F1FE8E828A4CE2 /* Accessibility */ = {
+			isa = PBXGroup;
+			children = (
+				0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */,
+			);
+			path = Accessibility;
+			sourceTree = "<group>";
+		};
+		D25363759E83B808857037EF /* SoundAlerts */ = {
+			isa = PBXGroup;
+			children = (
+				96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */,
+			);
+			path = SoundAlerts;
+			sourceTree = "<group>";
+		};
+		EB885AD887785FC1F0AFBF21 = {
+			isa = PBXGroup;
+			children = (
+				7D27507FB965F45DAB7E0D83 /* Packages */,
+				59F08F74B9E6D8A4F9346606 /* SenseBridge */,
+				BC56C0FDC55E64F74C1BF52B /* SenseBridgeTests */,
+				5B4CCA89F1AB81F1218D7F0C /* SenseBridgeUITests */,
+				9618DD4D4C1568F04C6D7A72 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F72FA9A23C21D154DC914D16 /* Reading */ = {
+			isa = PBXGroup;
+			children = (
+				03597A1D36C216848B88E81D /* ReadingView.swift */,
+			);
+			path = Reading;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B593D1286984F454EBA4A3C8 /* SenseBridge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 54D3995E916EBCE635BB2EA6 /* Build configuration list for PBXNativeTarget "SenseBridge" */;
+			buildPhases = (
+				CB1D52334DAD7CF770A84E89 /* Sources */,
+				4A2AB17303D5144B8089D369 /* Resources */,
+				6964BD15F75EE06E71D1FDD3 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SenseBridge;
+			packageProductDependencies = (
+				E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */,
+			);
+			productName = SenseBridge;
+			productReference = 91ABE54B3D488D3FD6947263 /* SenseBridge.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C869D1957C2046A45E319056 /* SenseBridgeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D2FEEB94B7C96E47CAADF08 /* Build configuration list for PBXNativeTarget "SenseBridgeUITests" */;
+			buildPhases = (
+				9AB940B762128CCD2FDF3585 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				758C906606A80C3B3FD7CD1D /* PBXTargetDependency */,
+			);
+			name = SenseBridgeUITests;
+			packageProductDependencies = (
+			);
+			productName = SenseBridgeUITests;
+			productReference = 1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		D3BD1BBF817FFBA608FE1DFC /* SenseBridgeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DFCDDE30C54ED3315124B31A /* Build configuration list for PBXNativeTarget "SenseBridgeTests" */;
+			buildPhases = (
+				B8A60DA5A20D2DCC1BDC0DD6 /* Sources */,
+				CDE1D005DC89CAF05EBDCBEC /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3C9FA97E8ED3ED156CB336B4 /* PBXTargetDependency */,
+			);
+			name = SenseBridgeTests;
+			packageProductDependencies = (
+				3030507FD05945D3B89734B5 /* SenseBridgeCore */,
+			);
+			productName = SenseBridgeTests;
+			productReference = 60602C61EB43396734122316 /* SenseBridgeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2EE5A08621EAFB090016B43E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					B593D1286984F454EBA4A3C8 = {
+						ProvisioningStyle = Automatic;
+					};
+					C869D1957C2046A45E319056 = {
+						TestTargetID = B593D1286984F454EBA4A3C8;
+					};
+				};
+			};
+			buildConfigurationList = 623FBC02FC6B158E53C5ADB5 /* Build configuration list for PBXProject "SenseBridge" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				es,
+				vi,
+			);
+			mainGroup = EB885AD887785FC1F0AFBF21;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6114C7349D9E8AF391CD5E45 /* XCLocalSwiftPackageReference "Packages/SenseBridgeCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9618DD4D4C1568F04C6D7A72 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B593D1286984F454EBA4A3C8 /* SenseBridge */,
+				D3BD1BBF817FFBA608FE1DFC /* SenseBridgeTests */,
+				C869D1957C2046A45E319056 /* SenseBridgeUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		4A2AB17303D5144B8089D369 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B62B6F726B5A68E041AADB00 /* Assets.xcassets in Resources */,
+				608A9FB837FD1E25D7527BD5 /* InfoPlist.xcstrings in Resources */,
+				A4130055EDBE13F4F595E785 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9AB940B762128CCD2FDF3585 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */,
+				45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B8A60DA5A20D2DCC1BDC0DD6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CB1D52334DAD7CF770A84E89 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */,
+				014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */,
+				A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */,
+				774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */,
+				9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */,
+				A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */,
+				B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */,
+				B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */,
+				CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */,
+				A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3C9FA97E8ED3ED156CB336B4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B593D1286984F454EBA4A3C8 /* SenseBridge */;
+			targetProxy = 4814D055CEF4C8017859ACFE /* PBXContainerItemProxy */;
+		};
+		758C906606A80C3B3FD7CD1D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B593D1286984F454EBA4A3C8 /* SenseBridge */;
+			targetProxy = 6BFD9E6A7CF56335310EC355 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2FF7325F917C4AE6DB2F4E1D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5848DBF74A3DDB5EE31C1770 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SenseBridge;
+			};
+			name = Debug;
+		};
+		8E69725E59F6D3BFDFF291D9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		95CD0452D651292B8B0EF7C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		C0D226AD8A46B6E036230822 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SenseBridge.app/SenseBridge";
+			};
+			name = Debug;
+		};
+		C19C11B259EAEA9C90D9E6A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		CCBFF280C428668A89957505 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SenseBridge;
+			};
+			name = Release;
+		};
+		E324DDCE085A93581856E7CE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeTests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SenseBridge.app/SenseBridge";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D2FEEB94B7C96E47CAADF08 /* Build configuration list for PBXNativeTarget "SenseBridgeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5848DBF74A3DDB5EE31C1770 /* Debug */,
+				CCBFF280C428668A89957505 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		54D3995E916EBCE635BB2EA6 /* Build configuration list for PBXNativeTarget "SenseBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2FF7325F917C4AE6DB2F4E1D /* Debug */,
+				C19C11B259EAEA9C90D9E6A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		623FBC02FC6B158E53C5ADB5 /* Build configuration list for PBXProject "SenseBridge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8E69725E59F6D3BFDFF291D9 /* Debug */,
+				95CD0452D651292B8B0EF7C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DFCDDE30C54ED3315124B31A /* Build configuration list for PBXNativeTarget "SenseBridgeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0D226AD8A46B6E036230822 /* Debug */,
+				E324DDCE085A93581856E7CE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		6114C7349D9E8AF391CD5E45 /* XCLocalSwiftPackageReference "Packages/SenseBridgeCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SenseBridgeCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3030507FD05945D3B89734B5 /* SenseBridgeCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SenseBridgeCore;
+		};
+		E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SenseBridgeCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2EE5A08621EAFB090016B43E /* Project object */;
+}

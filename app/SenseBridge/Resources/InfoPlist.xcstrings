@@ -1,0 +1,50 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge usa la cámara para leerte texto y describir escenas. Nada sale de tu dispositivo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge sử dụng camera để đọc văn bản và mô tả khung cảnh cho bạn. Không có gì rời khỏi thiết bị của bạn."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge usa el micrófono para reconocer sonidos cercanos y anunciarlos. Nada sale de tu dispositivo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge sử dụng micrô để nhận dạng các âm thanh gần đó và thông báo chúng. Không có gì rời khỏi thiết bị của bạn."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
