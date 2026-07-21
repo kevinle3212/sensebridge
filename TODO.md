@@ -25,6 +25,45 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Vercel GitHub auto-deploy + website SEO/accessibility (2026-07-21)
+
+Full session log: [`sessions/2026-07-21/1200-PST.md`](sessions/2026-07-21/1200-PST.md).
+Reverses the `0000-PST.md` decision to leave Vercel's Git integration
+disconnected (to avoid racing Railway) — owner confirmed in-session that
+dual auto-deploy is now intentional. SEO: added `astro.config.mjs`'s `site`,
+`@astrojs/sitemap`, `public/robots.txt`, and canonical/OG/Twitter meta to
+`BaseLayout.astro` — verified via `npm run build`. Accessibility: audited,
+found already clean (zero `<img>` tags anywhere, every decorative SVG/canvas
+already `aria-hidden`, icon-only controls already labeled) — no code change
+needed. Root Directory on the Vercel project was `.` (would have broken any
+Git-connected build against this monorepo) — fixed to `website` via the
+Vercel API.
+
+- [ ] **[P1]** **[Needs owner]** Grant the Vercel GitHub App access to
+      `kevinle3212/sensebridge`: GitHub → Settings → Applications →
+      Installed GitHub Apps → Vercel → Configure (or
+      `https://github.com/settings/installations/133842179`) → add
+      `sensebridge` under repository access — its installation is currently
+      restricted to a different repo allowlist, which is why
+      `vercel git connect` fails ("make sure you have access to the
+      repository"). Then re-run `vercel git connect` from `website/` to
+      actually wire Production (`main`) + Preview (branches/PRs) auto-deploy
+      — nothing auto-deploys on the Vercel side yet.
+- [ ] **[P3]** **[Needs owner]** Once Git auto-deploy is connected and the
+      next production deploy lands, confirm `https://sensebridge.vercel.app`
+      resolves — `astro.config.mjs`'s new `site` value assumes the pending
+      alias-bind-on-next-deploy (see the P2 item below from the earlier
+      Vercel session).
+- [ ] **[P3]** **[Needs owner]** Generate and wire a real `og:image`/
+      `twitter:image` (1200×630 PNG) once a social-preview asset exists —
+      currently omitted rather than pointed at a nonexistent file.
+- [ ] **[P3]** **[Needs owner]** Decide the JSON-LD structured-data approach
+      given the zero-exception CSP (`script-src 'self'`, no nonce mechanism
+      on this static site): accept `'unsafe-inline'` (security regression),
+      pin per-locale SHA-256 hashes into `vercel.json` (brittle), or skip
+      structured data entirely. Tried and reverted this session rather than
+      ship something CSP would silently drop.
+
 ### Commit backlog / Dependabot merge (2026-07-21)
 
 Full run log: [`sessions/2026-07-21/1100-PST.md`](sessions/2026-07-21/1100-PST.md).

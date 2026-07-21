@@ -15,6 +15,8 @@ const t = useTranslations(locale);
 const locales = Object.keys(translations) as Locale[];
 
 const { title = t.meta.title, description = t.meta.description } = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
@@ -25,9 +27,15 @@ const { title = t.meta.title, description = t.meta.description } = Astro.props;
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={canonicalURL} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SenseBridge" />
+    <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     {
       locales.map((loc) => (
         <link rel="alternate" hreflang={loc} href={getRelativeLocaleUrl(loc, "/")} />
