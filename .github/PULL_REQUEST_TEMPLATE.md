@@ -29,7 +29,7 @@
 
 - [ ] No new network round-trip for perception or reasoning.
 - [ ] No user surroundings leave the device without explicit, revocable consent
-      and a `docs/privacy.md` update.
+      and a `docs/PRIVACY.md` update.
 - [ ] Not applicable.
 
 ## Model / dependency licensing

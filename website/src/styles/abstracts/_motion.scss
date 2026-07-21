@@ -1,6 +1,6 @@
 // Motion tokens (durations + easings) and the reduced-motion gate. No
 // component styles use these yet — this phase ships zero animation (see
-// docs/safety-framing.md-adjacent motion doctrine: every transition must live
+// docs/SAFETY-FRAMING.md-adjacent motion doctrine: every transition must live
 // behind `prefers-reduced-motion`). Phase 5 (motion layer) is the first real
 // consumer.
 @use "sass:map";
@@ -10,6 +10,7 @@ $duration: (
   "base": 240ms,
   "slow": 400ms,
   "slower": 700ms,
+  "cinema": 1200ms,
 );
 $ease: (
   "out-expo": cubic-bezier(0.16, 1, 0.3, 1),

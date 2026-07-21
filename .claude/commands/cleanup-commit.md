@@ -5,7 +5,7 @@ Run when asked to "clean up and commit" or before handing work over.
 
 ---
 
-## Phase 0 — Survey (never skip)
+## Phase 0 — survey (never skip)
 
 1. `git status --porcelain` and `git diff` — know exactly what changed and why.
    Every changed line must trace to the task; revert drive-by edits.
@@ -14,7 +14,7 @@ Run when asked to "clean up and commit" or before handing work over.
 3. If anything under `legal/` changed, stop — owner approval is required
    before those files move at all.
 
-## Phase 1 — Automated checks
+## Phase 1 — automated checks
 
 Run in order; fix and re-run until clean:
 
@@ -26,7 +26,7 @@ Run in order; fix and re-run until clean:
 4. If Swift code changed: `swift build` / `xcodebuild build` and the relevant
    tests per `docs/TESTING.md`.
 
-## Phase 2 — Manual self-review
+## Phase 2 — manual self-review
 
 - Physical-world / spoken output changed? It must hedge — route through the
   safety-framing-reviewer (`.agents/agents/safety-framing-reviewer.md`).
@@ -38,7 +38,7 @@ Run in order; fix and re-run until clean:
   `README.md`, and the root docs (`GAPS.md`, `PROJECT_OVERVIEW.md`,
   `WIKI.md`) whenever structure or capability changed.
 
-## Phase 3 — Commit
+## Phase 3 — commit
 
 1. Stage narrowly (`git add <paths>`), not `git add -A`, unless the whole
    tree is genuinely one change.
@@ -48,7 +48,7 @@ Run in order; fix and re-run until clean:
    be disclosed in the PR description.
 4. One logical change per commit; split unrelated work.
 
-## Phase 4 — Report
+## Phase 4 — report
 
 State what was committed, which gates ran clean, and which could not run (no
 app yet, no device, no blind tester) — never let "hooks passed" imply more

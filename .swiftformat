@@ -1,0 +1,24 @@
+--swiftversion 6.0
+--exclude app/Packages/SenseBridgeCore/.build,app/SenseBridge.xcodeproj
+
+--indent 4
+--maxwidth 120
+--wraparguments before-first
+--self remove
+--importgrouping testable-last
+--commas inline
+
+# Correctness / dead-code cleanup beyond the defaults
+--enable emptyExtensions
+--enable isEmpty
+--enable preferContains
+--enable preferCountWhere
+--enable preferFirstWhere
+--enable preferFlatMap
+--enable preferMinOverSorted
+--enable preferSwiftStringAPI
+--enable preferFinalClasses
+--enable privateStateVariables
+--enable propertyTypes
+--enable testSuiteAccessControl
+--enable validateTestCases

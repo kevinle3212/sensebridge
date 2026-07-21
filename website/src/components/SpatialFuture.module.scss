@@ -1,0 +1,95 @@
+@use "@styles/abstracts" as *;
+
+// Quiet epilogue: sits outside the .pipeline wrapper (see src/pages/index.astro),
+// so it gets a slightly different band treatment — a raised surface rather
+// than the plain bg every in-pipeline section shares.
+.future {
+  position: relative;
+  scroll-margin-top: space("7");
+  background: color("bg-elevated");
+
+  @include section-band;
+  @include theme-transition;
+}
+
+.inner {
+  display: grid;
+  gap: space("4");
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: space("2");
+}
+
+.kicker {
+  color: color("text-secondary");
+
+  @include type-label;
+}
+
+.lede,
+.body {
+  max-width: 40rem;
+}
+
+.lede {
+  color: color("text-secondary");
+}
+
+.stage {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  border-radius: radius("lg");
+}
+
+.fallback-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+// `.scene-active` is added at runtime by scripts/scenes/core.ts's
+// mountScene() once glasses.ts's WebGL scene is live — same fade-the-
+// static-art pattern as PhoneExploded.module.scss's `.stage:global(.scene-active)`.
+.stage:global(.scene-active) .fallback-art {
+  opacity: 0.15;
+
+  @include motion-safe {
+    transition: opacity duration("slow") ease("in-out");
+  }
+}
+
+// Structural frame (lens rims, temples) reads as Hairline Navy; the bridge —
+// the seam the traveling signal crosses in the WebGL scene — carries the
+// meaning accent, per the Two-Accent Rule.
+.lens,
+.temple {
+  fill: none;
+  stroke: color("hairline");
+  stroke-width: 1.5;
+}
+
+.bridge {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.5;
+}
+
+.hinge {
+  fill: color("accent-warm");
+  stroke: none;
+}
+
+@media (width >= 56.25rem) {
+  .inner {
+    grid-template-columns: 1fr 45%;
+    align-items: center;
+  }
+
+  .stage {
+    height: 420px;
+  }
+}

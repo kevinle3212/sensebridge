@@ -43,6 +43,7 @@ check_advisory "xcbeautify" xcbeautify
 echo
 echo "== Advisory (pre-commit secret/sensitive-file scanning) =="
 check_advisory "gitleaks" gitleaks
+check_advisory "ggshield (GitGuardian; needs 'ggshield auth login' after install)" ggshield
 check_advisory "Node (runs tools/check-sensitive-files.mjs)" node
 
 echo

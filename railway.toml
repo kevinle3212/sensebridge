@@ -11,3 +11,12 @@ dockerfilePath = "docker/Dockerfile"
 [deploy]
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
+# Platform-level gate on top of the Dockerfile's own HEALTHCHECK: Railway
+# won't route traffic to a new deployment (or tear down the old one) until
+# this path answers, so a build that starts but serves broken output never
+# goes live. "/" is the same endpoint the Dockerfile HEALTHCHECK already
+# polls. overlapSeconds keeps the previous deployment serving traffic
+# alongside the new one during that window, so a switch is zero-downtime.
+healthcheckPath = "/"
+healthcheckTimeout = 30
+overlapSeconds = 15

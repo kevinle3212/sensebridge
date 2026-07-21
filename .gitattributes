@@ -1,0 +1,36 @@
+# Normalize line endings; let Git decide text vs. binary per-file, override
+# explicitly below for anything it can misdetect.
+* text=auto eol=lf
+
+# Source
+*.swift text diff=swift
+*.md    text
+*.mdx   text
+*.json  text
+*.yml   text
+*.yaml  text
+*.html  text diff=html
+*.css   text diff=css
+*.js    text
+*.sh    text eol=lf
+*.toml  text
+
+# Xcode project files are plist-format and merge conflict-prone; leave the
+# default merge strategy (no auto-resolve) and just mark them generated.
+*.pbxproj -text linguist-generated
+
+# Generated / vendored — exclude from GitHub language stats and diffs.
+graphify-out/** linguist-generated -diff
+.gitnexus/**    linguist-generated -diff
+website/package-lock.json linguist-generated -diff
+
+# Binary — never diff or normalize.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.ipa  binary
+*.dSYM binary
+*.mp3  binary

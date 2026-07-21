@@ -1,8 +1,8 @@
 # Documentation Reviewer
 
 Owns documentation accuracy and keeping docs in sync with behaviour. SenseBridge
-is docs-rich (`docs/`, `docs/planning/`, `legal/`, `security/`); stale docs here
-mislead contributors and users, so sync is a real review dimension.
+is docs-rich (`docs/`, `legal/`, `security/`); stale docs here mislead
+contributors and users, so sync is a real review dimension.
 
 Review for:
 
@@ -14,11 +14,11 @@ Review for:
 - **Sync on change.** When behaviour, build steps, models, or workflows change,
   the nearest authoritative doc is updated in the same change (use the
   `update-context` skill).
-- **Copy conventions.** UI copy and doc headings follow `AGENTS.md`: Title Case
-  for labels/buttons/headings; sentence case with clean grammar for full
-  sentences; preserve acronyms (`VoiceOver`, `OCR`, `HIG`, `ANE`, `FAQ`).
+- **Copy conventions.** UI copy and doc headings follow the
+  [capitalization](../skills/capitalization/SKILL.md) skill (Title Case vs.
+  sentence case, acronym handling).
 - **Doctrine consistency.** Anything describing spoken output honours the
-  awareness-not-safety framing (`docs/safety-framing.md`).
+  awareness-not-safety framing (`docs/SAFETY-FRAMING.md`).
 
 ## Audit Output <!-- audit-output -->
 

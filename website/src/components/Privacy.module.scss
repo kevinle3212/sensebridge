@@ -1,15 +1,30 @@
 @use "@styles/abstracts" as *;
 
 .privacy {
-  @include section-band;
+  position: relative;
+
+  // Sticky header height + breathing room, so a #privacy jump (Header nav)
+  // doesn't land the heading under the header.
+  scroll-margin-top: space("7");
+
+  @include section-band("generous");
 }
 
-.body,
-.supporting {
+.body {
   margin-top: space("2");
   max-width: 40rem;
 }
 
+// The page's one deliberate full-breath moment: the closing line stands
+// alone as a large centered statement rather than a supporting paragraph.
 .supporting {
-  color: color("text-secondary");
+  margin-top: space("4");
+  margin-inline: auto;
+  max-width: 28ch;
+  font-family: $font-display;
+  font-size: clamp(1.4rem, 1.1rem + 1.8vw, 2rem);
+  font-weight: 600;
+  color: color("text-primary");
+  text-align: center;
+  text-wrap: balance;
 }

@@ -1,25 +1,54 @@
-// Design tokens for the "First Light" design system — dark palette (two
-// accents max, AA-verified against the surfaces they sit on), an 8-based
-// spacing scale, corner radii, and the one hero-only glow token. These SCSS
-// maps are the single source of truth; global/base.scss emits the matching
-// CSS custom properties for runtime use (e.g. values JS needs to read).
-// Contrast (against $color("ink") #080a10, WCAG AA body-text floor 4.5:1):
+// Design tokens for the "First Light" design system — semantic color keys with
+// a dark palette (default) and a light palette, both with identical key sets
+// so the guard below catches drift; an 8-based spacing scale; corner radii;
+// and glow/card shadow tokens per theme. These SCSS maps are the single
+// source of truth; global/base.scss emits the matching CSS custom properties
+// (dark under :root, light under [data-theme="light"]) for runtime theming —
+// see abstracts/_functions.scss's color()/shadow(), which resolve to
+// `var(--color-<key>)` / `var(--shadow-<key>)` rather than a literal value.
+// Contrast (against $color-dark "bg" #080a10, WCAG AA body-text floor 4.5:1):
 //   text-primary   #e8ebf2 → ~17.9:1
 //   text-secondary #a7afc2 → ~8.6:1
 //   accent-primary #5eb1ff → ~8.1:1 (links/focus — carries text)
-// accent-secondary is decorative-only (hero glow/light-sweep) and never
-// carries text, so it is not held to the text contrast floor.
+// accent-warm is decorative-only (hero glow/light-sweep) and never carries
+// text, so it is not held to the text contrast floor. Light-mode contrast
+// (against $color-light "bg" #f7f8fb):
+//   text-primary   #101422 → ~17.4:1
+//   text-secondary #4d5468 → ~7.5:1
+//   accent-primary #145fc4 → ~6.2:1
+@use "sass:map";
 
-$color: (
-  "ink": #080a10,
-  "surface-raised": #131722,
-  "surface-glass": rgb(19 23 34 / 60%),
+$color-dark: (
+  "bg": #080a10,
+  "bg-elevated": #0f131c,
+  "surface": #161b28,
+  "surface-glass": rgb(15 19 28 / 60%),
+  "hairline": #2a3145,
   "text-primary": #e8ebf2,
   "text-secondary": #a7afc2,
   "accent-primary": #5eb1ff,
-  "accent-secondary": #ffb37a,
-  "hairline": #262c3d,
+  "accent-warm": #ffb37a,
+  // Deprecated alias kept only because Disclaimer.module.scss is untouchable
+  // (see CLAUDE.md) and still calls color("surface-raised") — same value as
+  // "surface". Remove if that file is ever migrated to the "surface" key.
+  "surface-raised": #161b28,
 );
+$color-light: (
+  "bg": #f7f8fb,
+  "bg-elevated": #ffffff,
+  "surface": #eef1f7,
+  "surface-glass": rgb(255 255 255 / 60%),
+  "hairline": #d4d9e4,
+  "text-primary": #101422,
+  "text-secondary": #4d5468,
+  "accent-primary": #145fc4,
+  "accent-warm": #a8480d,
+  "surface-raised": #eef1f7,
+);
+
+@if map.keys($color-dark) != map.keys($color-light) {
+  @error "$color-dark and $color-light must declare the same keys.";
+}
 
 // 8-based scale: 8/16/24/40/64/96/128px.
 $space: (
@@ -37,9 +66,19 @@ $radius: (
   "lg": 1.25rem,
 );
 
-// Elevation is mostly "surface-raised background + hairline border" (both
-// already in $color above); the only dedicated elevation token is the single
-// soft glow reserved for the hero.
-$shadow: (
+// Elevation: a soft card shadow plus the hero/bridge glow blooms, both tuned
+// per theme (lower alpha in light mode, where a dark shadow reads heavier).
+$shadow-dark: (
   "glow-hero": 0 0 160px 40px rgb(255 179 122 / 18%),
+  "glow-signal": 0 0 120px 30px rgb(94 177 255 / 14%),
+  "card": 0 8px 32px rgb(0 0 0 / 40%),
 );
+$shadow-light: (
+  "glow-hero": 0 0 160px 40px rgb(255 179 122 / 10%),
+  "glow-signal": 0 0 120px 30px rgb(20 95 196 / 8%),
+  "card": 0 8px 32px rgb(16 20 34 / 10%),
+);
+
+@if map.keys($shadow-dark) != map.keys($shadow-light) {
+  @error "$shadow-dark and $shadow-light must declare the same keys.";
+}

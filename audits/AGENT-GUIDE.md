@@ -5,7 +5,7 @@ performing audits in this repository. Follow this so every audit is consistent,
 verifiable, and honest about its limits.
 
 Claude Code agents should invoke the `audit-refresh` skill
-(`.agents/skills/audit-refresh/SKILL.md`), which automates the procedure below;
+(`.claude/skills/audit-refresh/SKILL.md`), which automates the procedure below;
 every reviewer agent under `.agents/agents/` also carries an "Audit Output"
 block that routes its findings to the matching category here.
 
@@ -36,7 +36,7 @@ block that routes its findings to the matching category here.
    Severity note specific to this project: a single confidently-wrong,
    safety-adjacent statement about the physical world (e.g. an unhedged "it is
    clear ahead") is the highest-severity class of bug here — treat it as
-   Critical even when nothing crashes. See `docs/safety-framing.md`.
+   Critical even when nothing crashes. See `docs/SAFETY-FRAMING.md`.
 5. **Fix what is realistic in scope**, keeping changes surgical (see root
    `CLAUDE.md`). Log each fix under "Fixes Applied" and list touched files under
    "Files Modified."

@@ -1,0 +1,32 @@
+---
+import styles from "./SpineNode.module.scss";
+
+interface Props {
+  // Distance from this node's own section's top edge — pass the section's
+  // top padding so the node lands at heading level (see each caller for its
+  // value). Kept as a prop instead of a lookup table so each section stays
+  // the single source of truth for its own spacing.
+  top: string;
+}
+
+const { top } = Astro.props;
+---
+
+<!-- Signal Spine stage marker (DESIGN.md "Signal Spine"): stroke-only ring +
+     filled center dot, purely decorative. Resting state is "locked" (ring at
+     full opacity, dot at full size) — src/scripts/motion.ts only ever hides
+     that finished picture first, then reveals it once this section scrolls
+     into view, same hide-then-reveal pattern as the Signal Bridge. -->
+<svg
+  class={styles.node}
+  style={`top: ${top}`}
+  viewBox="0 0 10 10"
+  width="10"
+  height="10"
+  aria-hidden="true"
+  focusable="false"
+  data-spine-node
+>
+  <circle class={styles.ring} cx="5" cy="5" r="4" data-spine-ring></circle>
+  <circle class={styles.dot} cx="5" cy="5" r="1.5" data-spine-dot></circle>
+</svg>

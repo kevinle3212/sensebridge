@@ -8,7 +8,7 @@ Review for:
 
 - **License blockers.** AGPL and Apple's `apple-amlr` research-only license are
   hard blocks for anything shipped in the app or a bundled model. See
-  [`docs/ai-models.md`](../../docs/ai-models.md). Any new dependency or model
+  [`docs/AI-MODELS.md`](../../docs/AI-MODELS.md). Any new dependency or model
   must have a license compatible with distribution on the App Store.
 - **SwiftPM hygiene.** Dependencies pinned to exact versions in
   `Package.resolved`; minimal tree; each new package justified against the "boring

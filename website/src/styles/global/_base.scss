@@ -1,10 +1,14 @@
 @use "sass:map";
 @use "@styles/abstracts" as *;
+@use "@styles/abstracts/tokens";
 
 // Runtime-readable copies of the build-time SCSS tokens (e.g. for JS that
-// needs to read a token, or for anyone inspecting computed styles).
+// needs to read a token, or for anyone inspecting computed styles). Dark is
+// the default, emitted under :root; light overrides emit under
+// [data-theme="light"] (set by the no-flash script in BaseLayout.astro before
+// first paint, or by the Header.astro theme toggle thereafter).
 :root {
-  @each $key, $value in $color {
+  @each $key, $value in tokens.$color-dark {
     --color-#{$key}: #{$value};
   }
 
@@ -16,7 +20,7 @@
     --radius-#{$key}: #{$value};
   }
 
-  @each $key, $value in $shadow {
+  @each $key, $value in tokens.$shadow-dark {
     --shadow-#{$key}: #{$value};
   }
 
@@ -27,52 +31,108 @@
   @each $key, $value in $ease {
     --ease-#{$key}: #{$value};
   }
-}
 
-html {
   color-scheme: dark;
 }
 
-// Self-hosted display face, Hero H1/H2 only (body/UI text stays on the
-// zero-byte system stack below). `font-display: optional` means it never
-// blocks or reflows LCP: the browser either has it in time for first paint
-// or falls back permanently for that render. The paired "Inter Fallback"
-// face below is metric-matched (ascent/descent/size-adjust computed from
-// Inter's and Arial's actual font metrics via the same method as Vercel's
-// next/font and the "fontaine" package) so swapping between them, on the
-// rare repaint where it does happen, causes no layout shift.
+[data-theme="light"] {
+  @each $key, $value in tokens.$color-light {
+    --color-#{$key}: #{$value};
+  }
+
+  @each $key, $value in tokens.$shadow-light {
+    --shadow-#{$key}: #{$value};
+  }
+
+  color-scheme: light;
+}
+
+// Self-hosted variable fonts: Fraunces (display/headings), Geist (body/UI),
+// Geist Mono (the label mixin, for later batches). `font-display: swap` means
+// text renders immediately in a fallback and swaps once the font loads —
+// unlike the old single-face Inter setup, three families now share the
+// critical path, so `optional` (never swap, never block) was too strict a
+// budget; BaseLayout.astro preloads all three to keep the swap window short.
 @font-face {
-  font-family: "Inter Variable";
-  src: url("/fonts/inter-variable-latin.woff2") format("woff2-variations");
+  font-family: "Fraunces Variable";
+  src: url("/fonts/fraunces-variable-latin.woff2") format("woff2-variations");
   font-weight: 100 900;
   font-style: normal;
-  font-display: optional;
+  font-display: swap;
 }
 
 @font-face {
-  font-family: "Inter Fallback";
-  src: local("Arial");
-  size-adjust: 107.12%;
-  ascent-override: 90.44%;
-  descent-override: 22.52%;
-  line-gap-override: 0%;
+  font-family: "Geist Variable";
+  src: url("/fonts/geist-variable-latin.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono Variable";
+  src: url("/fonts/geist-mono-variable-latin.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
 }
 
 body {
-  background-color: color("ink");
+  background-color: color("bg");
   color: color("text-primary");
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.55;
+
+  @include type-body;
+  @include theme-transition;
 }
 
 a {
   color: color("accent-primary");
 }
 
+// Underline draws in on hover for plain nav/content links — CTA-style links
+// (Hero .cta, FollowProgress .link) carry their own class and their own
+// border/background hover treatment, so this only ever matches unstyled
+// anchors. Resting state keeps the browser's native underline (untouched
+// below), so the link stays recognizable at rest with or without motion.
+a:not([class]) {
+  background-image: linear-gradient(currentcolor, currentcolor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0 1px;
+
+  @include motion-safe {
+    transition: background-size duration("fast") ease("standard");
+  }
+
+  &:hover {
+    text-decoration: none;
+    background-size: 100% 1px;
+  }
+}
+
+// Sanctioned second use of the display face (DESIGN.md "The One Display Face
+// Rule": Fraunces Variable in the hero heading "and at most a future h2
+// treatment"). Global so every section h2 picks it up without per-module
+// duplication.
+h2 {
+  @include type-h2;
+}
+
+h3 {
+  @include type-h3;
+}
+
 a:focus-visible,
 button:focus-visible,
 [tabindex]:focus-visible {
   @include focus-visible-outline;
+}
+
+// The header is sticky (Header.astro), so any anchor-jump target — including
+// the skip-link's own #main destination — must clear its height, same fix
+// applied per-section to #features/#privacy/#accessibility.
+main {
+  scroll-margin-top: space("7");
 }
 
 .skip-link {
@@ -82,7 +142,11 @@ button:focus-visible,
   z-index: 10;
   padding: space("1") space("2");
   background: color("accent-primary");
-  color: color("ink");
+
+  // bg-elevated rather than bg: in light mode this is #ffffff (5.7:1 against
+  // accent-primary #145fc4), the exact pairing the light palette spec calls
+  // for; bg (#f7f8fb) would sit slightly lower.
+  color: color("bg-elevated");
 
   &:focus {
     top: space("2");
@@ -92,4 +156,16 @@ button:focus-visible,
 
 .visually-hidden {
   @include visually-hidden;
+}
+
+// Ambient "First Light" 3D scene canvas (BaseLayout.astro's
+// [data-scene="ambient"], mounted by scripts/scenes/core.ts's mountScene()).
+// Fixed behind everything, never a hit target — body keeps its own
+// background-color (above) so text contrast is unaffected whether or not
+// this scene ever loads.
+.ambient-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
 }

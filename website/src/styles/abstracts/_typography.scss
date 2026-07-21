@@ -1,0 +1,68 @@
+// Type scale for the "First Light" design system: Fraunces Variable carries
+// display/heading roles, Geist Variable carries body/UI text (see
+// global/_base.scss for the @font-face rules). Each mixin below is the full
+// property set for that role — sizes are fluid (clamp) so they scale between
+// the DESIGN.md-specified mobile/desktop floor and ceiling without a
+// breakpoint. type-label (mono, uppercase) lives in _mixins.scss instead,
+// since it's exposed for later batches (3D scene annotations) rather than
+// applied here.
+$font-display: "Fraunces Variable", ui-serif, "Georgia", serif;
+$font-body:
+  "Geist Variable",
+  -apple-system,
+  "BlinkMacSystemFont",
+  "Segoe UI",
+  "Roboto",
+  sans-serif;
+$font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", "Menlo", monospace;
+
+// Hero h1 only (DESIGN.md "The One Display Face Rule").
+@mixin type-display {
+  font-family: $font-display;
+  font-optical-sizing: auto;
+  font-weight: 350;
+  font-size: clamp(2.75rem, 1.3rem + 6.4vw, 6rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+// Global h2.
+@mixin type-h2 {
+  font-family: $font-display;
+  font-weight: 400;
+  font-size: clamp(2rem, 1.35rem + 2.9vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+// Global h3.
+@mixin type-h3 {
+  font-family: $font-display;
+  font-weight: 500;
+  font-size: clamp(1.375rem, 1.18rem + 0.9vw, 1.75rem);
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+}
+
+// Global body copy.
+@mixin type-body {
+  font-family: $font-body;
+  font-size: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  line-height: 1.6;
+}
+
+// Hero lede paragraph.
+@mixin type-lede {
+  font-family: $font-body;
+  font-size: clamp(1.125rem, 1.02rem + 0.5vw, 1.375rem);
+  line-height: 1.55;
+}
+
+// Small print (footnotes, captions) — not yet applied anywhere in this batch.
+@mixin type-small {
+  font-family: $font-body;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
