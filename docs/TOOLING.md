@@ -1,3 +1,7 @@
+---
+title: Tooling — Global vs. Project Decision Matrix
+---
+
 # Tooling — Global vs. Project Decision Matrix
 
 Every development/AI tool considered for SenseBridge, where it lives, and why.
@@ -57,7 +61,7 @@ or orchestration platform touches `app/`.
 | semgrep | installed | Ad-hoc local runs; CI coverage lives in `security.yml`'s `semgrep` job (generic rulesets now, `p/swift` added when `app/` lands, see `GAPS.md` M3) |
 | gh | installed | GitHub workflows |
 | Serena | installed (`uv` tool) | Semantic code navigation via `.mcp.json` |
-| Graphify | installed | Knowledge-graph queries; output (`graphify-out/`) is gitignored. Auto-rebuilds via versioned `.githooks/post-commit` + `post-checkout` (installed by `graphify hook install`, detached/non-blocking, skips rebases and graph-only changes); optional live mode: `graphify watch .` (needs `watchdog` in graphify's env) |
+| Graphify | installed | Knowledge-graph queries; output (`graphify-out/`) is gitignored. Auto-rebuilds via versioned `.githooks/post-commit` + `post-checkout` (installed by `graphify hook install`, detached/non-blocking, skips rebases and graph-only changes); optional live mode: `graphify watch .` (needs `watchdog` in graphify's env). CI rebuilds it advisorily on `main` and uploads it as a downloadable artifact (`.github/workflows/graphify.yml`, scope in `.graphifyignore`) |
 | GitNexus (`gitnexus`) | installed (`npm install -g gitnexus`) | Knowledge-graph code navigation via `.mcp.json`-equivalent wired into the user-global `~/.claude/` config (`gitnexus setup -c claude`), not this repo's tracked files. Index (`.gitnexus/`) gitignored; refresh with `gitnexus analyze` |
 | RTK | installed | Token-efficient repo indexing |
 | gstack | installed (`~/.claude/skills/gstack`) | Web browsing + review/ship skill suite |
