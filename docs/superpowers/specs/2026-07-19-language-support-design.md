@@ -21,7 +21,7 @@ grammars can reorder. Pinned baseline — reviewers verify, native speakers
 validate later:
 
 | Certainty | en | es | vi |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | low | `there might be %@.` | `puede que haya %@.` | `có thể có %@.` |
 | medium | `it looks like there's %@.` | `parece que hay %@.` | `hình như có %@.` |
 | high | `it looks like there's likely %@.` | `parece que probablemente hay %@.` | `rất có thể có %@.` |
