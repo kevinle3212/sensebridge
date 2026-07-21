@@ -29,7 +29,7 @@ if compgen -G "Package.swift" >/dev/null || compgen -G "app/Package.swift" >/dev
 	echo "== swift build =="
 	swift build
 elif compgen -G "app/*.xcodeproj" >/dev/null || compgen -G "app/*.xcworkspace" >/dev/null; then
-	PROJ=$(ls -d app/*.xcworkspace app/*.xcodeproj 2>/dev/null | head -1)
+	PROJ=$(find app -maxdepth 1 \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -quit)
 	FLAG=-project
 	[ "${PROJ##*.}" = "xcworkspace" ] && FLAG=-workspace
 	echo "== xcodebuild build =="

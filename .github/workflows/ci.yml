@@ -60,7 +60,7 @@ jobs:
       - name: Xcode build and test
         if: steps.detect.outputs.kind == 'xcode'
         run: |
-          PROJ=$(ls -d app/*.xcworkspace app/*.xcodeproj 2>/dev/null | head -1)
+          PROJ=$(find app -maxdepth 1 \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -quit)
           FLAG=$([[ "$PROJ" == *.xcworkspace ]] && echo -workspace || echo -project)
           xcodebuild build test \
             "$FLAG" "$PROJ" \
