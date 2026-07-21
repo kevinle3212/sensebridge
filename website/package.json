@@ -35,10 +35,10 @@
     "scan": "react-scan http://localhost:4321",
     "audit:react": "react-doctor --no-telemetry",
     "doctor": "react-doctor --no-telemetry",
-    "railway:status": "railway status",
-    "railway:logs": "railway logs -n 100",
-    "railway:logs:build": "railway logs --build --latest",
-    "railway:redeploy": "railway redeploy --from-source"
+    "railway:status": "npx --yes @railway/cli status",
+    "railway:logs": "npx --yes @railway/cli logs -n 100",
+    "railway:logs:build": "npx --yes @railway/cli logs --build --latest",
+    "railway:redeploy": "npx --yes @railway/cli redeploy --from-source"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.1",
@@ -58,7 +58,6 @@
     "@fontsource-variable/fraunces": "5.2.9",
     "@fontsource-variable/geist": "5.2.9",
     "@fontsource-variable/geist-mono": "5.2.8",
-    "@railway/cli": "^5.27.1",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
@@ -81,9 +80,6 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
   },
-  "overrides": {
-    "tar": "^7.5.20"
-  },
   "lint-staged": {
     "**/*.{js,ts,tsx,jsx,astro}": "eslint --fix",
     "**/*.scss": "stylelint --fix",
@@ -91,7 +87,6 @@
   },
   "allowScripts": {
     "@parcel/watcher@2.5.6": true,
-    "@railway/cli@5.27.1": true,
     "esbuild@0.28.1": true,
     "sharp@0.34.5": true,
     "fsevents@2.3.3": true,
