@@ -27,8 +27,9 @@ agent. SenseBridge is docs-rich; stale docs mislead contributors and users.
   long guidance across files.
 - Keep links live — `CONTRIBUTING.md` references `app/`, `.github/` templates,
   `docs/ENVIRONMENT.md`, and `docs/TESTING.md`; verify targets exist.
-- Follow `AGENTS.md` copy conventions (Title Case labels; sentence case prose;
-  preserve acronyms like `VoiceOver`, `OCR`, `HIG`, `ANE`).
+- Follow `AGENTS.md` copy conventions; see the
+  [capitalization](../capitalization/SKILL.md) skill for Title Case vs.
+  sentence case rules and the acronym list.
 - Anything about spoken output honours the awareness-not-safety doctrine.
 - Purge stale references when code, screens, models, or workflows move.
 

@@ -28,13 +28,13 @@ require legal review or a doc update — it does not authorise the edit.
 
 - **Privacy / data handling.** Any new data captured, stored, or transmitted;
   any change to the on-device-by-default guarantee — reconcile with
-  `legal/PRIVACY_POLICY.md` and `docs/privacy.md`.
+  `legal/PRIVACY_POLICY.md` and `docs/PRIVACY.md`.
 - **Permissions / biometric / camera capture.** New sensor or camera use, or
   anything touching biometric-adjacent data, has legal exposure across
   jurisdictions.
 - **Safety-adjacent output.** Spoken descriptions of the physical world must
   stay within the awareness-not-safety framing and the disclaimer
-  (`legal/DISCLAIMER.md`, `docs/safety-framing.md`).
+  (`legal/DISCLAIMER.md`, `docs/SAFETY-FRAMING.md`).
 - **App Store positioning.** Store copy must not claim a mobility- or
   navigation-safety device.
 - **Model/data licensing.** Defer to the `model-license-audit` skill.

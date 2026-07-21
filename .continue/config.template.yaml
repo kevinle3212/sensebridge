@@ -1,0 +1,35 @@
+# EXAMPLE ONLY — never read as active config. Continue reads
+# ~/.continue/config.yaml, not this file. Copy it there:
+#   cp .continue/config.template.yaml ~/.continue/config.yaml
+#   chmod 600 ~/.continue/config.yaml
+# then adjust apiBase below if your Ollama runs on another machine (e.g. a
+# LAN host) instead of this one. Full story: docs/OLLAMA.md.
+name: Local AI
+version: 2.0.0
+schema: v1
+
+models:
+  - name: Qwen3 4B (Chat & Edit)
+    provider: ollama
+    model: qwen3:4b
+    apiBase: http://localhost:11434
+    roles:
+      - chat
+      - edit
+      - apply
+      - subagent
+    capabilities:
+      - tool_use
+    defaultCompletionOptions:
+      temperature: 0.2
+      contextLength: 16384
+
+  - name: Qwen2.5 Coder 1.5B Base (Autocomplete)
+    provider: ollama
+    model: qwen2.5-coder:1.5b-base
+    apiBase: http://localhost:11434
+    roles:
+      - autocomplete
+    defaultCompletionOptions:
+      temperature: 0.1
+      contextLength: 8192

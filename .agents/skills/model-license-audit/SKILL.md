@@ -22,7 +22,7 @@ permissive. Interview the user or flag the ambiguity before proceeding.
 
 License review is a **merge blocker**, not a formality. A model with the wrong
 license cannot ship, no matter how good its output. See
-[`docs/ai-models.md`](../../../docs/ai-models.md).
+[`docs/AI-MODELS.md`](../../../docs/AI-MODELS.md).
 
 ## Hard blockers (do not ship)
 
