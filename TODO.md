@@ -25,6 +25,20 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Commit backlog / Dependabot merge (2026-07-21)
+
+Full run log: [`sessions/2026-07-21/1100-PST.md`](sessions/2026-07-21/1100-PST.md).
+
+- [ ] **[P2]** **[Needs owner]** Confirm Dependabot's rebase of PR #9
+      (`chore(deps-dev): bump typescript from 6.0.3 to 7.0.2 in /website`)
+      landed and merge it. It conflicted with `main` after 4 other
+      dependency PRs merged first in the same batch and touched the same
+      `website/package.json`/`package-lock.json`; `@dependabot rebase` was
+      requested via PR comment on 2026-07-21 but not confirmed merged.
+- [ ] **[P3]** **[Needs owner]** Push `chore/bmad-method-setup` (11 local
+      commits, not pushed this session per the no-autonomous-push rule) and
+      open/update its PR once ready.
+
 ### Documentation & code-quality audit (2026-07-21)
 
 Full run log: [`HANDOFF.md`](HANDOFF.md). An unattended audit pass over
