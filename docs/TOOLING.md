@@ -48,7 +48,7 @@ or orchestration platform touches `app/`.
 | Agent/CI scratch space | `tmp/`, `logs/` | Gitignored scratch dirs (`.gitkeep` + README tracked) so agents stop reaching for shared `/tmp` or leaving untracked litter at repo root |
 | Line-ending/merge hygiene | `.gitattributes` | LF normalization, `linguist-generated` on `graphify-out/`, `.gitnexus/`, lockfiles |
 | Secret-scan overrides | `.gitleaksignore` | Fingerprint allowlist for verified false positives, separate from the pattern rules in `.gitleaks.toml`; empty until a real false positive needs one |
-| Static analysis (generic) | `.github/workflows/security.yml` → `semgrep` job (`p/security-audit`, `p/secrets`, `p/owasp-top-ten`) | Scans scripts, workflows, and `website/` now; deliberately **excludes `p/swift`** until `app/` lands (unchanged from `GAPS.md` M3 — add it to this job, not a new one) |
+| Static analysis (generic) | `.github/workflows/security.yml` → `semgrep` job (`p/security-audit`, `p/secrets`, `p/owasp-top-ten`, `p/swift`) | Scans scripts, workflows, `website/`, and (since `app/` landed) Swift — `p/swift` is in the job's config and verified clean, see `GAPS.md`'s H1 resolution |
 
 ## Global (installed on this machine, nothing to add to the repo)
 
@@ -58,7 +58,7 @@ or orchestration platform touches `app/`.
 | SwiftLint, SwiftFormat, xcbeautify | installed (Homebrew) | Invoked by `scripts/lint.sh` once `app/` exists |
 | gitleaks | installed | Pre-commit secret scan |
 | ggshield | not installed — advisory (`brew install ggshield`, then `ggshield auth login`) | Pre-commit GitGuardian secret scan; CI runs regardless via the `ggshield` job, gated on the `GITGUARDIAN_API_KEY` repo secret |
-| semgrep | installed | Ad-hoc local runs; CI coverage lives in `security.yml`'s `semgrep` job (generic rulesets now, `p/swift` added when `app/` lands, see `GAPS.md` M3) |
+| semgrep | installed | Ad-hoc local runs; CI coverage lives in `security.yml`'s `semgrep` job, including `p/swift` (added once `app/` landed) |
 | gh | installed | GitHub workflows |
 | Serena | installed (`uv` tool) | Semantic code navigation via `.mcp.json` |
 | Graphify | installed | Knowledge-graph queries; output (`graphify-out/`) is gitignored. Auto-rebuilds via versioned `.githooks/post-commit` + `post-checkout` (installed by `graphify hook install`, detached/non-blocking, skips rebases and graph-only changes); optional live mode: `graphify watch .` (needs `watchdog` in graphify's env). CI rebuilds it advisorily on `main` and uploads it as a downloadable artifact (`.github/workflows/graphify.yml`, scope in `.graphifyignore`) |
