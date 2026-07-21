@@ -58,8 +58,9 @@ committed file, an environment variable, or a log — see
    repo's git hooks (`.githooks/`): a pre-commit secret/sensitive-file scan
    plus lint, a conventional-commit header check, a pre-push build gate that
    also refuses direct pushes to `main`, and a post-merge check that flags
-   manifest/toolchain files just pulled in. `gitleaks` and Node are advisory
-   for the hooks (`brew install gitleaks`; CI scans regardless).
+   manifest/toolchain files just pulled in. `gitleaks`, `ggshield`, and Node
+   are advisory for the hooks (`brew install gitleaks`; `brew install
+   ggshield` then `ggshield auth login`; CI scans regardless).
    `scripts/lint.sh` can also be run directly before committing.
 
 ## Secret handling

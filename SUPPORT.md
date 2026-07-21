@@ -2,10 +2,10 @@
 
 For help with SenseBridge:
 
-- Documentation: https://github.com/kevinle3212/sensebridge/tree/main/docs
-- Issues: https://github.com/kevinle3212/sensebridge/issues
-- Support: kevinle3212@gmail.com
-- Security reports (private): see [`SECURITY.md`](SECURITY.md)
+- Documentation: <https://github.com/kevinle3212/sensebridge/tree/main/docs>
+- Issues: <https://github.com/kevinle3212/sensebridge/issues>
+- Email/Contact: <kevinle3212@gmail.com>
+- Security Reports (Private): See [`SECURITY.md`](SECURITY.md)
 
 This is a solo-maintained, on-device app with no backend — there is no
 production incident escalation path because there is no production service to
