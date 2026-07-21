@@ -11,17 +11,31 @@ SenseBridge work.
 - What the product is, and the three doctrines that constrain every change:
   [`AGENTS.md`](AGENTS.md). Read it first.
 - Product and scope: [`docs/PRODUCT.md`](docs/PRODUCT.md). Architecture:
-  [`docs/architecture.md`](docs/architecture.md) and
-  [`docs/planning/`](docs/planning).
+  [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - Setup and toolchain: [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md). Testing:
   [`docs/TESTING.md`](docs/TESTING.md).
+
+## Design context — website/
+
+`website/` is a separate design surface from the app: brand register, web
+platform, pre-launch (no CTA implies a download exists yet). Full context in
+[`.agents/context/PRODUCT.md`](.agents/context/PRODUCT.md) and
+[`.agents/context/DESIGN.md`](.agents/context/DESIGN.md) — they live there, not
+in `website/`, because that is where the `impeccable` skill reads them from (see
+[`docs/TOOLING.md`](docs/TOOLING.md) → "Impeccable project root"); do not
+confuse them with [`docs/PRODUCT.md`](docs/PRODUCT.md), which is the **app's**
+product doc. Four principles govern the site: honesty
+over hype (never imply the app is available, never break safety-framing),
+screen-reader-first as a first-class requirement (not an afterthought),
+restraint over conversion pressure (nothing is being sold), and transparency
+about pre-launch status.
 
 ## Architecture invariants
 
 - **Serverless, on-device.** There is no backend, no accounts, and no telemetry
   by default. Do not introduce a network round-trip for perception or reasoning;
   anything leaving the device needs explicit, revocable user consent and a
-  privacy-doc update. See [`docs/privacy.md`](docs/privacy.md).
+  privacy-doc update. See [`docs/PRIVACY.md`](docs/PRIVACY.md).
 - **Protocol seams.** The pipeline is `SensingSource` → perception services →
   Reasoning → `RenderTarget`. Dependencies point inward; reasoning logic stays
   pure and framework-independent. Never couple reasoning to a specific capture or
@@ -30,16 +44,20 @@ SenseBridge work.
   asserts unearned certainty. This is the highest-severity review surface —
   route such changes through the
   [safety-framing-reviewer](.agents/agents/safety-framing-reviewer.md). See
-  [`docs/safety-framing.md`](docs/safety-framing.md).
+  [`docs/SAFETY-FRAMING.md`](docs/SAFETY-FRAMING.md).
 - **Main thread stays free.** No perception or model inference on the main
-  thread; the UI must stay responsive to VoiceOver during processing.
+  thread; the UI must stay responsive to VoiceOver during processing. See the
+  [swift-concurrency-6-2](.agents/skills/swift-concurrency-6-2/SKILL.md) skill
+  for the mechanism.
 
 ## Quality gates (blocking)
 
 Clear the [ci-green-gate](.agents/skills/ci-green-gate/SKILL.md) before any PR:
 
 - Build (`xcodebuild build`, and `swift build` where a package target exists).
-- Tests pass (unit / integration / AI-eval per [`docs/TESTING.md`](docs/TESTING.md)).
+- Tests pass (unit / integration / e2e / AI-eval per
+  [`docs/TESTING.md`](docs/TESTING.md) — e2e floor: three per feature, happy
+  path / error / edge case).
 - **Zero unlabeled elements** on every screen + a VoiceOver pass on changed UI.
   This is a hard gate, not a percentage.
 - Safety-framing review for any physical-world output.
@@ -80,9 +98,14 @@ change needs legal review.
   "worktree" (or the harness mandates isolation, e.g. background jobs) — and
   say so when that happens.
 
+## Session logs
+
+Full rule in [`AGENTS.md`](AGENTS.md#session-logs) — log every substantive
+session under `sessions/<YYYY-MM-DD>/<HHMM>-PST.md` (gitignored, hour-bucketed,
+Pacific time) and carry any substantive follow-up into [`TODO.md`](TODO.md) in
+the same change per [`AGENTS.md`](AGENTS.md#when-you-cant-do-something).
+
 ## Docs sync (per change)
 
-Update whatever the change touches: behaviour/models/permissions → the relevant
-`docs/` file + `README.md`; env vars/toolchain → `docs/ENVIRONMENT.md`;
-dependencies → `SECURITY.md` + setup steps; moved/renamed files → purge stale
-references everywhere (docs, comments, templates, agent instructions).
+Full rule in [`AGENTS.md`](AGENTS.md#docs-sync-per-change) — update the nearest
+authoritative doc in the same change and purge stale references everywhere.

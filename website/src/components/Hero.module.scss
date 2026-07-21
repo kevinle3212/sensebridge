@@ -1,6 +1,7 @@
 @use "@styles/abstracts" as *;
 
 .hero {
+  position: relative;
   padding-block: space("6") space("5");
 }
 
@@ -17,16 +18,7 @@
 }
 
 .hero-heading {
-  font-family:
-    "Inter Variable",
-    "Inter Fallback",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  font-weight: 600;
-  font-size: clamp(2rem, 1.5rem + 3vw, 3.5rem);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  @include type-display;
 }
 
 // Structural only (needed so the JS word-reveal in src/scripts/motion.ts can
@@ -43,21 +35,26 @@
 
 .lede {
   color: color("text-secondary");
-  font-size: 1.125rem;
+
+  @include type-lede;
 }
 
 .cta {
   display: inline-block;
   width: fit-content;
   margin-top: space("1");
-  padding: space("1") space("3");
+
+  // Vertical padding sized past space("1") so the tap target clears the
+  // 44px floor (line-height 1.55 * 16px body text + this padding ≈ 48.8px)
+  // — see DESIGN.md-adjacent mobile a11y check in Batch 3.
+  padding: 0.75rem space("3");
   border: 1px solid color("accent-primary");
   border-radius: radius("md");
   color: color("text-primary");
   text-decoration: none;
 
   &:hover {
-    background: color("surface-raised");
+    background: color("surface");
   }
 
   @include motion-safe {
@@ -85,10 +82,46 @@
   box-shadow: shadow("glow-hero");
 }
 
+// `.scene-active` is added at runtime by scripts/scenes/core.ts's
+// mountScene() once the hero's 3D scene (scripts/scenes/hero.ts) is live —
+// `:global` since that class is never hashed by CSS Modules. Fades the
+// now-redundant static layers rather than hiding them outright, so they're
+// still the immediate fallback if the WebGL context is lost (mountScene
+// removes the class again then).
+.hero-visual:global(.scene-active) [data-hero-layer] {
+  opacity: 0.15;
+
+  @include motion-safe {
+    transition: opacity duration("slow") ease("in-out");
+  }
+}
+
+// --glow-x/--glow-y default to the original static position (50% 40%) so
+// the gradient is pixel-identical to before until src/scripts/motion.ts →
+// initHeroPointerGlow() ever sets them (hover-capable + fine-pointer only;
+// unset everywhere else, including touch and reduced-motion). Same 18% peak
+// alpha and radius as the original — a pointer-following light, not a new
+// effect. This is a gradient color-stop, not a shadow, so it can't route
+// through the shadow("glow-hero") token (a full box-shadow value) — the light
+// override below reuses that same token's 18%→10% alpha ratio and the light
+// theme's accent-warm hex (#a8480d) directly, so the glow still reads as
+// ink-on-paper rather than the dark theme's orange on a light background.
 .visual-glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 40%, rgb(255 179 122 / 18%), transparent 70%);
+  background: radial-gradient(
+    circle at var(--glow-x, 50%) var(--glow-y, 40%),
+    rgb(255 179 122 / 18%),
+    transparent 70%
+  );
+
+  [data-theme="light"] & {
+    background: radial-gradient(
+      circle at var(--glow-x, 50%) var(--glow-y, 40%),
+      rgb(168 72 13 / 10%),
+      transparent 70%
+    );
+  }
 
   @include motion-safe {
     will-change: transform;
@@ -102,7 +135,7 @@
   overflow: hidden;
   width: 44%;
   aspect-ratio: 0.5;
-  background: linear-gradient(180deg, color("surface-raised"), color("ink"));
+  background: linear-gradient(180deg, color("surface"), color("bg"));
   border: 1px solid color("hairline");
   border-radius: radius("lg");
   transform: translate(-50%, -50%);
@@ -130,6 +163,13 @@
   inset: -20% -60%;
   background: linear-gradient(105deg, transparent 42%, rgb(255 179 122 / 22%) 50%, transparent 58%);
   transform: translateX(-10%);
+
+  // Same reasoning as .visual-glow above: a gradient stop, not a shadow
+  // token, so the light-mode alpha is scaled down by the same ~55% ratio as
+  // shadow("glow-hero")'s 18%→10% dark/light split.
+  [data-theme="light"] & {
+    background: linear-gradient(105deg, transparent 42%, rgb(168 72 13 / 12%) 50%, transparent 58%);
+  }
 
   @include motion-safe {
     animation: hero-sweep 7s ease("in-out") infinite alternate;

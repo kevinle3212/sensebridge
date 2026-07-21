@@ -1,9 +1,18 @@
 ---
-// Markup for the site's two "listen to this page" controls. Both buttons
-// stay `hidden` until src/scripts/read-aloud.ts confirms each is usable —
-// see that file for the full progressive-enhancement contract. Same element
-// IDs as the pre-Astro js/read-aloud.js markup so the ported script's
-// querySelectors keep working unchanged.
+// Renders the site's two "listen to this page" controls (device TTS and
+// natural-audio playback) plus a status region for progressive-enhancement
+// feedback. Both buttons stay `hidden` until src/scripts/read-aloud.ts
+// confirms each is usable — see that file for the full
+// progressive-enhancement contract. Same element IDs as the pre-Astro
+// js/read-aloud.js markup so the ported script's querySelectors keep working
+// unchanged.
+//
+// Keep this comment inside the frontmatter fence: Astro requires `---` to be
+// the first thing in the file, so a JSDoc block above it silently turns the
+// whole frontmatter into markup.
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 ---
 
 <div class="read-aloud">
@@ -15,7 +24,7 @@
     aria-pressed="false"
   >
     <span aria-hidden="true">🔊</span>
-    <span class="read-aloud__label">Listen (device voice)</span>
+    <span class="read-aloud__label">{t.readAloud.deviceIdleLabel}</span>
   </button>
   <button
     id="read-aloud-natural-toggle"
@@ -25,7 +34,7 @@
     aria-pressed="false"
   >
     <span aria-hidden="true">🎙️</span>
-    <span class="read-aloud-natural__label">Listen (natural voice)</span>
+    <span class="read-aloud-natural__label">{t.readAloud.naturalIdleLabel}</span>
   </button>
   <audio id="read-aloud-natural-audio" hidden preload="none" src="/audio/main.mp3"></audio>
   <p id="read-aloud-status" class="visually-hidden" role="status" aria-live="polite"></p>

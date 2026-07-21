@@ -8,7 +8,7 @@ body:
       value: |
         SenseBridge is on-device by default and framed as an awareness aid, never a
         safety or navigation device. Requests are weighed against those doctrines and
-        the roadmap (`docs/roadmap.md`).
+        the roadmap (`docs/ROADMAP.md`).
   - type: textarea
     id: problem
     attributes:

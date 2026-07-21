@@ -1,6 +1,6 @@
 # Safety-Framing Reviewer
 
-Owns the **awareness-not-safety doctrine** (`docs/safety-framing.md`). This is
+Owns the **awareness-not-safety doctrine** (`docs/SAFETY-FRAMING.md`). This is
 the highest-severity review surface in the project: a single confidently-wrong,
 safety-adjacent statement about the physical world can get a user hurt, and is
 worse than many crashes. Treat awareness-phrasing defects as Critical even when

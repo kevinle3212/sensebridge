@@ -7,9 +7,53 @@
 [extend]
 useDefault = true
 
-[allowlist]
-description = "Documentation examples and fixtures"
-paths = [
-    '''docs/.*\.md''',
-    '''audits/.*\.md''',
-]
+# --- AI-provider keys the default ruleset does NOT catch -------------------
+#
+# Verified 2026-07-16 against gitleaks 8.30.1: of the provider key formats this
+# repo could plausibly leak, the default ruleset caught only `github-pat` and
+# `gcp-api-key`. Anthropic, both OpenAI formats, and Hugging Face all scanned
+# clean — a real key would have been committed silently. This is a Claude Code
+# repo whose model work is documented in docs/AI-MODELS.md, so an `sk-ant-` key
+# is the single most likely credential to leak here.
+#
+# Keep `keywords` in sync with each regex's literal prefix: gitleaks uses them
+# as a fast pre-filter, so a rule whose keyword never appears never fires.
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API key"
+regex = '''sk-ant-[a-zA-Z0-9_\-]{24,}'''
+keywords = ["sk-ant-"]
+
+[[rules]]
+id = "openai-project-key"
+description = "OpenAI project API key"
+regex = '''sk-proj-[a-zA-Z0-9_\-]{40,}'''
+keywords = ["sk-proj-"]
+
+[[rules]]
+id = "openai-legacy-key"
+description = "OpenAI legacy API key"
+# Exactly 48 base62 chars. Cannot swallow `sk-ant-` / `sk-proj-`: the hyphen in
+# those prefixes is outside the character class and breaks the match.
+regex = '''sk-[a-zA-Z0-9]{48}'''
+keywords = ["sk-"]
+
+[[rules]]
+id = "huggingface-token"
+description = "Hugging Face access token"
+regex = '''hf_[a-zA-Z0-9]{30,}'''
+keywords = ["hf_"]
+
+# --- Allowlist -------------------------------------------------------------
+#
+# Deliberately no path rules. This previously excluded `docs/.*\.md` and
+# `audits/.*\.md` as "documentation examples and fixtures", which silently
+# disabled scanning across two whole trees: an identical GitHub PAT was caught
+# at the repo root and allowed in docs/. Nothing in either tree actually trips a
+# rule (verified 2026-07-16 by scanning the repo with no allowlist: clean), so
+# the exclusion bought nothing and cost real coverage.
+#
+# Real false positives go in .gitleaksignore by fingerprint — one reviewed
+# finding at a time — never by re-adding a blanket path rule here. That is what
+# .gitleaksignore is for; see docs/TOOLING.md.

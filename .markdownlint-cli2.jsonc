@@ -1,0 +1,36 @@
+{
+  // Rule config lives in .markdownlint.jsonc (shared with the VS Code
+  // extension, which reads that file directly). This file exists only so
+  // `npx markdownlint-cli2` works from the command line and matches what
+  // the editor already does — the editor's markdownlint extension honors
+  // .markdownlintignore natively; this CLI version does not appear to load
+  // it automatically, so the same excludes are repeated here explicitly.
+  //
+  // Run from the repo root: `npx markdownlint-cli2`. Deliberately unpinned
+  // (resolved fresh by npx each run) rather than added as a website/
+  // devDependency — this file's globs cover the whole repo, not just
+  // website/, and Node tooling is intentionally scoped to website/ only
+  // (see docs/TOOLING.md). If CLI output ever drifts between runs, pin a
+  // version with `npx markdownlint-cli2@<version>` and update this comment.
+  "config": { "extends": ".markdownlint.jsonc" },
+  "globs": ["**/*.md"],
+  "ignores": [
+    "**/node_modules/**",
+    "**/skills/impeccable/**",
+    "**/skills/seo-schema/**",
+    "**/skills/seo-technical/**",
+    "**/skills/bmad-*/**",
+    "**/skills/stripe-best-practices/**",
+    "**/skills/stripe-projects/**",
+    "**/skills/upgrade-stripe/**",
+    "**/skills/react-doctor/**",
+    "**/.impeccable/critique/**",
+    "CLAUDE.template.md",
+    "**/NOTES.local.md",
+    "audits/*/[0-9]*.md",
+    "graphify-out/**",
+    "sessions/**",
+    "tmp/**",
+    "LICENSE"
+  ]
+}

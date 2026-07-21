@@ -3,15 +3,22 @@ name: Claude
 # Responds to @claude mentions in issues and PRs. Requires the repo secret
 # ANTHROPIC_API_KEY (Settings -> Secrets and variables -> Actions).
 
-on:
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-  issues:
-    types: [opened, assigned]
-  pull_request_review:
-    types: [submitted]
+# TEMPORARILY DISABLED 2026-07-17 — paused until additional Anthropic API
+# budget is available (intentional, not a defect). To re-enable: restore the
+# original trigger below and confirm the ANTHROPIC_API_KEY repo secret is set
+# (Settings -> Secrets and variables -> Actions).
+#
+# on:
+#   issue_comment:
+#     types: [created]
+#   pull_request_review_comment:
+#     types: [created]
+#   issues:
+#     types: [opened, assigned]
+#   pull_request_review:
+#     types: [submitted]
+
+on: workflow_dispatch
 
 permissions:
   contents: read

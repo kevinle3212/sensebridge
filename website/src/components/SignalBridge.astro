@@ -1,0 +1,84 @@
+---
+import styles from "./SignalBridge.module.scss";
+import SpineNode from "./SpineNode.astro";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+
+// Suspender/cog joints along the deck, evenly spaced between the two
+// pylons. cableY is the straight-line interpolation between each pylon top
+// (48,40) / (272,40) and the cable's low point at midspan (160,60) — see
+// DESIGN.md → "Signal Bridge" for the shape this draws.
+const joints = [
+  { x: 92, cableY: 47.86 },
+  { x: 124, cableY: 53.57 },
+  { x: 196, cableY: 53.57 },
+  { x: 228, cableY: 47.86 },
+];
+const deckY = 110;
+---
+
+<section id="bridge" class={styles.bridge} aria-labelledby="bridge-heading" data-stage>
+  <!-- Signal Spine's "the span" stage marker (DESIGN.md "Signal Spine"). -->
+  <SpineNode top="4rem" />
+  <div class={`wrap ${styles["bridge-inner"]}`}>
+    <div class={styles["bridge-copy"]}>
+      <h2 id="bridge-heading">{t.bridge.heading}</h2>
+      <p class={styles.body} data-reveal-item>{t.bridge.body}</p>
+      <p class={styles.supporting} data-reveal-item>{t.bridge.supporting}</p>
+    </div>
+    <!-- Signal Bridge visual (DESIGN.md → "Signal Bridge"): CSS/SVG line-art only, same
+         stroke-only vocabulary as the hero's LiDAR rings. The resting CSS state below is already
+         the finished picture — bridge built, cogs locked, glow arrived — for
+         prefers-reduced-motion/no-JS. src/scripts/motion.ts only ever hides-then-reveals that same
+         state as a scroll-triggered construction sequence; it never creates the final picture. -->
+    <div class={styles["bridge-visual"]} aria-hidden="true" data-bridge-visual data-scene="bridge">
+      <svg viewBox="0 0 320 140" focusable="false">
+        <defs>
+          <symbol id="bridge-cog" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="7"></circle>
+            <circle cx="12" cy="12" r="3"></circle>
+            <line x1="19" y1="12" x2="22" y2="12"></line>
+            <line x1="15.5" y1="18.06" x2="17" y2="20.66"></line>
+            <line x1="8.5" y1="18.06" x2="7" y2="20.66"></line>
+            <line x1="5" y1="12" x2="2" y2="12"></line>
+            <line x1="8.5" y1="5.94" x2="7" y2="3.34"></line>
+            <line x1="15.5" y1="5.94" x2="17" y2="3.34"></line>
+          </symbol>
+        </defs>
+        <line class={styles.pylon} x1="48" y1="40" x2="48" y2="110"></line>
+        <line class={styles.pylon} x1="272" y1="40" x2="272" y2="110"></line>
+        <path class={styles.cable} d="M48,40 L160,60" data-bridge-cable></path>
+        <path class={styles.cable} d="M160,60 L272,40" data-bridge-cable></path>
+        {
+          joints.map((joint) => (
+            <line
+              class={styles.suspender}
+              x1={joint.x}
+              y1={joint.cableY}
+              x2={joint.x}
+              y2={deckY}
+              data-bridge-suspender
+            />
+          ))
+        }
+        <line class={styles.deck} x1="48" y1={deckY} x2="272" y2={deckY} data-bridge-deck></line>
+        {
+          joints.map((joint) => (
+            <use
+              class={styles.cog}
+              href="#bridge-cog"
+              x={joint.x - 8}
+              y={deckY - 8}
+              width="16"
+              height="16"
+              data-bridge-cog
+            />
+          ))
+        }
+        <circle class={styles.pulse} cx="48" cy={deckY} r="3" data-bridge-pulse></circle>
+      </svg>
+      <div class={styles["bridge-glow"]} data-bridge-glow></div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,14 @@
+---
+import styles from "./SignalSpine.module.scss";
+---
+
+<!-- Signal Spine (DESIGN.md "Signal Spine"): a single continuous rail
+     threading the product pipeline (Hero → #accessibility), purely
+     decorative. Rendered once from src/pages/index.astro inside the
+     ".pipeline" positioning wrapper, which is why this fills that wrapper
+     via inset-block: 0 instead of the whole page — see index.astro for why
+     it stops before the Disclaimer. -->
+<div class={styles.spine} aria-hidden="true" data-spine>
+  <div class={styles.rail}></div>
+  <div class={styles.pulse} data-spine-pulse></div>
+</div>

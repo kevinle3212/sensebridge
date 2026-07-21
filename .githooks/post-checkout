@@ -1,4 +1,12 @@
 #!/bin/sh
+# gitnexus-staleness-notice-start
+# Hand-maintained — see .githooks/post-commit for the full rationale (no
+# vendor `hook install` for GitNexus; advisory only, never auto-reindexes).
+if [ "$3" = "1" ] && [ -d .gitnexus ]; then
+    echo "[gitnexus] branch switched — the knowledge graph reflects the previous checkout; run 'gitnexus analyze' (or 'node .gitnexus/run.cjs analyze') to refresh it." >&2
+fi
+# gitnexus-staleness-notice-end
+
 # graphify-checkout-hook-start
 # Auto-rebuilds the knowledge graph (code only) when switching branches.
 # Installed by: graphify hook install
@@ -15,7 +23,9 @@ if [ -n "${WINDIR:-}" ] || [ -n "${MSYSTEM:-}" ]; then
     export GRAPHIFY_MAX_WORKERS="${GRAPHIFY_MAX_WORKERS:-1}"
 fi
 
+# shellcheck disable=SC2034 # names the hook's positional args for readability; only $3 is used
 PREV_HEAD=$1
+# shellcheck disable=SC2034
 NEW_HEAD=$2
 BRANCH_SWITCH=$3
 
@@ -51,7 +61,7 @@ if [ -z "$GRAPHIFY_PYTHON" ]; then
     if [ -f "$_GFY_PYTHON_FILE" ]; then
         _FROM_FILE=$(cat "$_GFY_PYTHON_FILE" 2>/dev/null | tr -d '[:space:]')
         case "$_FROM_FILE" in
-            *[!a-zA-Z0-9/_.@:\-]*) _FROM_FILE="" ;;  # allowlist (covers Windows paths)
+            *[!a-zA-Z0-9/_.@:-]*) _FROM_FILE="" ;;  # allowlist (covers Windows paths)
         esac
         if [ -n "$_FROM_FILE" ] && [ -x "$_FROM_FILE" ] && "$_FROM_FILE" -c "import graphify" 2>/dev/null; then
             GRAPHIFY_PYTHON="$_FROM_FILE"

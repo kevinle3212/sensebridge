@@ -1,0 +1,42 @@
+# CodeRabbit is scoped to website/** only. .github/workflows/claude-code-review.yml
+# is the doctrine-tuned reviewer for the Swift app (safety-framing, accessibility,
+# on-device/privacy, licensing) — see docs/TOOLING.md for the division of labor.
+# Requires the CodeRabbit GitHub App installed on this repo to take effect.
+
+language: en
+tone_instructions: >-
+  This is a marketing site for an accessibility app. Flag any copy that
+  implies a safety, navigation, or mobility guarantee — SenseBridge is
+  awareness-only and must always hedge (see docs/SAFETY-FRAMING.md).
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  path_filters:
+    - "!**"
+    - "website/**"
+    - "!website/package-lock.json"
+  path_instructions:
+    - path: "website/**/*.html"
+      instructions: >-
+        Check semantic HTML, alt text on any image, heading order, and that
+        no copy claims a safety/navigation guarantee.
+    - path: "website/**/*.css"
+      instructions: >-
+        Check WCAG color-contrast ratios, avoid !important, prefer relative
+        units (rem/em) over fixed px for typography.
+  tools:
+    markdownlint:
+      enabled: true
+
+chat:
+  auto_reply: true

@@ -56,3 +56,79 @@ dashboard → Settings → Source) — not `website` — since the build context
 to include both `docker/` and `website/`. `dockerfilePath` in `railway.toml`
 is relative to that root. Full first-time setup: see `website/README.md`'s
 Deployment section.
+
+Railway deploys itself: its GitHub App watches `main` and rebuilds on every
+push, with no GitHub Actions involvement in the deploy step itself.
+
+`railway.toml`'s `[deploy]` also sets `healthcheckPath = "/"` with a 30s
+timeout and a 15s `overlapSeconds` — Railway won't cut traffic over to a new
+deployment (or stop the old one) until that path answers, so a container
+that starts but serves broken output never goes live, and the switch itself
+is zero-downtime. This is a platform-level check on top of, not instead of,
+the Dockerfile's own `HEALTHCHECK`, which only `docker inspect`/Compose/the
+CI job below can see.
+
+### CI check
+
+`.github/workflows/railway-deploy-check.yml` builds `docker/Dockerfile` and
+smoke-tests the running container (waits for the `HEALTHCHECK` to report
+`healthy`, then `curl`s `/`) on every push/PR touching `docker/**`,
+`website/**`, or `railway.toml`. It exists so a Dockerfile- or
+dependency-classification break (see "Build-time dependencies" below) is
+caught before merge, not discovered after Railway's own auto-deploy fails in
+production — which is exactly what happened once already: a Root
+Directory/`railway.toml` location mismatch merged without this check reaching
+that build path.
+
+### Build-time dependencies
+
+Stage 1 runs `npm ci --omit=dev`, not a plain `npm ci` — most of
+`website/`'s `devDependencies` are lint/format/test/audit tooling never
+touched by `astro build`, but two are build-time requirements despite the
+"dev" label and live in `dependencies` instead:
+
+- `@astrojs/react` — imported directly by `astro.config.mjs`.
+- `react-scan` — imported by an `import.meta.env.DEV`-gated `<script>` in
+  `BaseLayout.astro`; Vite still resolves the import before dead-code-
+  eliminating the `false` branch, so the package must be physically
+  installed even though it never ships to production.
+
+If a future change adds a new devDependency import anywhere Astro's build
+touches (including inside a dev-only conditional), the CI check above will
+catch the resulting build failure — move that package to `dependencies` the
+same way.
+
+### CLI commands
+
+Railway CLI is available two ways: install it globally
+(`npm install -g @railway/cli` or `brew install railway`) for use anywhere on
+the machine, or use the project-local devDependency (already in
+`website/package.json`, installed via `npm install` inside `website/`) so
+`npm run railway:*` scripts work without a global install. Both resolve to
+the same CLI; the global one is what a fresh contributor is more likely to
+already have, the local one pins an exact version for this repo.
+
+```sh
+npm run railway:status        # linked project/service/environment + latest deployment status
+npm run railway:logs           # last 100 log lines from the latest deployment
+npm run railway:logs:build      # build logs from the latest deployment (add --latest to include in-progress builds)
+npm run railway:redeploy       # pull latest main and redeploy — the only way to get a fix live
+                                # after a push, since Railway does not redeploy automatically on
+                                # its own once the *previous* deploy already failed
+```
+
+Or with the CLI directly (`railway --help` for the full command list):
+`railway logs --build <deployment-id>` for a specific deployment's build log,
+`railway logs --http` for request logs, `railway status --json` to inspect
+the linked service's full config (builder, `rootDirectory`, restart policy)
+as Railway currently sees it — the fastest way to confirm `railway.toml` is
+actually being read rather than silently falling back to Railpack.
+
+**Known accepted risk:** `@railway/cli`'s `tar` dependency (`tar@6.2.1`) has
+a high/critical `npm audit` finding (path traversal / symlink CVEs, fixed
+only in `tar@7`, which breaks `@railway/cli`'s postinstall via an ESM
+default-export mismatch — no patched `6.x` release exists). Accepted because
+it's dev-only: the Dockerfile's `--omit=dev` means it's never installed in
+the image Railway actually builds and serves, and it's not a `dependencies`
+entry a consumer of this repo would inherit. Re-evaluate if `@railway/cli`
+ships a fix.

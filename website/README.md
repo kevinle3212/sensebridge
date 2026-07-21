@@ -13,6 +13,12 @@ co-located `*.module.scss` per component). The only client-side JavaScript is:
   instantiates and the page renders as a complete, static, fully-readable
   document. That completeness is a hard requirement, not a fallback.
 
+`@astrojs/react` is wired in `astro.config.mjs` so a component can opt into a
+React island with a `client:*` directive, but no component does today — a
+`.tsx` component with no `client:*` directive still renders to static HTML
+with zero shipped JS, so the list above stays accurate until a real
+interactive island ships.
+
 Copy must follow the awareness-not-safety framing in
 [`../docs/SAFETY-FRAMING.md`](../docs/SAFETY-FRAMING.md); never claim a safety
 or navigation guarantee. The safety disclaimer in
@@ -105,10 +111,25 @@ npm run preview    # serve the built dist/ locally
 - `npm run lint:js` — ESLint (`eslint.config.mjs`), strict flat config:
   `eslint-plugin-astro` (with its `jsx-a11y` strict preset — accessibility is
   a first-class requirement here, not an afterthought), `typescript-eslint`
-  strict + stylistic with type-aware rules, and `eslint-plugin-security`
-  (every rule raised from its default `warn` to `error` — a security finding
-  never ships as a non-blocking warning), plus project hardening rules
-  (`no-console`, `no-eval`, `eqeqeq`, `curly`, banned `any`, etc.).
+  strict + stylistic with type-aware rules, `eslint-plugin-react-hooks`
+  (Hooks correctness) + `eslint-plugin-jsx-a11y`'s strict preset directly on
+  `.tsx`/`.jsx` files, and `eslint-plugin-security` (every rule raised from
+  its default `warn` to `error` — a security finding never ships as a
+  non-blocking warning), plus project hardening rules (`no-console`,
+  `no-eval`, `eqeqeq`, `curly`, banned `any`, etc.).
+- `npm run audit:react` (alias: `npm run doctor`) — [React Doctor](https://github.com/millionco/react-doctor)
+  static audit (Hooks correctness, a11y, security, perf) for `.tsx`/`.jsx`
+  code, run with `--no-telemetry`. Also runs automatically, staged-files-only,
+  in `.githooks/pre-commit` whenever a commit touches `website/`, and on every
+  pull request via `.github/workflows/react-doctor.yml` (`blocking: error` —
+  fails only on new error-severity findings). Its Claude Code/Cursor agent
+  skill and hooks live at the repo root (`.claude/skills/react-doctor/`,
+  `.agents/`, `.continue/`, `.cursor/` — not under `website/`, since this
+  repo's agent config is rooted at the repo root, not per-subdirectory).
+- `npm run scan` — [React Scan](https://react-scan.million.dev) render
+  profiler against a running `npm run dev`; also auto-attaches in the dev
+  server itself (`src/layouts/BaseLayout.astro`, gated behind
+  `import.meta.env.DEV` so it never ships to production).
 - `npm run format` / `npm run format:fix` — Prettier, explicit strict
   options pinned in `.prettierrc` so formatting can't silently drift.
   (`.astro` files aren't Prettier-formatted — no `prettier-plugin-astro` —
@@ -129,10 +150,15 @@ npm run preview    # serve the built dist/ locally
 Deploys to [Railway](https://railway.app) via `docker/Dockerfile` +
 `railway.toml` at the repo root — see [`docker/README.md`](../docker/README.md)
 for the container setup itself. The image is multi-stage: stage 1 runs
-`npm ci && npm run build` (Astro prerender), stage 2 serves the resulting
-`dist/` with nginx (`nginxinc/nginx-unprivileged`, non-root, no npm in the
-runtime image), listening on Railway's injected `$PORT`. No secrets exist in
-the image (`docker/Dockerfile.dockerignore` allowlists only `website/`).
+`npm ci --omit=dev && npm run build` (Astro prerender), stage 2 serves the
+resulting `dist/` with nginx (`nginxinc/nginx-unprivileged`, non-root, no npm
+in the runtime image), listening on Railway's injected `$PORT`. No secrets
+exist in the image (`docker/Dockerfile.dockerignore` allowlists only
+`website/`).
+
+CI, the Railway CLI (global + project-local), and available `npm run
+railway:*` commands are documented in `docker/README.md`'s "Railway deploy"
+section — that's the single source of truth, not repeated here.
 
 ### First-time setup
 
@@ -143,7 +169,7 @@ the image (`docker/Dockerfile.dockerignore` allowlists only `website/`).
    Dockerfile build context has to span both `docker/` and `website/`, and
    `railway.toml`/`docker/Dockerfile` are only discovered from the root.
 3. Build/run is already specified by `railway.toml` (`dockerfilePath =
-   "docker/Dockerfile"`) — no manual build command needed.
+"docker/Dockerfile"`) — no manual build command needed.
 4. No environment variables are required **on Railway**. This is a static
    site with no backend, accounts, or telemetry (see the repo's architecture
    invariants in `../CLAUDE.md`). `ELEVENLABS_API_KEY` (see

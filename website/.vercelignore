@@ -1,0 +1,27 @@
+# Vercel already excludes node_modules, .git, .env*, .DS_Store, and build
+# caches by default — this only adds files that are committed to the repo
+# but never touched by `npm install --omit=dev` / `npm run build`, so the
+# Vercel checkout stays small and the build has nothing extra to walk.
+
+# Documentation — read on GitHub, not shipped or built.
+README.md
+
+# Lint/format/test tooling config — dev-only, never imported by the Astro
+# build itself.
+eslint.config.mjs
+.prettierrc
+.prettierignore
+.stylelintrc.json
+.pa11yci.json
+
+# Offline, generation-time-only script — writes public/audio/main.mp3 ahead
+# of time on a developer machine; the output ships, this script never runs
+# during `npm run build`. See scripts/generate-audio.js and README.md's
+# Read-aloud controls section.
+scripts/
+
+# Env template — informational only, not read by the build.
+.env.example
+
+# Impeccable design-tool local cache — see ../docs/TOOLING.md.
+.impeccable/

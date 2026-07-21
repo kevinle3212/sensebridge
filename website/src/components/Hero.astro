@@ -1,16 +1,27 @@
 ---
+/**
+ * Hero section: headline, lede, status line, and CTA, plus the cinematic
+ * CSS/SVG hero visual. Renders the Signal Spine's "sensing" stage marker.
+ */
 import styles from "./Hero.module.scss";
+import SpineNode from "./SpineNode.astro";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 
 // Split at build time so the visual word-by-word reveal (Phase 5) can
 // stagger each word independently. The visually-hidden span below carries
 // the real accessible text; the word spans live in an aria-hidden sibling,
 // so VoiceOver/NVDA still read the h1 as a single plain string — never the
 // duplicated/segmented markup.
-const heroHeading = "Sense more. Share nothing.";
+const heroHeading = t.hero.heading;
 const heroWords = heroHeading.split(" ");
 ---
 
 <section class={styles.hero} aria-labelledby="hero-heading">
+  <!-- Signal Spine's "sensing" stage marker (DESIGN.md "Signal Spine"); lit
+       as part of the hero reveal timeline in src/scripts/motion.ts. -->
+  <SpineNode top="6rem" />
   <div class={`wrap ${styles["hero-inner"]}`}>
     <div class={styles["hero-copy"]}>
       <h1 id="hero-heading" class={styles["hero-heading"]}>
@@ -29,16 +40,21 @@ const heroWords = heroHeading.split(" ");
         </span>
       </h1>
       <p class={styles.lede} data-hero-reveal>
-        SenseBridge is a free, open-source iPhone app that translates a blind or low-vision
-        person's surroundings into clear spoken information — processed entirely on the device, so
-        the camera and your surroundings never leave your phone.
+        {t.hero.lede}
       </p>
       <p class={styles.status} data-hero-reveal>
-        SenseBridge is in open development and not yet available to download. You can follow the
-        build on GitHub today.
+        {t.hero.status}
       </p>
-      <a class={styles.cta} data-hero-reveal href="https://github.com/kevinle3212/sensebridge">
-        Follow progress on GitHub
+      <p class="visually-hidden">
+        {t.hero.visuallyHiddenDescription}
+      </p>
+      <a
+        class={styles.cta}
+        data-hero-reveal
+        data-magnetic
+        href="https://github.com/kevinle3212/sensebridge"
+      >
+        {t.hero.cta}
       </a>
     </div>
     <!-- Cinematic hero visual (Phase 6): CSS/SVG only — no canvas, no
@@ -46,7 +62,7 @@ const heroWords = heroHeading.split(" ");
          data-hero-layer for the scroll-linked parallax in src/scripts/motion.ts.
          Complete static frame under prefers-reduced-motion/no-JS: every
          layer's resting CSS state (below) is already the finished picture. -->
-    <div class={styles["hero-visual"]} aria-hidden="true">
+    <div class={styles["hero-visual"]} data-hero-visual data-scene="hero" aria-hidden="true">
       <div class={styles["visual-glow"]} data-hero-layer="glow"></div>
       <div class={styles["visual-device"]} data-hero-layer="device">
         <div class={styles["device-sweep"]}></div>
@@ -58,9 +74,9 @@ const heroWords = heroHeading.split(" ");
         viewBox="0 0 100 100"
         focusable="false"
       >
-        <circle class={styles["field-ring"]} cx="50" cy="20" r="6"></circle>
-        <circle class={styles["field-ring"]} cx="50" cy="20" r="14"></circle>
-        <circle class={styles["field-ring"]} cx="50" cy="20" r="22"></circle>
+        <circle class={styles["field-ring"]} cx="50" cy="20" r="6" data-field-ring></circle>
+        <circle class={styles["field-ring"]} cx="50" cy="20" r="14" data-field-ring></circle>
+        <circle class={styles["field-ring"]} cx="50" cy="20" r="22" data-field-ring></circle>
       </svg>
     </div>
   </div>

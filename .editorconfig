@@ -1,0 +1,23 @@
+root = true
+
+# Default: matches Prettier's baseline (2-space, LF, trimmed whitespace) so
+# VS Code's indentation guides and formatOnSave never disagree with the linters.
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# MCP client configs are tab-indented by convention (matches how each tool's
+# own config format ships) — pin indent_style so Prettier's formatOnSave
+# doesn't silently rewrite them to spaces.
+[{.mcp.json,.cursor/mcp.json,.copilot/mcp-config.json,.windsurf/mcp_config.json,.vscode/mcp.json}]
+indent_style = tab
+
+# Shell scripts, git hooks, and standalone utility scripts (no Prettier
+# coverage — that's scoped to website/, see docs/TOOLING.md) are tab-indented
+# throughout the repo; pin it so the editor's indentation guides match.
+[{*.sh,.githooks/*,tools/*.mjs,tools/*.js}]
+indent_style = tab

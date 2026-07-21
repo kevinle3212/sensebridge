@@ -1,0 +1,9 @@
+# gitleaks fingerprint allowlist — one fingerprint per line, format:
+#   <commit>:<file>:<rule-id>:<start-line>
+# Generate a fingerprint for a verified false positive with:
+#   gitleaks detect --report-format json --report-path report.json
+# then copy the `Fingerprint` field of the entry you're accepting.
+#
+# Prefer fixing or scoping the pattern in .gitleaks.toml over ignoring a
+# specific line — this file is for genuine one-off false positives only.
+_bmad/_config/files-manifest.csv:generic-api-key:47
