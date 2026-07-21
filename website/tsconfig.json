@@ -5,8 +5,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "baseUrl": ".",
     "paths": {
+      "*": ["./*"],
       "@styles/*": ["./src/styles/*"]
     }
   }
