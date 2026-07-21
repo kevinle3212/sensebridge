@@ -1,0 +1,38 @@
+@use "@styles/abstracts" as *;
+
+// Fills the ".pipeline" wrapper (src/pages/index.astro) that this component
+// renders inside; behind all content (z-index) and inert to input.
+.spine {
+  position: absolute;
+  inset-block: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+// The rail itself: reduced-opacity Signal Blue, per DESIGN.md's Two-Accent
+// Rule (meaning-carrying color, dimmed rather than a third accent).
+.rail {
+  position: absolute;
+  inset-block: 0;
+  left: spine-x();
+  width: 1.5px;
+  background: color("accent-primary");
+  opacity: 0.35;
+}
+
+// Scroll-scrubbed signal pulse (src/scripts/motion.ts → initSignalSpine).
+// Hidden in every mode by default — same precedent as the Signal Bridge's
+// `.pulse` (SignalBridge.module.scss): a travelling dot has no meaningful
+// "finished" resting frame under reduced-motion/no-JS, so it never appears
+// without JS driving its position.
+.pulse {
+  position: absolute;
+  top: 0;
+  left: calc(#{spine-x()} - 2.5px);
+  width: 5px;
+  height: 5px;
+  background: color("accent-primary");
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}

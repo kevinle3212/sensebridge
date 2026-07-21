@@ -1,6 +1,12 @@
 @use "@styles/abstracts" as *;
 
 .features {
+  position: relative;
+
+  // Sticky header height + breathing room, so a #features jump (Header nav)
+  // doesn't land the heading under the header.
+  scroll-margin-top: space("7");
+
   @include section-band;
 }
 
@@ -17,6 +23,21 @@
   gap: space("2");
   margin-top: space("3");
   padding-left: space("3");
+
+  // Hover lift on each repeated capability item: transform-only (no layout
+  // shift) plus a card shadow that fades in from none, so it never "jumps".
+  li {
+    @include motion-safe {
+      transition:
+        transform duration("base") ease("standard"),
+        box-shadow duration("base") ease("standard");
+    }
+
+    &:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: shadow("card");
+    }
+  }
 
   li:nth-child(4) {
     margin-top: space("2");

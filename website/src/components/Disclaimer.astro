@@ -1,13 +1,13 @@
 ---
+/** Renders the honesty-over-hype disclaimer note shown near the page footer. */
 import styles from "./Disclaimer.module.scss";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 ---
 
-<aside class={styles.disclaimer} role="note" aria-label="Safety disclaimer">
+<aside class={styles.disclaimer} role="note" aria-label={t.disclaimer.ariaLabel}>
   <div class="wrap">
-    <p class={styles.text}>
-      SenseBridge raises awareness of your surroundings. It is not a mobility or navigation safety
-      device, and its descriptions can be wrong — always use it alongside your own judgment, a
-      cane, or a guide dog.
-    </p>
+    <p class={styles.text}>{t.disclaimer.text}</p>
   </div>
 </aside>

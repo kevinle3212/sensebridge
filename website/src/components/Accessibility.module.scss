@@ -1,6 +1,12 @@
 @use "@styles/abstracts" as *;
 
 .accessibility {
+  position: relative;
+
+  // Sticky header height + breathing room, so a #accessibility jump (Header
+  // nav) doesn't land the heading under the header.
+  scroll-margin-top: space("7");
+
   @include section-band;
 }
 

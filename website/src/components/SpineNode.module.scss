@@ -1,0 +1,25 @@
+@use "@styles/abstracts" as *;
+
+// `left` must stay in lockstep with the rail's (SignalSpine.module.scss) —
+// both call the same spine-x() function, and every section this renders
+// inside starts flush with the viewport's left edge, so they resolve to the
+// same on-screen x position regardless of which section hosts the node.
+.node {
+  position: absolute;
+  left: calc(#{spine-x()} - 5px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ring {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.5;
+}
+
+.dot {
+  fill: color("accent-primary");
+  stroke: none;
+  transform-box: fill-box;
+  transform-origin: center;
+}

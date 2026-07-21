@@ -4,3 +4,9 @@ dist
 .astro
 package-lock.json
 .impeccable/hook.cache.json
+
+# prettier-plugin-astro cannot parse a `<script>` nested inside a JSX
+# expression, which is how the dev-only react-scan block is gated (the gate is
+# deliberate — it keeps the tag out of the built HTML entirely). The file is
+# still covered by ESLint, `astro check`, and the build; only Prettier skips it.
+src/layouts/BaseLayout.astro

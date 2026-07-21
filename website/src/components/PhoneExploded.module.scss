@@ -1,0 +1,190 @@
+@use "@styles/abstracts" as *;
+
+.device {
+  position: relative;
+  scroll-margin-top: space("7");
+
+  @include section-band;
+}
+
+.lede {
+  max-width: 40rem;
+  margin-top: space("2");
+  color: color("text-secondary");
+}
+
+// Track height comes naturally from the three annotation blocks stacked
+// below the stage — never set explicitly.
+.track {
+  position: relative;
+  margin-top: space("4");
+}
+
+// Sticky stage (canvas + static fallback SVG): mobile gets a negative
+// margin-bottom pulling the first annotation card up over its bottom edge
+// (the "cards scroll over the stage" effect), cancelled again at the
+// desktop breakpoint where the stage sits in its own grid column instead.
+.stage {
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  height: 55svh;
+  margin-bottom: calc(-1 * #{space("4")});
+  overflow: hidden;
+  border-radius: radius("lg");
+}
+
+.fallback-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+// `.scene-active` is added at runtime by scripts/scenes/core.ts's
+// mountScene() once phone.ts's WebGL scene is live — same fade-the-static-
+// art pattern as Hero.module.scss's `.hero-visual:global(.scene-active)`.
+.stage:global(.scene-active) .fallback-art {
+  opacity: 0.15;
+
+  @include motion-safe {
+    transition: opacity duration("slow") ease("in-out");
+  }
+}
+
+// Structural layers (back/front plates, lens rings, speaker slot, haptic
+// dots) read as Hairline Navy; the middle "reasoning" plate and its chip
+// core get the meaning-carrying accents (Signal Blue / warm), per the
+// Two-Accent Rule.
+.plate-back,
+.plate-front {
+  fill: none;
+  stroke: color("hairline");
+  stroke-width: 1.5;
+}
+
+.plate-middle {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.5;
+}
+
+.lens {
+  fill: none;
+  stroke: color("hairline");
+  stroke-width: 1.5;
+}
+
+.lidar {
+  fill: color("accent-warm");
+  stroke: none;
+}
+
+.chip {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.5;
+}
+
+.chip-core {
+  fill: color("accent-warm");
+  stroke: none;
+}
+
+.speaker,
+.haptic-dot {
+  fill: color("hairline");
+  stroke: none;
+}
+
+.connector {
+  stroke: color("hairline");
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  opacity: 0.6;
+}
+
+.annotation {
+  position: relative;
+  z-index: 1;
+  padding: space("4");
+  background: color("surface");
+  border-radius: radius("lg");
+
+  &:not(:first-of-type) {
+    margin-top: space("3");
+  }
+
+  @include theme-transition;
+}
+
+.label {
+  color: color("text-secondary");
+
+  @include type-label;
+}
+
+.annotation h3 {
+  margin-top: space("1");
+}
+
+.annotation p:last-child {
+  max-width: 32rem;
+  margin-top: space("2");
+  color: color("text-secondary");
+}
+
+@media (width >= 56.25rem) {
+  .track {
+    display: grid;
+    grid-template-columns: minmax(0, 55%) 1fr;
+    column-gap: space("4");
+  }
+
+  .stage {
+    top: 10vh;
+    grid-column: 1;
+
+    // `1 / -1` would collapse to a single row here (no explicit rows exist,
+    // so -1 resolves to line 1) and auto-placement would then flow
+    // annotations into BOTH columns; span the three annotation rows
+    // explicitly instead.
+    grid-row: 1 / span 3;
+    height: 80vh;
+    margin-bottom: 0;
+  }
+
+  .annotation {
+    display: flex;
+    grid-column: 2;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 70vh;
+    margin-top: 0;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+  }
+}
+
+// Complete resting design: the stage stops pinning and the track collapses
+// to plain document flow, so the section reads as diagram-then-three-blocks
+// with nothing scroll-scrubbed. WebGL never loads under reduced motion
+// (scripts/scenes/quality-gate.ts's webglAllowed()), so the fallback SVG
+// above is what shows. Placed last so it wins regardless of viewport width.
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    display: block;
+  }
+
+  .stage {
+    position: static;
+    height: auto;
+    min-height: 50vh;
+    margin-bottom: 0;
+  }
+
+  .annotation {
+    display: block;
+    min-height: 0;
+  }
+}

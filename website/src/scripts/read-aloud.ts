@@ -16,6 +16,8 @@
 // only revealed here, after confirming each is actually usable, so
 // unsupported/unavailable options never show a dead control. Starting one
 // stops the other.
+import { useTranslations } from "../i18n";
+
 type StopFn = (message?: string) => void;
 
 export {};
@@ -26,6 +28,8 @@ export {};
   if (!status || !main) {
     return;
   }
+
+  const t = useTranslations(document.documentElement.lang);
 
   const announce = (message: string): void => {
     status.textContent = message;
@@ -50,8 +54,8 @@ export {};
   setupNaturalVoice();
 
   function setupDeviceVoice(mainElement: HTMLElement): void {
-    const IDLE_LABEL = "Listen (device voice)";
-    const STOP_LABEL = "Stop reading";
+    const IDLE_LABEL = t.readAloud.deviceIdleLabel;
+    const STOP_LABEL = t.readAloud.stopLabel;
 
     const toggleButton = document.getElementById("read-aloud-toggle");
     const label = toggleButton?.querySelector(".read-aloud__label");
@@ -89,19 +93,19 @@ export {};
       utterance.onend = () => {
         setIdle();
         clearActive(stop);
-        announce("Finished reading.");
+        announce(t.readAloud.finishedReading);
       };
       utterance.onerror = () => {
         setIdle();
         clearActive(stop);
-        announce("Reading stopped.");
+        announce(t.readAloud.readingStopped);
       };
 
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
       label.textContent = STOP_LABEL;
       toggleButton.setAttribute("aria-pressed", "true");
-      announce("Reading page…");
+      announce(t.readAloud.readingPage);
     };
 
     setIdle();
@@ -109,7 +113,7 @@ export {};
 
     toggleButton.addEventListener("click", () => {
       if (window.speechSynthesis.speaking) {
-        stop("Stopped.");
+        stop(t.readAloud.stopped);
       } else {
         start();
       }
@@ -129,8 +133,8 @@ export {};
   }
 
   function setupNaturalVoice(): void {
-    const IDLE_LABEL = "Listen (natural voice)";
-    const STOP_LABEL = "Stop reading";
+    const IDLE_LABEL = t.readAloud.naturalIdleLabel;
+    const STOP_LABEL = t.readAloud.stopLabel;
 
     const toggleButton = document.getElementById("read-aloud-natural-toggle");
     const label = toggleButton?.querySelector(".read-aloud-natural__label");
@@ -163,17 +167,17 @@ export {};
       void audio.play().catch(() => {
         setIdle();
         clearActive(stop);
-        announce("Couldn't play the natural-voice narration.");
+        announce(t.readAloud.naturalPlaybackError);
       });
       label.textContent = STOP_LABEL;
       toggleButton.setAttribute("aria-pressed", "true");
-      announce("Reading page in a natural voice…");
+      announce(t.readAloud.readingPageNatural);
     };
 
     audio.addEventListener("ended", () => {
       setIdle();
       clearActive(stop);
-      announce("Finished reading.");
+      announce(t.readAloud.finishedReading);
     });
 
     // /audio/main.mp3 only exists once scripts/generate-audio.js has been
@@ -198,7 +202,7 @@ export {};
 
     toggleButton.addEventListener("click", () => {
       if (!audio.paused) {
-        stop("Stopped.");
+        stop(t.readAloud.stopped);
       } else {
         start();
       }

@@ -13,6 +13,12 @@ co-located `*.module.scss` per component). The only client-side JavaScript is:
   instantiates and the page renders as a complete, static, fully-readable
   document. That completeness is a hard requirement, not a fallback.
 
+`@astrojs/react` is wired in `astro.config.mjs` so a component can opt into a
+React island with a `client:*` directive, but no component does today — a
+`.tsx` component with no `client:*` directive still renders to static HTML
+with zero shipped JS, so the list above stays accurate until a real
+interactive island ships.
+
 Copy must follow the awareness-not-safety framing in
 [`../docs/SAFETY-FRAMING.md`](../docs/SAFETY-FRAMING.md); never claim a safety
 or navigation guarantee. The safety disclaimer in
@@ -105,10 +111,25 @@ npm run preview    # serve the built dist/ locally
 - `npm run lint:js` — ESLint (`eslint.config.mjs`), strict flat config:
   `eslint-plugin-astro` (with its `jsx-a11y` strict preset — accessibility is
   a first-class requirement here, not an afterthought), `typescript-eslint`
-  strict + stylistic with type-aware rules, and `eslint-plugin-security`
-  (every rule raised from its default `warn` to `error` — a security finding
-  never ships as a non-blocking warning), plus project hardening rules
-  (`no-console`, `no-eval`, `eqeqeq`, `curly`, banned `any`, etc.).
+  strict + stylistic with type-aware rules, `eslint-plugin-react-hooks`
+  (Hooks correctness) + `eslint-plugin-jsx-a11y`'s strict preset directly on
+  `.tsx`/`.jsx` files, and `eslint-plugin-security` (every rule raised from
+  its default `warn` to `error` — a security finding never ships as a
+  non-blocking warning), plus project hardening rules (`no-console`,
+  `no-eval`, `eqeqeq`, `curly`, banned `any`, etc.).
+- `npm run audit:react` (alias: `npm run doctor`) — [React Doctor](https://github.com/millionco/react-doctor)
+  static audit (Hooks correctness, a11y, security, perf) for `.tsx`/`.jsx`
+  code, run with `--no-telemetry`. Also runs automatically, staged-files-only,
+  in `.githooks/pre-commit` whenever a commit touches `website/`, and on every
+  pull request via `.github/workflows/react-doctor.yml` (`blocking: error` —
+  fails only on new error-severity findings). Its Claude Code/Cursor agent
+  skill and hooks live at the repo root (`.claude/skills/react-doctor/`,
+  `.agents/`, `.continue/`, `.cursor/` — not under `website/`, since this
+  repo's agent config is rooted at the repo root, not per-subdirectory).
+- `npm run scan` — [React Scan](https://react-scan.million.dev) render
+  profiler against a running `npm run dev`; also auto-attaches in the dev
+  server itself (`src/layouts/BaseLayout.astro`, gated behind
+  `import.meta.env.DEV` so it never ships to production).
 - `npm run format` / `npm run format:fix` — Prettier, explicit strict
   options pinned in `.prettierrc` so formatting can't silently drift.
   (`.astro` files aren't Prettier-formatted — no `prettier-plugin-astro` —
@@ -126,23 +147,29 @@ npm run preview    # serve the built dist/ locally
 
 ## Deployment
 
-Deploys to [Railway](https://railway.app) via `Dockerfile` + `railway.toml`
-in this directory. The image is multi-stage: stage 1 runs `npm ci && npm run
-build` (Astro prerender), stage 2 serves the resulting `dist/` with `serve`
-as a non-root user, listening on Railway's injected `$PORT`. No secrets exist
-in the image (`.env` is excluded via `.dockerignore`).
+Deploys to [Railway](https://railway.app) via `docker/Dockerfile` +
+`railway.toml` at the repo root — see [`docker/README.md`](../docker/README.md)
+for the container setup itself. The image is multi-stage: stage 1 runs
+`npm ci --omit=dev && npm run build` (Astro prerender), stage 2 serves the
+resulting `dist/` with nginx (`nginxinc/nginx-unprivileged`, non-root, no npm
+in the runtime image), listening on Railway's injected `$PORT`. No secrets
+exist in the image (`docker/Dockerfile.dockerignore` allowlists only
+`website/`).
+
+CI, the Railway CLI (global + project-local), and available `npm run
+railway:*` commands are documented in `docker/README.md`'s "Railway deploy"
+section — that's the single source of truth, not repeated here.
 
 ### First-time setup
 
 1. Create a Railway project at [railway.app](https://railway.app) (New
    Project → Empty Project, or Deploy from GitHub repo directly).
-2. Connect this GitHub repo. Since the repo root also holds the iOS app and
-   docs, set the service's **Root Directory to `website`** (Settings →
-   Source) so Railway only watches/builds this subtree and picks up
-   `website/Dockerfile` and `website/railway.toml` automatically.
-3. Build/run is already specified by `Dockerfile` + `railway.toml` — no
-   manual build command needed. Railway auto-detects the Dockerfile once the
-   root directory is set.
+2. Connect this GitHub repo. **Leave the service's Root Directory as the
+   repo root** (Settings → Source) — do not set it to `website`. The
+   Dockerfile build context has to span both `docker/` and `website/`, and
+   `railway.toml`/`docker/Dockerfile` are only discovered from the root.
+3. Build/run is already specified by `railway.toml` (`dockerfilePath =
+"docker/Dockerfile"`) — no manual build command needed.
 4. No environment variables are required **on Railway**. This is a static
    site with no backend, accounts, or telemetry (see the repo's architecture
    invariants in `../CLAUDE.md`). `ELEVENLABS_API_KEY` (see
@@ -153,18 +180,18 @@ in the image (`.env` is excluded via `.dockerignore`).
    Variables — never commit it.
 5. Deploy: push to `main` (Railway auto-redeploys on every push once the
    GitHub connection is live) or trigger a manual deploy from the Railway
-   dashboard. Watch the build logs for the first deploy to confirm `serve`
-   starts and binds to `$PORT`.
+   dashboard. Watch the build logs for the first deploy to confirm nginx
+   starts and the healthcheck goes green.
 
 ### Local verification before pushing
 
 ```sh
-cd website
-docker build -t sensebridge-website .
-docker run -p 3000:3000 sensebridge-website
+docker build -f docker/Dockerfile -t sensebridge-website .   # from the repo root
+docker run -p 8080:8080 sensebridge-website
 ```
 
-Then open `http://localhost:3000`.
+Or `docker compose -f docker/docker-compose.yml up web`. Then open
+`http://localhost:8080`.
 
 ---
 

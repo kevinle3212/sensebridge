@@ -1,0 +1,169 @@
+@use "@styles/abstracts" as *;
+
+.bridge {
+  position: relative;
+  scroll-margin-top: space("7");
+
+  @include section-band;
+}
+
+.bridge-inner {
+  display: flex;
+  flex-direction: column;
+  gap: space("4");
+}
+
+.bridge-copy {
+  display: flex;
+  flex-direction: column;
+  gap: space("2");
+}
+
+.body {
+  max-width: 40rem;
+  color: color("text-secondary");
+}
+
+.supporting {
+  max-width: 40rem;
+}
+
+// Line-art suspension bridge, same stroke-only vocabulary as the hero's
+// LiDAR rings: pylons + suspenders read as structure (Hairline Navy), cable +
+// deck read as the signal path itself (Signal Blue, per the Two-Accent
+// Rule). Every shape below is already at its finished/locked resting state;
+// src/scripts/motion.ts only ever hides then reveals it as a construction
+// sequence when motion is enabled.
+.bridge-visual {
+  position: relative;
+  align-self: center;
+  width: 100%;
+  max-width: 26rem;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+// `.scene-active` is added at runtime by scripts/scenes/core.ts's
+// mountScene() once scripts/scenes/bridge.ts's WebGL scene is live — same
+// fade-the-static-art pattern as Hero.module.scss's
+// `.hero-visual:global(.scene-active) [data-hero-layer]`. Scoped to the
+// <svg> itself (not `.bridge-glow`): the glow layer's opacity is separately
+// driven by src/scripts/motion.ts's scroll-triggered reveal, whose inline
+// style would otherwise win over this class-based fade.
+.bridge-visual:global(.scene-active) svg {
+  opacity: 0.15;
+
+  @include motion-safe {
+    transition: opacity duration("slow") ease("in-out");
+  }
+}
+
+.pylon {
+  fill: none;
+  stroke: color("hairline");
+  stroke-width: 1.5;
+}
+
+.suspender {
+  fill: none;
+  stroke: color("hairline");
+  stroke-width: 1.5;
+}
+
+.cable {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.5;
+}
+
+.deck {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.5;
+}
+
+.cog {
+  fill: none;
+  stroke: color("accent-primary");
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+// Signal Blue pulse crossing the deck once the span is built — hidden by
+// default in every mode, since the finished picture is "already crossed,"
+// not "mid-crossing."
+.pulse {
+  fill: color("accent-primary");
+  stroke: none;
+  opacity: 0;
+}
+
+// Perception Glow arrival bloom at the far pylon — decorative light only,
+// the second and only other sanctioned use of glow-hero (see DESIGN.md →
+// "Signal Bridge"). Visible by default: the finished picture is "arrived."
+// A gradient color-stop, not a shadow, so it can't route through
+// shadow("glow-hero") directly — the light override scales the alpha down by
+// the same ~55% ratio as that token's own 18%→10% dark/light split, using the
+// light theme's accent-warm hex (#a8480d).
+.bridge-glow {
+  position: absolute;
+  top: 14%;
+  right: 6%;
+  width: 30%;
+  aspect-ratio: 1;
+  background: radial-gradient(circle, rgb(255 179 122 / 30%), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+
+  [data-theme="light"] & {
+    background: radial-gradient(circle, rgb(168 72 13 / 17%), transparent 70%);
+  }
+}
+
+// Cogs settle with a small idle wobble once locked in — additive, on top of
+// the already-finished picture, same pattern as the hero's device-sweep and
+// lidar-pulse. Pointer-hover livens the wobble further; every other visitor
+// (including reduced-motion) sees the identical static locked cog.
+@include motion-safe {
+  .cog {
+    animation: cog-idle 5s ease("in-out") infinite alternate;
+  }
+
+  @media (hover: hover) {
+    .bridge-visual:hover .cog {
+      animation-duration: 1.6s;
+    }
+  }
+
+  @keyframes cog-idle {
+    from {
+      transform: rotate(-4deg);
+    }
+
+    to {
+      transform: rotate(4deg);
+    }
+  }
+}
+
+@media (width >= 48rem) {
+  .bridge-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: space("5");
+  }
+
+  .bridge-copy {
+    flex: 1;
+  }
+
+  .bridge-visual {
+    flex: 1;
+  }
+}

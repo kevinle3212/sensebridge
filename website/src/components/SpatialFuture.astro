@@ -1,0 +1,32 @@
+---
+import styles from "./SpatialFuture.module.scss";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+---
+
+<section id="future" class={styles.future} aria-labelledby="future-title">
+  <div class={`wrap ${styles.inner}`}>
+    <div class={styles.copy}>
+      <p class={styles.kicker} data-reveal-item>{t.future.kicker}</p>
+      <h2 id="future-title" data-reveal-item>{t.future.heading}</h2>
+      <p class={styles.lede} data-reveal-item>{t.future.lede}</p>
+      <p class={styles.body} data-reveal-item>{t.future.body}</p>
+      <p class="visually-hidden">{t.future.illustrationDescription}</p>
+    </div>
+    <div class={styles.stage} data-scene="glasses" aria-hidden="true">
+      <!-- Static line-art wireframe-glasses diagram: same fallback/scene-active
+           pattern as PhoneExploded.astro. Visible by default; fades to 0.15
+           opacity once scripts/scenes/glasses.ts's WebGL scene mounts, and is
+           the only thing shown under prefers-reduced-motion/no-JS/no-WebGL. -->
+      <svg class={styles["fallback-art"]} viewBox="0 0 220 130" focusable="false">
+        <rect class={styles.lens} x="28" y="33" width="68" height="54" rx="20"></rect>
+        <rect class={styles.lens} x="124" y="33" width="68" height="54" rx="20"></rect>
+        <path class={styles.bridge} d="M96,52 Q110,40 124,52"></path>
+        <line class={styles.temple} x1="28" y1="46" x2="4" y2="24"></line>
+        <line class={styles.temple} x1="192" y1="46" x2="216" y2="24"></line>
+        <circle class={styles.hinge} cx="192" cy="46" r="3.5"></circle>
+      </svg>
+    </div>
+  </div>
+</section>

@@ -1,17 +1,22 @@
 ---
+/**
+ * Privacy section: explains the on-device/no-telemetry stance. Renders
+ * the Signal Spine's "stays on-device" stage marker.
+ */
 import styles from "./Privacy.module.scss";
+import SpineNode from "./SpineNode.astro";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 ---
 
-<section id="privacy" class={styles.privacy} aria-labelledby="privacy-heading">
-  <div class="wrap" data-reveal>
-    <h2 id="privacy-heading">Private by architecture, not by policy</h2>
-    <p class={styles.body}>
-      There is no backend, no account system, and no telemetry by default. Perception and
-      reasoning run on-device; nothing about your surroundings leaves your phone without your
-      explicit, revocable consent.
-    </p>
-    <p class={styles.supporting}>
-      A privacy policy can change. An architecture with no server cannot.
-    </p>
+<section id="privacy" class={styles.privacy} aria-labelledby="privacy-heading" data-stage>
+  <!-- Signal Spine's "stays on-device" stage marker (DESIGN.md "Signal
+       Spine"). -->
+  <SpineNode top="8rem" />
+  <div class="wrap">
+    <h2 id="privacy-heading">{t.privacy.heading}</h2>
+    <p class={styles.body} data-reveal-item>{t.privacy.body}</p>
+    <p class={styles.supporting} data-reveal-item>{t.privacy.supporting}</p>
   </div>
 </section>
