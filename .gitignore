@@ -59,13 +59,9 @@ sessions/
 # sessions/: local agent working state, not project source.
 skill-observations/
 
-# Agent scratch space and local logs — see tmp/README.md and logs/README.md
+# Agent scratch space and local logs.
 tmp/*
-!tmp/.gitkeep
-!tmp/README.md
-logs/*.log
-!logs/.gitkeep
-!logs/README.md
+logs/*
 
 # website/ (Astro build — Node tooling, build output)
 website/node_modules/
