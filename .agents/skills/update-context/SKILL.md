@@ -39,7 +39,7 @@ user-facing copy, or agent guidance.
    - `PROJECT_OVERVIEW.md` — the layout, milestones, or state of the ground
      changed (e.g. `app/` scaffolded, a new top-level directory or gate).
    - `WIKI.md` — any doc was added, removed, moved, or renamed.
-   - Also: `SETUP-STATUS.md` when set-up/pending status shifts,
+   - Also: `GAPS.md` when set-up/pending status shifts,
      `docs/TOOLING.md` when a tool or MCP server is added or removed, and
      `LEARNING.md` when a lesson changed how we work.
 4. Remove or update stale references to moved or renamed code, screens, scripts,
@@ -49,15 +49,15 @@ user-facing copy, or agent guidance.
 5. Update comments only when the surrounding code would otherwise mislead.
    Remove stale comments rather than adding new ones.
 6. Add or adjust tests and validation steps when behaviour or tooling changes.
-7. For user-facing copy, follow `AGENTS.md`: Title Case for non-sentence labels,
-   buttons, headings, and status chips; sentence case with grammar/clarity checks
-   for full sentences; preserve acronyms (`VoiceOver`, `OCR`, `HIG`, `ANE`,
-   `FAQ`, `URL`).
+7. For user-facing copy, follow the
+   [capitalization](../capitalization/SKILL.md) skill (Title Case vs. sentence
+   case, acronym handling).
 8. Anything describing spoken output or the physical world must honour the
-   awareness-not-safety doctrine (`docs/safety-framing.md`).
-9. If a complex agent mistake took substantial debugging to fix, add one concise
-   prevention note to the nearest relevant skill or agent file. Do not record
-   typos or routine fixes.
+   awareness-not-safety doctrine (`docs/SAFETY-FRAMING.md`).
+9. If a mistake took substantial debugging to fix, or a complex problem took a
+   long time to solve, run the
+   [lessons-learned](../lessons-learned/SKILL.md) skill to capture it in its
+   correct durable home. Do not record typos or routine fixes.
 10. Keep run notes under `logs/` as readable Markdown (see the `log-markdown`
    skill).
 
