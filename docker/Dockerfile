@@ -11,24 +11,12 @@
 # .github/workflows/security.yml. Dependabot's `docker` ecosystem entry
 # (.github/dependabot.yml) opens a PR to bump these digests whenever a new
 # image is published, so they never need a manual registry lookup.
-FROM node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2 AS build
+FROM node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951032d7ac1a66 AS build
 
 WORKDIR /app
 
 COPY website/.npmrc website/package.json website/package-lock.json ./
-# npm install -g npm@latest: node:22-alpine bundles npm 10.9.8, whose own
-# vendored deps (tar, sigstore, picomatch, brace-expansion) carry 1 critical +
-# 4 high CVEs — already the newest published node:22-alpine digest, so there's
-# no upstream fix to pin to yet. Self-upgrading npm before install swaps in
-# npm's patched vendored copies; confirmed empty `docker scout cves` after.
-# --omit=dev: devDependencies include @railway/cli, whose postinstall fetches
-# a platform binary from GitHub releases and 404s in this container — it's a
-# human-facing CLI, never needed to run `astro build`. Anything devDependencies
-# holds that the build *does* need (@astrojs/react, imported by astro.config.mjs;
-# react-scan, whose import Vite still resolves before dead-code-eliminating the
-# import.meta.env.DEV-gated script in BaseLayout.astro) must live in
-# dependencies instead, not here.
-RUN npm install -g npm@latest && npm ci --omit=dev
+RUN npm ci
 
 COPY website/ .
 RUN npm run build
