@@ -4,10 +4,7 @@
 highest-liability area in this repository — two of the most technically
 attractive models available are legally unusable here, and getting this wrong
 poisons the whole codebase's license. Enforcement ledger (provenance/date per
-bundled model): [`models/README.md`](../models/README.md). Full rationale:
-[`docs/planning/SenseBridge-03-Technical-Architecture.md`](planning/SenseBridge-03-Technical-Architecture.md)
-§11 and [`docs/planning/SenseBridge-05-Governance-Security-Legal.md`](planning/SenseBridge-05-Governance-Security-Legal.md)
-§19.
+bundled model): [`models/README.md`](../models/README.md).
 
 ## The standing rule
 
@@ -31,12 +28,12 @@ and license-clean.
 
 Reach for a bundled VLM (SmolVLM-class) only if on-device benchmarking on
 real hardware shows Vision + Foundation Models is genuinely insufficient —
-don't reach for it by default. See [architecture.md](architecture.md).
+don't reach for it by default. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## License ledger
 
 | Model / need | License | Status | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Apple Vision (OCR, detection) | Apple SDK | **Primary — use** | No model to bundle, no license risk |
 | Apple Foundation Models (scene reasoning) | Apple SDK | **Primary — use** | Text-only, ~4,096-token context window; two-stage with Vision |
 | Apple SpeechAnalyzer / SpeechTranscriber (deaf phase STT) | Apple SDK | **Primary — use** | On-device, reported faster than Whisper Large V3 Turbo |
@@ -75,7 +72,11 @@ don't reach for it by default. See [architecture.md](architecture.md).
   and managed by the OS).
 - Everything above is on-device and private by default. The only path
   off-device is the optional, opt-in cloud reasoning adapter — see
-  [privacy.md](privacy.md).
+  [PRIVACY.md](PRIVACY.md).
 - Published on-device latency figures (for FastVLM and others) come from
   secondary sources and different devices — benchmark on your own hardware,
   don't trust a number you didn't measure.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

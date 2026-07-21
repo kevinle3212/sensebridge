@@ -18,19 +18,19 @@ project, so response time depends on one person's availability — see
 ## Scope
 
 SenseBridge's MVP has **no backend and no server** — see
-[`docs/architecture.md`](docs/architecture.md). That removes most classic
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). That removes most classic
 attack surfaces (nothing to breach, nothing to rate-limit, no database to
 leak). What's actually in scope:
 
 - **Camera, microphone, and photo-library handling** — the app's permission
   boundaries and how captured content is processed and discarded.
 - **On-device biometric data** (facial-enrollment feature, deferred but
-  designed now) — see [`docs/privacy.md`](docs/privacy.md) and
+  designed now) — see [`docs/PRIVACY.md`](docs/PRIVACY.md) and
   [`security/THREAT-MODEL.md`](security/THREAT-MODEL.md) for the encrypted,
   on-device-only, consent-gated design.
 - **Supply chain** — dependencies and any bundled on-device ML model. Model
   license and provenance issues (the AGPL/AMLR traps documented in
-  [`docs/ai-models.md`](docs/ai-models.md)) are treated as security issues,
+  [`docs/AI-MODELS.md`](docs/AI-MODELS.md)) are treated as security issues,
   not just legal ones, because an unvetted model is unvetted code.
 - **Signing keys and CI secrets** for the eventual TestFlight/App Store
   pipeline — see [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md). These never
@@ -44,3 +44,7 @@ leak). What's actually in scope:
 Account takeover, server-side issues, and anything requiring a backend the
 MVP doesn't have. This will change if/when the optional cloud service is
 built — this file will be updated at that point.
+
+---
+
+Need help? See [`SUPPORT.md`](SUPPORT.md).
