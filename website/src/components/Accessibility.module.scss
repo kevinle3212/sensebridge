@@ -1,0 +1,11 @@
+@use "@styles/abstracts" as *;
+
+.accessibility {
+  @include section-band;
+}
+
+.body,
+.lead-in {
+  margin-top: space("2");
+  max-width: 40rem;
+}

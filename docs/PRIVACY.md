@@ -8,7 +8,7 @@ the legal-facing version, see [`legal/PRIVACY_POLICY.md`](../legal/PRIVACY_POLIC
 
 SenseBridge's MVP has no backend and no central data store. This is an
 architectural fact, not a policy promise — see
-[`docs/architecture.md`](architecture.md#backend-architecture). Most classic
+[`docs/ARCHITECTURE.md`](ARCHITECTURE.md#backend-architecture-there-is-none-and-that-is-correct). Most classic
 privacy attack surfaces (server breach, cross-user data leakage, third-party
 data brokering) simply do not exist because there is no server for them to
 exist on.
@@ -18,7 +18,7 @@ exist on.
 - Images and recognized text are **processed and discarded**, not persisted
   without a specific reason the user can see.
 - **Never logged.** See the logging rules in
-  [`docs/architecture.md`](architecture.md) — no recognized text, images, or
+  [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — no recognized text, images, or
   audio ever goes into application logs, only events and states.
 - **Optional settings sync** (iCloud) carries only preferences — never
   content — and rides on Apple's iCloud security model rather than a
@@ -40,9 +40,8 @@ expensive, the storage model is designed now:
 This design is deliberately both the ethical choice and the legally safest
 one — biometric law (Illinois BIPA, Texas CUBI, GDPR Article 9, CCPA/CPRA
 among others) is a real, fast-moving exposure. See
-[`legal/PRIVACY_POLICY.md`](../legal/PRIVACY_POLICY.md) and
-`docs/planning/SenseBridge-05-Governance-Security-Legal.md` §21 for the full
-legal notes. **None of this is legal advice — get counsel before shipping any
+[`legal/PRIVACY_POLICY.md`](../legal/PRIVACY_POLICY.md) for the full legal
+notes. **None of this is legal advice — get counsel before shipping any
 facial-enrollment feature.**
 
 ## The optional cloud adapter (not built, opt-in when it exists)
@@ -57,3 +56,7 @@ secrets of its own.
 The MVP has essentially no secrets: no backend, no API keys. CI (GitHub
 Actions) uses repository secrets only for release-signing credentials, never
 committed to the repository.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

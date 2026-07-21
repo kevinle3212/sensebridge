@@ -1,0 +1,68 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import "../styles/global/index.scss";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "SenseBridge — open-source, on-device, private accessibility",
+  description = "SenseBridge is a free, open-source iPhone app that translates a blind or low-vision person's surroundings into clear spoken information, processed entirely on-device.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <link
+      rel="preload"
+      href="/fonts/inter-variable-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      // Motion is decoration, so its bundle (GSAP + ScrollTrigger + Lenis)
+      // stays out of the critical path: load after `load`, at idle, and only
+      // when the reduced-motion gate would let it run at all — a
+      // reduced-motion visitor never downloads it. (If the OS preference
+      // flips mid-session, from reduce to no-preference, motion stays off
+      // until reload; the reverse flip is handled live by gsap.matchMedia
+      // inside the module.)
+      window.addEventListener(
+        "load",
+        () => {
+          if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+            return;
+          }
+          const idle =
+            window.requestIdleCallback ??
+            ((callback: IdleRequestCallback) => setTimeout(callback, 1));
+          idle(() => {
+            void import("../scripts/motion");
+          });
+        },
+        { once: true },
+      );
+    </script>
+  </body>
+</html>

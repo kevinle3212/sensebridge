@@ -5,7 +5,7 @@ not just what the code does.
 
 - **Accessibility regressions are taken seriously.** A feature that looks
   fine sighted but breaks VoiceOver is not a minor issue — see
-  [`docs/accessibility.md`](docs/accessibility.md) and the accessibility-impact
+  [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md) and the accessibility-impact
   section required in every pull request.
 - **Lived expertise outranks abstract opinions.** This community includes
   blind, low-vision, deaf, and deaf-blind people. When a disabled contributor
@@ -26,3 +26,7 @@ Accessibility Awareness Day (GAAD) pledge, accessibility summits, and
 assistive-technology hackathons. These are worth engaging once the project
 has something concrete to show, both for visibility and for finding
 contributors and testers who bring real assistive-technology expertise.
+
+---
+
+Need help? See [`SUPPORT.md`](SUPPORT.md).

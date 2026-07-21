@@ -1,0 +1,17 @@
+---
+import styles from "./Accessibility.module.scss";
+import ReadAloud from "./ReadAloud.astro";
+---
+
+<section id="accessibility" class={styles.accessibility} aria-labelledby="accessibility-heading">
+  <div class="wrap" data-reveal>
+    <h2 id="accessibility-heading">Built the way it asks to be judged</h2>
+    <p class={styles.body}>
+      This site is built screen-reader-first, to the same standard the app promises: semantic
+      structure, every control labeled, full keyboard support, WCAG 2.2 AA. If you use VoiceOver or
+      NVDA, this page should already feel like home.
+    </p>
+    <p class={styles["lead-in"]}>Prefer to listen? This page can read itself aloud.</p>
+    <ReadAloud />
+  </div>
+</section>

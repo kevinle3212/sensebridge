@@ -1,0 +1,45 @@
+// Design tokens for the "First Light" design system — dark palette (two
+// accents max, AA-verified against the surfaces they sit on), an 8-based
+// spacing scale, corner radii, and the one hero-only glow token. These SCSS
+// maps are the single source of truth; global/base.scss emits the matching
+// CSS custom properties for runtime use (e.g. values JS needs to read).
+// Contrast (against $color("ink") #080a10, WCAG AA body-text floor 4.5:1):
+//   text-primary   #e8ebf2 → ~17.9:1
+//   text-secondary #a7afc2 → ~8.6:1
+//   accent-primary #5eb1ff → ~8.1:1 (links/focus — carries text)
+// accent-secondary is decorative-only (hero glow/light-sweep) and never
+// carries text, so it is not held to the text contrast floor.
+
+$color: (
+  "ink": #080a10,
+  "surface-raised": #131722,
+  "surface-glass": rgb(19 23 34 / 60%),
+  "text-primary": #e8ebf2,
+  "text-secondary": #a7afc2,
+  "accent-primary": #5eb1ff,
+  "accent-secondary": #ffb37a,
+  "hairline": #262c3d,
+);
+
+// 8-based scale: 8/16/24/40/64/96/128px.
+$space: (
+  "1": 0.5rem,
+  "2": 1rem,
+  "3": 1.5rem,
+  "4": 2.5rem,
+  "5": 4rem,
+  "6": 6rem,
+  "7": 8rem,
+);
+$radius: (
+  "sm": 0.5rem,
+  "md": 0.75rem,
+  "lg": 1.25rem,
+);
+
+// Elevation is mostly "surface-raised background + hairline border" (both
+// already in $color above); the only dedicated elevation token is the single
+// soft glow reserved for the hero.
+$shadow: (
+  "glow-hero": 0 0 160px 40px rgb(255 179 122 / 18%),
+);

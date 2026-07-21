@@ -1,0 +1,37 @@
+// Token getters. Wrapping `map-get` gives a clear build-time error (instead
+// of a silent `null`) when a component references a token key that doesn't
+// exist.
+@use "sass:map";
+@use "tokens";
+
+@function color($key) {
+  @if not map.has-key(tokens.$color, $key) {
+    @error "Unknown color token: '#{$key}'.";
+  }
+
+  @return map.get(tokens.$color, $key);
+}
+
+@function space($key) {
+  @if not map.has-key(tokens.$space, $key) {
+    @error "Unknown space token: '#{$key}'.";
+  }
+
+  @return map.get(tokens.$space, $key);
+}
+
+@function radius($key) {
+  @if not map.has-key(tokens.$radius, $key) {
+    @error "Unknown radius token: '#{$key}'.";
+  }
+
+  @return map.get(tokens.$radius, $key);
+}
+
+@function shadow($key) {
+  @if not map.has-key(tokens.$shadow, $key) {
+    @error "Unknown shadow token: '#{$key}'.";
+  }
+
+  @return map.get(tokens.$shadow, $key);
+}

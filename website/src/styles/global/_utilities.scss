@@ -1,0 +1,9 @@
+@use "@styles/abstracts" as *;
+
+// Centered content container — used by every section, starting with the
+// header/footer shells in this phase.
+.wrap {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 space("3");
+}

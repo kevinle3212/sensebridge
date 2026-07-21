@@ -1,8 +1,8 @@
 # FAQ
 
 For the full reasoning behind these answers, see
-[`PRODUCT.md`](PRODUCT.md), [`roadmap.md`](roadmap.md), and
-[`planning/SenseBridge-06-Miscellaneous-and-Remarks.md`](planning/SenseBridge-06-Miscellaneous-and-Remarks.md).
+[`PRODUCT.md`](PRODUCT.md), [`ROADMAP.md`](ROADMAP.md), and
+[`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
 
 **Why "SenseBridge"?**
 It says what the project does (bridges senses) without overclaiming safety,
@@ -14,7 +14,7 @@ Cloud scene-description apps are excellent but send your camera images to a
 third party (Be My AI routes through OpenAI). For sensitive material —
 mail, medical letters, financial documents — on-device processing is both
 an ethical stance and a real product wedge no closed competitor can match.
-See [`privacy.md`](privacy.md) and [`ai-models.md`](ai-models.md).
+See [`PRIVACY.md`](PRIVACY.md) and [`AI-MODELS.md`](AI-MODELS.md).
 
 **Why free, with no subscription?**
 Affordability is a real constraint for the people this app serves — only
@@ -29,7 +29,7 @@ The hardest and most valuable code here — Vision, ARKit/LiDAR, Foundation
 Models, Sound Analysis — is native Apple-framework code regardless of UI
 layer. React Native would add a layer without buying back any of the
 cross-platform reach an iPhone-only, on-device MVP doesn't need. See
-[`architecture.md`](architecture.md).
+[`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 **How is this different from Apple's built-in accessibility features
 (VoiceOver, Magnifier, Live Recognition)?**
@@ -42,10 +42,14 @@ than a set of separate closed features.
 **Does this replace a cane, guide dog, or orientation-and-mobility
 training?**
 No, and it says so repeatedly in the app itself. See
-[`safety-framing.md`](safety-framing.md) for why "awareness, not safety" is
+[`SAFETY-FRAMING.md`](SAFETY-FRAMING.md) for why "awareness, not safety" is
 a hard rule, not a guideline.
 
 **Will there be an Android version?**
-Not in the MVP or the near-term roadmap. See [`roadmap.md`](roadmap.md)
+Not in the MVP or the near-term roadmap. See [`ROADMAP.md`](ROADMAP.md)
 Phase 5 — a shared core enabling Android is a long-term, conditional goal,
 reachable only after the iPhone MVP and later phases land.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

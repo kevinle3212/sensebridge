@@ -3,14 +3,14 @@
 SenseBridge follows a simple standard: be respectful, precise, and
 constructive.
 
-## Expected Behavior
+## Expected behavior
 
 - Communicate in good faith.
 - Keep feedback actionable and relevant.
 - Respect security, privacy, and legal boundaries.
 - Assume public project spaces may be read by future contributors.
 
-## Unacceptable Behavior
+## Unacceptable behavior
 
 - Harassment, discrimination, threats, or abuse.
 - Publishing private information.
@@ -19,3 +19,6 @@ constructive.
 
 Report concerns to `kevinle3212@gmail.com`.
 
+---
+
+Need help? See [`SUPPORT.md`](SUPPORT.md).

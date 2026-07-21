@@ -1,4 +1,4 @@
-# WIKI.md — documentation index
+# WIKI.md — Documentation Index
 
 Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 
@@ -11,8 +11,7 @@ Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 | `AGENT-CONTEXT.md` | Current state of the ground for agents |
 | `CLAUDE.md` / `GEMINI.md` / `.github/copilot-instructions.md` | Per-agent pointers into `AGENTS.md` |
 | `.codex/` `.gemini/` `.copilot/` `.continue/` `.windsurf/` `.cursor/` `.openclaw/` | Per-agent config (Serena MCP + rules), all deferring to `AGENTS.md` |
-| `SETUP-STATUS.md` | What is set up vs. pending, next milestones |
-| `GAPS.md` | Verified defects, debt, risks |
+| `GAPS.md` | Verified defects, debt, risks, next milestones |
 | `MEMORY.md` | Where each kind of knowledge lives |
 | `LEARNING.md` | Append-only lessons log |
 | `README.md` | Public-facing product summary |
@@ -22,17 +21,16 @@ Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 | File | Purpose |
 | --- | --- |
 | `docs/PRODUCT.md` | Product positioning and scope |
-| `docs/architecture.md` | Module seams: `SensingSource` → perception → Reasoning → `RenderTarget` |
-| `docs/planning/SenseBridge-01…07`, `-COMPLETE-PLAN.md` | Source research series |
-| `docs/safety-framing.md` | Awareness-not-safety doctrine (highest-severity surface) |
-| `docs/privacy.md` | On-device guarantee, consent rules |
-| `docs/accessibility.md` | VoiceOver bar: zero unlabeled elements |
-| `docs/TESTING.md` | Unit / integration / AI-eval strategy |
-| `docs/ai-models.md` | Model selection and licensing approach |
+| `docs/ARCHITECTURE.md` | Module seams: `SensingSource` → perception → Reasoning → `RenderTarget` |
+| `docs/SAFETY-FRAMING.md` | Awareness-not-safety doctrine (highest-severity surface) |
+| `docs/PRIVACY.md` | On-device guarantee, consent rules |
+| `docs/ACCESSIBILITY.md` | VoiceOver bar: zero unlabeled elements |
+| `docs/TESTING.md` | Unit / integration / e2e / AI-eval strategy |
+| `docs/AI-MODELS.md` | Model selection and licensing approach |
 | `docs/ENVIRONMENT.md` | Toolchain setup (see also `scripts/setup.sh`) |
 | `docs/TOOLING.md` | Global-vs-project tooling decision matrix, MCP inventory |
 | `docs/DISTRIBUTION.md` | TestFlight / App Store path |
-| `docs/roadmap.md` | Deferred scope and sequencing |
+| `docs/ROADMAP.md` | Deferred scope and sequencing |
 | `docs/FAQ.md` | Common questions |
 
 ## Governance, community, legal
@@ -42,3 +40,7 @@ Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 `CHANGELOG.md`, `legal/` (owner-approval only), `security/` (threat model,
 checklist), `audits/` (append-only reports; guide in `audits/AGENT-GUIDE.md`),
 `models/README.md` (model vendoring approach).
+
+---
+
+Need help? See [`SUPPORT.md`](SUPPORT.md).

@@ -1,6 +1,4 @@
 # Xcode
-#
-# gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
 ## User settings
 xcuserdata/
@@ -17,42 +15,14 @@ xcuserdata/
 timeline.xctimeline
 playground.xcworkspace
 
-# Swift Package Manager
-#
-# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
-# Packages/
-# Package.pins
-# Package.resolved
-# *.xcodeproj
-#
-# Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
-# hence it is not needed unless you have added a package configuration file to your project
-# .swiftpm
+# Swift Package Manager — Xcode auto-generates .swiftpm; not needed unless a
+# package configuration file exists.
 .build/
 
-# CocoaPods
-#
-# We recommend against adding the Pods directory to your .gitignore. However
-# you should judge for yourself, the pros and cons are mentioned at:
-# https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
-#
-# Pods/
-#
-# Add this line if you want to avoid checking in source code from the Xcode workspace
-# *.xcworkspace
-
 # Carthage
-#
-# Add this line if you want to avoid checking in source code from Carthage dependencies.
-# Carthage/Checkouts
 Carthage/Build/
 
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo.
-# Instead, use fastlane to re-generate the screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/#source-control
+# fastlane — don't store generated screenshots/reports in git.
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
@@ -64,19 +34,30 @@ fastlane/test_output
 # Generated analysis output (graphify, etc.)
 graphify-out/
 
-# GitNexus knowledge-graph index (local-only, no network calls — see
-# docs/TOOLING.md's Nexus row). Regenerate any time with `gitnexus analyze`.
+# GitNexus knowledge-graph index — local-only, no network calls. Regenerate
+# with `gitnexus analyze`. See docs/TOOLING.md.
 .gitnexus/
 
 # Claude Code local state
 .claude/worktrees/
 .claude/settings.local.json
 
-# Private notes (mirrors TrustLedger convention). Deliberate two-file split:
-# NOTES.md is public/committed/secret-scanned; NOTES.local.md is personal and
-# machine-specific (local setup, absolute paths, session handoffs) and must
-# never be committed. See NOTES.md for what belongs where.
+# Secrets — never committed. See docs/ENVIRONMENT.md.
+.env
+.env.*
+!.env.example
+
+# Private notes: NOTES.md is public/committed; NOTES.local.md is personal and
+# machine-specific and must never be committed. See NOTES.md.
 NOTES.local.md
+
+# Claude/agent session logs — local development history, not shipped project
+# source. See CLAUDE.md's "Session logs" section.
+sessions/
+
+# task-observer skill-improvement observation log — same category as
+# sessions/: local agent working state, not project source.
+skill-observations/
 
 # Agent scratch space and local logs — see tmp/README.md and logs/README.md
 tmp/*
@@ -86,22 +67,21 @@ logs/*.log
 !logs/.gitkeep
 !logs/README.md
 
-# website/ (Node tooling — Stylelint, Prettier)
+# website/ (Astro build — Node tooling, build output)
 website/node_modules/
+website/dist/
+website/.astro/
 
-# Impeccable skill — local/generated state, not project source
+# Impeccable skill — local/generated state, not project source.
 # (.impeccable/design.json and .impeccable/live/config.json ARE committed —
-# see .agents/skills/impeccable/reference/document.md and live.md)
-#
-# `**/` on purpose: impeccable roots `.impeccable/` at its resolved project
-# root, which (absent a monorepo marker) is just the cwd it was invoked from —
-# so running it from any subdirectory creates a stray nested `.impeccable/`.
-# Repo root is the only supported root here (the editor hook hard-keys to it
-# via the `.git` marker), but these patterns ignore local state at any depth so
-# a stray can never become git noise. See docs/TOOLING.md.
+# see .agents/skills/impeccable/reference/document.md and live.md.)
+# `**/` matches at any depth: impeccable roots `.impeccable/` at cwd absent a
+# monorepo marker, so invoking it from a subdirectory creates a stray. Repo
+# root is the only supported root — see docs/TOOLING.md.
 **/.impeccable/hook.cache.json
 **/.impeccable/hook.pending.json
 **/.impeccable/config.local.json
+**/.impeccable/critique/
 **/.impeccable/live/server.json
 **/.impeccable/live/sessions/
 **/.impeccable/live/previews/
@@ -119,23 +99,17 @@ src/lib/impeccable/ImpeccableLiveRoot.svelte
 src/lib/impeccable/__runtime.js
 src/lib/impeccable/[0-9a-f]*/
 
-# GAPS.md catalogs known defects/debt/risks in prose specific enough to double
-# as an attacker checklist if this repo is ever made public — keep it local.
-# NOTE: GAPS.md is already committed (tracked since the initial commit). This
-# entry only stops *future* changes from being re-added — it does not untrack
-# the file (needs `git rm --cached GAPS.md`) or purge it from existing git
-# history (needs a history rewrite, e.g. git filter-repo — destructive, do not
-# run without explicit sign-off).
+# GAPS.md doubles as an attacker checklist if this repo goes public — keep it
+# local. Already tracked since the initial commit: this only blocks future
+# re-adds (untracking needs `git rm --cached`; purging history needs a
+# rewrite, e.g. git filter-repo — destructive, requires explicit sign-off).
 GAPS.md
 
-# Same reasoning as GAPS.md above: keep specific-findings documents local so
-# they can't double as an attacker checklist if this repo goes public.
-# `security/CHECKLIST.md` and the audits/ process docs (README, GOVERNANCE,
-# AGENT-GUIDE, scripts/, templates/, markdownlint config) stay tracked —
-# they're process descriptions, not findings. Same untrack/history caveat as
-# GAPS.md applies: `security/THREAT-MODEL.md` and the two
-# `audits/general/2026*.md` reports are already committed; this only stops
-# future re-adds.
+# Same reasoning as GAPS.md: keep specific-findings docs local so they can't
+# double as an attacker checklist. Process docs (README, GOVERNANCE,
+# AGENT-GUIDE, scripts/, templates/, markdownlint config) stay tracked.
+# `security/THREAT-MODEL.md` and the audits/general/2026*.md reports are
+# already tracked; same untrack/history caveat as GAPS.md applies.
 security/THREAT-MODEL.md
 audits/**
 !audits/README.md
@@ -145,14 +119,22 @@ audits/**
 !audits/scripts/**
 !audits/templates/
 !audits/templates/**
-
-# docs/planning/ is the original research/strategy series (SENSEBRIDGE-01..07,
-# -COMPLETE-PLAN.md) — kept local only, per explicit request. NOTE: it is
-# already committed (tracked since the initial bootstrap commit and pushed to
-# origin/main). This entry plus `git rm --cached -r docs/planning` stops
-# future re-adds and drops it from the tip going forward, but does NOT purge
-# it from existing git history — that needs a history rewrite (e.g. git
-# filter-repo), which is destructive and force-pushes; do not run without
-# explicit separate sign-off.
-docs/planning/
 !audits/.markdownlint.jsonc
+
+# docs/planning/ — original research/strategy series, kept local per explicit
+# request. Already tracked (initial commit): this only stops future re-adds,
+# not a history purge (needs git filter-repo — destructive, needs sign-off).
+docs/planning/
+.gstack/
+
+# BMAD installer-managed personal config — "Holds install answers scoped to
+# YOU personally" (see the file's own header). _bmad/custom/.gitignore
+# already covers _bmad/custom/*.user.toml; this catches the root-level one
+# (_bmad/config.user.toml) and any future nested copies under one rule.
+_bmad/**/*.user.toml
+
+# _bmad/ itself (module core, scripts, config) is tracked — same category as
+# the already-tracked .claude/skills/bmad-*. _bmad-output/ is BMAD's
+# generated planning/implementation artifact scratch space (regenerable,
+# session-specific); keep it local like graphify-out/ and .gitnexus/ above.
+_bmad-output/

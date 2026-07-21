@@ -44,18 +44,18 @@ The primary user operates this app entirely through VoiceOver.
 
 Where it helps, deliver the same information through more than one sense
 (spoken plus on-screen text). This is also the seed of the multi-sense
-architecture described in [`docs/architecture.md`](architecture.md): the same
+architecture described in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md): the same
 reasoning output can render as speech, caption, or haptic depending on the
 user's profile.
 
 ## Accessibility risks and mitigations
 
 | Risk | Consequence | Mitigation |
-|---|---|---|
+| --- | --- | --- |
 | Unlabeled or poorly labeled controls | App is unusable via VoiceOver | Label everything; audit each screen with VoiceOver on |
 | Focus lost after actions | User stranded after a result | Explicit focus management and announcements |
 | Output too verbose or too terse | Cognitive load or missing info | Tune phrasing with real testers; make verbosity configurable |
-| Over-confident output | User trusts a wrong reading | Hedged language everywhere — see [`docs/safety-framing.md`](safety-framing.md) |
+| Over-confident output | User trusts a wrong reading | Hedged language everywhere — see [`docs/SAFETY-FRAMING.md`](SAFETY-FRAMING.md) |
 | Building features before the shell is accessible | Inaccessible product with nice internals | VoiceOver-first discipline: shell accessible before features |
 
 **The single most important sentence in this project: if a blind person has
@@ -78,3 +78,7 @@ Every pull request that touches UI must include the accessibility-impact
 statement in [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md).
 "No accessibility impact" is a valid answer for a pure-logic change — but it
 must be stated, not assumed.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

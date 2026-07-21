@@ -1,4 +1,4 @@
-# MEMORY.md — where knowledge lives
+# MEMORY.md — Where Knowledge Lives
 
 One fact, one home; everything else links to it. This file records the
 decision and the routing rules — it is **not** itself a memory store.
@@ -15,9 +15,9 @@ vault and Claude's private memory are satellites, not sources of truth.
 | Knowledge | Home | Examples |
 | --- | --- | --- |
 | Conventions, doctrines, gates | `AGENTS.md` + `docs/` | Safety framing rules, quality gates |
-| Current state of the ground | `AGENT-CONTEXT.md`, `SETUP-STATUS.md` | "app/ is not scaffolded yet" |
+| Current state of the ground | `AGENT-CONTEXT.md` | "app/ has an early scaffold, no distributable build" |
 | Defects, debt, risks | `GAPS.md` | Missing repo secret |
-| Lessons that changed how we work | `LEARNING.md` (append-only) | Why CI no-ops instead of failing |
+| Lessons that changed how we work | `LEARNING.md` (append-only), driven by the [lessons-learned](.agents/skills/lessons-learned/SKILL.md) skill | Why CI no-ops instead of failing |
 | Tooling decisions | `docs/TOOLING.md` | Why there is no ESLint here |
 | Audit findings | `audits/` (append-only) | Review reports |
 | Cross-project, durable knowledge | Obsidian `~/Vault` via the `vault-capture` skill | Reusable patterns, milestones, debugging discoveries that outlive this repo |
@@ -30,3 +30,7 @@ vault and Claude's private memory are satellites, not sources of truth.
 - When a satellite note turns out to be project-relevant and durable, promote
   it into the matching repo doc and delete the satellite copy.
 - Convert relative dates to absolute when writing anything here.
+
+---
+
+Need help? See [`SUPPORT.md`](SUPPORT.md).

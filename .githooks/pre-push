@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+#
+# pre-push — local mirror of the CI build gate before code leaves the machine.
+#
+# Refuses to push commits directly to refs/heads/main (branch as
+# feat/fix/chore/... and open a PR, per CONTRIBUTING.md), then runs a
+# build-only check using the same project-detection as .github/workflows/ci.yml
+# (no-ops until app/ is scaffolded). CI still runs the full build+test; this
+# just catches the fast, common breakage before a push.
+#
+# Enabled by `git config core.hooksPath .githooks` — scripts/setup.sh does
+# this. Bypass in an emergency with `git push --no-verify` and say so in the
+# PR.
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+protected_ref='refs/heads/main'
+while read -r local_ref local_sha remote_ref remote_sha; do
+	if [ "$remote_ref" = "$protected_ref" ]; then
+		echo "pre-push: refusing to push directly to main — branch as feat/fix/chore/... and open a PR (see CONTRIBUTING.md)." >&2
+		exit 1
+	fi
+done
+
+if compgen -G "Package.swift" >/dev/null || compgen -G "app/Package.swift" >/dev/null; then
+	echo "== swift build =="
+	swift build
+elif compgen -G "app/*.xcodeproj" >/dev/null || compgen -G "app/*.xcworkspace" >/dev/null; then
+	PROJ=$(ls -d app/*.xcworkspace app/*.xcodeproj 2>/dev/null | head -1)
+	FLAG=-project
+	[ "${PROJ##*.}" = "xcworkspace" ] && FLAG=-workspace
+	echo "== xcodebuild build =="
+	xcodebuild build "$FLAG" "$PROJ" -scheme SenseBridge \
+		-destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+		CODE_SIGNING_ALLOWED=NO
+else
+	echo "pre-push: no Swift package or Xcode project found under app/ yet — skipping build check."
+fi

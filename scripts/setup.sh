@@ -3,8 +3,8 @@
 # setup.sh — check the local toolchain matches docs/ENVIRONMENT.md.
 #
 # Required tooling (blocks): Xcode/xcodebuild, Swift, Git.
-# Swift lint/format tooling (advisory only until app/ exists — see
-# SETUP-STATUS.md; scripts/lint.sh no-ops the same way ci.yml does).
+# Swift lint/format tooling (advisory only until app/ exists;
+# scripts/lint.sh no-ops the same way ci.yml does).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -46,9 +46,20 @@ check_advisory "gitleaks" gitleaks
 check_advisory "Node (runs tools/check-sensitive-files.mjs)" node
 
 echo
+echo "== website/ (Node tooling: Stylelint, Prettier) =="
+if [ -f "$REPO_ROOT/website/package.json" ]; then
+	if command -v npm >/dev/null 2>&1; then
+		(cd "$REPO_ROOT/website" && npm ci)
+		echo "ok   website/ dependencies installed"
+	else
+		echo "advisory  npm not found — needed for website/ (brew install node)"
+	fi
+fi
+
+echo
 echo "== Git hooks =="
 git -C "$REPO_ROOT" config core.hooksPath .githooks
-echo "ok   core.hooksPath -> .githooks (secret scan + lint on commit, conventional-commit header check)"
+echo "ok   core.hooksPath -> .githooks (secret scan + lint on commit, conventional-commit header check, build gate + main-push guard on push, manifest-change check on merge)"
 
 echo
 if [ "$FAIL" -ne 0 ]; then

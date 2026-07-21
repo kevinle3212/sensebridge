@@ -1,0 +1,15 @@
+@use "@styles/abstracts" as *;
+
+// Raised-surface callout. Deliberately no transition/animation of any kind —
+// the disclaimer must never feel like decoration.
+.disclaimer {
+  padding-block: space("4");
+  background: color("surface-raised");
+  border-top: 1px solid color("hairline");
+  border-bottom: 1px solid color("hairline");
+}
+
+.text {
+  max-width: 44rem;
+  font-size: 1.0625rem;
+}

@@ -1,0 +1,29 @@
+@use "@styles/abstracts" as *;
+
+.follow-progress {
+  @include section-band;
+}
+
+.body {
+  margin-top: space("2");
+  max-width: 40rem;
+}
+
+.link {
+  display: inline-block;
+  width: fit-content;
+  margin-top: space("2");
+  padding: space("1") space("3");
+  border: 1px solid color("accent-primary");
+  border-radius: radius("md");
+  color: color("text-primary");
+  text-decoration: none;
+
+  &:hover {
+    background: color("surface-raised");
+  }
+
+  @include motion-safe {
+    transition: background-color duration("base") ease("standard");
+  }
+}

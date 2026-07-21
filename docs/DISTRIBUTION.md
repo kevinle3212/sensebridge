@@ -1,7 +1,7 @@
 # Distribution
 
 *(Named "Distribution," not "Deployment" — there is no server to deploy. See
-[architecture.md](architecture.md#backend-architecture-there-is-none-and-that-is-correct).)*
+[ARCHITECTURE.md](ARCHITECTURE.md#backend-architecture-there-is-none-and-that-is-correct).)*
 
 ## What's free
 
@@ -27,7 +27,7 @@ Options, in order of preference:
    eligibility and terms before assuming one applies.
 2. **Budget for the Developer Program at beta.** Decide this before you need
    real testers (see the roadmap's month-four checkpoint in
-   [roadmap.md](roadmap.md)) — don't let it surprise you late.
+   [ROADMAP.md](ROADMAP.md)) — don't let it surprise you late.
 3. **Limit early testing to your own device and source builds** until either
    of the above is resolved. This is a real fallback, not just a stopgap:
    getting the document-reading feature right on your own device, validated
@@ -49,6 +49,18 @@ Signing keys and certificates are the crown jewels of the release pipeline.
 Never commit them to the repository. Keep them in GitHub Actions repository
 secrets (for CI-driven TestFlight uploads, once that's set up) or in local
 secure storage for manual builds. There is no automated TestFlight upload
-workflow yet — see [`docs/roadmap.md`](roadmap.md) for when that becomes
+workflow yet — see [`docs/ROADMAP.md`](ROADMAP.md) for when that becomes
 relevant; adding one before there's a Developer Program account to use it
 with would be premature.
+
+When that changes: enroll in the Apple Developer Program, set the real
+bundle ID and `DEVELOPMENT_TEAM` in `app/project.yml`, and generate signing
+certificates/provisioning profiles for the team. Only then does an **App
+Store Connect API key** (Users and Access → Integrations → App Store Connect
+API in App Store Connect) become relevant, for CI-driven TestFlight
+uploads — store it in GitHub Actions repository secrets, never in the repo.
+No such CI workflow exists yet.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

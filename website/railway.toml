@@ -1,0 +1,10 @@
+# Railway service config for the marketing site. Applies when the Railway
+# service's "Root Directory" is set to `website` — see README.md's
+# Deployment section for the full setup flow.
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
