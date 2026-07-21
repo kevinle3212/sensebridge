@@ -1,0 +1,22 @@
+# BuildKit picks this up automatically for `docker build -f docker/Dockerfile`
+# (it takes precedence over a context-root .dockerignore, of which this repo
+# has none). Build context is the repo root — see docker/README.md — so
+# these patterns are repo-root relative.
+#
+# Allowlist, not a denylist: ignore everything, then re-include only what the
+# build actually reads. New top-level directories (app/, legal/, secrets,
+# .git history, ...) never reach the Docker daemon by default, regardless of
+# what gets added to the repo root later.
+*
+
+!website
+!website/**
+!docker/nginx.conf.template
+
+# Re-excluded even though `website` is allowlisted above — build artifacts
+# and local deps, never build inputs.
+website/node_modules
+website/dist
+website/.astro
+website/.env
+website/.env.*

@@ -1,0 +1,21 @@
+# Rendered to /etc/nginx/conf.d/default.conf at container start by the base
+# image's 20-envsubst-on-templates.sh entrypoint script, substituting $PORT
+# from the environment. nginx's own runtime variables ($uri, $host, ...)
+# aren't shell env vars, so envsubst leaves them untouched.
+server {
+    listen ${PORT};
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Astro static output: /, /es/, /vi/ each resolve to their own
+    # index.html via nginx's `index` directive above.
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options DENY always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+}
