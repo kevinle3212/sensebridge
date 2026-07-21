@@ -1,0 +1,121 @@
+included:
+  - app
+excluded:
+  - app/Packages/SenseBridgeCore/.build
+  - app/SenseBridge.xcodeproj
+  # SPM's manifest variable must be named `package` — `prefixed_toplevel_constant`
+  # can't be satisfied by build-tool boilerplate that isn't application code.
+  - app/Packages/SenseBridgeCore/Package.swift
+
+# Formatting/whitespace/indentation belong to SwiftFormat (see .swiftformat).
+# Opt-in rules here are limited to correctness, safety, and encapsulation —
+# duplicating a formatting concern in both tools makes them fight each other.
+opt_in_rules:
+  # Crash / concurrency safety
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - unowned_variable_capture
+  - unhandled_throwing_task
+  - untyped_error_in_catch
+  - discouraged_optional_boolean
+  - discouraged_optional_collection
+  - redundant_nil_coalescing
+  - optional_enum_case_matching
+  - overridden_super_call
+  - prohibited_super_call
+  - variable_shadowing
+  - identical_operands
+  - yoda_condition
+  - static_operator
+  - required_enum_case
+  - return_value_from_void_function
+  # Correct API usage / idiom
+  - array_init
+  - empty_collection_literal
+  - empty_count
+  - empty_string
+  - first_where
+  - last_where
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - flatmap_over_map_reduce
+  - reduce_into
+  - toggle_bool
+  - explicit_init
+  - prefer_zero_over_explicit_init
+  - prefer_key_path
+  - prefer_self_type_over_type_of_self
+  - joined_default_parameter
+  - discouraged_object_literal
+  - discouraged_none_name
+  - convenience_type
+  - no_empty_block
+  - fallthrough
+  - superfluous_else
+  - self_binding
+  - shorthand_optional_binding
+  - unneeded_throws_rethrows
+  - unavailable_function
+  - fatal_error_message
+  - redundant_type_annotation
+  - unneeded_parentheses_in_closure_argument
+  # Test hygiene
+  - final_test_case
+  - balanced_xctest_lifecycle
+  - empty_xctest_method
+  - xct_specific_matcher
+  - test_case_accessibility
+  - single_test_class
+  - enum_case_associated_values_count
+  # Encapsulation / least privilege
+  - lower_acl_than_parent
+  - strict_fileprivate
+  - private_swiftui_state
+  - prefixed_toplevel_constant
+  # Public API documentation
+  - missing_docs
+
+# sorted_imports is deliberately NOT enabled: it wants pure alphabetical
+# order, which conflicts with .swiftformat's `--importgrouping testable-last`
+# (testable imports intentionally sort after regular ones, not alphabetically
+# interleaved with them).
+
+# one_declaration_per_file is deliberately NOT enabled: this codebase
+# idiomatically colocates a protocol with its single default implementation,
+# or a small enum with its companion enum (e.g. OutputProfile.swift's
+# RenderChannel + OutputProfile). Splitting those into one file each would
+# fragment tightly-coupled ~10-line types for no readability gain.
+
+# unused_import / unused_declaration / capture_variable / typesafe_array_init
+# are analyzer rules — they need `swiftlint analyze` with a compiler log, not
+# the `swiftlint lint` scripts/lint.sh and ci.yml run. Wiring that up is a
+# separate, larger CI change (needs a captured xcodebuild compile log);
+# tracked as a follow-up in TODO.md rather than silently no-op'd here.
+
+line_length:
+  warning: 120
+  error: 150
+
+identifier_name:
+  min_length: 2
+
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+
+function_body_length:
+  warning: 40
+  error: 60
+
+type_body_length:
+  warning: 200
+  error: 300
+
+file_length:
+  warning: 400
+  error: 500
+
+missing_docs:
+  warning: [public, open]

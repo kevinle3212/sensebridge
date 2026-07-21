@@ -1,0 +1,89 @@
+{
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true,
+  "files.insertFinalNewline": true,
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+  "files.associations": {
+    ".markdownlintignore": "ignore",
+    ".gitleaksignore": "ignore",
+    ".gitnexusrc": "json",
+    "post-checkout": "shellscript",
+    "post-commit": "shellscript",
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.stylelint": "explicit"
+    }
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json][jsonc][yaml][markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "stylelint.validate": [
+    "css"
+  ],
+  "markdownlint.config": {
+    "extends": ".markdownlint.jsonc"
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
+    "https://json.schemastore.org/dependabot-2.0.json": ".github/dependabot.yml"
+  },
+  "json.schemas": [
+    { "fileMatch": ["website/vercel.json"], "url": "https://openapi.vercel.sh/vercel.json" },
+    { "fileMatch": ["website/tsconfig.json"], "url": "https://json.schemastore.org/tsconfig" }
+  ],
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.build": true,
+    "graphify-out/**": true,
+    ".gitnexus/**": true,
+    "tmp/**": true,
+    "logs/**": true,
+    "**/*.xcuserstate": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.build/**": true,
+    "graphify-out/**": true,
+    ".gitnexus/**": true,
+    "tmp/**": true,
+    "logs/**": true
+  },
+  "files.exclude": {
+    "**/.DS_Store": true
+  },
+  "git.ignoreLimitWarning": true,
+  "todo-tree.filtering.excludeGlobs": [
+    "**/node_modules/**",
+    "**/.build/**",
+    "audits/templates/**",
+    "security/CHECKLIST.md",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    "**/skills/impeccable/reference/**"
+  ],
+  "todohighlight.exclude": [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.build/**",
+    "**/.vscode/**",
+    "**/.github/**",
+    "**/_output/**",
+    "**/*.min.*",
+    "**/*.map",
+    "**/.next/**",
+    "audits/templates/**",
+    "security/CHECKLIST.md",
+    "**/skills/impeccable/reference/**"
+  ]
+}

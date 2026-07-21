@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-11T16:20:53Z",
+  "title": "Design System: SenseBridge",
+  "extensions": {
+    "colorMeta": {
+      "near-black-ink": {
+        "role": "neutral",
+        "displayName": "Near-Black Ink",
+        "canonical": "oklch(16.3% 0.014 264.1)",
+        "tonalRamp": ["#080b11", "#23262d", "#41454d", "#62666e", "#858992", "#a9aeb7", "#d0d4de", "#eaeff8"]
+      },
+      "raised-slate": {
+        "role": "neutral",
+        "displayName": "Raised Slate",
+        "canonical": "oklch(20.6% 0.023 268.9)",
+        "tonalRamp": ["#070b15", "#222632", "#404552", "#606674", "#838998", "#a8aebd", "#ced4e4", "#e8eeff"]
+      },
+      "fog-white": {
+        "role": "neutral",
+        "displayName": "Fog White",
+        "canonical": "oklch(94.0% 0.010 267.4)",
+        "tonalRamp": ["#090b0f", "#24262b", "#43454b", "#63666c", "#86898f", "#abaeb4", "#d1d4db", "#ebeef5"]
+      },
+      "muted-steel-blue-gray": {
+        "role": "neutral",
+        "displayName": "Muted Steel Blue-Gray",
+        "canonical": "oklch(75.4% 0.029 267.5)",
+        "tonalRamp": ["#060a17", "#202635", "#3e4555", "#5f6677", "#81899b", "#a6aec1", "#ccd4e8", "#e6eeff"]
+      },
+      "signal-blue": {
+        "role": "primary",
+        "displayName": "Signal Blue",
+        "canonical": "oklch(74.1% 0.140 248.9)",
+        "tonalRamp": ["#000042", "#002266", "#00458b", "#0169b2", "#398ed9", "#60b4ff", "#87dbff", "#a1f6ff"]
+      },
+      "hairline-navy": {
+        "role": "neutral",
+        "displayName": "Hairline Navy",
+        "canonical": "oklch(29.5% 0.032 269.3)",
+        "tonalRamp": ["#060a19", "#202636", "#3e4557", "#5e6679", "#81899d", "#a6aec3", "#ccd4ea", "#e6eeff"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The single h1 per page, hero heading only." },
+      "lede": { "displayName": "Lede", "purpose": "One supporting paragraph under the hero heading." },
+      "body": { "displayName": "Body", "purpose": "Section copy, list items, footer text." },
+      "label": { "displayName": "Label", "purpose": "Footer fine print, the smallest text in the system." }
+    }
+  },
+  "components": [
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Plain text navigation link, underline on hover, Signal Blue focus outline.",
+      "html": "<a class=\"ds-nav-link\" href=\"#\">Features</a>",
+      "css": ".ds-nav-link { color: #e8ebf2; text-decoration: none; } .ds-nav-link:hover { text-decoration: underline; } .ds-nav-link:focus-visible { outline: 2px solid #5eb1ff; outline-offset: 2px; }"
+    },
+    {
+      "name": "Callout",
+      "kind": "custom",
+      "refersTo": "callout",
+      "description": "Bordered, raised-background box reserved for the safety-framing disclaimer — used once per page.",
+      "html": "<p class=\"ds-callout\">SenseBridge raises awareness of your surroundings. It is not a mobility or navigation safety device.</p>",
+      "css": ".ds-callout { background: #131722; border: 1px solid #262c3d; border-radius: 8px; padding: 16px 24px; color: #e8ebf2; }"
+    },
+    {
+      "name": "Skip Link",
+      "kind": "custom",
+      "refersTo": "skip-link",
+      "description": "Visually hidden until focused; the one place Signal Blue is used as a fill instead of a line, so it's unmissable for keyboard users.",
+      "html": "<a class=\"ds-skip-link\" href=\"#main\">Skip to main content</a>",
+      "css": ".ds-skip-link { position: absolute; left: -999px; top: 0; background: #5eb1ff; color: #041018; padding: 8px 16px; } .ds-skip-link:focus { left: 16px; top: 16px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Signal",
+    "overview": "One clear blue signal against a calm, near-black field — the visual system is built to say exactly one thing at a time, at exactly the volume it deserves. SenseBridge is a free, pre-launch, open-source accessibility project; it is not selling anything, so nothing here is designed to pressure a click. Density is low, motion is restrained, and the only color that isn't a neutral is reserved for the handful of moments that actually need to signal something (links, focus states, the one accent the whole page earns). This system explicitly rejects generic SaaS-gradient startup marketing: hero-metric templates, gradient text, glassmorphism, and tiny uppercase eyebrows on every section. It also rejects manufactured urgency — there is no app to download yet, and the design never implies otherwise.",
+    "keyCharacteristics": [
+      "Dark, near-black field with a single sky-blue signal color",
+      "Flat by default — no shadows, depth via a one-step surface lift and hairline borders only",
+      "One font stack throughout; hierarchy comes from size and weight, not a second display face",
+      "Text-first components: links and thin-bordered containers, not filled buttons, until a real action exists to justify one"
+    ],
+    "rules": [
+      { "name": "The One Signal Rule", "body": "Signal Blue appears only on links and focus outlines. If a design decision reaches for it anywhere else, that's the tell the layout is reaching for decoration instead of hierarchy.", "section": "colors" },
+      { "name": "The System Voice Rule", "body": "One font stack, used everywhere; hierarchy comes from size and weight, not a second family.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "No blurred shadows, ever. Depth comes from a background-color step and a 1px border, never a blur radius.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep Signal Blue (#5eb1ff) to links and focus states only.",
+      "Do use a one-step background lift plus a 1px Hairline Navy border for anything that needs to feel raised.",
+      "Do keep any future primary action understated — a bordered or ghost treatment, not a filled SaaS-style CTA button.",
+      "Do cap body and lede line length near 65-70ch.",
+      "Do keep every animation behind a prefers-reduced-motion: reduce alternative."
+    ],
+    "donts": [
+      "Don't introduce a second accent color.",
+      "Don't use a gradient, glassmorphism blur, or drop shadow anywhere.",
+      "Don't add a tiny uppercase tracked eyebrow, hero-metric template, or numbered section markers as default scaffolding.",
+      "Don't reuse the Callout treatment for anything other than the safety-framing disclaimer.",
+      "Don't ship a filled, high-contrast CTA button before there's a real action behind it."
+    ]
+  }
+}
