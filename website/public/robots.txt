@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sensebridge.vercel.app/sitemap-index.xml
