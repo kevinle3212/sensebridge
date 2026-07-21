@@ -1,7 +1,7 @@
 # Roadmap
 
-Source research: [`planning/SenseBridge-02-Features-and-Scope.md`](planning/SenseBridge-02-Features-and-Scope.md)
-and [`planning/SenseBridge-06-Miscellaneous-and-Remarks.md`](planning/SenseBridge-06-Miscellaneous-and-Remarks.md).
+Source research: [`planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md`](planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md)
+and [`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
 
 Five phases. The first two are the MVP, funded by the maintainer's own time.
 The rest are a credible direction, each gated on the previous phase actually
@@ -15,8 +15,8 @@ A free, open-source, native iPhone app for blind and low-vision users that
 runs entirely on-device and is itself fully accessible via VoiceOver.
 Intentionally excludes: deaf/deaf-blind features, wearables/AR output,
 facial recognition, any cloud processing or backend, turn-by-turn
-navigation, and Android. See [`architecture.md`](architecture.md) for why
-there is no backend and [`safety-framing.md`](safety-framing.md) for why
+navigation, and Android. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for why
+there is no backend and [`SAFETY-FRAMING.md`](SAFETY-FRAMING.md) for why
 navigation is refused permanently, not just deferred.
 
 ### Phase 1 — MVP increment 1 (months 1–3): prove the core
@@ -28,7 +28,7 @@ navigation is refused permanently, not just deferred.
 - Camera capture module; document/text reading end to end; object and scene
   labeling end to end.
 - `SensingSource` / `RenderTarget` protocols defined (camera-in, speech-out
-  only for now — see [`architecture.md`](architecture.md)).
+  only for now — see [`ARCHITECTURE.md`](ARCHITECTURE.md)).
 - **Done when:** a blind tester can navigate the app entirely via VoiceOver,
   point the camera at a letter and hear it read, and point it at a table and
   hear what is on it.
@@ -94,7 +94,7 @@ planning:
 1. **Is Apple Vision + Foundation Models good enough for scene description,
    or is bundling SmolVLM necessary?** Only on-device benchmarking will
    tell. Start with the license-clean Apple path (see
-   [`ai-models.md`](ai-models.md)); reach for SmolVLM only if quality is
+   [`AI-MODELS.md`](AI-MODELS.md)); reach for SmolVLM only if quality is
    genuinely insufficient and the RAM/latency cost is acceptable.
 2. **How to recruit blind testers?** On the critical path, not a nicety —
    NFB/ACB local chapters, accessibility Discord/forum communities, and
@@ -103,10 +103,14 @@ planning:
    TestFlight distribution at the end of Phase 2 — see
    [`DISTRIBUTION.md`](DISTRIBUTION.md). Decide before month four.
 4. **Apache 2.0 vs. AGPL for SenseBridge's own code?** Apache 2.0 is
-   recommended (see [`ai-models.md`](ai-models.md) and
+   recommended (see [`AI-MODELS.md`](AI-MODELS.md) and
    [`../GOVERNANCE.md`](../GOVERNANCE.md)), but if preventing closed forks
    matters more than flexibility, AGPL is a defensible, values-driven
    alternative choice.
 5. **How much verbosity do blind users actually want from spoken output?**
    A tuning question only real testers can answer — verbosity should be
    configurable from the start rather than guessed at.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

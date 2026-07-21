@@ -1,7 +1,6 @@
 # Architecture
 
-Full rationale: [`docs/planning/SenseBridge-03-Technical-Architecture.md`](planning/SenseBridge-03-Technical-Architecture.md).
-Product framing: [`docs/PRODUCT.md`](PRODUCT.md). Roadmap: [`docs/roadmap.md`](roadmap.md).
+Product framing: [`docs/PRODUCT.md`](PRODUCT.md). Roadmap: [`docs/ROADMAP.md`](ROADMAP.md).
 
 ## The framework decision
 
@@ -21,11 +20,11 @@ watchOS already share frameworks with iOS, so those are natural extensions.
 Android or Meta-glasses would need new platform integrations regardless of
 starting language, because their ML stacks are entirely different — revisit a
 shared Rust/C++ core only if Android becomes a funded, near-term requirement
-(a Phase 5 question; see [roadmap](roadmap.md)).
+(a Phase 5 question; see [roadmap](ROADMAP.md)).
 
 ## System architecture
 
-```
+```text
 SenseBridge App (native Swift / SwiftUI)
 
   Sensing Layer (SensingSource)         Output Layer (RenderTarget)
@@ -66,7 +65,7 @@ Reasoning (Foundation Models composes a hedged sentence) → Output (Speech
 RenderTarget) → User`. The Foundation Models step is local and text-only — it
 never sees the image, only the labels and text Vision extracted. That's a
 hard constraint of the framework, not a design choice (see
-[ai-models.md](ai-models.md)).
+[AI-MODELS.md](AI-MODELS.md)).
 
 ### Component responsibilities
 
@@ -103,7 +102,7 @@ than a true vision-language model reasoning over pixels directly — it can
 miss spatial relationships and sound confident while wrong — which is the
 honest on-device quality gap versus cloud competitors. The answer is hedged
 language plus an optional opt-in cloud path, never a default cloud
-dependency. Full model choice and license ledger: [ai-models.md](ai-models.md).
+dependency. Full model choice and license ledger: [AI-MODELS.md](AI-MODELS.md).
 
 Foundation Models requires Apple Intelligence (iPhone 15 Pro+); implement
 availability checks and a graceful fallback (label lists instead of composed
@@ -111,7 +110,7 @@ sentences) for unsupported devices.
 
 ## Mobile project shape
 
-```
+```text
 SenseBridge/
   App/            SenseBridgeApp.swift, AppEnvironment.swift (DI container)
   Core/
@@ -129,7 +128,8 @@ SenseBridge/
   Features/         Reading/ Labeling/ SceneDescription/ ObstacleAwareness/
                     SoundAlerts/
   Accessibility/    VoiceOver+Helpers, DynamicType+Helpers, HapticPatterns
-  Resources/        Localizable.strings, SoundModels/ (Create ML, permissive)
+  Resources/        Localizable.xcstrings, InfoPlist.xcstrings,
+                    SoundModels/ (Create ML, permissive)
   Tests/            mirrors structure — see docs/TESTING.md
 ```
 
@@ -141,9 +141,9 @@ object, and simplicity is a feature for a solo maintainer.
 
 **Navigation** — SwiftUI `NavigationStack`, flat hierarchy. Blind users
 navigate by VoiceOver, not visual layout: a main screen with clearly labeled
-mode buttons (Read, Identify, Describe, Awareness, Sounds), each leading to a
-focused single-purpose screen. Avoid deep nesting and gesture-only navigation
-that conflicts with VoiceOver gestures.
+mode buttons (Read, Identify, Describe, Awareness, Sounds, Settings), each
+leading to a focused single-purpose screen. Avoid deep nesting and
+gesture-only navigation that conflicts with VoiceOver gestures.
 
 **Accessibility layer is not optional — it is the product.** Every control
 has a meaningful `accessibilityLabel`, a `hint` where the action isn't
@@ -152,7 +152,7 @@ actions. Support Dynamic Type — never hardcode font sizes. Respect Reduce
 Motion / Reduce Transparency. Announce asynchronous results. Build the empty
 shell to this standard before adding any feature: if the empty app isn't
 cleanly VoiceOver-navigable, nothing built on top of it will be either. Full
-standard: [accessibility.md](accessibility.md).
+standard: [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
 **Offline-first** — every feature must work with the network off; the only
 network-touching code is the optional cloud adapter, isolated behind a
@@ -194,7 +194,7 @@ a system that doesn't have one. What the MVP actually needs:
 - **Self-hosting/Docker/cloud** — relevant only to a far-future optional
   cloud-reasoning service, not the app itself; not built now.
 
-```
+```text
 MVP:        Xcode + iPhone + GitHub Actions  (no server)
                      |
                      v  (only if optional cloud reasoning is ever added)
@@ -205,3 +205,7 @@ Scale:      container orchestration, revisited then with real numbers
 ```
 
 Do not build infrastructure for problems you do not have.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

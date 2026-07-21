@@ -14,7 +14,7 @@ co-located `*.module.scss` per component). The only client-side JavaScript is:
   document. That completeness is a hard requirement, not a fallback.
 
 Copy must follow the awareness-not-safety framing in
-[`../docs/safety-framing.md`](../docs/safety-framing.md); never claim a safety
+[`../docs/SAFETY-FRAMING.md`](../docs/SAFETY-FRAMING.md); never claim a safety
 or navigation guarantee. The safety disclaimer in
 `src/components/Disclaimer.astro` is verbatim doctrine text — do not edit it
 without a safety-framing review.
@@ -59,7 +59,7 @@ timestamp) and both must be committed together. `npm run build && npm run
 check:audio` re-derives that hash from the current build output and fails CI
 if it no longer matches — a stale narration would mean the natural voice says
 something different from what's on the page, which is a safety-framing risk
-(see [`../docs/safety-framing.md`](../docs/safety-framing.md)), not just a
+(see [`../docs/SAFETY-FRAMING.md`](../docs/SAFETY-FRAMING.md)), not just a
 nice-to-have. `check:audio` does no network I/O and needs no key, so it's
 safe to run in CI unattended (after the build step); before any narration has
 ever been generated it prints an informational skip instead of failing.
@@ -67,6 +67,23 @@ ever been generated it prints an informational skip instead of failing.
 `.env` is git-ignored; never commit a real `ELEVENLABS_API_KEY`. The key is
 only ever read by `scripts/generate-audio.js`, on whichever machine runs
 `generate:audio` — it is not referenced anywhere else in the codebase.
+
+## Internationalization
+
+The site ships in English, Spanish, and Vietnamese via Astro's built-in i18n
+routing (no i18n library dependency): `/` (English, default/unprefixed),
+`/es/`, `/vi/`. Copy lives in typed dictionaries under `src/i18n/`
+(`en.ts`/`es.ts`/`vi.ts`, all implementing the `Translations` interface in
+`src/i18n/types.ts` — a missing key in one locale is a compile error, not a
+silent fallback); components read from them via `useTranslations()`, keyed
+off `Astro.currentLocale` (or `document.documentElement.lang` in the two
+client scripts that need it, `read-aloud.ts` and the theme toggle in
+`Header.astro`). The header's language switcher is plain `<a>` links —
+keyboard-operable natively, with `aria-current="true"` marking the active
+locale. See
+[`../docs/superpowers/specs/2026-07-19-language-support-design.md`](../docs/superpowers/specs/2026-07-19-language-support-design.md)
+for the full design (this covers the website half only; the iOS app has its
+own localization).
 
 ## Local development
 
@@ -148,3 +165,7 @@ docker run -p 3000:3000 sensebridge-website
 ```
 
 Then open `http://localhost:3000`.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

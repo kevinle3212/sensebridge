@@ -17,21 +17,23 @@ run each test layer is in [`docs/TESTING.md`](docs/TESTING.md).
 Never commit to `main`. Branch as `feat/...`, `fix/...`, or `chore/...`, use
 conventional commit headers (`type(scope): subject`), and open a PR so CI
 runs. `scripts/setup.sh` enables the repo git hooks (`.githooks/`), which
-enforce the commit format and run a secret/sensitive-file scan plus lint
-before every commit.
+enforce the commit format, run a secret/sensitive-file scan plus lint before
+every commit, mirror the CI build gate and block direct pushes to `main`
+before every push, and flag manifest/toolchain changes after every merge or
+pull.
 
 ## Before you open a PR
 
 - **Accessibility is not optional.** Every screen must be fully VoiceOver-
-  navigable before it merges — see [`docs/accessibility.md`](docs/accessibility.md).
+  navigable before it merges — see [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md).
   If you changed any UI, manually test it with VoiceOver on, eyes closed or
   screen-curtained, not just by reading the code.
 - **Respect the awareness-not-safety doctrine.** If your change touches
   spoken output, alerts, or any language describing the physical world, read
-  [`docs/safety-framing.md`](docs/safety-framing.md) first. Confidently wrong
+  [`docs/SAFETY-FRAMING.md`](docs/SAFETY-FRAMING.md) first. Confidently wrong
   output is the single worst-case bug in this project.
 - **Check model licenses before adding any model or dependency.** See
-  [`docs/ai-models.md`](docs/ai-models.md) — AGPL and Apple's `apple-amlr`
+  [`docs/AI-MODELS.md`](docs/AI-MODELS.md) — AGPL and Apple's `apple-amlr`
   research-only license are hard blockers.
 - Use the [pull request template](.github/PULL_REQUEST_TEMPLATE.md), which
   includes a required accessibility-impact statement.
@@ -55,3 +57,7 @@ contribution.
 ## Decision-making
 
 See [`GOVERNANCE.md`](GOVERNANCE.md) for how decisions get made and by whom.
+
+---
+
+Need help? See [`SUPPORT.md`](SUPPORT.md).

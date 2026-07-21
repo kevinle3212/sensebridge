@@ -1,7 +1,7 @@
 # Product
 
-Source research: [`planning/SenseBridge-01-Strategy-and-Product.md`](planning/SenseBridge-01-Strategy-and-Product.md)
-and [`planning/SenseBridge-06-Miscellaneous-and-Remarks.md`](planning/SenseBridge-06-Miscellaneous-and-Remarks.md).
+Source research: [`planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md`](planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md)
+and [`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
 This document summarizes the product decisions; see those files for full
 reasoning and evidence.
 
@@ -18,7 +18,7 @@ An open, auditable sensory-translation layer that adapts its output to the
 person using it: speech for blind users, captions for deaf users, structured
 haptics for deaf-blind users, across phones, watches, and glasses. The MVP is
 the first true slice of that layer, not a demo of all of it — see
-[`roadmap.md`](roadmap.md) for how the phases build toward this without
+[`ROADMAP.md`](ROADMAP.md) for how the phases build toward this without
 committing to it early.
 
 ## Why this, why now (the wedge)
@@ -47,9 +47,9 @@ the feature list is what every competitor also has.
 "everyone." Five other personas (deaf user, deaf-blind user, caregiver,
 family member enrolled by consent, accessibility advocate) inform the
 architecture and are documented in full in
-[`planning/SenseBridge-01-Strategy-and-Product.md`](planning/SenseBridge-01-Strategy-and-Product.md#3-user-personas)
+[`planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md`](planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md#3-user-personas)
 so deferred work has a real home — see
-[`architecture.md`](architecture.md) for the `SensingSource`/`RenderTarget`
+[`ARCHITECTURE.md`](ARCHITECTURE.md) for the `SensingSource`/`RenderTarget`
 abstractions that keep that door open without building through it now.
 
 ## Success metrics
@@ -89,7 +89,7 @@ mistake a solo project can make.
 - **If revenue is ever needed:** keep the app and all core features free and
   open; offer optional paid *services* on top (hosted opt-in cloud
   reasoning, paid organizational support). This is Phase 5 territory (see
-  [`roadmap.md`](roadmap.md)), not an MVP consideration.
+  [`ROADMAP.md`](ROADMAP.md)), not an MVP consideration.
 
 ## Final recommendation (from the strategy review)
 
@@ -102,4 +102,8 @@ holds and real testers are involved; probability of the full original
 multi-group, multi-device vision shipping solo in that window is near zero.
 The single biggest determinant of success is what gets refused, not what
 gets built — see the "things not to build" list in
-[`planning/SenseBridge-06-Miscellaneous-and-Remarks.md`](planning/SenseBridge-06-Miscellaneous-and-Remarks.md).
+[`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

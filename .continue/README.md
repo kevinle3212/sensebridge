@@ -12,3 +12,14 @@ only when this workspace is open.
 
 Continue loads rule files in lexicographical order; prefix new files with a
 number when order matters.
+
+## Model configuration
+
+`config.template.yaml` in this directory is an **example only** — Continue
+never reads it directly. Copy it to `~/.continue/config.yaml` and adjust as
+needed. For the full local-AI setup, model/role rationale, and security
+posture, see [`docs/OLLAMA.md`](../docs/OLLAMA.md).
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).
