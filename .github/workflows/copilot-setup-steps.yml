@@ -1,0 +1,40 @@
+# GitHub's documented convention for bootstrapping the Copilot coding agent's
+# environment: a job named exactly `copilot-setup-steps` is auto-detected and
+# run before the agent starts working, so its first commands don't have to
+# `npm install` from scratch.
+#
+# Copilot's coding agent runs on a Linux (ubuntu-latest-class) environment, not
+# macOS — it can prep the website/ Node toolchain here, but it cannot run
+# Xcode or build the iOS app (app/), which needs a Mac. State that plainly
+# rather than implying full-repo agent coverage: assign Copilot issues/PRs
+# scoped to website/, docs, or CI config, not app/ Swift changes.
+
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install website dependencies
+        run: npm ci
+        working-directory: website
