@@ -16,15 +16,24 @@ positioning.
 > to download yet. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the current
 > phase.
 
-**Links:** [Website](https://kevinle3212.github.io/sensebridge) ·
+**Links:** [Website](https://sensebridge.vercel.app) ·
 [Docs](https://kevinle3212.github.io/sensebridge) ·
 [Wiki](https://github.com/kevinle3212/sensebridge/wiki) ·
+[Preview](https://sensebridge-preview.up.railway.app) ·
 [Source](https://github.com/kevinle3212/sensebridge)
 
 [![CI](https://github.com/kevinle3212/sensebridge/actions/workflows/ci.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/ci.yml)
 [![Security](https://github.com/kevinle3212/sensebridge/actions/workflows/security.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/security.yml)
 [![CodeQL](https://github.com/kevinle3212/sensebridge/actions/workflows/codeql.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/codeql.yml)
 [![Pages](https://github.com/kevinle3212/sensebridge/actions/workflows/pages.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/pages.yml)
+[![Website CI](https://github.com/kevinle3212/sensebridge/actions/workflows/website-ci.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/website-ci.yml)
+[![Railway deploy check](https://github.com/kevinle3212/sensebridge/actions/workflows/railway-deploy-check.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/railway-deploy-check.yml)
+[![React Doctor](https://github.com/kevinle3212/sensebridge/actions/workflows/react-doctor.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/react-doctor.yml)
+[![Sync Docs to Wiki](https://github.com/kevinle3212/sensebridge/actions/workflows/wiki-sync.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/wiki-sync.yml)
+[![GitHub Models prompts](https://github.com/kevinle3212/sensebridge/actions/workflows/github-models.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/github-models.yml)
+[![Dependabot auto-merge](https://github.com/kevinle3212/sensebridge/actions/workflows/dependabot-automerge.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/dependabot-automerge.yml)
+[![Graphify Knowledge Graph](https://github.com/kevinle3212/sensebridge/actions/workflows/graphify.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/graphify.yml)
+[![Copilot Setup Steps](https://github.com/kevinle3212/sensebridge/actions/workflows/copilot-setup-steps.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/copilot-setup-steps.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/kevinle3212/sensebridge?style=flat)](https://github.com/kevinle3212/sensebridge/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/kevinle3212/sensebridge)](https://github.com/kevinle3212/sensebridge/commits/main)

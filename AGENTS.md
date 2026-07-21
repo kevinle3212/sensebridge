@@ -192,6 +192,17 @@ existing `TODO.md` entry) — duplicating those adds noise, not signal. Follow
 a `/clear` or a new session. Mentioning it in a reply is not enough — the
 reply doesn't persist, the file does.
 
+Write every entry so it's executable by someone with zero session
+context — a future agent or the owner reading it cold, not the person who
+wrote it. For a **Needs owner** manual step: give the exact UI path
+(`Settings → X → Y`) or exact command, any values verbatim and
+copy-paste-ready (no placeholders left to decode), and — critically — what
+happens once the manual step is done: the concrete next automated step
+(who/what picks it back up), or an explicit "nothing further" if the step is
+the end of the chain. For a follow-up meant for a future agent: name the
+file(s)/symbol(s) it touches and the acceptance check, not just the
+recommendation.
+
 ## Session logs
 
 Log every substantive agent session under
