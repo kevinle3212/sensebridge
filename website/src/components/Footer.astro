@@ -1,0 +1,29 @@
+---
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>SenseBridge is free and open source. No subscription, ever.</p>
+    <p>
+      <a href="https://github.com/kevinle3212/sensebridge">SenseBridge on GitHub</a>
+    </p>
+    <p>
+      Not yet available on the App Store — SenseBridge is pre-launch and in open development.
+    </p>
+  </div>
+</footer>
+
+<style lang="scss">
+  @use "@styles/abstracts" as *;
+
+  .site-footer {
+    padding-block: space("3");
+    border-top: 1px solid color("hairline");
+    color: color("text-secondary");
+    font-size: 0.875rem;
+
+    p + p {
+      margin-top: space("1");
+    }
+  }
+</style>

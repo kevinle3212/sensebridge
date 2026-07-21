@@ -30,7 +30,7 @@ disclaimers and Terms of Service depend on. See
 
 If a change adds or edits any of the above, and it doesn't preserve this
 hedging, that's a release-blocking defect, not a style nit — see the
-accessibility risk table in [`docs/accessibility.md`](accessibility.md), which
+accessibility risk table in [`docs/ACCESSIBILITY.md`](ACCESSIBILITY.md), which
 lists "over-confident output" as a named risk with the same severity as an
 unlabeled control.
 
@@ -49,5 +49,9 @@ The original concept included real-time navigation guidance. This plan
 reframes that permanently as *awareness*, never *guidance*, because
 navigation guidance is the most dangerous feature shape this project could
 build: it invites exactly the false confidence this doctrine exists to
-prevent. See [`docs/roadmap.md`](roadmap.md) for what's deliberately not
+prevent. See [`docs/ROADMAP.md`](ROADMAP.md) for what's deliberately not
 being built and why.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

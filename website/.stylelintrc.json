@@ -1,0 +1,17 @@
+{
+  "extends": ["stylelint-config-standard-scss"],
+  "rules": {
+    "color-hex-length": "long",
+    "declaration-no-important": true,
+    "font-family-no-missing-generic-family-keyword": true,
+    "no-descending-specificity": true,
+    "selector-max-id": 0,
+    "selector-class-pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+    "shorthand-property-no-redundant-values": true,
+    "unit-disallowed-list": ["pt", "cm", "mm", "in"],
+    "declaration-block-no-duplicate-properties": true,
+    "no-duplicate-selectors": true,
+    "function-url-no-scheme-relative": true,
+    "function-disallowed-list": ["expression"]
+  }
+}

@@ -15,32 +15,51 @@
   app is built around; published latency figures for on-device models
   shouldn't be trusted, so benchmark on your own hardware before making
   architecture decisions that depend on them (see
-  [ai-models.md](ai-models.md)).
+  [AI-MODELS.md](AI-MODELS.md)).
 
 ## Configuration
 
 **None required for the MVP.** There is no backend, no API keys, and no
 `.env` file: no server, no accounts, no analytics — see
-[architecture.md](architecture.md#backend-architecture-there-is-none-and-that-is-correct).
+[ARCHITECTURE.md](ARCHITECTURE.md#backend-architecture-there-is-none-and-that-is-correct).
 If the optional, opt-in cloud reasoning adapter is ever enabled by a user,
 their own provider credential is stored in the Keychain, never in a
 committed file, an environment variable, or a log — see
-[privacy.md](privacy.md).
+[PRIVACY.md](PRIVACY.md).
 
 ## Local development
 
 1. Clone the repository.
 2. Open the Xcode project under `app/`.
 3. Select your personal Apple ID as the signing team for local, on-device
-   builds (App Store Connect / TestFlight distribution needs the paid Apple
-   Developer Program — see [DISTRIBUTION.md](DISTRIBUTION.md)).
+   builds — free, no Apple Developer Program enrollment needed (App Store
+   Connect / TestFlight distribution needs the paid program — see
+   [DISTRIBUTION.md](DISTRIBUTION.md)). `app/project.yml` already sets
+   `CODE_SIGN_STYLE: Automatic` with no `DEVELOPMENT_TEAM`, so this is purely
+   an Xcode-side step:
+   1. Xcode → Settings → Accounts → add your personal Apple ID (free — not
+      the paid Developer Program).
+   2. Open `app/SenseBridge.xcodeproj`, select the `SenseBridge` target →
+      Signing & Capabilities → pick your personal team from the dropdown.
+      Xcode fills in `DEVELOPMENT_TEAM` for you; no manual bundle ID change
+      needed unless you want one different from `com.sensebridge.app`.
+   3. Plug in your device, select it as the run destination, hit Run. First
+      launch: on-device Settings → General → VPN & Device Management →
+      trust your developer certificate.
+   4. **The catch:** a free personal-team signature expires after 7 days —
+      re-run from Xcode to re-sign. Fine for active development, annoying
+      for a build you want to leave installed; it's the free tier's only
+      real limitation. No API keys are involved in this path — see
+      [DISTRIBUTION.md](DISTRIBUTION.md) for when one becomes relevant.
 4. Build and run on a physical device for anything touching camera, LiDAR,
    microphone, or on-device model performance; the simulator is fine for
    pure UI/VoiceOver-label work but cannot validate the perception pipeline.
 5. Run `scripts/setup.sh` once — it checks your toolchain and enables the
    repo's git hooks (`.githooks/`): a pre-commit secret/sensitive-file scan
-   plus lint, and a conventional-commit header check. `gitleaks` and Node are
-   advisory for the hooks (`brew install gitleaks`; CI scans regardless).
+   plus lint, a conventional-commit header check, a pre-push build gate that
+   also refuses direct pushes to `main`, and a post-merge check that flags
+   manifest/toolchain files just pulled in. `gitleaks` and Node are advisory
+   for the hooks (`brew install gitleaks`; CI scans regardless).
    `scripts/lint.sh` can also be run directly before committing.
 
 ## Secret handling
@@ -51,3 +70,7 @@ them in the Keychain (on-device) or GitHub Actions repository secrets (CI) —
 never in the repository, a log, or a committed `.env` file. Run
 `tools/check-sensitive-files.mjs` before publishing changes that touch
 signing or credentials.
+
+---
+
+Need help? See [`SUPPORT.md`](../SUPPORT.md).

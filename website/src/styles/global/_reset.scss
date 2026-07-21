@@ -1,0 +1,32 @@
+// Minimal modern reset — only the parts that actually bite (box-sizing,
+// stray margins, media overflow, form-control font inheritance). Deliberately
+// does not strip list-style or other semantics the content still relies on.
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body,
+h1,
+h2,
+h3,
+p,
+figure {
+  margin: 0;
+}
+
+img,
+picture,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}

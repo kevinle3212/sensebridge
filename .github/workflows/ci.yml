@@ -1,9 +1,9 @@
 name: CI
 
 # Build and test the SenseBridge iOS app. Until the Swift app is scaffolded
-# under app/ (see SETUP-STATUS.md), the build and test jobs detect the absence
-# of a Swift package / Xcode project and no-op so main stays green; they start
-# doing real work automatically once the project lands.
+# under app/, the build and test jobs detect the absence of a Swift package /
+# Xcode project and no-op so main stays green; they start doing real work
+# automatically once the project lands.
 
 on:
   push:
@@ -26,14 +26,26 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Select Xcode
-        run: sudo xcode-select -switch /Applications/Xcode_16.app || true
+        run: |
+          LATEST="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)"
+          [ -n "$LATEST" ] && sudo xcode-select -switch "$LATEST" || true
+
+      - name: Local Swift package build and test
+        run: |
+          shopt -s nullglob
+          for manifest in app/Packages/*/Package.swift; do
+            dir="$(dirname "$manifest")"
+            name="$(basename "$dir")"
+            echo "== $dir =="
+            (cd "$dir" && swift build && xcodebuild test -scheme "$name" -destination 'platform=macOS' | xcpretty && exit "${PIPESTATUS[0]}")
+          done
 
       - name: Detect project layout
         id: detect
         run: |
-          if ls Package.swift app/Package.swift >/dev/null 2>&1; then
+          if compgen -G "Package.swift" >/dev/null || compgen -G "app/Package.swift" >/dev/null; then
             echo "kind=spm" >> "$GITHUB_OUTPUT"
-          elif ls app/*.xcodeproj app/*.xcworkspace >/dev/null 2>&1; then
+          elif compgen -G "app/*.xcodeproj" >/dev/null || compgen -G "app/*.xcworkspace" >/dev/null; then
             echo "kind=xcode" >> "$GITHUB_OUTPUT"
           else
             echo "kind=none" >> "$GITHUB_OUTPUT"
@@ -58,7 +70,7 @@ jobs:
 
       - name: No app yet
         if: steps.detect.outputs.kind == 'none'
-        run: echo "No Swift package or Xcode project found under app/ yet — skipping build. See SETUP-STATUS.md."
+        run: echo "No Swift package or Xcode project found under app/ yet — skipping build."
 
   lint:
     name: Lint (SwiftFormat + SwiftLint)
@@ -75,18 +87,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check mirrored skills match canonical
+        run: node tools/sync-skills.mjs --check
       - name: Check relative Markdown links resolve
+        # Skips **/skills/* — skill/template content (e.g. vendored bmad-*
+        # skills) intentionally contains placeholder links ({{path}},
+        # ./filename.ext) that are examples, not real navigable docs.
         run: |
           fail=0
           while IFS= read -r -d '' file; do
-            grep -oE '\]\(([^)#]+)' "$file" | sed -E 's/^\]\(//' | while read -r link; do
+            while read -r link; do
               case "$link" in
                 http*|mailto:*|//*) continue ;;
               esac
               target="$(dirname "$file")/$link"
               if [ ! -e "$target" ]; then
-                echo "::warning file=$file::broken relative link -> $link"
+                echo "::error file=$file::broken relative link -> $link"
+                fail=1
               fi
-            done
-          done < <(find . -path ./.git -prune -o -name '*.md' -print0)
+            done < <(grep -oE '\]\(([^)#]+)' "$file" | sed -E 's/^\]\(//')
+          done < <(find . -path ./.git -prune -o -path '*/skills/*' -prune -o -name '*.md' -print0)
           exit $fail

@@ -1,0 +1,45 @@
+// Motion tokens (durations + easings) and the reduced-motion gate. No
+// component styles use these yet — this phase ships zero animation (see
+// docs/safety-framing.md-adjacent motion doctrine: every transition must live
+// behind `prefers-reduced-motion`). Phase 5 (motion layer) is the first real
+// consumer.
+@use "sass:map";
+
+$duration: (
+  "fast": 120ms,
+  "base": 240ms,
+  "slow": 400ms,
+  "slower": 700ms,
+);
+$ease: (
+  "out-expo": cubic-bezier(0.16, 1, 0.3, 1),
+  // reveals
+  "standard": cubic-bezier(0.4, 0, 0.2, 1),
+  // micro-interactions
+  "in-out": cubic-bezier(0.65, 0, 0.35, 1), // sweeps
+);
+
+@function duration($key) {
+  @if not map.has-key($duration, $key) {
+    @error "Unknown duration token: '#{$key}'.";
+  }
+
+  @return map.get($duration, $key);
+}
+
+@function ease($key) {
+  @if not map.has-key($ease, $key) {
+    @error "Unknown ease token: '#{$key}'.";
+  }
+
+  @return map.get($ease, $key);
+}
+
+// Wraps animated declarations so the "no-preference" default is never the
+// resting state — per the two-layer reduced-motion gate, content must be
+// complete and correct even before this block ever applies.
+@mixin motion-safe {
+  @media (prefers-reduced-motion: no-preference) {
+    @content;
+  }
+}

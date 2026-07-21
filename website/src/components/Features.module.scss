@@ -1,0 +1,24 @@
+@use "@styles/abstracts" as *;
+
+.features {
+  @include section-band;
+}
+
+.intro {
+  margin-top: space("2");
+  color: color("text-secondary");
+}
+
+// Visually chunks the 5-item list as 3+2 (per the copy deck) without
+// splitting it into two semantic lists.
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: space("2");
+  margin-top: space("3");
+  padding-left: space("3");
+
+  li:nth-child(4) {
+    margin-top: space("2");
+  }
+}

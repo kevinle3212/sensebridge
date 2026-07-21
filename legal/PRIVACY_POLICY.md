@@ -7,8 +7,8 @@
 > patchwork that varies by jurisdiction.
 
 **Effective date:** 2026-07-09
-**Maintainer:** Kevin Khanh Le
-**Contact:** kevinle3212@gmail.com
+**Maintainer:** Kevin K. Le
+**Contact:** <kevinle3212@gmail.com>
 
 ## The short version
 
@@ -28,7 +28,7 @@ explicitly turn on an optional cloud feature yourself.
   and when this ships, enrolling a face requires your explicit, informed
   consent. Face data would be stored only on your device, encrypted, never
   transmitted, and you would be able to view and delete it at any time. See
-  [`docs/privacy.md`](docs/privacy.md) for the engineering detail.
+  [`docs/PRIVACY.md`](../docs/PRIVACY.md) for the engineering detail.
 
 ## What SenseBridge does not do
 
@@ -67,4 +67,4 @@ with a new effective date.
 
 ## Contact
 
-Privacy questions: kevinle3212@gmail.com
+Privacy questions: <kevinle3212@gmail.com>

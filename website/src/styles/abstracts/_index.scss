@@ -1,0 +1,7 @@
+// Single entry point for the abstracts layer (zero CSS output on its own).
+// Component modules pull the whole layer with:
+//   @use "@styles/abstracts" as *;
+@forward "tokens";
+@forward "functions";
+@forward "mixins";
+@forward "motion";

@@ -1,0 +1,59 @@
+---
+// Markup for the site's two "listen to this page" controls. Both buttons
+// stay `hidden` until src/scripts/read-aloud.ts confirms each is usable —
+// see that file for the full progressive-enhancement contract. Same element
+// IDs as the pre-Astro js/read-aloud.js markup so the ported script's
+// querySelectors keep working unchanged.
+---
+
+<div class="read-aloud">
+  <button
+    id="read-aloud-toggle"
+    class="read-aloud-toggle"
+    type="button"
+    hidden
+    aria-pressed="false"
+  >
+    <span aria-hidden="true">🔊</span>
+    <span class="read-aloud__label">Listen (device voice)</span>
+  </button>
+  <button
+    id="read-aloud-natural-toggle"
+    class="read-aloud-toggle"
+    type="button"
+    hidden
+    aria-pressed="false"
+  >
+    <span aria-hidden="true">🎙️</span>
+    <span class="read-aloud-natural__label">Listen (natural voice)</span>
+  </button>
+  <audio id="read-aloud-natural-audio" hidden preload="none" src="/audio/main.mp3"></audio>
+  <p id="read-aloud-status" class="visually-hidden" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+  import "../scripts/read-aloud.ts";
+</script>
+
+<style lang="scss">
+  @use "@styles/abstracts" as *;
+
+  .read-aloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space("2");
+    margin-top: space("3");
+  }
+
+  .read-aloud-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: space("1");
+    padding: space("1") space("2");
+    background: transparent;
+    border: 1px solid color("hairline");
+    border-radius: radius("sm");
+    color: color("text-primary");
+    cursor: pointer;
+  }
+</style>

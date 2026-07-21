@@ -1,0 +1,36 @@
+@use "functions" as fn;
+
+// Shared vertical rhythm + hairline divider used by every full-width content
+// section below the hero (features, privacy, accessibility, follow-progress).
+@mixin section-band {
+  padding-block: fn.space("5");
+  border-top: 1px solid fn.color("hairline");
+}
+
+// Visually hides content from sighted users while keeping it in the
+// accessibility tree — same technique as the pre-Astro site's
+// `.visually-hidden` class (see global/base.scss for the class itself).
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Signal Blue focus ring. Never suppress this — every interactive element
+// must keep a visible focus indicator.
+@mixin focus-visible-outline {
+  outline: 2px solid fn.color("accent-primary");
+  outline-offset: 2px;
+}
+
+// Tasteful glass surface — hero/nav only, per the palette spec.
+@mixin glass-surface {
+  background: fn.color("surface-glass");
+  backdrop-filter: blur(16px);
+}
