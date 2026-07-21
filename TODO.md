@@ -25,6 +25,217 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Documentation & code-quality audit (2026-07-21)
+
+Full run log: [`HANDOFF.md`](HANDOFF.md). An unattended audit pass over
+documentation, maintainability, and code quality. It found and fixed three
+defects — two of them in gates that were **already red before the run
+started**, so any recent "CI is green" impression was not trustworthy for
+those targets.
+
+Fixed this run (details in the annotated items further down this file and in
+`HANDOFF.md`): non-English locales silently served English hedge templates
+(a safety-framing defect); `swift test` had no localization data at all and
+could never have validated the pinned translations; `ReadAloud.astro`'s
+frontmatter was broken by a JSDoc block placed above the `---` fence.
+Markdownlint went from 2100 errors to 0 by excluding vendored, hash-pinned
+skill trees rather than reformatting them.
+
+The repo-wide marker sweep found **zero** `TODO`/`FIXME`/`XXX`/`HACK`/`BUG`
+markers in first-party source — the backlog lives here and in `GAPS.md`
+instead, which is the better pattern and needs no change.
+
+- [x] **[P0]** Spanish and Vietnamese output silently fell back to English.
+      **Fixed 2026-07-21** — `swift test` was failing with 9 issues, every one
+      of them a locale case. This is a safety-framing defect, not a cosmetic
+      one: the affected strings are the doctrine-pinned hedge templates that
+      `docs/SAFETY-FRAMING.md` treats as the highest-severity class of bug in
+      the codebase, so es/vi users would have received English hedges. Two
+      confirmed root causes: (1) `Phrasing` and `LabelListSceneComposer` both
+      used `LocalizedStringResource(_:locale:bundle:)` with
+      `String(localized:)`, which resolves against the **process** locale and
+      silently ignores the `locale:` argument; (2) only Xcode compiles
+      `Localizable.xcstrings` into `.lproj` bundles — command-line SwiftPM
+      copies it verbatim, so the test bundle contained no localization data
+      at all and the gate was structurally incapable of passing. Verified by
+      inspecting the built bundle (`Info.plist` + `Localizable.xcstrings`, no
+      `.lproj`). The catalog and the tests were both already correct; only the
+      lookup was broken. Fix: new `Reasoning/LocalizedCatalog.swift`, a single
+      seam that prefers a compiled `.lproj` bundle and falls back to parsing
+      the shipped `.xcstrings`, so `Localizable.xcstrings` stays the one
+      source of truth and the suite is honest under both build systems.
+      Pre-generating `.lproj` files (a second source of truth that drifts) and
+      marking the tests Xcode-only (hiding a blocking gate) were both
+      considered and rejected. Native-speaker validation of the translations
+      is still open and still `[Needs owner]`.
+- [x] **[P1]** `website/src/components/ReadAloud.astro` did not compile.
+      **Fixed 2026-07-21** — a JSDoc block sat above the frontmatter fence.
+      Astro requires `---` to be the first thing in the file, so the whole
+      frontmatter was parsed as markup: 6 `astro check` errors and an ESLint
+      parse error, and the component's translation lookup never compiled.
+      Almost certainly introduced by an earlier documentation pass adding doc
+      comments; an equivalent comment already existed *inside* the
+      frontmatter, so the JSDoc was both redundant and destructive. Folded
+      its unique wording into the frontmatter comment and left an in-file note
+      so the next docs pass doesn't reintroduce it. Swept every other `.astro`
+      file — this was the only one affected.
+- [ ] **[P2]** SwiftFormat's `wrapMultilineStatementBraces` and SwiftLint's
+      `opening_brace` give directly contradictory instructions for a
+      multi-line `if let` condition: whichever way the brace is written, one
+      tool fails. Currently sidestepped in
+      `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Reasoning/LocalizedCatalog.swift`
+      by using single-line conditions plus an in-file comment, but the next
+      person to write a multi-line condition will hit the same wall. Reconcile
+      the two configs — most likely by disabling `wrapMultilineStatementBraces`
+      in `.swiftformat`, since SwiftLint's placement matches the rest of the
+      codebase.
+- [ ] **[P2]** **[Needs owner]** `npm audit` in `website/` reports 2
+      vulnerabilities (1 critical, 1 high), both `tar` reached through
+      `@railway/cli`. Pre-existing and dev-only (Railway CLI is never in the
+      shipped bundle), but `npm audit fix --force` would downgrade
+      `@railway/cli` 5.x → 0.3.1, which is breaking. Needs an owner call:
+      accept the dev-only risk, pin a patched `tar` via `overrides`, or drop
+      the Railway CLI dependency now that Vercel is the production host.
+- [ ] **[P3]** `npm run test:a11y` could not be executed locally — Puppeteer
+      has no Chrome binary on this machine (`npx puppeteer browsers install
+      chrome` would fix it). The `.pa11yci.json` locale coverage added this
+      run is therefore config-verified but not run-verified outside CI.
+
+### Editor lint fixes + Dockerfile critical/high CVE fix (2026-07-21)
+
+Full session log: `sessions/2026-07-21/0100-PST.md`. Fixed TS5090 in
+`website/tsconfig.json` (non-relative `paths` entry), moved `vercel.json`/
+`tsconfig.json` schema associations from inline `$schema` (blocked by VS
+Code workspace trust) to `.vscode/settings.json`'s `json.schemas`, added a
+missing glob comment to `_bmad/custom/.gitignore`, and fixed the Docker DX
+"1 critical and 4 high vulnerabilities" finding in `docker/Dockerfile` —
+root-caused to npm 10.9.8's own vendored `tar`/`sigstore`/`picomatch`/
+`brace-expansion` (node:22-alpine's pinned digest is already the newest
+published build, so no digest bump was available); fixed with a self-
+upgrading `npm install -g npm@latest` before `npm ci`, verified via
+`docker scout cves` on a full rebuild of both stages before and after.
+
+- [ ] **[P3]** **[Needs owner]** Decide whether `.gitnexus/**` should be
+      readable by the agent — it's currently hard-blocked by a `deny` rule in
+      `.claude/settings.json` (`Read/Bash/Grep(.gitnexus/**)`), which a
+      verbal "I give you permission" can't override by design. If wanted,
+      edit that deny list directly; otherwise no action needed.
+
+### Vercel production hosting + Stripe/Resend hardening (2026-07-21)
+
+Full session log: `sessions/2026-07-21/0000-PST.md`. `website/` is now live
+in production on Vercel (`https://sensebridge-website.vercel.app`,
+`trustledger/sensebridge-website`) with a zero-exception CSP and full
+security-header set, verified live via `curl -I`. The Vercel project was
+renamed `sensebridge-website` → `sensebridge` on 2026-07-21; the
+`sensebridge.vercel.app` alias doesn't bind until the next production
+deploy (renaming doesn't retroactively rebind the default alias) — until
+then the site is still reachable at the old `sensebridge-website.vercel.app`
+URL. Railway stays for
+previews/testing per owner decision — no GitHub auto-deploy connected on the
+Vercel side, so the two hosts don't race on the same push. Stripe/Resend
+were scoped to infra hardening only (no checkout/email code, no SSR
+adapter) — the site's `output: "static"` no-backend invariant and "nothing
+is being sold" pre-launch doctrine are both still intact.
+
+- [ ] **[P1]** **[Needs owner]** Rotate the Stripe test-mode secret key
+      (`sk_test_...`). It printed in full, unmasked, into this session's
+      transcript via `stripe config --list` — the live-mode restricted key
+      was properly masked by the CLI, the test key was not. Dashboard →
+      Developers → API keys → roll key.
+- [ ] **[P2]** **[Needs owner]** Stripe Dashboard hardening (none of this is
+      CLI/API-scriptable without an owner decision or identity/bank details
+      this session doesn't have): enable/confirm account 2FA; review Radar
+      fraud rules once there's real transaction history to base them on;
+      confirm payout schedule and business profile. Also worth switching the
+      test-mode key to a restricted key (matching the live-mode key's
+      posture) whenever it's next touched.
+- [ ] **[P3]** **[Needs owner]** Attach a custom domain to the Vercel project
+      (`trustledger/sensebridge`) once one is decided — currently only
+      reachable at the `*.vercel.app` URL.
+- [ ] **[P2]** **[Needs owner]** Trigger a new production deploy so the
+      `sensebridge.vercel.app` alias actually binds (see rename note above)
+      — a deploy pushes current `website/` content live, so it needs an
+      explicit go-ahead rather than running automatically.
+- [ ] **[P3]** **[Needs owner]** Resend setup, parked until there's an actual
+      feature to send email for (a waitlist or contact form): create an
+      account if one doesn't exist, pick a sending domain, verify it
+      (DKIM/SPF/DMARC — needs DNS registrar access this session doesn't
+      have), and generate a sending-only scoped API key.
+- [ ] **[P3]** Decide Stripe/Resend's actual product surface before writing
+      any integration code — there's no checkout page or contact/waitlist
+      form anywhere in `website/src` today, so both currently have nothing
+      to attach to. Needs a real feature decision, not infra config.
+
+### GitGuardian secret scanning (2026-07-20)
+
+Full session log: `sessions/2026-07-20/1900-PST.md`. Added `ggshield` as a
+third, independent secret scanner alongside the existing Gitleaks
+(pre-commit, pattern-based) and TruffleHog (CI, verified-credential):
+`.gitguardian.yaml` (strict — `exit_zero: false`, no path allowlist),
+`.githooks/pre-commit` (advisory-skip if not installed), a new `ggshield`
+job in `.github/workflows/security.yml` (pinned to the commit behind
+`v1.52.2`), an advisory check in `scripts/setup.sh`, and synced
+`docs/TOOLING.md`/`docs/ENVIRONMENT.md`. Same session also set
+`autoCompactWindow: 100000` and added Effort Level orchestration guidance to
+the global `~/.claude/CLAUDE.md` (personal config, not repo-tracked).
+
+- [ ] **[P2]** **[Needs owner]** Run `brew install ggshield && ggshield auth
+      login` locally — the pre-commit hook advisory-skips the GitGuardian
+      scan until this is done.
+- [ ] **[P1]** **[Needs owner]** Add the `GITGUARDIAN_API_KEY` repository
+      secret (Settings → Secrets and variables → Actions), sourced from the
+      GitGuardian dashboard (Personal access tokens → `scan` scope) — the new
+      `ggshield` CI job fails closed on every push/PR until this exists.
+- [ ] **[P3]** Commit and ship this session's repo-side changes
+      (`.gitguardian.yaml`, `.githooks/pre-commit`,
+      `.github/workflows/security.yml`, `scripts/setup.sh`,
+      `docs/TOOLING.md`, `docs/ENVIRONMENT.md`) — none committed yet, no
+      commit was requested this session.
+
+### Docker rewrite + website build/lint fixes (2026-07-20)
+
+Full session log: `sessions/2026-07-20/1800-PST.md`. Rewrote the website's
+Docker setup into a dedicated `docker/` directory (Dockerfile moved there,
+runtime stage switched from an unpinned `npm install --global serve@14` to
+digest-pinned `nginxinc/nginx-unprivileged:alpine`, no npm in the runtime
+image at all), plus a `docker-compose.yml`, allowlist `.dockerignore`, and
+`docker/README.md`. `railway.toml` moved to the repo root
+(`dockerfilePath = "docker/Dockerfile"`). Verified locally: `docker build`
+succeeds, the container serves `/` and `/es/` with 200s, healthcheck reaches
+`healthy`, `docker compose config` resolves cleanly. Also fixed the Astro
+build's 500kB-chunk warning (raised `chunkSizeWarningLimit`; the oversized
+chunk is three.js, already lazy-loaded) and an MD060 table-formatting error
+in `docs/superpowers/specs/2026-07-19-language-support-design.md`.
+
+- [x] **[P1]** **[Needs owner]** Update the Railway service's Root Directory
+      to the repo root. **Done 2026-07-20** — owner changed it via the
+      Railway dashboard in-session; confirmed via `railway status --json`
+      (`rootDirectory: "/"`).
+- [ ] **[P3]** `docker compose -f docker/docker-compose.yml up dev` (the
+      hot-reload Astro dev service) was only config-validated
+      (`docker compose config`), not actually run — confirm it starts and
+      hot-reloads before relying on it.
+- [x] **[P3]** Commit and ship the session's changes. **Done 2026-07-20** —
+      shipped as a small standalone branch off `main` (not folded into
+      `chore/bmad-method-setup`'s pending diff), since that branch's
+      committed history had diverged too far from `main` to cleanly cherry-
+      pick just these files. Used a throwaway `git worktree` to assemble the
+      branch without touching `chore/bmad-method-setup`'s own uncommitted
+      work. PR: `kevinle3212/sensebridge#7`. Also fixed two CI failures
+      discovered along the way, both pre-existing on `main` and unrelated to
+      Docker: `tools/sync-skills.mjs` already required 4 mirrored skills
+      (`council`, `website-design`, `seo-schema`, `seo-technical`) whose
+      content was never committed; `.githooks/post-checkout`/`post-commit`
+      had a hardcoded local macOS path in the graphify Python probe. Also
+      found `.github/workflows/claude-code-review.yml` was only disabled
+      locally, not on `main` — its old `on: pull_request` trigger fired on
+      the PR and failed (no `ANTHROPIC_API_KEY` secret), so it's now
+      actually paused via a third commit. One CI check remains red on
+      purpose: `Docs link check`'s ~50 pre-existing broken links spanning
+      unrelated files across the repo — explicitly left for the existing
+      "Full markdown documentation sync sweep" work below, not fixed here.
+
 ### Repo-hygiene pass — gitignore, SETUP-STATUS removal, SUPPORT.md footers, hook/CI fixes (2026-07-20)
 
 Full findings in `sessions/2026-07-20/1700-PST.md`. 9 commits landed on
@@ -55,13 +266,15 @@ were fixed directly in the same pass (`.gitignore` now covers
 `_bmad/**/*.user.toml`; `.github/dependabot.yml` now tracks the `docker`
 ecosystem for `website/Dockerfile`) — this is the one deferred nice-to-have.
 
-- [ ] **[P3]** Pin `website/Dockerfile`'s `node:22-alpine` base image to a
-      digest (`node:22-alpine@sha256:...`) instead of a mutable tag, for
-      supply-chain immutability — same rationale already applied to the
-      GitHub Actions pins in `.github/workflows/security.yml`. Needs a
-      registry lookup for the current correct digest (not fabricated this
-      session); the new Dependabot `docker` ecosystem entry added this
-      session will keep a pinned digest current automatically once set.
+- [x] **[P3]** Pin `website/Dockerfile`'s `node:22-alpine` base image to a
+      digest instead of a mutable tag. **Done 2026-07-20** — superseded by a
+      full Docker rewrite: the Dockerfile moved to `docker/Dockerfile`, both
+      the `node:22-alpine` build stage and the new
+      `nginxinc/nginx-unprivileged:alpine` runtime stage are pinned by
+      digest (registry lookups done this session, not fabricated), and the
+      previous unpinned `npm install --global serve@14` runtime install —
+      the likely source of prior "high" vulnerability scan findings — was
+      replaced entirely (no npm in the runtime image). See `docker/README.md`.
 
 ### Full markdown documentation sync sweep (2026-07-20)
 
@@ -133,10 +346,16 @@ these items outlive it regardless.
       memory). Same open question as before on BMAD sequencing (the ~103
       pre-existing uncommitted files unrelated to this feature) — commands
       for the achievable split are in this session's final report.
-- [ ] **[P2]** Unit C (website) shipped `/`, `/es/`, `/vi/` routes, but
+- [x] **[P2]** Unit C (website) shipped `/`, `/es/`, `/vi/` routes, but
       `website/.pa11yci.json` still only tests `http://localhost:4321/` —
       add `/es/` and `/vi/` so `npm run test:a11y` actually covers the two
-      new locales, not just English.
+      new locales, not just English. **Done 2026-07-21** — `.pa11yci.json`
+      `urls` now lists all three routes; JSON validity and the presence of
+      `dist/index.html`, `dist/es/index.html`, `dist/vi/index.html` were
+      verified after a build. `pa11y-ci` itself still could not be executed
+      locally (Puppeteer has no Chrome binary on this machine), so the gate
+      remains machine-unverified here — it runs in `website-ci.yml`, and the
+      real-browser/VoiceOver pass is still owner work.
 - [ ] **[P2]** Unit C's "Listen (natural voice)" control
       (`website/src/components/ReadAloud.astro`) has its label translated on
       `/es/`/`/vi/`, but the pre-rendered narration it plays
@@ -248,12 +467,23 @@ table. (The rest of that build-out is machine-scoped and tracked in
       `aria-hidden` placement statically from the built HTML — `pa11y-ci`
       couldn't launch (no local Chrome binary for Puppeteer in this
       environment).
-- [ ] **[P3]** `npm run format` (`prettier --check .`) fails on every
+- [x] **[P3]** `npm run format` (`prettier --check .`) fails on every
       `.astro` file, including pre-existing ones (`Hero.astro` hits the same
       "No parser could be inferred" error) — `prettier-plugin-astro` isn't in
       `devDependencies`. Pre-existing gap, not introduced this session; fix
       by adding the plugin (with a `.prettierrc` `plugins` entry) or
-      knowingly excluding `.astro` from the format script.
+      knowingly excluding `.astro` from the format script. **Done 2026-07-21**
+      — added `prettier-plugin-astro` to `devDependencies` and a `plugins`
+      entry to `.prettierrc`. Worth recording precisely: `prettier --check .`
+      was *not* failing on `.astro` by then — Prettier silently **skips**
+      extensions it cannot infer a parser for and only errors when one is
+      named explicitly, so all 11 `.astro` components had simply never been
+      format-checked. Enabling the plugin surfaced 3 unformatted components,
+      fixed via `npm run format:fix`. One file,
+      `src/layouts/BaseLayout.astro`, is excluded in `.prettierignore`:
+      `prettier-plugin-astro` cannot parse a `<script>` nested inside a JSX
+      expression, which is how the dev-only react-scan block is gated. It is
+      still covered by ESLint, `astro check`, and the build.
 
 ### Signal Spine motion batch — accessibility review follow-ups (2026-07-18)
 
@@ -310,11 +540,23 @@ remaining open items.
 - [ ] **[P2]** **[Needs owner]** Re-verify the Railway deploy after merge:
       service Root Directory still `website`, new multi-stage Dockerfile
       builds on Railway, site serves on `$PORT`.
-- [ ] **[P2]** Add a regression guard for the verbatim safety disclaimer
+- [x] **[P2]** Add a regression guard for the verbatim safety disclaimer
       (it is hand-inlined in `website/src/components/Disclaimer.astro`; a CI
       grep of `dist/index.html` for the exact string — or a shared constant —
       would stop a future edit from silently breaking the verbatim
-      guarantee).
+      guarantee). **Done 2026-07-21** — added
+      `website/scripts/check-disclaimer.js`, wired up as
+      `npm run check:disclaimer` and as a `website-ci.yml` step after Build.
+      The premise had gone stale: the text is no longer hand-inlined in
+      `Disclaimer.astro`, which now reads `t.disclaimer.text` from `src/i18n/`,
+      so the guard asserts the built HTML of **all three** locales (`/`,
+      `/es/`, `/vi/`) contains its disclaimer verbatim. The expected strings
+      are pinned *in the script* and deliberately not imported from
+      `src/i18n/` — importing them would make the check tautological and pass
+      no matter how the copy was weakened. Negative-tested by rewriting "its
+      descriptions can be wrong" to "its descriptions are accurate" in a built
+      `dist/index.html`: the guard failed with a pointer to
+      `docs/SAFETY-FRAMING.md`, then passed again once restored.
 - [ ] **[P3]** Refresh `.impeccable/design.json` from the rewritten
       `.agents/context/DESIGN.md` ("First Light" superseded "Quiet Signal"),
       then re-run `impeccable detect website` so its design-system detectors
@@ -371,13 +613,91 @@ remaining open items.
 
 ### Owner actions pending (from the `app/` scaffold session, 2026-07-17)
 
-- [ ] **[P1]** **[Needs owner]** Make the repo public and recreate the
-      "Protect main" ruleset — `GAPS.md` M5. Commands:
-      `gh repo edit kevinle3212/sensebridge --visibility public
-      --accept-visibility-change-consequences`, then confirm
-      `gh api repos/kevinle3212/sensebridge/rulesets` no longer 403s, then
-      recreate the ruleset per the settings in this file's "GitHub branch
-      protection — ruleset setup" section.
+- [ ] **[P1]** **[Needs owner]** Make the repo public, then create the
+      GitHub ruleset protecting `main` — `GAPS.md` M5. GitHub Free can't use
+      Rulesets on a private repo, which is why the 2026-07-17 attempt below
+      403'd. Steps, in order:
+      1. `gh repo edit kevinle3212/sensebridge --visibility public --accept-visibility-change-consequences`
+      2. `gh api repos/kevinle3212/sensebridge/rulesets` — confirm it now
+         returns `[]` instead of `403`.
+      3. Create the **"Protect main"** ruleset — target: default branch;
+         enforcement: Active; bypass list: empty (no exceptions, including
+         the owner). Two equivalent ways:
+         - **UI** — Settings → Rules → Rulesets → New branch ruleset. Set:
+           restrict deletions **on**, restrict force pushes **on**, require
+           linear history **on**, require signed commits **off** (commit
+           history isn't GPG-signed yet); require a pull request before
+           merging **on** with required approvals **0** (`CODEOWNERS` is
+           solely `@kevinle3212` — raise to 1 the moment a co-maintainer
+           exists), dismiss stale approvals **on**, require review from Code
+           Owners **off** (same reasoning as approvals), require approval of
+           most recent push **on**, require conversation resolution **on**,
+           allowed merge methods **squash only**; require status checks to
+           pass **on** with require branches up to date **on**, adding these
+           checks by exact name: `Build and test`, `Lint (SwiftFormat +
+           SwiftLint)`, `Docs link check`, `Secret scan (TruffleHog)`,
+           `Dependency scan (OSV)`, `Sensitive file scan`, `Semgrep
+           (scripts, workflows, website, Swift)`; require deployments to
+           succeed **off** (no gating environment), require code scanning
+           results **off** (Semgrep/TruffleHog run as plain Actions, not
+           GitHub's native code-scanning integration). Do **not** add
+           `Stylelint + ESLint + Prettier` / `Impeccable design detectors`
+           (`website-ci.yml` is path-filtered to `website/**` — would block
+           every non-website PR forever) or `review`
+           (`claude-code-review.yml` — an AI first-pass, not a deterministic
+           gate).
+         - **`gh api`** — equivalent, one shot:
+           ```sh
+           gh api --method POST repos/kevinle3212/sensebridge/rulesets \
+             --input - <<'JSON'
+           {
+             "name": "Protect main",
+             "target": "branch",
+             "enforcement": "active",
+             "bypass_actors": [],
+             "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+             "rules": [
+               { "type": "deletion" },
+               { "type": "non_fast_forward" },
+               { "type": "required_linear_history" },
+               {
+                 "type": "pull_request",
+                 "parameters": {
+                   "required_approving_review_count": 0,
+                   "dismiss_stale_reviews_on_push": true,
+                   "require_code_owner_review": false,
+                   "require_last_push_approval": true,
+                   "required_review_thread_resolution": true,
+                   "allowed_merge_methods": ["squash"]
+                 }
+               },
+               {
+                 "type": "required_status_checks",
+                 "parameters": {
+                   "strict_required_status_checks_policy": true,
+                   "required_status_checks": [
+                     { "context": "Build and test" },
+                     { "context": "Lint (SwiftFormat + SwiftLint)" },
+                     { "context": "Docs link check" },
+                     { "context": "Secret scan (TruffleHog)" },
+                     { "context": "Dependency scan (OSV)" },
+                     { "context": "Sensitive file scan" },
+                     { "context": "Semgrep (scripts, workflows, website, Swift)" }
+                   ]
+                 }
+               }
+             ]
+           }
+           JSON
+           ```
+      4. `gh api repos/kevinle3212/sensebridge/rulesets` — verify it now
+         lists "Protect main".
+      5. Settings → General → Pull Requests: disable merge commits and
+         rebase merging, leaving squash merging as the only option
+         (belt-and-suspenders with the ruleset's `allowed_merge_methods`).
+      A full-history secret scan (`gitleaks detect`,
+      `check-sensitive-files.mjs --all`) already ran clean before this was
+      decided, so nothing else blocks going public.
 - [ ] **[P1]** **[Needs owner]** Commit, push, and open a PR for this
       session's work (the `app/` scaffold, CI/lint fixes, doc corrections) —
       never run autonomously per `CLAUDE.md` § Branching and committing.
@@ -404,13 +724,22 @@ remaining open items.
 
 ### First real Swift validation — partially done now that `app/` exists (2026-07-17)
 
-- [ ] **[P1]** Run the Swift tooling against real `.swift` files, as the
+- [x] **[P1]** Run the Swift tooling against real `.swift` files, as the
       **first** Swift work done — before any volume of tests exists.
       Everything below was decided, written, and documented while the repo had
       **zero `.swift` files**; it is verified by grep, markdownlint, and
       reading upstream — **no compiler has ever run any of it**. That is not a
       hedge, it is the actual state, and it mirrors the rule in `CLAUDE.md`:
       never let a green pipeline imply validation nobody performed.
+      **Done 2026-07-21** — the toolchain has now actually run against the 31
+      real `.swift` files. `swift build` succeeds; `swiftlint` reports 0
+      violations across 30 files; `swiftformat --lint` reports 0/31 needing
+      changes. So the *configs* were sound. `swift test`, however, **failed
+      with 9 issues** — see the localization entry in the 2026-07-21
+      documentation & code-quality audit section above; it is fixed, and
+      the suite now passes with 14 tests in 5 suites. Still unverified by any
+      machine: the `xcodebuild` app-target build (needs Xcode signing) and
+      everything on-device.
 
       Do it first, not eventually: the whole case for the Swift Testing
       decision is that migration cost is zero at zero tests. If a claim below
@@ -471,9 +800,84 @@ remaining open items.
             and both planning docs — `04` and `COMPLETE-PLAN` duplicate each
             other and must stay identical).
 
+### React on Astro migration (2026-07-20)
+
+Full session log: `sessions/2026-07-20/2200-PST.md`. Added `@astrojs/react`
+(islands only, zero-JS-by-default preserved until a component opts in with
+`client:*`), `eslint-plugin-react-hooks` + `eslint-plugin-jsx-a11y` strict on
+`.tsx`/`.jsx`, `react-doctor` (`npm run audit:react`, `--no-telemetry`), and
+`react-scan` (`npm run scan`; also dev-only in `BaseLayout.astro`, gated at
+build time so zero bytes reach production). Verified end-to-end with a
+throwaway island (typecheck/lint/build/hydration), then removed it. Synced
+`docs/TOOLING.md` and `website/README.md`.
+
+- [x] `context7` MCP registered. **Done 2026-07-20** — `claude mcp add
+      --scope user context7 -- npx -y @upstash/context7-mcp`, confirmed
+      `✔ Connected` via `claude mcp list`. User-global, unauthenticated
+      (`CONTEXT7_API_KEY` only needed for a higher rate limit later).
+- [x] `puppeteer@24.43.1`'s install script approved. **Done 2026-07-20** —
+      added to `website/package.json`'s `allowScripts` (pre-existing gap from
+      `pa11y-ci`'s dependency tree, confirmed via `npm ls puppeteer` to
+      predate this session's changes), then `npm rebuild puppeteer` to
+      actually trigger the postinstall (npm considered the tree already
+      current and skipped it on a plain `npm install`). Verified with a real
+      run: `npm run build && npm run preview -- --port 4321` +
+      `npm run test:a11y` → `✔ 1/1 URLs passed`.
+- [x] `react-doctor install --agent-hooks` + `ci install` run and reconciled.
+      **Done 2026-07-20** — two false starts first: (1) running from
+      `website/` cwd nested a whole duplicate agent-config tree under
+      `website/.claude`, `.agents`, `.continue`, `.cursor`, `.github`,
+      `skills/` — inert (GitHub Actions never reads workflows outside the
+      repo-root `.github/workflows/`) and disconnected from this repo's real
+      config; (2) an `npx --prefix website ... --cwd <repo-root>` attempt
+      silently fell back to writing into **global** `~/.claude/settings.json`
+      (a `PostToolBatch` hook entry), `~/.claude/skills/react-doctor`,
+      `~/.claude/hooks/react-doctor.mjs`, `~/.cursor/hooks.json` (new file),
+      `~/.cursor/hooks/react-doctor.mjs` — polluting every project, not just
+      this repo. Both cleaned up and verified back to baseline (hash-compared
+      `.githooks/pre-commit` before/after; global settings.json confirmed
+      valid JSON with only the react-doctor block removed). One inert
+      leftover the permission classifier wouldn't let `rm`:
+      `~/.cursor/hooks.json` still exists globally but its `command` now
+      points at a deleted script, so it no-ops.
+      Final approach: ran `install`/`ci install` from `website/` (the tool's
+      documented model — "run from your project root"), then **manually
+      relocated** its output to match this repo's actual root-vs-`website/`
+      split: skill files → `.claude/skills/react-doctor/`,
+      `.agents/skills/react-doctor/`, `.continue/skills/react-doctor/`,
+      `skills/react-doctor/`; hooks → `.claude/hooks/react-doctor.mjs` +
+      merged `PostToolBatch` in `.claude/settings.json`,
+      `.cursor/hooks/react-doctor.mjs` + merged `postToolUse` in
+      `.cursor/hooks.json` (merged into the existing `impeccable` entry, not
+      overwritten); CI workflow moved from the tool's
+      `website/.github/workflows/react-doctor.yml` default to
+      `.github/workflows/react-doctor.yml` with an explicit
+      `directory: website` input, path-filtered like `website-ci.yml`, third-
+      party action pinned to the commit behind the `v2` tag (matching
+      `security.yml`'s `ggshield` convention), `blocking: error`. Pre-commit
+      hook hand-rewritten (not the tool's auto-inserted top-of-file version)
+      to run inside the existing `cd website && ...`, staged-website-files-
+      only block alongside `lint-staged`. Verified: `bash -n` on the hook,
+      valid-JSON checks on both settings files, valid-YAML check on the
+      workflow, and a full `typecheck`/`lint:js`/`build` pass. Full
+      blow-by-blow in the session log.
+      Confirmed clean: `node tools/sync-skills.mjs --check` (run from the
+      repo root — it resolves its paths relative to cwd, so running it from
+      `website/` produces a false "canonical skill directory missing"
+      error, which is what happened on a first attempt here) passes: 32
+      files across 4 skills × 4 mirrors match canonical, and `react-doctor`
+      correctly stays outside its scope (not in `MIRRORED_SKILLS`).
+- [ ] Commit and ship this session's `website/` + `docs/TOOLING.md` +
+      `.claude/`/`.agents/`/`.continue/`/`.cursor/`/`.github/workflows/`
+      changes — nothing was committed; needs a branch, commit, and PR per
+      this repo's branching rules. Note the global (non-repo) files touched
+      this session (`~/.claude.json` for the context7 MCP registration,
+      `~/.claude/settings.json` cleanup) aren't part of any PR — personal
+      machine config, not repo-tracked.
+
 ## In Progress
 
-_Nothing currently in progress._
+*Nothing currently in progress.*
 
 ## Completed
 
@@ -643,7 +1047,7 @@ _Nothing currently in progress._
       dropping the override so the callout inherits `body` (1rem) — the
       on-ramp step — rather than documenting a 5th step, which would have
       worsened the existing `flat-type-hierarchy` finding (14/15/16/18px).
-      Size moved _up_ (15px → 16px): this element carries the safety-framing
+      Size moved *up* (15px → 16px): this element carries the safety-framing
       disclaimer, so it must never be the smallest text on the page. Copy
       untouched, so no safety-framing review was required. Made the rule
       explicit in `DESIGN.md` (callout now declares
