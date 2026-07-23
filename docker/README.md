@@ -60,6 +60,26 @@ Deployment section.
 Railway deploys itself: its GitHub App watches `main` and rebuilds on every
 push, with no GitHub Actions involvement in the deploy step itself.
 
+### Preview environment
+
+A second Railway environment, `preview`, exists for previewing in-flight
+`website/` changes — [`sensebridge-preview.up.railway.app`](https://sensebridge-preview.up.railway.app),
+linked from the root `README.md`. It auto-deploys via
+[`.github/workflows/railway-preview-deploy.yml`](../.github/workflows/railway-preview-deploy.yml)
+on every push to **any branch except `main`** that touches `docker/**`,
+`website/**`, or `railway.toml` — a GitHub Actions workflow calling
+`railway up`, not Railway's own native branch watch, so it never touches
+`production`'s existing GitHub-App-based auto-deploy on the same service.
+Needs the `RAILWAY_TOKEN` repository secret (a Railway *project* token, not a
+personal one — see `TODO.md` for the full walkthrough) or the job fails
+closed.
+
+To redeploy by hand instead of waiting for CI:
+
+```sh
+railway up --service sensebridge --environment preview --ci
+```
+
 `railway.toml`'s `[deploy]` also sets `healthcheckPath = "/"` with a 30s
 timeout and a 15s `overlapSeconds` — Railway won't cut traffic over to a new
 deployment (or stop the old one) until that path answers, so a container

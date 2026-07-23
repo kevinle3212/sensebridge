@@ -1,0 +1,96 @@
+# Native GitHub Code Scanning (Security tab → Code scanning alerts).
+# Complements security.yml's TruffleHog/GGShield/OSV/Semgrep with CodeQL,
+# which needs its own workflow (github/codeql-action) rather than a job in
+# security.yml, since compiled-language analysis (Swift) needs a real build.
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly full scan, Wednesdays at 08:00 UTC.
+    - cron: "0 8 * * 3"
+  workflow_dispatch:
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  swift:
+    name: CodeQL (Swift)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Select Xcode
+        run: |
+          shopt -s nullglob
+          CANDIDATES=(/Applications/Xcode_*.app)
+          if [ ${#CANDIDATES[@]} -gt 0 ]; then
+            LATEST="$(printf "%s\n" "${CANDIDATES[@]}" | sort -V | tail -1)"
+            sudo xcode-select -switch "$LATEST"
+          fi
+
+      - name: Detect project layout
+        id: detect
+        run: |
+          if compgen -G "app/*.xcworkspace" >/dev/null || compgen -G "app/*.xcodeproj" >/dev/null; then
+            echo "kind=xcode" >> "$GITHUB_OUTPUT"
+          else
+            echo "kind=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Initialize CodeQL
+        if: steps.detect.outputs.kind == 'xcode'
+        uses: github/codeql-action/init@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
+        with:
+          languages: swift
+          build-mode: manual
+          # security-extended adds higher-precision queries beyond the defaults.
+          queries: security-extended
+
+      - name: Build app
+        if: steps.detect.outputs.kind == 'xcode'
+        run: |
+          PROJ=$(find app -maxdepth 1 \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -quit)
+          FLAG=$([[ "$PROJ" == *.xcworkspace ]] && echo -workspace || echo -project)
+          xcodebuild build \
+            "$FLAG" "$PROJ" \
+            -scheme SenseBridge \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Perform CodeQL analysis
+        if: steps.detect.outputs.kind == 'xcode'
+        uses: github/codeql-action/analyze@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
+        with:
+          category: "/language:swift"
+
+      - name: No app yet
+        if: steps.detect.outputs.kind == 'none'
+        run: echo "No Xcode project under app/ yet — skipping Swift code scanning."
+
+  javascript:
+    name: CodeQL (JavaScript/TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
+        with:
+          category: "/language:javascript-typescript"

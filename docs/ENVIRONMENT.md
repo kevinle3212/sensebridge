@@ -1,3 +1,7 @@
+---
+title: Environment
+---
+
 # Environment
 
 ## Required tooling
@@ -56,11 +60,15 @@ committed file, an environment variable, or a log — see
    pure UI/VoiceOver-label work but cannot validate the perception pipeline.
 5. Run `scripts/setup.sh` once — it checks your toolchain and enables the
    repo's git hooks (`.githooks/`): a pre-commit secret/sensitive-file scan
-   plus lint, a conventional-commit header check, a pre-push build gate that
-   also refuses direct pushes to `main`, and a post-merge check that flags
-   manifest/toolchain files just pulled in. `gitleaks`, `ggshield`, and Node
-   are advisory for the hooks (`brew install gitleaks`; `brew install
-   ggshield` then `ggshield auth login`; CI scans regardless).
+   plus lint plus actionlint on staged workflow files, a conventional-commit
+   header check (commitlint when the root `npm ci` has run, else a
+   dependency-free bash-regex fallback), a pre-push build gate that also
+   refuses direct pushes to `main`, and a post-merge check that flags
+   manifest/toolchain files just pulled in. `gitleaks`, `ggshield`,
+   `actionlint`, and Node are advisory for the hooks (`brew install
+   gitleaks`; `brew install ggshield` then `ggshield auth login`; `brew
+   install actionlint`; CI enforces commitlint and actionlint regardless via
+   `.github/workflows/commitlint.yml` and `.github/workflows/actionlint.yml`).
    `scripts/lint.sh` can also be run directly before committing.
 
 ## Secret handling

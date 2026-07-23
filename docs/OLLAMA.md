@@ -1,3 +1,7 @@
+---
+title: Local AI — Ollama + Continue.dev
+---
+
 # Local AI — Ollama + Continue.dev
 
 Optional, free, on-device coding assistance that complements Claude rather

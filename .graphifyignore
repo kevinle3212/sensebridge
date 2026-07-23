@@ -1,0 +1,10 @@
+# Paths graphify skips when building the knowledge graph. Generated,
+# vendored, or dependency output only — mirrors .gitignore's generated-output
+# section (see docs/TOOLING.md's Graphify row).
+node_modules/
+website/node_modules/
+website/dist/
+graphify-out/
+app/**/.build/
+app/**/DerivedData/
+_bmad-output/

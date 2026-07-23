@@ -30,7 +30,7 @@ struct PhrasingTests {
     }
 
     /// Pinned baseline from
-    /// docs/superpowers/specs/2026-07-19-language-support-design.md
+    /// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md
     /// "Doctrine-pinned strings" — reviewers verify, native speakers validate
     /// later. Every language must produce the exact hedge template, never a
     /// bare assertion.

@@ -1,3 +1,7 @@
+---
+title: NotebookLM — manual setup for project work
+---
+
 # NotebookLM — manual setup for project work
 
 There is no automated NotebookLM integration **in this repo's workflow**.

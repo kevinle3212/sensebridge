@@ -63,6 +63,9 @@ skill-observations/
 tmp/*
 logs/*
 
+# Root Node tooling (commitlint only — package.json has no runtime deps).
+/node_modules/
+
 # website/ (Astro build — Node tooling, build output)
 website/node_modules/
 website/dist/

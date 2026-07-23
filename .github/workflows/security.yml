@@ -21,14 +21,14 @@ jobs:
     name: Secret scan (TruffleHog)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - name: TruffleHog
         # Pinned to a released tag, not the mutable @main ref: a moving action
         # ref is a supply-chain risk (upstream could change under us between runs).
         # Bump deliberately; Dependabot's github-actions ecosystem tracks it.
-        uses: trufflesecurity/trufflehog@v3.95.9
+        uses: trufflesecurity/trufflehog@27b0417c16317ca9a472a9a8092acce143b49c55 # v3.95.9
         with:
           extra_args: --only-verified
 
@@ -36,7 +36,7 @@ jobs:
     name: Secret scan (GitGuardian)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
       - name: ggshield
@@ -54,10 +54,10 @@ jobs:
     name: Dependency scan (OSV)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: OSV Scanner
         # Pinned exactly: this repo publishes no moving v2 major tag.
-        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
         with:
           scan-args: |-
             --recursive
@@ -67,7 +67,7 @@ jobs:
     name: Sensitive file scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Check for signing/credential material
         run: node tools/check-sensitive-files.mjs --all
 
@@ -75,7 +75,7 @@ jobs:
     name: Semgrep (scripts, workflows, website, Swift)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Semgrep
         # Pinned to the commit behind the v1 tag, not the mutable ref itself —
         # same rationale as the other two scanners above. Bump deliberately.

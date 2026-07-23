@@ -4,6 +4,22 @@ Append-only. One entry per lesson, newest first, absolute dates. If a lesson
 changes a rule, update the rule's home (`AGENTS.md`, `docs/`) and link it —
 don't restate the rule here.
 
+## 2026-07-23 — "strict" enforcement needs CI, not just a local hook
+
+The 2026-07-11 entry below chose a dependency-free bash regex over commitlint
+because local hooks were the only enforcement layer in play. That reasoning
+breaks once the goal is catching a manually-typed commit for consistency:
+local hooks are always escapable (`--no-verify`, or a machine with Node
+never installed), so only a blocking CI check is actually inescapable.
+Resolution: keep the bash regex as the zero-dependency local fallback, add
+real commitlint (`commitlint.config.js`, root `package.json`) as the
+CI-enforced source of truth (`.github/workflows/commitlint.yml`, lints every
+PR commit plus the PR title), and do the same for actionlint
+(`.github/workflows/actionlint.yml`, checksum-verified pinned binary rather
+than a third-party action). This is the repo's first root-level Node
+surface — deliberately minimal (no scripts, no runtime deps) so it stays a
+policy tool. Decisions recorded in `docs/TOOLING.md`.
+
 ## 2026-07-11 — tool fit beats tool count
 
 Cross-referencing TrustLedger showed most of its toolchain (ESLint, Jest,

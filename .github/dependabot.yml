@@ -1,11 +1,18 @@
 version: 2
 
 # SenseBridge dependency ecosystems: SwiftPM (once app/ has a Package.swift or
-# an Xcode project with package dependencies), npm (the website/ marketing
-# site — Stylelint/Prettier/ESLint devDependencies only, no runtime deps),
-# Docker (docker/Dockerfile's node:22-alpine and nginx-unprivileged:alpine
-# base images, deployed via Railway — see railway.toml and
-# docker/README.md), and GitHub Actions.
+# an Xcode project with package dependencies), npm at the repo root
+# (commitlint devDependencies only — see commitlint.config.js), npm in
+# website/ (the marketing site — Stylelint/Prettier/ESLint devDependencies
+# only, no runtime deps), Docker (docker/Dockerfile's node:22-alpine and
+# nginx-unprivileged:alpine base images, deployed via Railway — see
+# railway.toml and docker/README.md), and GitHub Actions.
+
+# Every ecosystem below sets a supply-chain cooldown: wait before adopting a
+# freshly published version so a compromised release has time to be caught
+# and yanked before it lands here. semver-*-days only applies to ecosystems
+# Dependabot resolves via semver (npm); others (swift, docker,
+# github-actions) get default-days only.
 
 updates:
   - package-ecosystem: swift
@@ -14,9 +21,31 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - swift
+    commit-message:
+      prefix: chore
+      include: scope
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      dev-dependencies:
+        dependency-type: development
+    labels:
+      - dependencies
     commit-message:
       prefix: chore
       include: scope
@@ -27,6 +56,14 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
+    groups:
+      dev-dependencies:
+        dependency-type: development
     labels:
       - dependencies
       - website
@@ -40,6 +77,8 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - website
@@ -53,6 +92,8 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - github-actions
