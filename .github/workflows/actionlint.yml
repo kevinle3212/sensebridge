@@ -1,0 +1,50 @@
+name: Actionlint
+
+# Lints every GitHub Actions workflow file (YAML syntax, expression errors,
+# shellcheck on run: blocks). Local mirror: .githooks/pre-commit runs the
+# same actionlint binary (brew install actionlint) when workflow files are
+# staged, advisory there — this job is the blocking gate.
+#
+# actionlint has no official GitHub Action; the binary is downloaded from
+# its GitHub release and SHA256-verified instead of trusting a third-party
+# action wrapper. To bump the version: `gh release view --repo
+# rhysd/actionlint` for the new tag, then read that release's
+# actionlint_<ver>_checksums.txt for the linux_amd64 SHA256 — never guess
+# either value.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: actionlint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  actionlint:
+    name: Lint workflow files
+    runs-on: ubuntu-latest
+    env:
+      ACTIONLINT_VERSION: "1.7.12"
+      ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Download and verify actionlint
+        run: |
+          ARCHIVE="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${ARCHIVE}"
+          echo "${ACTIONLINT_SHA256}  ${ARCHIVE}" | sha256sum -c -
+          tar -xzf "${ARCHIVE}" actionlint
+
+      - name: Run actionlint
+        run: ./actionlint -color

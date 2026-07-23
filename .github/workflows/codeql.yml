@@ -32,8 +32,12 @@ jobs:
 
       - name: Select Xcode
         run: |
-          LATEST="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)"
-          [ -n "$LATEST" ] && sudo xcode-select -switch "$LATEST" || true
+          shopt -s nullglob
+          CANDIDATES=(/Applications/Xcode_*.app)
+          if [ ${#CANDIDATES[@]} -gt 0 ]; then
+            LATEST="$(printf "%s\n" "${CANDIDATES[@]}" | sort -V | tail -1)"
+            sudo xcode-select -switch "$LATEST"
+          fi
 
       - name: Detect project layout
         id: detect

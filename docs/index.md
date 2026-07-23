@@ -32,6 +32,8 @@ and the [README](https://github.com/kevinle3212/sensebridge#readme).
 
 ## Setup and Distribution
 
+- [Quick Start](QUICK-START.md) — fastest path from clone to a running app on
+  your own device, plus the living usage guide (what each feature does today)
 - [Environment](ENVIRONMENT.md) — dev environment setup
 - [Distribution](DISTRIBUTION.md) — TestFlight / App Store distribution
 - [Tooling](TOOLING.md) — global-vs-project tooling decision matrix

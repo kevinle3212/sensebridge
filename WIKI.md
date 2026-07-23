@@ -27,6 +27,7 @@ Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 | `docs/ACCESSIBILITY.md` | VoiceOver bar: zero unlabeled elements |
 | `docs/TESTING.md` | Unit / integration / e2e / AI-eval strategy |
 | `docs/AI-MODELS.md` | Model selection and licensing approach |
+| `docs/QUICK-START.md` | Fast path to a running app on your own device, plus the living usage guide |
 | `docs/ENVIRONMENT.md` | Toolchain setup (see also `scripts/setup.sh`) |
 | `docs/TOOLING.md` | Global-vs-project tooling decision matrix, MCP inventory |
 | `docs/DISTRIBUTION.md` | TestFlight / App Store path |

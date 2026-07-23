@@ -6,9 +6,11 @@
 # advisory if not installed), the sensitive-file check
 # (tools/check-sensitive-files.mjs), the mirrored-skill drift check
 # (tools/sync-skills.mjs --check), Swift lint/format (scripts/lint.sh, which
-# no-ops until app/ exists), and — only when staged changes touch website/ —
-# website/'s lint-staged (eslint/stylelint/prettier) and React Doctor
-# (--staged --blocking warning), both scoped to the staged files only.
+# no-ops until app/ exists), actionlint on staged workflow files (advisory if
+# not installed; also runs blocking in CI), and — only when staged changes
+# touch website/ — website/'s lint-staged (eslint/stylelint/prettier) and
+# React Doctor (--staged --blocking warning), both scoped to the staged
+# files only.
 #
 # Enabled by `git config core.hooksPath .githooks` — scripts/setup.sh does
 # this. Bypass in an emergency with `git commit --no-verify` and say so in
@@ -38,6 +40,14 @@ else
 fi
 
 ./scripts/lint.sh
+
+if git diff --cached --name-only | grep -qE "^\.github/workflows/.*\.ya?ml$"; then
+	if command -v actionlint >/dev/null 2>&1; then
+		actionlint
+	else
+		echo "pre-commit: actionlint not installed (brew install actionlint) — skipping local workflow lint; CI still lints." >&2
+	fi
+fi
 
 if git diff --cached --name-only | grep -q '^website/'; then
 	if [ -d website/node_modules ]; then

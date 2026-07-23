@@ -25,6 +25,37 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### actionlint + commitlint setup (2026-07-23)
+
+Full session log: [`sessions/2026-07-23/1400-PST.md`](sessions/2026-07-23/1400-PST.md).
+Requested to keep manual (non-agent) commits consistent with the existing
+conventional-commit convention, plus lint `.github/workflows/*` with
+actionlint. Surveyed the existing posture first: `.githooks/commit-msg`
+already enforces conventional commits via a dependency-free bash regex
+(deliberately built without a Node/commitlint dependency); `pre-commit`/
+`pre-push` follow a consistent `command -v <tool>` graceful-degradation
+pattern; no root `package.json` exists (only `website/` is a Node project);
+all GitHub Actions are pinned to full commit SHAs as of `159bca1`. Dispatched
+an Opus planning pass with that context before implementing.
+
+- [x] **[P0]** Resume: read the Opus plan for actionlint + commitlint, then
+      implement with Sonnet — config files, hook updates
+      (`.githooks/commit-msg`, `.githooks/pre-commit`), new CI job(s) pinned
+      to full commit SHAs, and `CONTRIBUTING.md`/`scripts/setup.sh` doc sync.
+      Verify hooks + CI locally before considering done.
+      **Done 2026-07-23** — see the session log for the full file list;
+      commitlint (real tool, CI-enforced) plus the existing bash regex as
+      local fallback, actionlint (checksum-verified pinned binary in CI,
+      advisory locally), 3 pre-existing shellcheck findings fixed along the
+      way, docs synced. Not committed yet (no commit requested this
+      session).
+- [ ] **[Needs owner]** Mark `commitlint` and `actionlint` as required status
+      checks in branch protection once this branch merges and both jobs have
+      run at least once — a CI job alone is advisory (red X, still
+      mergeable) until a ruleset requires it. This is the honest limit of
+      "strict": `--no-verify` always bypasses the local hook, so branch
+      protection is what actually makes it inescapable.
+
 ### GitHub platform hardening — Actions policies, tag rules, branch rulesets (2026-07-21)
 
 Audited live via `gh api` (read-only, no changes made). `main` has **zero
@@ -190,7 +221,19 @@ repo file); it can't do anything until Copilot coding agent is enabled.
          watch the Actions tab for the "Railway preview deploy" run.
       Until this secret exists, `railway up --service sensebridge
       --environment preview --ci` (run locally, already authenticated) is the
-      fallback way to update the preview site.
+      fallback way to update the preview site. **Lower urgency than it looks**:
+      confirmed via `gh api repos/.../deployments` this session that Railway's
+      own GitHub App already auto-deploys both `production` and `preview` on
+      every push independent of this workflow (both show `success` there) —
+      the missing token only breaks this one *additional* CLI-based deploy
+      path, not preview deploys in general.
+- [ ] **[P3]** **[Needs owner]** Delete or reconnect the stray `exquisite-fulfillment`
+      Railway project — `gh api repos/.../deployments` shows one `production`
+      deployment (2026-07-21T01:08 UTC, `inactive`) posted under that project
+      name before the `sensebridge` project existed/was renamed. Looks like a
+      one-time artifact from initial Railway setup with no deploys since;
+      confirm in the Railway dashboard and delete if genuinely unused, so it
+      doesn't linger as an orphaned GitHub App connection.
 - [ ] **[Needs owner]** Decide whether `monthly-log-archive` needs a
       guaranteed trigger (`SessionStart` hook or a monthly `schedule` cron)
       instead of relying on a session starting on the 1st — not added without
@@ -460,7 +503,7 @@ succeeds, the container serves `/` and `/es/` with 200s, healthcheck reaches
 `healthy`, `docker compose config` resolves cleanly. Also fixed the Astro
 build's 500kB-chunk warning (raised `chunkSizeWarningLimit`; the oversized
 chunk is three.js, already lazy-loaded) and an MD060 table-formatting error
-in `docs/superpowers/specs/2026-07-19-language-support-design.md`.
+in `docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`.
 
 - [x] **[P1]** **[Needs owner]** Update the Railway service's Root Directory
       to the repo root. **Done 2026-07-20** — owner changed it via the
@@ -569,7 +612,7 @@ items below need an owner decision or a `git` action and were left untouched.
 
 ### Language support EN/ES/VI — implementation in progress (2026-07-19)
 
-Spec: `docs/superpowers/specs/2026-07-19-language-support-design.md`. Session
+Spec: `docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`. Session
 log: 2026-07-19 `2300-PST`. Implementation units may still land in-session;
 these items outlive it regardless.
 

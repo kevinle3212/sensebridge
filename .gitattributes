@@ -23,6 +23,7 @@
 graphify-out/** linguist-generated -diff
 .gitnexus/**    linguist-generated -diff
 website/package-lock.json linguist-generated -diff
+package-lock.json         linguist-generated -diff
 
 # Binary — never diff or normalize.
 *.png  binary

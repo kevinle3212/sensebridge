@@ -87,7 +87,7 @@ client scripts that need it, `read-aloud.ts` and the theme toggle in
 `Header.astro`). The header's language switcher is plain `<a>` links —
 keyboard-operable natively, with `aria-current="true"` marking the active
 locale. See
-[`../docs/superpowers/specs/2026-07-19-language-support-design.md`](../docs/superpowers/specs/2026-07-19-language-support-design.md)
+[`../docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`](../docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md)
 for the full design (this covers the website half only; the iOS app has its
 own localization).
 

@@ -45,6 +45,7 @@ positioning.
 - [Explicitly out of scope for now](#explicitly-out-of-scope-for-now)
 - [System Architecture](#system-architecture)
 - [Repository Structure](#repository-structure)
+- [Quick Start](#quick-start)
 - [Build and Run](#build-and-run)
 - [Knowledge Graph (Graphify)](#knowledge-graph-graphify)
 - [Documentation](#documentation)
@@ -199,6 +200,12 @@ app/SenseBridge/
 
 </details>
 
+## Quick Start
+
+New here? [`docs/QUICK-START.md`](docs/QUICK-START.md) is the fastest path
+from a clone to a running app on your own iPhone, plus a living usage guide
+covering what each feature actually does today.
+
 ## Build and Run
 
 The Xcode project lives under [`app/`](app/) (native Swift/SwiftUI, no
@@ -207,10 +214,12 @@ external framework dependencies for the MVP — see
 testing require a Mac and Xcode; a LiDAR-equipped iPhone (12 Pro or later) is
 needed to exercise obstacle awareness, and model-latency benchmarking should
 be done on the newest iPhone you have access to. See
-[`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) for setup and
-[`scripts/setup.sh`](scripts/setup.sh) for the bootstrap script. Distributing
-builds to other testers (TestFlight/App Store) requires the paid Apple
-Developer Program — see [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
+[`docs/QUICK-START.md`](docs/QUICK-START.md) for the fast path,
+[`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) for the full setup reference,
+and [`scripts/setup.sh`](scripts/setup.sh) for the bootstrap script.
+Distributing builds to other testers (TestFlight/App Store) requires the
+paid Apple Developer Program — see
+[`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
 
 ## Knowledge Graph (Graphify)
 
@@ -237,6 +246,7 @@ blocks a merge.
 
 | Doc | Covers |
 | --- | --- |
+| [`docs/QUICK-START.md`](docs/QUICK-START.md) | Fast path to a running app on your own device, plus the living usage guide |
 | [`docs/PRODUCT.md`](docs/PRODUCT.md) | Vision, personas, funding, differentiators |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Five-phase roadmap, MVP definition, open questions |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design, protocols, data flow |

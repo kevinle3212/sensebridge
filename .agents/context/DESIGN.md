@@ -332,7 +332,7 @@ Skip link appears top-left on focus (Signal Blue fill, bg-elevated text —
    lint:js && npm run format` — all exit 0.
 2. `npm run test:a11y` (pa11y, WCAG2AA) — 0 errors. The site is multi-locale
    since 2026-07-20 (`/`, `/es/`, `/vi/` via Astro's built-in i18n routing —
-   see `docs/superpowers/specs/2026-07-19-language-support-design.md`), but
+   see `docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`), but
    `website/.pa11yci.json` currently only lists `http://localhost:4321/` —
    this gate does not yet cover the `/es/`/`/vi/` routes (tracked in
    `TODO.md`).

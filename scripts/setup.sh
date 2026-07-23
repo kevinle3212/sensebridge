@@ -45,6 +45,16 @@ echo "== Advisory (pre-commit secret/sensitive-file scanning) =="
 check_advisory "gitleaks" gitleaks
 check_advisory "ggshield (GitGuardian; needs 'ggshield auth login' after install)" ggshield
 check_advisory "Node (runs tools/check-sensitive-files.mjs)" node
+check_advisory "actionlint (lints .github/workflows/*.yml on commit)" actionlint
+
+echo
+echo "== Repo root (Node tooling: commitlint) =="
+if command -v npm >/dev/null 2>&1; then
+	(cd "$REPO_ROOT" && npm ci)
+	echo "ok   root dependencies installed"
+else
+	echo "advisory  npm not found — commit-msg falls back to its dependency-free bash regex until installed (brew install node)"
+fi
 
 echo
 echo "== website/ (Node tooling: Stylelint, Prettier) =="
@@ -60,7 +70,7 @@ fi
 echo
 echo "== Git hooks =="
 git -C "$REPO_ROOT" config core.hooksPath .githooks
-echo "ok   core.hooksPath -> .githooks (secret scan + lint on commit, conventional-commit header check, build gate + main-push guard on push, manifest-change check on merge)"
+echo "ok   core.hooksPath -> .githooks (secret scan + lint + actionlint on commit, conventional-commit header check via commitlint or its bash fallback, build gate + main-push guard on push, manifest-change check on merge). Commitlint and actionlint also run blocking in CI regardless of local hook state."
 
 echo
 if [ "$FAIL" -ne 0 ]; then
