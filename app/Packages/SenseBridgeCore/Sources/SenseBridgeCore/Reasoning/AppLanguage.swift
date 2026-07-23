@@ -2,7 +2,7 @@ import Foundation
 
 /// The language the user wants SenseBridge's output in. `.system` defers to
 /// the device's active locale instead of pinning one — see
-/// docs/superpowers/specs/2026-07-19-language-support-design.md.
+/// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md.
 public enum AppLanguage: String, Sendable, Equatable, Codable, CaseIterable {
     case system, en, es, vi
 

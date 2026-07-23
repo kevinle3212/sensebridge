@@ -14,7 +14,7 @@ public enum Certainty: Sendable, Equatable {
 /// detector was. Hedge templates are format strings (never concatenation)
 /// loaded from the package's String Catalog, so es/vi grammars can reorder
 /// around the subject — see the pinned translations in
-/// docs/superpowers/specs/2026-07-19-language-support-design.md
+/// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md
 /// "Doctrine-pinned strings".
 public struct Phrasing: Sendable {
     // Empty but required: a public init is needed for cross-module init; nothing to initialize.

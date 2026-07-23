@@ -3,7 +3,7 @@ import Testing
 
 // Exercises the voice fallback chain as a pure function over BCP-47 language
 // tags, so it runs without installed voices or a device — see
-// docs/superpowers/specs/2026-07-19-language-support-design.md
+// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md
 // "SpeechRenderTarget: voice selection by BCP-47 fallback chain".
 struct SpeechRenderTargetTests {
     @Test

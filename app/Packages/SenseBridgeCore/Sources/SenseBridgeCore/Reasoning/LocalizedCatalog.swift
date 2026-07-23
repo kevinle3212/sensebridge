@@ -18,7 +18,7 @@ import Foundation
 /// packaged app) and falls back to parsing the shipped `.xcstrings` directly
 /// (the path under SwiftPM). `Localizable.xcstrings` stays the single source
 /// of truth either way, and the doctrine-pinned hedge templates in
-/// docs/superpowers/specs/2026-07-19-language-support-design.md are verifiable
+/// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md are verifiable
 /// by the package's own test suite instead of only inside Xcode.
 enum LocalizedCatalog {
     /// Returns the catalog entry for `key` rendered in `locale`.
