@@ -21,7 +21,7 @@ jobs:
     name: Secret scan (TruffleHog)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
       - name: TruffleHog
@@ -36,7 +36,7 @@ jobs:
     name: Secret scan (GitGuardian)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
       - name: ggshield
@@ -54,7 +54,7 @@ jobs:
     name: Dependency scan (OSV)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: OSV Scanner
         # Pinned exactly: this repo publishes no moving v2 major tag.
         uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
@@ -67,7 +67,7 @@ jobs:
     name: Sensitive file scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Check for signing/credential material
         run: node tools/check-sensitive-files.mjs --all
 
@@ -75,7 +75,7 @@ jobs:
     name: Semgrep (scripts, workflows, website, Swift)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Semgrep
         # Pinned to the commit behind the v1 tag, not the mutable ref itself —
         # same rationale as the other two scanners above. Bump deliberately.
