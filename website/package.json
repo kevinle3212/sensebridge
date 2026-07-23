@@ -58,7 +58,7 @@
     "@fontsource-variable/fraunces": "5.2.9",
     "@fontsource-variable/geist": "5.2.9",
     "@fontsource-variable/geist-mono": "5.2.8",
-    "@types/node": "^22.20.1",
+    "@types/node": "^26.0.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@types/three": "0.182.0",
