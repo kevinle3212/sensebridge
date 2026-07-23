@@ -1,0 +1,62 @@
+# Rebuilds the graphify knowledge graph (AST-only, no API cost) so reviewers
+# can download an up-to-date graph without running the tool locally.
+# graphify-out/ is git-ignored, so this never commits generated output.
+# The job is advisory: it must never block a merge (continue-on-error: true).
+# Local usage and the auto-rebuild git hooks are documented in
+# docs/TOOLING.md's Graphify row and this repo's README.
+
+name: Graphify Knowledge Graph
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "app/**"
+            - "website/src/**"
+            - "tools/**"
+            - "scripts/**"
+            - ".graphifyignore"
+    workflow_dispatch:
+
+concurrency:
+    group: graphify-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    build-graph:
+        name: Build knowledge graph
+        runs-on: ubuntu-latest
+        continue-on-error: true
+        steps:
+            - name: Checkout
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+            - name: Set up Python
+              uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+              with:
+                  python-version: "3.x"
+
+            - name: Install graphify
+              run: pip install graphifyy
+
+            - name: Build graph (AST-only, no API cost)
+              # `update` re-extracts code files only and never calls an LLM, so
+              # it builds a code-only graph from a clean checkout without an
+              # API key. A bare `graphify .` would also try semantic doc
+              # extraction and fail with no key set.
+              run: graphify update .
+
+            - name: Verify graph output
+              run: test -d graphify-out && [ "$(find graphify-out -type f | wc -l)" -gt 0 ]
+
+            - name: Upload graph artifact
+              if: always()
+              uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+              with:
+                  name: graphify-out
+                  path: graphify-out/
+                  if-no-files-found: ignore
+                  retention-days: 14

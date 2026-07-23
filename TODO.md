@@ -25,6 +25,246 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### actionlint + commitlint setup (2026-07-23)
+
+Full session log: [`sessions/2026-07-23/1400-PST.md`](sessions/2026-07-23/1400-PST.md).
+Requested to keep manual (non-agent) commits consistent with the existing
+conventional-commit convention, plus lint `.github/workflows/*` with
+actionlint. Surveyed the existing posture first: `.githooks/commit-msg`
+already enforces conventional commits via a dependency-free bash regex
+(deliberately built without a Node/commitlint dependency); `pre-commit`/
+`pre-push` follow a consistent `command -v <tool>` graceful-degradation
+pattern; no root `package.json` exists (only `website/` is a Node project);
+all GitHub Actions are pinned to full commit SHAs as of `159bca1`. Dispatched
+an Opus planning pass with that context before implementing.
+
+- [x] **[P0]** Resume: read the Opus plan for actionlint + commitlint, then
+      implement with Sonnet — config files, hook updates
+      (`.githooks/commit-msg`, `.githooks/pre-commit`), new CI job(s) pinned
+      to full commit SHAs, and `CONTRIBUTING.md`/`scripts/setup.sh` doc sync.
+      Verify hooks + CI locally before considering done.
+      **Done 2026-07-23** — see the session log for the full file list;
+      commitlint (real tool, CI-enforced) plus the existing bash regex as
+      local fallback, actionlint (checksum-verified pinned binary in CI,
+      advisory locally), 3 pre-existing shellcheck findings fixed along the
+      way, docs synced. Not committed yet (no commit requested this
+      session).
+- [ ] **[Needs owner]** Mark `commitlint` and `actionlint` as required status
+      checks in branch protection once this branch merges and both jobs have
+      run at least once — a CI job alone is advisory (red X, still
+      mergeable) until a ruleset requires it. This is the honest limit of
+      "strict": `--no-verify` always bypasses the local hook, so branch
+      protection is what actually makes it inescapable.
+
+### GitHub platform hardening — Actions policies, tag rules, branch rulesets (2026-07-21)
+
+Audited live via `gh api` (read-only, no changes made). `main` has **zero
+branch protection** (`GET .../branches/main/protection` → 404 "Branch not
+protected"), **zero rulesets exist** (`GET .../rulesets` → `[]`), and no tags
+have been created yet (`git tag -l` empty). Actions is set to
+`allowed_actions: "all"`, `sha_pinning_required: true`; default
+`GITHUB_TOKEN` permissions are already `read` repo-wide and every workflow in
+`.github/workflows/` already declares its own least-privilege `permissions:`
+block — that part needs no change. The repo allows all three merge
+strategies (merge commit, squash, rebase) with `delete_branch_on_merge:
+true`. All items below are `gh`/web-UI actions this session doesn't have
+standing permission to run.
+
+- [ ] **[P1]** **[Needs owner]** Create a branch ruleset for `main` — nothing
+      currently stops a direct push or force-push to `main`, despite both
+      `CLAUDE.md` files saying "never commit to main." Settings → Rules →
+      Rulesets → New branch ruleset:
+      - Name `main-protection`; Enforcement: Active; Target branches: `main`.
+      - Restrict deletions; restrict force pushes.
+      - Require a pull request before merging. Required approvals can stay
+        at `0` — the repo is solo-maintained per `CODEOWNERS`/
+        `GOVERNANCE.md`, so there's no second reviewer — but this still
+        forces every change through a PR, which is what actually triggers
+        CI. Turn on "Dismiss stale approvals on new commits."
+      - Require status checks to pass, then add every currently-defined job:
+        `ci.yml` → `build-test`, `lint`, `docs-links`; `security.yml` →
+        `secret-scan`, `ggshield`, `osv-scan`, `sensitive-files`, `semgrep`;
+        `codeql.yml` → `swift`, `javascript`; `website-ci.yml` → `lint`,
+        `design-qa`. Note `ci.yml` and `website-ci.yml` both have a job
+        literally named `lint` — the ruleset UI will list them as two
+        separate checks once each has run at least once; add both, don't
+        assume one covers the other.
+      - Require linear history (pairs with the squash-only merge setting
+        below).
+      - Bypass list: leave empty, or add yourself scoped to "Pull request
+        only" if you want an emergency-hotfix escape hatch — either way it's
+        logged, unlike an unprotected branch.
+- [ ] **[P2]** **[Needs owner]** Set merge strategy to squash-only: Settings
+      → General → Pull Requests → uncheck "Allow merge commits" and "Allow
+      rebase merging," keep "Allow squash merging." Matches the clean-history
+      instruction in `CLAUDE.md` §15 and is required for the ruleset's
+      "require linear history" rule above to actually hold.
+- [ ] **[P2]** **[Needs owner]** Narrow Actions permissions from "Allow all
+      actions and reusable workflows" to "Allow ... and select non-GitHub
+      actions and reusable workflows" (or at minimum "Allow actions created
+      by GitHub" + verified creators): Settings → Actions → General →
+      Actions permissions. The repo is public and at least one workflow
+      already uses a secret (`GITGUARDIAN_API_KEY`; `RAILWAY_TOKEN` is
+      pending per the item above) — an unpinned third-party action from an
+      unreviewed source is a meaningfully bigger risk here than on a private
+      repo. `sha_pinning_required` is already on, which helps but doesn't
+      substitute for an allowlist.
+- [ ] **[P2]** **[Needs owner]** Require approval for first-time contributors
+      on fork PR workflow runs: Settings → Actions → General → "Fork pull
+      request workflows from outside collaborators" → "Require approval for
+      first-time contributors." Not visible via the REST API for
+      personal-account repos (confirmed 404 on the
+      fork-pr-workflows-approval endpoint this session) — UI-only setting.
+      Stops an untrusted fork PR from running workflows with repo secrets
+      before a human looks at the diff.
+- [ ] **[P3]** **[Needs owner]** Create a tag protection ruleset once a
+      release/tagging scheme is decided — the repo has zero tags today.
+      Settings → Rules → Rulesets → New tag ruleset, target pattern `v*` (or
+      whatever scheme is chosen), rules: restrict deletions, restrict
+      updates (no re-pointing a tag after it's cut). Low priority until
+      there's an actual release to protect.
+- [ ] **[P3]** **[Needs owner]** Consider adding "Require signed commits" to
+      the `main` ruleset once local commit signing is set up. Checked this
+      session: no commit in this repo's history is GPG/SSH-signed (`git log
+      --show-signature` empty, no `commit.gpgsign`/`user.signingkey`
+      configured locally) — turning this on today would immediately block
+      the owner's own merges.
+
+### README badges, monthly log archive skill, Railway preview env, Copilot MCP (2026-07-21)
+
+Full session log: [`sessions/2026-07-21/1600-PST.md`](sessions/2026-07-21/1600-PST.md).
+Added Actions badges for every actively-triggered workflow to `README.md`
+(skipped the two intentionally-disabled Claude workflows — a badge would just
+show permanent "no status"). Added `tools/condense-monthly-logs.mjs` +
+`.agents/skills/monthly-log-archive/SKILL.md`: condenses `sessions/` into one
+file per month (gitignored, safe to merge-and-delete) and builds an
+`audits/<month>/INDEX.md` for that month's append-only audit reports
+(originals never touched). Created a Railway `preview` environment since none
+existed — `https://sensebridge-preview.up.railway.app`, linked in `README.md`
+and documented in `docker/README.md`; now auto-deploys via
+[`.github/workflows/railway-preview-deploy.yml`](.github/workflows/railway-preview-deploy.yml)
+on push to any branch except `main` (added after this section was first
+written — see the follow-up below for the one remaining setup step). Gave the
+Copilot GitHub MCP `mcpServers`
+JSON inline in chat (not committed — it's a Settings-field config, not a
+repo file); it can't do anything until Copilot coding agent is enabled.
+
+- [ ] **[Needs owner]** Wire up the Copilot GitHub MCP server. Blocked on
+      enabling Copilot coding agent first (Settings → Copilot → Coding agent
+      → enable — needs a Copilot license tier that includes it; see the item
+      below). Once that's on:
+      1. **Generate the token.** GitHub → your avatar → Settings → Developer
+         settings → Personal access tokens → Fine-grained tokens → "Generate
+         new token." Set:
+         - Resource owner: `kevinle3212`.
+         - Repository access: "Only select repositories" → `sensebridge`.
+         - Repository permissions: `Contents` → Read and write, `Issues` →
+           Read and write, `Pull requests` → Read and write, `Metadata` →
+           Read-only (forced default). Widen later only if the agent's MCP
+           calls actually need more — start minimal.
+         - Expiration: pick something you're comfortable rotating on (this
+           token cannot be scoped down further later, only regenerated).
+         - Generate, then copy the `github_pat_...` value immediately — GitHub
+           only shows it once.
+      2. **Store it as a Copilot secret**, not a repo/Actions secret. Repo →
+         Settings → Copilot → Coding agent → "Secrets" → add one named
+         exactly `COPILOT_MCP_GITHUB_PERSONAL_ACCESS_TOKEN` (the `COPILOT_MCP_`
+         prefix is required for Copilot's coding agent to see it), value = the
+         token from step 1.
+      3. **Paste this into the same page's "MCP configuration" field**
+         (copy-paste ready, no edits needed — the `env` value below is a
+         reference to the secret name from step 2, not the token itself):
+
+         ```json
+         {
+           "mcpServers": {
+             "github": {
+               "type": "local",
+               "command": "docker",
+               "args": [
+                 "run",
+                 "-i",
+                 "--rm",
+                 "-e",
+                 "GITHUB_PERSONAL_ACCESS_TOKEN",
+                 "ghcr.io/github/github-mcp-server"
+               ],
+               "env": {
+                 "GITHUB_PERSONAL_ACCESS_TOKEN": "COPILOT_MCP_GITHUB_PERSONAL_ACCESS_TOKEN"
+               },
+               "tools": ["*"]
+             }
+           }
+         }
+         ```
+
+      4. Save. Copilot's coding agent runner pulls
+         `ghcr.io/github/github-mcp-server` itself on its next run — nothing
+         else to install. Rotate the PAT before its expiration by repeating
+         steps 1–2 with a new token value; the JSON in step 3 never needs to
+         change.
+- [ ] **[Needs owner]** Create the `RAILWAY_TOKEN` repository secret so
+      `railway-preview-deploy.yml` can actually deploy (it fails closed
+      without one):
+      1. Railway dashboard → the `sensebridge` project → Settings → Tokens →
+         "Create Token." Scope it to the `preview` environment if the
+         dashboard offers a per-environment option — this token should never
+         be able to touch `production`. This is a **project token**, not your
+         personal Railway login; do not reuse the CLI session already
+         authenticated on this machine for CI.
+      2. Copy the generated token value immediately (shown once).
+      3. GitHub repo → Settings → Secrets and variables → Actions → "New
+         repository secret" → name it exactly `RAILWAY_TOKEN`, paste the
+         value.
+      4. Push any branch other than `main` touching `docker/**`, `website/**`,
+         or `railway.toml` to confirm the workflow deploys successfully —
+         watch the Actions tab for the "Railway preview deploy" run.
+      Until this secret exists, `railway up --service sensebridge
+      --environment preview --ci` (run locally, already authenticated) is the
+      fallback way to update the preview site. **Lower urgency than it looks**:
+      confirmed via `gh api repos/.../deployments` this session that Railway's
+      own GitHub App already auto-deploys both `production` and `preview` on
+      every push independent of this workflow (both show `success` there) —
+      the missing token only breaks this one *additional* CLI-based deploy
+      path, not preview deploys in general.
+- [ ] **[P3]** **[Needs owner]** Delete or reconnect the stray `exquisite-fulfillment`
+      Railway project — `gh api repos/.../deployments` shows one `production`
+      deployment (2026-07-21T01:08 UTC, `inactive`) posted under that project
+      name before the `sensebridge` project existed/was renamed. Looks like a
+      one-time artifact from initial Railway setup with no deploys since;
+      confirm in the Railway dashboard and delete if genuinely unused, so it
+      doesn't linger as an orphaned GitHub App connection.
+- [ ] **[Needs owner]** Decide whether `monthly-log-archive` needs a
+      guaranteed trigger (`SessionStart` hook or a monthly `schedule` cron)
+      instead of relying on a session starting on the 1st — not added without
+      sign-off, since both touch shared harness config.
+
+### GitHub platform audit + Copilot coding agent + website URL fix (2026-07-21)
+
+Full session log: [`sessions/2026-07-21/1600-PST.md`](sessions/2026-07-21/1600-PST.md).
+Audited Wiki/Pages/Models/Dependabot/Code Scanning/Secret Scanning/Security
+Policy/Advisories against the live repo via `gh api` (explicit one-turn
+permission granted): secret scanning, push protection, and Dependabot
+security updates are all enabled; Pages is already set to build via GitHub
+Actions. `pages.yml` and `wiki-sync.yml` 404 on their workflow-runs endpoint
+because they — along with most of this branch's GitHub-platform setup —
+haven't merged to `main` yet (`chore/github-platform-setup` is 12 commits
+ahead, 0 behind). Fixed `README.md`'s "Website" link, which duplicated the
+Docs link instead of pointing at the live marketing site.
+
+- [ ] Merge `chore/github-platform-setup` to `main` — required before Pages
+      builds, Wiki sync, CodeQL, Dependabot config, GitHub Models CI, and
+      Copilot's environment bootstrap actually run for the first time.
+- [ ] **[Needs owner]** Enable Copilot coding agent (Settings → Copilot →
+      Coding agent) once a Copilot license tier that includes it is
+      confirmed. No REST/CLI/MCP endpoint exists to toggle this remotely —
+      confirmed by an empty `assignees` list (no Copilot bot assignable) and
+      a 404 on the personal-account Copilot-seat endpoint.
+- [ ] **[Needs owner]** Checking GitHub Projects (v2) board status requires
+      `gh auth refresh -s read:project` first — not run this session, since
+      it changes the stored CLI token's scopes and wasn't part of the
+      granted "run gh api commands" permission.
+
 ### Vercel GitHub auto-deploy + website SEO/accessibility (2026-07-21)
 
 Full session log: [`sessions/2026-07-21/1200-PST.md`](sessions/2026-07-21/1200-PST.md).
@@ -206,10 +446,14 @@ is being sold" pre-launch doctrine are both still intact.
 - [ ] **[P3]** **[Needs owner]** Attach a custom domain to the Vercel project
       (`trustledger/sensebridge`) once one is decided — currently only
       reachable at the `*.vercel.app` URL.
-- [ ] **[P2]** **[Needs owner]** Trigger a new production deploy so the
+- [x] **[P2]** **[Needs owner]** Trigger a new production deploy so the
       `sensebridge.vercel.app` alias actually binds (see rename note above)
       — a deploy pushes current `website/` content live, so it needs an
       explicit go-ahead rather than running automatically.
+      **Done/Fixed 2026-07-21** — verified live via `curl -o /dev/null -w
+      '%{http_code}' https://sensebridge.vercel.app` → `200`. The alias has
+      bound; `README.md`'s Website link now points here instead of the old
+      `sensebridge-website.vercel.app` URL.
 - [ ] **[P3]** **[Needs owner]** Resend setup, parked until there's an actual
       feature to send email for (a waitlist or contact form): create an
       account if one doesn't exist, pick a sending domain, verify it
@@ -259,7 +503,7 @@ succeeds, the container serves `/` and `/es/` with 200s, healthcheck reaches
 `healthy`, `docker compose config` resolves cleanly. Also fixed the Astro
 build's 500kB-chunk warning (raised `chunkSizeWarningLimit`; the oversized
 chunk is three.js, already lazy-loaded) and an MD060 table-formatting error
-in `docs/superpowers/specs/2026-07-19-language-support-design.md`.
+in `docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`.
 
 - [x] **[P1]** **[Needs owner]** Update the Railway service's Root Directory
       to the repo root. **Done 2026-07-20** — owner changed it via the
@@ -368,7 +612,7 @@ items below need an owner decision or a `git` action and were left untouched.
 
 ### Language support EN/ES/VI — implementation in progress (2026-07-19)
 
-Spec: `docs/superpowers/specs/2026-07-19-language-support-design.md`. Session
+Spec: `docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`. Session
 log: 2026-07-19 `2300-PST`. Implementation units may still land in-session;
 these items outlive it regardless.
 

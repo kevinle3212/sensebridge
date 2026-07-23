@@ -1,3 +1,7 @@
+---
+title: Architecture
+---
+
 # Architecture
 
 Product framing: [`docs/PRODUCT.md`](PRODUCT.md). Roadmap: [`docs/ROADMAP.md`](ROADMAP.md).

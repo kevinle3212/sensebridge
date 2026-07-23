@@ -1,3 +1,7 @@
+---
+title: FAQ
+---
+
 # FAQ
 
 For the full reasoning behind these answers, see

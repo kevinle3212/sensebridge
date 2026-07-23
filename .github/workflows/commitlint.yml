@@ -1,0 +1,49 @@
+name: Commitlint
+
+# Blocking check that every commit in the PR range — and the PR title, which
+# becomes the squash-merge commit message — follows conventional commits
+# (commitlint.config.js). Local mirror: .githooks/commit-msg runs the same
+# commitlint when the root `npm ci` has been run, falling back to a
+# dependency-free bash regex otherwise; this job is authoritative and can't
+# be skipped with `git commit --no-verify`.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commitlint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commitlint:
+    name: Lint commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint PR commits
+        run: |
+          npx --no-install commitlint \
+            --from "${{ github.event.pull_request.base.sha }}" \
+            --to "${{ github.event.pull_request.head.sha }}" \
+            --verbose
+
+      - name: Lint PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: echo "$PR_TITLE" | npx --no-install commitlint --verbose

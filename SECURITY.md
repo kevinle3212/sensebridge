@@ -39,6 +39,16 @@ leak). What's actually in scope:
   own provider credentials, stored in Keychain, never shipped as project
   secrets.
 
+## Automated scanning
+
+GitHub's native code scanning (CodeQL, `.github/workflows/codeql.yml`),
+secret scanning with push protection, and Dependabot are enabled on this
+repository — see the [GitHub Platform](README.md#github-platform) table in
+the README for the full list, and the
+[Security tab](https://github.com/kevinle3212/sensebridge/security) for live
+alerts. These catch classes of bugs before review; they don't replace a
+private report for anything they miss.
+
 ## Out of scope (for now)
 
 Account takeover, server-side issues, and anything requiring a backend the

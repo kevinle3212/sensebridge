@@ -1,0 +1,45 @@
+name: Railway preview deploy
+
+# Deploys website/ to the Railway `preview` environment (see docker/README.md's
+# "Preview environment" section) on every push to any branch except main.
+# Production deploys itself via Railway's own GitHub App watching `main`, with
+# no GitHub Actions involvement — this workflow only ever touches `preview`,
+# so the two never race. Complements, doesn't replace,
+# railway-deploy-check.yml, which only builds+smoke-tests the image locally
+# and never deploys anywhere.
+#
+# Requires the RAILWAY_TOKEN repository secret: a Railway *project token*
+# (Railway dashboard -> Project -> Settings -> Tokens -> Create Token, scope
+# it to the `preview` environment if the dashboard offers that option) -- not
+# a personal account token. See TODO.md for the full setup walkthrough.
+
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - "docker/**"
+      - "website/**"
+      - "railway.toml"
+      - ".github/workflows/railway-preview-deploy.yml"
+
+concurrency:
+  group: railway-preview-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Railway preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to preview environment
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service sensebridge --environment preview --ci

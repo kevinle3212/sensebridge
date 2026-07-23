@@ -1,0 +1,10 @@
+title: SenseBridge Documentation
+description: Open-source, on-device, private accessibility for blind and low-vision iPhone users.
+theme: jekyll-theme-cayman
+show_downloads: false
+
+# Planning docs are historical/internal working notes, not curated
+# documentation — kept out of the published site, matching the curation in
+# ../WIKI.md, which doesn't list them either.
+exclude:
+  - planning

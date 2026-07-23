@@ -5,8 +5,9 @@
 # Refuses to push commits directly to refs/heads/main (branch as
 # feat/fix/chore/... and open a PR, per CONTRIBUTING.md), then runs a
 # build-only check using the same project-detection as .github/workflows/ci.yml
-# (no-ops until app/ is scaffolded). CI still runs the full build+test; this
-# just catches the fast, common breakage before a push.
+# (no-ops until app/ is scaffolded), then an OSV dependency scan mirroring
+# .github/workflows/security.yml's osv-scan job. CI still runs the full
+# build+test+scan; this just catches the fast, common breakage before a push.
 #
 # Enabled by `git config core.hooksPath .githooks` — scripts/setup.sh does
 # this. Bypass in an emergency with `git push --no-verify` and say so in the
@@ -38,4 +39,11 @@ elif compgen -G "app/*.xcodeproj" >/dev/null || compgen -G "app/*.xcworkspace" >
 		CODE_SIGNING_ALLOWED=NO
 else
 	echo "pre-push: no Swift package or Xcode project found under app/ yet — skipping build check."
+fi
+
+if command -v osv-scanner >/dev/null 2>&1; then
+	echo "== osv-scanner (dependency vulnerabilities) =="
+	osv-scanner --recursive ./
+else
+	echo "pre-push: osv-scanner not installed (brew install osv-scanner) — skipping local dependency scan; CI's osv-scan job still runs on push." >&2
 fi

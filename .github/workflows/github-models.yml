@@ -1,0 +1,107 @@
+# Validates GitHub Models prompt files for docs/CI.
+# Live provider-backed inference jobs are manual-only so external provider
+# hangs, quota, or availability cannot block application/security CI.
+# Requires models: read on GITHUB_TOKEN (enabled by default for GITHUB_TOKEN
+# in many repos).
+#
+# Manual: Actions → GitHub Models prompts → Run workflow
+# Local eval: gh models eval .github/prompts/safety-framing-check.prompt.yml
+
+name: GitHub Models prompts
+
+on:
+    workflow_dispatch:
+    pull_request:
+        paths:
+            - ".github/prompts/**"
+            - ".github/workflows/github-models.yml"
+    push:
+        branches: [main]
+        paths:
+            - ".github/prompts/**"
+            - ".github/workflows/github-models.yml"
+
+permissions:
+    contents: read
+    models: read
+
+jobs:
+    prompt-files:
+        name: Inference via prompt.yml (${{ matrix.prompt }})
+        if: github.event_name == 'workflow_dispatch'
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        strategy:
+            fail-fast: false
+            # Serialize matrix legs: GitHub Models has a low shared rate limit,
+            # and running all prompts at once reliably triggers HTTP 429.
+            max-parallel: 1
+            matrix:
+                prompt:
+                    - safety-framing-check.prompt.yml
+                    - accessibility-label-review.prompt.yml
+                include:
+                    - prompt: safety-framing-check.prompt.yml
+                      input: "There is a person standing in front of you."
+                    - prompt: accessibility-label-review.prompt.yml
+                      input: 'accessibilityLabel: "Button" accessibilityHint: ""'
+
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+            # Tolerate transient GitHub Models rate limits (HTTP 429). A 429 is
+            # an infrastructure/quota issue, not a prompt regression, so it must
+            # not fail the PR. Genuine empty responses are still asserted below.
+            - name: Run actions/ai-inference
+              id: inference
+              continue-on-error: true
+              uses: actions/ai-inference@a7805884c80886efc241e94a5351df715968a0ad # v2
+              with:
+                  prompt-file: .github/prompts/${{ matrix.prompt }}
+                  input: 'input: "${{ matrix.input }}"'
+                  endpoint: https://models.github.ai/inference
+                  model: openai/gpt-4.1
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Print response
+              run: |
+                  echo "Prompt: ${{ matrix.prompt }}"
+                  echo "Response:"
+                  echo "${{ steps.inference.outputs.response }}"
+
+            # Pass if the inference returned a response. If the inference step
+            # itself failed (e.g. a 429 rate limit), warn and skip rather than
+            # fail the workflow.
+            - name: Verify response (rate-limit tolerant)
+              run: |
+                  if [ "${{ steps.inference.outcome }}" != "success" ]; then
+                    echo "::warning::Inference did not succeed (likely a transient rate limit / 429); skipping assertion for ${{ matrix.prompt }}."
+                    exit 0
+                  fi
+                  if [ -z "${{ steps.inference.outputs.response }}" ]; then
+                    echo "::error::Inference succeeded but returned an empty response for ${{ matrix.prompt }}."
+                    exit 1
+                  fi
+                  echo "Response present for ${{ matrix.prompt }}."
+
+    evaluate-prompts:
+        name: Evaluate prompts (gh models eval)
+        runs-on: ubuntu-latest
+        continue-on-error: true
+        timeout-minutes: 5
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+            - name: Run gh models eval
+              continue-on-error: true
+              run: |
+                  if ! gh models eval --help >/dev/null 2>&1; then
+                    echo "gh models eval not available on this runner; skip eval job"
+                    exit 0
+                  fi
+                  for f in .github/prompts/*.prompt.yml; do
+                    echo "Evaluating $f"
+                    gh models eval "$f" --json || exit 1
+                  done
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

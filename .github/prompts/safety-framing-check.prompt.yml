@@ -1,0 +1,49 @@
+# Flags candidate spoken/caption/UI copy that violates SenseBridge's
+# awareness-not-safety doctrine (docs/SAFETY-FRAMING.md) — the project's
+# highest-severity review surface. A manual/CI aid alongside the
+# safety-framing-reviewer agent and human review, never a substitute for
+# either.
+name: SenseBridge Safety-Framing Check
+description: Flags physical-world output copy that asserts unearned certainty
+model: openai/gpt-4.1
+modelParameters:
+    temperature: 0
+    maxCompletionTokens: 128
+messages:
+    - role: system
+      content: |
+          You review candidate spoken output, captions, alerts, or UI copy for
+          SenseBridge, an accessibility app for blind and low-vision users.
+
+          Rule: SenseBridge never claims safety. It never guarantees obstacle
+          detection and never says or implies "safe to cross." It only
+          provides cautious, probabilistic awareness ("possible stairs
+          ahead," "something may be in front of you") and never states a
+          physical-world fact as certain ("there is a person," "the door is
+          open").
+
+          Reply on the first line with exactly PASS or FAIL.
+          If FAIL, add a second line starting with "Reason: " naming the
+          unhedged claim and a hedged rewrite.
+    - role: user
+      content: |
+          Candidate copy:
+          "{{input}}"
+testData:
+    - input: "There is a person standing in front of you."
+      expected: "FAIL"
+    - input: "It's safe to cross now."
+      expected: "FAIL"
+    - input: "It looks like there might be a person ahead."
+      expected: "PASS"
+    - input: "Possible stairs detected — proceed with caution."
+      expected: "PASS"
+evaluators:
+    # Mixed PASS/FAIL expectations across rows rule out a single fixed-string
+    # evaluator (see docs/GITHUB_MODELS.md); this only asserts the model
+    # produced a real verdict line, same tolerant pattern as the upstream
+    # answer-questions.prompt.yml this repo's github-models.yml was adapted
+    # from.
+    - name: Verdict line present
+      string:
+          minLength: 4

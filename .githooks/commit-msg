@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 #
-# commit-msg — enforce conventional commit headers (type(scope): subject)
-# without a Node/commitlint dependency. Types mirror CONTRIBUTING.md.
-# Merge, revert, and fixup/squash commits are exempt.
+# commit-msg — enforce conventional commit headers (type(scope): subject).
+# commitlint (commitlint.config.js) is authoritative and also runs blocking
+# in CI (.github/workflows/commitlint.yml); prefer it here when the root
+# `npm ci` has been run. The bash regex below is the dependency-free local
+# fallback so this hook still works with no Node installed. Types mirror
+# CONTRIBUTING.md. Merge, revert, and fixup/squash commits are exempt.
 set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+if [ -x node_modules/.bin/commitlint ]; then
+	exec node_modules/.bin/commitlint --edit "$1"
+fi
 
 MSG_FILE="$1"
 HEADER="$(head -1 "$MSG_FILE")"

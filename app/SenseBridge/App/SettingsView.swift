@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Lets the user override the app's display language, or defer to the
 /// device's system language via `.system` (the default) — see
-/// docs/superpowers/specs/2026-07-19-language-support-design.md.
+/// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md.
 struct SettingsView: View {
     /// Shared app state, read here for the current language and written
     /// back via `save()` when the user changes it.

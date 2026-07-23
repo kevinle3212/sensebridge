@@ -17,10 +17,15 @@ run each test layer is in [`docs/TESTING.md`](docs/TESTING.md).
 Never commit to `main`. Branch as `feat/...`, `fix/...`, or `chore/...`, use
 conventional commit headers (`type(scope): subject`), and open a PR so CI
 runs. `scripts/setup.sh` enables the repo git hooks (`.githooks/`), which
-enforce the commit format, run a secret/sensitive-file scan plus lint before
-every commit, mirror the CI build gate and block direct pushes to `main`
-before every push, and flag manifest/toolchain changes after every merge or
-pull.
+enforce the commit format (via [commitlint](commitlint.config.js) when the
+root `npm ci` has been run, else a dependency-free bash-regex fallback), lint
+any changed `.github/workflows/*.yml` with actionlint, run a
+secret/sensitive-file scan plus lint before every commit, mirror the CI build
+gate and block direct pushes to `main` before every push, and flag
+manifest/toolchain changes after every merge or pull. Commit messages and
+workflow files are also linted in CI ([`commitlint.yml`](.github/workflows/commitlint.yml),
+[`actionlint.yml`](.github/workflows/actionlint.yml)) — that check is not
+skippable with `git commit --no-verify`.
 
 ## Before you open a PR
 

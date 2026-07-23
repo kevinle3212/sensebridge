@@ -4,7 +4,7 @@ import Testing
 
 struct SceneComposerTests {
     /// Pinned baseline from
-    /// docs/superpowers/specs/2026-07-19-language-support-design.md
+    /// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md
     /// "Doctrine-pinned strings".
     @Test(arguments: [
         (localeIdentifier: "en", expected: "Nothing recognizable was found."),
