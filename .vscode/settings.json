@@ -13,6 +13,7 @@
     ".markdownlintignore": "ignore",
     ".gitleaksignore": "ignore",
     ".gitnexusrc": "json",
+    ".graphifyignore": "ignore",
     "post-checkout": "shellscript",
     "post-commit": "shellscript"
   },

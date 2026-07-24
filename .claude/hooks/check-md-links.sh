@@ -12,8 +12,11 @@ file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_respons
 case "$file_path" in *.md) ;; *) exit 0 ;; esac
 [ -f "$file_path" ] || exit 0
 
-root="${CLAUDE_PROJECT_DIR:-.}"
 dir=$(dirname "$file_path")
+# Resolve the edited file's own repo root (git worktree-aware) instead of
+# CLAUDE_PROJECT_DIR, which stays fixed to the main checkout even when the
+# edit happened in a `.claude/worktrees/*` worktree on another branch.
+root="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null || echo "${CLAUDE_PROJECT_DIR:-.}")"
 broken=""
 
 # ponytail: regex link scan, not a Markdown parser — misses reference-style
@@ -28,7 +31,11 @@ while IFS= read -r target; do
     /*) resolved="$root$path" ;;
     *)  resolved="$dir/$path" ;;
   esac
-  [ -e "$resolved" ] || broken="$broken $target"
+  [ -e "$resolved" ] && continue
+  # Matches ci.yml's docs-links job: links to gitignored targets (GAPS.md,
+  # sessions/, NOTES.local.md, ...) are intentionally local-only references.
+  git -C "$root" check-ignore -q "$resolved" 2>/dev/null && continue
+  broken="$broken $target"
 done < <(grep -oE '\]\([^)]+\)' "$file_path" | sed -E 's/^\]\(//; s/\)$//')
 
 [ -z "$broken" ] && exit 0
