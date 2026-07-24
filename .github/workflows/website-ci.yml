@@ -78,7 +78,7 @@ jobs:
         # Automated checks are a floor — the manual VoiceOver/keyboard pass
         # per docs/TESTING.md is still required for changed UI.
         run: |
-          npx astro preview --port 4321 &
+          npx astro preview --port 4321 --host 127.0.0.1 &
           sleep 4
           npm run test:a11y
 

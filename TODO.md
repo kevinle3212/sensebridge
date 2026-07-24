@@ -25,6 +25,30 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Website CI accessibility gate failing on Dependabot PR (2026-07-23)
+
+Found while regenerating the Obsidian vault's `Deployments.md` status report.
+`pa11y-ci accessibility gate` failed (exit code 2) on PR #21 — `Navigation
+timeout of 30000 ms exceeded` on all 3 locale URLs, even though `astro
+preview` logged `ready` well within the job's `sleep 4`
+(`https://github.com/kevinle3212/sensebridge/actions/runs/30053998683`).
+
+- [x] **[P0]** Root cause: `astro preview` binds `localhost` only, which on
+      this stack resolves to the IPv6 loopback (`::1`) exclusively —
+      confirmed locally via `lsof -iTCP -sTCP:LISTEN`, no IPv4 listener at
+      all. GitHub Actions' `ubuntu-latest` runners don't reliably route IPv6
+      loopback inside the container, so Chromium's connection attempt hangs
+      until pa11y's 30 s navigation timeout instead of failing fast. **Fixed
+      2026-07-24** — added `--host 127.0.0.1` to the `astro preview`
+      invocation in `.github/workflows/website-ci.yml`'s `a11y` job to force
+      an IPv4 bind, and pointed `website/.pa11yci.json`'s URLs at
+      `127.0.0.1` instead of `localhost` to match. Verified locally end to
+      end: `npm run build && npx astro preview --port 4321 --host 127.0.0.1`
+      + `npm run test:a11y` → `✔ 3/3 URLs passed` (used
+      `PUPPETEER_EXECUTABLE_PATH` pointed at system Chrome per the bundled-
+      Chrome workaround documented below in this file — a separate,
+      unrelated local-macOS issue).
+
 ### Command relocation, alt text, debug logging (2026-07-24, afternoon)
 
 Landed on `chore/overnight-website-devex-audit` alongside the overnight batch
