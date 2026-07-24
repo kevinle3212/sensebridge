@@ -43,7 +43,14 @@ fi
 
 if command -v osv-scanner >/dev/null 2>&1; then
 	echo "== osv-scanner (dependency vulnerabilities) =="
-	osv-scanner --recursive ./
+	# --include-git-root is load-bearing in a linked worktree (.claude/worktrees/*):
+	# osv-scanner treats a directory's own .git as a nested-repo boundary and
+	# skips descending into it by default, and a worktree's .git is a file (the
+	# gitdir pointer) rather than a real directory — without this flag the scan
+	# visits only that one directory and silently reports "No package sources
+	# found" instead of finding website/package-lock.json and package-lock.json.
+	# Harmless on the main checkout (which has no nested git roots to begin with).
+	osv-scanner --recursive --include-git-root ./
 else
 	echo "pre-push: osv-scanner not installed (brew install osv-scanner) — skipping local dependency scan; CI's osv-scan job still runs on push." >&2
 fi

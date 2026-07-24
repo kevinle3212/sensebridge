@@ -10,7 +10,12 @@ input=$(cat)
 # never re-block a stop that a Stop hook already continued — prevents loops
 [ "$(printf '%s' "$input" | jq -r '.stop_hook_active // false')" = "true" ] && exit 0
 
-root="${CLAUDE_PROJECT_DIR:-.}"
+# Resolve the session's actual live working directory (git worktree-aware)
+# instead of CLAUDE_PROJECT_DIR, which stays fixed to the main checkout even
+# when the session is working in a `.claude/worktrees/*` worktree.
+cwd="$(printf '%s' "$input" | jq -r '.cwd // empty')"
+root="$(git -C "${cwd:-${CLAUDE_PROJECT_DIR:-.}}" rev-parse --show-toplevel 2>/dev/null || echo "${CLAUDE_PROJECT_DIR:-.}")"
+
 # ponytail: dirty-tree gate is coarse — pre-existing dirt also triggers it;
 # tighten to session-modified files if it gets noisy.
 git -C "$root" status --porcelain 2>/dev/null | grep -q . || exit 0
