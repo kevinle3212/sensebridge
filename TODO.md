@@ -58,7 +58,7 @@ ended up different from the one being hand-edited (`.claude`'s).
       on PR #28 were attributed to real files under that exact path,
       proving CodeQL follows through to the canonical copy rather than
       skipping symlinked mirrors or losing coverage.
-- [ ] **[P1]** **[Needs owner]** PR #28: confirm the CodeQL check goes green
+- [x] **[P1]** **[Needs owner]** PR #28: confirm the CodeQL check goes green
       once `CodeQL (Swift)` finishes and the aggregate check re-runs (the
       Code Scanning Alerts API, scoped to this branch, already shows zero
       open alerts for every rule the 23-alert check listed — the one still-
@@ -66,7 +66,13 @@ ended up different from the one being hand-edited (`.claude`'s).
       Swift's config was available: "1 configuration present on `main` was
       not found"). Then merge to `main` per the owner's one-time go-ahead to
       bypass the standing "never merge to `main` directly" rule.
-- [ ] **[P1]** **[Needs owner]** Register `~/.ssh/kevinle3212-GitHub.pub` as
+      **Done 2026-07-24** — merged as squash commit `72b6084`. The
+      "CodeQL" PR check never went green on its own even after Swift
+      finished (its "new alerts" diff doesn't respect suppression comments
+      and was comparing against `main`'s own unfixed baseline); merged
+      anyway on the strength of the Alerts API showing zero open alerts on
+      the branch, per the owner's explicit authorization.
+- [x] **[P1]** **[Needs owner]** Register `~/.ssh/kevinle3212-GitHub.pub` as
       an SSH **signing** key on GitHub (Settings → SSH and GPG keys → New
       SSH key → Key type: Signing Key — it's currently only registered as
       an *authentication* key). Root cause found for the recurring Vercel
@@ -86,13 +92,23 @@ ended up different from the one being hand-edited (`.claude`'s).
       requires either the GitHub web UI, or `gh auth refresh -s
       admin:ssh_signing_key` — an interactive OAuth approval — followed by
       `gh ssh-key add ~/.ssh/kevinle3212-GitHub.pub --type signing`).
-- [ ] **[P3]** **[Needs owner]** Confirm the Railway dashboard project
+      **Done 2026-07-24** — owner registered the key as a GitHub signing
+      key. Verified end-to-end with a disposable branch + empty commit:
+      `gh api .../commits/<sha>` now returns
+      `{"verified": true, "reason": "valid"}`, and the matching Vercel
+      status context flipped to `{"state": "success", "description":
+      "Deployment has completed"}` — no more auto-cancel. Test branch and
+      remote ref both deleted after confirming.
+- [x] **[P3]** **[Needs owner]** Confirm the Railway dashboard project
       itself is configured as intended — the owner's request named it but
       the text was garbled; likely "sensebridge" per
       `railway-preview-deploy.yml`'s `--service sensebridge`. The GitHub-side
       `RAILWAY_TOKEN` repo secret is confirmed present (added 2026-07-23),
       but the Railway-side project config isn't checkable from here (no
       Railway API/MCP access in this session).
+      **Done 2026-07-24** — owner confirmed the garbled name was
+      `exquisite-fulfillment`, an unused/stray Railway project, and has
+      deleted it. No further action needed.
 - [ ] **[P3]** The single→double quote conversion (`eslint --rule quotes`)
       only covers the 24 files touched by the CodeQL fix, not the rest of
       `impeccable/scripts/`'s real files (now only one copy to edit, at
