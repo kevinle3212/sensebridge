@@ -8,14 +8,14 @@
  * source changes with full repo context.
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { isGeneratedFile } from './lib/is-generated.mjs';
-import { readBuffer, getBufferPath } from './live/manual-edits-buffer.mjs';
+import fs from "node:fs";
+import path from "node:path";
+import { isGeneratedFile } from "./lib/is-generated.mjs";
+import { readBuffer, getBufferPath } from "./live/manual-edits-buffer.mjs";
 
 const EVIDENCE_VERSION = 1;
-const TEXT_EXTENSIONS = new Set(['.html', '.jsx', '.tsx', '.vue', '.svelte', '.astro', '.js', '.mjs', '.ts']);
-const SEARCH_DIRS = ['src', 'app', 'pages', 'components', 'public', 'views', 'templates', 'site', 'lib', 'data'];
+const TEXT_EXTENSIONS = new Set([".html", ".jsx", ".tsx", ".vue", ".svelte", ".astro", ".js", ".mjs", ".ts"]);
+const SEARCH_DIRS = ["src", "app", "pages", "components", "public", "views", "templates", "site", "lib", "data"];
 const STRONG_LITERAL_MATCH_LIMIT = 8;
 const WEAK_LITERAL_MATCH_LIMIT = 4;
 const OBJECT_KEY_MATCH_LIMIT = 8;
@@ -23,17 +23,17 @@ const LOCATOR_MATCH_LIMIT = 4;
 const CONTEXT_MATCH_LIMIT = 8;
 const CONTEXT_MATCH_PER_HINT = 2;
 const SKIP_DIRS = new Set([
-  'node_modules',
-  '.git',
-  '.impeccable',
-  '.astro',
-  '.next',
-  '.nuxt',
-  '.svelte-kit',
-  'dist',
-  'build',
-  'out',
-  'coverage',
+  "node_modules",
+  ".git",
+  ".impeccable",
+  ".astro",
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  "dist",
+  "build",
+  "out",
+  "coverage",
 ]);
 
 export function buildManualEditEvidence({ cwd = process.cwd(), pageUrl = null } = {}) {
@@ -110,18 +110,18 @@ function buildContextHintsByRef(entry) {
   for (const op of entry.ops || []) {
     const hints = new Set();
     const add = (value) => {
-      const text = normalizeText(decodeBasicHtml(String(value || '')));
+      const text = normalizeText(decodeBasicHtml(String(value || "")));
       if (text.length < 3 || text.length > 160) return;
       if (text === normalizeText(op.originalText) || text === normalizeText(op.newText)) return;
       hints.add(text);
     };
 
     for (const item of op.nearbyEditableTexts || []) {
-      add(typeof item === 'string' ? item : item?.text);
+      add(typeof item === "string" ? item : item?.text);
     }
-    const outer = typeof entry.element?.outerHTML === 'string' ? entry.element.outerHTML : '';
+    const outer = typeof entry.element?.outerHTML === "string" ? entry.element.outerHTML : "";
     for (const match of outer.matchAll(/data-impeccable-original-text="([^"]*)"/g)) add(match[1]);
-    if (typeof entry.element?.textContent === 'string') {
+    if (typeof entry.element?.textContent === "string") {
       for (const chunk of entry.element.textContent.split(/\s{2,}|\n|\t/)) add(chunk);
     }
     map.set(op.ref, [...hints].slice(0, 16));
@@ -130,7 +130,7 @@ function buildContextHintsByRef(entry) {
 }
 
 function buildCandidatesForOp(op, cwd, searchFiles) {
-  const originalText = String(op.originalText || '');
+  const originalText = String(op.originalText || "");
   const contextNeedles = op.contextHints || [];
   return {
     entryId: op.entryId,
@@ -159,25 +159,25 @@ function analyzeSourceHint(op, cwd) {
   const file = path.resolve(cwd, hint.file);
   const relativeFile = path.relative(cwd, file);
   if (!isPathInsideOrEqual(cwd, file)) {
-    return { ...hint, status: 'outside_cwd', relativeFile: hint.file };
+    return { ...hint, status: "outside_cwd", relativeFile: hint.file };
   }
   if (!fs.existsSync(file)) {
-    return { ...hint, status: 'file_missing', relativeFile };
+    return { ...hint, status: "file_missing", relativeFile };
   }
   if (isGeneratedFile(file, { cwd })) {
-    return { ...hint, status: 'generated', relativeFile };
+    return { ...hint, status: "generated", relativeFile };
   }
 
-  const content = fs.readFileSync(file, 'utf-8');
-  const lines = content.split('\n');
+  const content = fs.readFileSync(file, "utf-8");
+  const lines = content.split("\n");
   const line = hint.line || 1;
   const start = Math.max(0, line - 4);
   const end = Math.min(lines.length, line + 3);
-  const windowText = lines.slice(start, end).join('\n');
-  const containsOriginalText = typeof op.originalText === 'string' && windowText.includes(op.originalText);
+  const windowText = lines.slice(start, end).join("\n");
+  const containsOriginalText = typeof op.originalText === "string" && windowText.includes(op.originalText);
   return {
     ...hint,
-    status: containsOriginalText ? 'ok' : 'text_not_found_near_hint',
+    status: containsOriginalText ? "ok" : "text_not_found_near_hint",
     relativeFile,
     excerpt: lines.slice(start, end).map((text, index) => ({
       line: start + index + 1,
@@ -187,10 +187,10 @@ function analyzeSourceHint(op, cwd) {
 }
 
 function normalizeSourceHint(hint) {
-  if (!hint || typeof hint !== 'object') return {};
+  if (!hint || typeof hint !== "object") return {};
   let line = Number.isFinite(Number(hint.line)) ? Number(hint.line) : null;
   let column = Number.isFinite(Number(hint.column)) ? Number(hint.column) : null;
-  if ((!line || !column) && typeof hint.loc === 'string') {
+  if ((!line || !column) && typeof hint.loc === "string") {
     const match = hint.loc.match(/^(\d+)(?::(\d+))?/);
     if (match) {
       line = Number(match[1]);
@@ -198,8 +198,8 @@ function normalizeSourceHint(hint) {
     }
   }
   return {
-    file: typeof hint.file === 'string' ? hint.file : '',
-    loc: typeof hint.loc === 'string' ? hint.loc : '',
+    file: typeof hint.file === "string" ? hint.file : "",
+    loc: typeof hint.loc === "string" ? hint.loc : "",
     line,
     column,
   };
@@ -253,20 +253,20 @@ function maybeAddSearchFile(file, cwd, seenFiles, out) {
   seenFiles.add(realFile);
   if (isGeneratedFile(file, { cwd })) return;
   let content;
-  try { content = fs.readFileSync(file, 'utf-8'); } catch { return; }
-  out.push({ file, relativeFile: path.relative(cwd, file), content, lines: content.split('\n') });
+  try { content = fs.readFileSync(file, "utf-8"); } catch { return; }
+  out.push({ file, relativeFile: path.relative(cwd, file), content, lines: content.split("\n") });
 }
 
 function findLiteralMatches(searchFiles, needle, { max }) {
-  return findMatches(searchFiles, needle, { kind: 'text', max });
+  return findMatches(searchFiles, needle, { kind: "text", max });
 }
 
 function findObjectKeyMatches(searchFiles, text, { max }) {
-  const re = new RegExp('(["\\\'`])' + escapeRegExp(text) + '\\1(?=\\s*:)', 'g');
+  const re = new RegExp('(["\\\'`])' + escapeRegExp(text) + "\\1(?=\\s*:)", "g");
   const out = [];
   for (const file of searchFiles) {
     for (const match of file.content.matchAll(re)) {
-      out.push(matchForIndex(file, match.index, 'object_key', text));
+      out.push(matchForIndex(file, match.index, "object_key", text));
       if (out.length >= max) return out;
     }
   }
@@ -275,17 +275,17 @@ function findObjectKeyMatches(searchFiles, text, { max }) {
 
 function findLocatorMatches(searchFiles, op, { max }) {
   const needles = [];
-  if (op.elementId) needles.push({ kind: 'id', needle: op.elementId });
+  if (op.elementId) needles.push({ kind: "id", needle: op.elementId });
   for (const cls of op.classes || []) {
-    if (cls) needles.push({ kind: 'class', needle: cls });
+    if (cls) needles.push({ kind: "class", needle: cls });
   }
-  if (op.tag) needles.push({ kind: 'tag', needle: '<' + op.tag });
+  if (op.tag) needles.push({ kind: "tag", needle: "<" + op.tag });
 
   const out = [];
   const seen = new Set();
   for (const { kind, needle } of needles) {
     for (const match of findMatches(searchFiles, needle, { kind, max })) {
-      const key = match.file + ':' + match.line + ':' + kind + ':' + needle;
+      const key = match.file + ":" + match.line + ":" + kind + ":" + needle;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push({ ...match, needle });
@@ -299,8 +299,8 @@ function findContextMatches(searchFiles, hints, { maxPerHint, max }) {
   const out = [];
   const seen = new Set();
   for (const hint of hints || []) {
-    for (const match of findMatches(searchFiles, hint, { kind: 'context', max: maxPerHint })) {
-      const key = match.file + ':' + match.line + ':' + hint;
+    for (const match of findMatches(searchFiles, hint, { kind: "context", max: maxPerHint })) {
+      const key = match.file + ":" + match.line + ":" + hint;
       if (seen.has(key)) continue;
       seen.add(key);
       out.push({ ...match, needle: hint });
@@ -311,7 +311,7 @@ function findContextMatches(searchFiles, hints, { maxPerHint, max }) {
 }
 
 function findMatches(searchFiles, needle, { kind, max }) {
-  const text = String(needle || '');
+  const text = String(needle || "");
   if (!text) return [];
   const out = [];
   for (const file of searchFiles) {
@@ -328,8 +328,8 @@ function findMatches(searchFiles, needle, { kind, max }) {
 }
 
 function matchForIndex(file, index, kind, needle) {
-  const line = file.content.slice(0, index).split('\n').length;
-  const lineText = file.lines[line - 1] || '';
+  const line = file.content.slice(0, index).split("\n").length;
+  const lineText = file.lines[line - 1] || "";
   return {
     kind,
     file: file.relativeFile,
@@ -341,11 +341,11 @@ function matchForIndex(file, index, kind, needle) {
 
 function isPathInsideOrEqual(cwd, file) {
   const rel = path.relative(path.resolve(cwd), path.resolve(file));
-  return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+  return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
 }
 
 function normalizeText(value) {
-  return String(value || '').replace(/\s+/g, ' ').trim();
+  return String(value || "").replace(/\s+/g, " ").trim();
 }
 
 function decodeBasicHtml(value) {
@@ -356,11 +356,11 @@ function decodeBasicHtml(value) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
 }
 
 function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

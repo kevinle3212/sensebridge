@@ -6,7 +6,7 @@ function isFullPage(content) {
   let previous;
   do {
     previous = stripped;
-    stripped = stripped.replace(/<!--[\s\S]*?-->/g, '');
+    stripped = stripped.replace(/<!--[\s\S]*?-->/g, "");
   } while (stripped !== previous);
   return /<!doctype\s|<html[\s>]|<head[\s>]/i.test(stripped);
 }

@@ -3,9 +3,9 @@
  * Print durable recovery status for Impeccable live sessions.
  */
 
-import { createLiveSessionStore } from './live/session-store.mjs';
-import { readLiveServerInfo } from './lib/impeccable-paths.mjs';
-import { manualApplyResumeHint } from './live-resume.mjs';
+import { createLiveSessionStore } from "./live/session-store.mjs";
+import { readLiveServerInfo } from "./lib/impeccable-paths.mjs";
+import { manualApplyResumeHint } from "./live-resume.mjs";
 
 function readServerInfo() {
   return readLiveServerInfo(process.cwd())?.info || null;
@@ -43,22 +43,22 @@ export async function statusCli() {
     recoveryHint: manualApply
       ? manualApplyResumeHint(manualApply)
       : server
-        ? 'Run live-poll.mjs to continue pending work, or live-complete.mjs --id <session> after manual cleanup.'
-        : 'Start live-server.mjs to requeue pending durable events, then run live-poll.mjs.',
+        ? "Run live-poll.mjs to continue pending work, or live-complete.mjs --id <session> after manual cleanup."
+        : "Start live-server.mjs to requeue pending durable events, then run live-poll.mjs.",
   };
   console.log(JSON.stringify(payload, null, 2));
 }
 
 function findPendingManualApply(server, activeSessions) {
-  const fromServer = server?.pendingEvents?.find((event) => event?.type === 'manual_edit_apply');
+  const fromServer = server?.pendingEvents?.find((event) => event?.type === "manual_edit_apply");
   if (fromServer) return fromServer;
   const fromSession = activeSessions
     ?.map((session) => session.pendingEvent)
-    .find((event) => event?.type === 'manual_edit_apply');
+    .find((event) => event?.type === "manual_edit_apply");
   return fromSession || null;
 }
 
 const _running = process.argv[1];
-if (_running?.endsWith('live-status.mjs') || _running?.endsWith('live-status.mjs/')) {
+if (_running?.endsWith("live-status.mjs") || _running?.endsWith("live-status.mjs/")) {
   statusCli();
 }

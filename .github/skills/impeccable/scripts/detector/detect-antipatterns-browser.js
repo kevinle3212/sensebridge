@@ -10,16 +10,16 @@
  * Re-scan: window.impeccableScan()
  */
 (function () {
-if (typeof window === 'undefined') return;
+if (typeof window === "undefined") return;
 // --- cli/engine/shared/constants.mjs ---
 // ─── Section 1: Constants ───────────────────────────────────────────────────
 
 const SAFE_TAGS = new Set([
-  'blockquote', 'nav', 'a', 'input', 'textarea', 'select',
-  'pre', 'code', 'span', 'th', 'td', 'tr', 'li', 'label',
-  'button', 'hr', 'html', 'head', 'body', 'script', 'style',
-  'link', 'meta', 'title', 'br', 'img', 'svg', 'path', 'circle',
-  'rect', 'line', 'polyline', 'polygon', 'g', 'defs', 'use',
+  "blockquote", "nav", "a", "input", "textarea", "select",
+  "pre", "code", "span", "th", "td", "tr", "li", "label",
+  "button", "hr", "html", "head", "body", "script", "style",
+  "link", "meta", "title", "br", "img", "svg", "path", "circle",
+  "rect", "line", "polyline", "polygon", "g", "defs", "use",
 ]);
 
 // Per-check safe-tags override for the border (side-tab / border-accent)
@@ -31,50 +31,50 @@ const SAFE_TAGS = new Set([
 // already filter out plain inline form labels so this does not introduce
 // false positives. See modern-color-borders.html for the test matrix.
 const BORDER_SAFE_TAGS = new Set(
-  [...SAFE_TAGS].filter(t => t !== 'label')
+  [...SAFE_TAGS].filter(t => t !== "label")
 );
 
 const OVERUSED_FONTS = new Set([
   // Older monoculture (still ubiquitous):
-  'inter', 'roboto', 'open sans', 'lato', 'montserrat', 'arial', 'helvetica',
+  "inter", "roboto", "open sans", "lato", "montserrat", "arial", "helvetica",
   // Newer monoculture (the Anthropic-skill / Vercel / GitHub default wave):
-  'fraunces', 'instrument sans', 'instrument serif',
-  'geist', 'geist sans', 'geist mono',
-  'mona sans',
-  'plus jakarta sans', 'space grotesk', 'recoleta',
+  "fraunces", "instrument sans", "instrument serif",
+  "geist", "geist sans", "geist mono",
+  "mona sans",
+  "plus jakarta sans", "space grotesk", "recoleta",
 ]);
 
 // Brand-associated fonts: don't flag these as "overused" on the brand's own domains.
 // Keys are font names, values are arrays of hostname suffixes where the font is allowed.
 const GOOGLE_DOMAINS = [
-  'google.com', 'youtube.com', 'android.com', 'chromium.org',
-  'chrome.com', 'web.dev', 'gstatic.com', 'firebase.google.com',
+  "google.com", "youtube.com", "android.com", "chromium.org",
+  "chrome.com", "web.dev", "gstatic.com", "firebase.google.com",
 ];
-const VERCEL_DOMAINS = ['vercel.com', 'nextjs.org', 'v0.app'];
-const GITHUB_DOMAINS = ['github.com', 'githubnext.com'];
+const VERCEL_DOMAINS = ["vercel.com", "nextjs.org", "v0.app"];
+const GITHUB_DOMAINS = ["github.com", "githubnext.com"];
 const BRAND_FONT_DOMAINS = {
-  'roboto': GOOGLE_DOMAINS,
-  'google sans': GOOGLE_DOMAINS,
-  'product sans': GOOGLE_DOMAINS,
-  'geist': VERCEL_DOMAINS,
-  'geist sans': VERCEL_DOMAINS,
-  'geist mono': VERCEL_DOMAINS,
-  'mona sans': GITHUB_DOMAINS,
+  "roboto": GOOGLE_DOMAINS,
+  "google sans": GOOGLE_DOMAINS,
+  "product sans": GOOGLE_DOMAINS,
+  "geist": VERCEL_DOMAINS,
+  "geist sans": VERCEL_DOMAINS,
+  "geist mono": VERCEL_DOMAINS,
+  "mona sans": GITHUB_DOMAINS,
 };
 
 function isBrandFontOnOwnDomain(font) {
-  if (typeof location === 'undefined') return false;
+  if (typeof location === "undefined") return false;
   const allowed = BRAND_FONT_DOMAINS[font];
   if (!allowed) return false;
   const host = location.hostname.toLowerCase();
-  return allowed.some(suffix => host === suffix || host.endsWith('.' + suffix));
+  return allowed.some(suffix => host === suffix || host.endsWith("." + suffix));
 }
 
 const GENERIC_FONTS = new Set([
-  'serif', 'sans-serif', 'monospace', 'cursive', 'fantasy',
-  'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded',
-  '-apple-system', 'blinkmacsystemfont', 'segoe ui',
-  'inherit', 'initial', 'unset', 'revert',
+  "serif", "sans-serif", "monospace", "cursive", "fantasy",
+  "system-ui", "ui-serif", "ui-sans-serif", "ui-monospace", "ui-rounded",
+  "-apple-system", "blinkmacsystemfont", "segoe ui",
+  "inherit", "initial", "unset", "revert",
 ]);
 
 // WCAG large text thresholds are defined in points: 18pt normal text and
@@ -86,465 +86,465 @@ const WCAG_LARGE_BOLD_TEXT_PX = 14 * (96 / 72);
 // the primary face is unknown but the stack ends in the generic `serif` token,
 // which catches custom/private faces with a serif fallback.
 const KNOWN_SERIF_FONTS = new Set([
-  'fraunces', 'recoleta', 'newsreader', 'playfair display', 'playfair',
-  'cormorant', 'cormorant garamond', 'garamond', 'eb garamond',
-  'tiempos', 'tiempos headline', 'tiempos text',
-  'lora', 'vollkorn', 'spectral',
-  'source serif pro', 'source serif 4', 'source serif',
-  'ibm plex serif', 'merriweather',
-  'libre caslon', 'libre baskerville', 'baskerville',
-  'georgia', 'times new roman', 'times',
-  'dm serif display', 'dm serif text',
-  'instrument serif', 'gt sectra', 'ogg', 'canela',
-  'freight display', 'freight text',
+  "fraunces", "recoleta", "newsreader", "playfair display", "playfair",
+  "cormorant", "cormorant garamond", "garamond", "eb garamond",
+  "tiempos", "tiempos headline", "tiempos text",
+  "lora", "vollkorn", "spectral",
+  "source serif pro", "source serif 4", "source serif",
+  "ibm plex serif", "merriweather",
+  "libre caslon", "libre baskerville", "baskerville",
+  "georgia", "times new roman", "times",
+  "dm serif display", "dm serif text",
+  "instrument serif", "gt sectra", "ogg", "canela",
+  "freight display", "freight text",
 ]);
 
 // --- cli/engine/registry/antipatterns.mjs ---
 const ANTIPATTERNS = [
   // ── AI slop: tells that something was AI-generated ──
   {
-    id: 'side-tab',
-    category: 'slop',
-    name: 'Side-tab accent border',
+    id: "side-tab",
+    category: "slop",
+    name: "Side-tab accent border",
     description:
-      'Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.',
-    skillSection: 'Visual Details',
-    skillGuideline: 'colored accent stripe',
+      "Thick colored border on one side of a card — the most recognizable tell of AI-generated UIs. Use a subtler accent or remove it entirely.",
+    skillSection: "Visual Details",
+    skillGuideline: "colored accent stripe",
   },
   {
-    id: 'border-accent-on-rounded',
-    category: 'slop',
-    name: 'Border accent on rounded element',
+    id: "border-accent-on-rounded",
+    category: "slop",
+    name: "Border accent on rounded element",
     description:
-      'Thick accent border on a rounded card — the border clashes with the rounded corners. Remove the border or the border-radius.',
-    skillSection: 'Visual Details',
-    skillGuideline: 'colored accent stripe',
+      "Thick accent border on a rounded card — the border clashes with the rounded corners. Remove the border or the border-radius.",
+    skillSection: "Visual Details",
+    skillGuideline: "colored accent stripe",
   },
   {
-    id: 'overused-font',
-    category: 'slop',
-    scopes: ['type'],
-    name: 'Overused font',
+    id: "overused-font",
+    category: "slop",
+    scopes: ["type"],
+    name: "Overused font",
     description:
-      'Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives your interface personality.',
-    skillSection: 'Typography',
-    skillGuideline: 'overused fonts like Inter',
+      "Inter, Roboto, Fraunces, Geist, Plus Jakarta Sans, and Space Grotesk are used on so many sites they no longer feel distinctive. Each new wave of AI-generated UIs converges on the same handful of faces. Choose a face that gives your interface personality.",
+    skillSection: "Typography",
+    skillGuideline: "overused fonts like Inter",
   },
   {
-    id: 'single-font',
-    category: 'slop',
-    scopes: ['type'],
-    name: 'Single font for everything',
+    id: "single-font",
+    category: "slop",
+    scopes: ["type"],
+    name: "Single font for everything",
     description:
-      'Only one font family is used for the entire page. Pair a distinctive display font with a refined body font to create typographic hierarchy.',
-    skillSection: 'Typography',
-    skillGuideline: 'only one font family for the entire page',
+      "Only one font family is used for the entire page. Pair a distinctive display font with a refined body font to create typographic hierarchy.",
+    skillSection: "Typography",
+    skillGuideline: "only one font family for the entire page",
   },
   {
-    id: 'flat-type-hierarchy',
-    category: 'slop',
-    scopes: ['type'],
-    name: 'Flat type hierarchy',
+    id: "flat-type-hierarchy",
+    category: "slop",
+    scopes: ["type"],
+    name: "Flat type hierarchy",
     description:
-      'Font sizes are too close together — no clear visual hierarchy. Use fewer sizes with more contrast (aim for at least a 1.25 ratio between steps).',
-    skillSection: 'Typography',
-    skillGuideline: 'flat type hierarchy',
+      "Font sizes are too close together — no clear visual hierarchy. Use fewer sizes with more contrast (aim for at least a 1.25 ratio between steps).",
+    skillSection: "Typography",
+    skillGuideline: "flat type hierarchy",
   },
   {
-    id: 'gradient-text',
-    category: 'slop',
-    name: 'Gradient text',
+    id: "gradient-text",
+    category: "slop",
+    name: "Gradient text",
     description:
-      'Gradient text is decorative rather than meaningful — a common AI tell, especially on headings and metrics. Use solid colors for text.',
-    skillSection: 'Color & Contrast',
-    skillGuideline: 'gradient text for',
+      "Gradient text is decorative rather than meaningful — a common AI tell, especially on headings and metrics. Use solid colors for text.",
+    skillSection: "Color & Contrast",
+    skillGuideline: "gradient text for",
   },
   {
-    id: 'ai-color-palette',
-    category: 'slop',
-    name: 'AI color palette',
+    id: "ai-color-palette",
+    category: "slop",
+    name: "AI color palette",
     description:
-      'Purple/violet gradients and cyan-on-dark are the most recognizable tells of AI-generated UIs. Choose a distinctive, intentional palette.',
-    skillSection: 'Color & Contrast',
-    skillGuideline: 'AI color palette',
+      "Purple/violet gradients and cyan-on-dark are the most recognizable tells of AI-generated UIs. Choose a distinctive, intentional palette.",
+    skillSection: "Color & Contrast",
+    skillGuideline: "AI color palette",
   },
   {
-    id: 'cream-palette',
-    category: 'slop',
-    name: 'Cream / beige palette',
+    id: "cream-palette",
+    category: "slop",
+    name: "Cream / beige palette",
     description:
       'A warm cream or beige page background has become the default "tasteful" AI surface, reached for by reflex. Choose a background that comes from a deliberate palette, not the safe warm off-white.',
-    skillSection: 'Color & Contrast',
-    skillGuideline: 'cream and beige as the default surface',
+    skillSection: "Color & Contrast",
+    skillGuideline: "cream and beige as the default surface",
   },
   {
-    id: 'nested-cards',
-    category: 'slop',
-    scopes: ['layout'],
-    name: 'Nested cards',
+    id: "nested-cards",
+    category: "slop",
+    scopes: ["layout"],
+    name: "Nested cards",
     description:
-      'Cards inside cards create visual noise and excessive depth. Flatten the hierarchy — use spacing, typography, and dividers instead of nesting containers.',
-    skillSection: 'Layout & Space',
-    skillGuideline: 'Nest cards inside cards',
+      "Cards inside cards create visual noise and excessive depth. Flatten the hierarchy — use spacing, typography, and dividers instead of nesting containers.",
+    skillSection: "Layout & Space",
+    skillGuideline: "Nest cards inside cards",
   },
   {
-    id: 'monotonous-spacing',
-    category: 'slop',
-    scopes: ['layout'],
-    name: 'Monotonous spacing',
+    id: "monotonous-spacing",
+    category: "slop",
+    scopes: ["layout"],
+    name: "Monotonous spacing",
     description:
-      'The same spacing value used everywhere — no rhythm, no variation. Use tight groupings for related items and generous separations between sections.',
-    skillSection: 'Layout & Space',
-    skillGuideline: 'same spacing everywhere',
+      "The same spacing value used everywhere — no rhythm, no variation. Use tight groupings for related items and generous separations between sections.",
+    skillSection: "Layout & Space",
+    skillGuideline: "same spacing everywhere",
   },
   {
-    id: 'bounce-easing',
-    category: 'slop',
-    name: 'Bounce or elastic easing',
+    id: "bounce-easing",
+    category: "slop",
+    name: "Bounce or elastic easing",
     description:
-      'Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.',
-    skillSection: 'Motion',
-    skillGuideline: 'bounce or elastic easing',
+      "Bounce and elastic easing feel dated and tacky. Real objects decelerate smoothly — use exponential easing (ease-out-quart/quint/expo) instead.",
+    skillSection: "Motion",
+    skillGuideline: "bounce or elastic easing",
   },
   {
-    id: 'dark-glow',
-    category: 'slop',
-    name: 'Dark mode with glowing accents',
+    id: "dark-glow",
+    category: "slop",
+    name: "Dark mode with glowing accents",
     description:
       'Dark backgrounds with colored box-shadow glows are the default "cool" look of AI-generated UIs. Use subtle, purposeful lighting instead — or skip the dark theme entirely.',
-    skillSection: 'Color & Contrast',
-    skillGuideline: 'dark mode with glowing accents',
+    skillSection: "Color & Contrast",
+    skillGuideline: "dark mode with glowing accents",
   },
   {
-    id: 'icon-tile-stack',
-    category: 'slop',
-    scopes: ['layout'],
-    name: 'Icon tile stacked above heading',
+    id: "icon-tile-stack",
+    category: "slop",
+    scopes: ["layout"],
+    name: "Icon tile stacked above heading",
     description:
-      'A small rounded-square icon container above a heading is the universal AI feature-card template — every generator outputs this exact shape. Try a side-by-side icon and heading, or let the icon sit in flow without its own container.',
-    skillSection: 'Typography',
-    skillGuideline: 'large icons with rounded corners above every heading',
+      "A small rounded-square icon container above a heading is the universal AI feature-card template — every generator outputs this exact shape. Try a side-by-side icon and heading, or let the icon sit in flow without its own container.",
+    skillSection: "Typography",
+    skillGuideline: "large icons with rounded corners above every heading",
   },
   {
-    id: 'italic-serif-display',
-    category: 'slop',
-    scopes: ['type'],
-    name: 'Italic serif display headline',
+    id: "italic-serif-display",
+    category: "slop",
+    scopes: ["type"],
+    name: "Italic serif display headline",
     description:
-      'Oversized italic serif (Fraunces, Recoleta, Playfair, Newsreader-italic) as the primary hero headline reads as taste in isolation but has become the universal AI-startup landing page hero. Set roman, or move to a non-serif display face. Editorial / magazine register may legitimately want this — judge by context.',
-    skillSection: 'Typography',
-    skillGuideline: 'oversized italic serif as the hero headline',
+      "Oversized italic serif (Fraunces, Recoleta, Playfair, Newsreader-italic) as the primary hero headline reads as taste in isolation but has become the universal AI-startup landing page hero. Set roman, or move to a non-serif display face. Editorial / magazine register may legitimately want this — judge by context.",
+    skillSection: "Typography",
+    skillGuideline: "oversized italic serif as the hero headline",
   },
   {
-    id: 'hero-eyebrow-chip',
-    category: 'slop',
-    scopes: ['type'],
-    name: 'Hero eyebrow / pill chip',
+    id: "hero-eyebrow-chip",
+    category: "slop",
+    scopes: ["type"],
+    name: "Hero eyebrow / pill chip",
     description:
-      'A tiny uppercase letter-spaced label sitting immediately above an oversized hero headline — or the same shape rendered as a pill chip — is now the default AI SaaS hero. Drop the eyebrow, integrate the kicker into the headline, or run it as a navigation breadcrumb instead.',
-    skillSection: 'Typography',
-    skillGuideline: 'tiny uppercase tracked label above the hero headline',
+      "A tiny uppercase letter-spaced label sitting immediately above an oversized hero headline — or the same shape rendered as a pill chip — is now the default AI SaaS hero. Drop the eyebrow, integrate the kicker into the headline, or run it as a navigation breadcrumb instead.",
+    skillSection: "Typography",
+    skillGuideline: "tiny uppercase tracked label above the hero headline",
   },
   {
-    id: 'repeated-section-kickers',
-    category: 'slop',
-    scopes: ['type'],
-    severity: 'advisory',
-    name: 'Repeated section kicker labels',
+    id: "repeated-section-kickers",
+    category: "slop",
+    scopes: ["type"],
+    severity: "advisory",
+    name: "Repeated section kicker labels",
     description:
-      'Repeating tiny uppercase tracked labels above section headings turns a brand page into AI editorial scaffolding. Replace them with stronger structure, artifacts, imagery, or a deliberate brand system.',
-    skillSection: 'Typography',
-    skillGuideline: 'repeated eyebrow or kicker labels as section scaffolding',
+      "Repeating tiny uppercase tracked labels above section headings turns a brand page into AI editorial scaffolding. Replace them with stronger structure, artifacts, imagery, or a deliberate brand system.",
+    skillSection: "Typography",
+    skillGuideline: "repeated eyebrow or kicker labels as section scaffolding",
   },
   {
-    id: 'numbered-section-markers',
-    category: 'slop',
-    scopes: ['layout'],
-    severity: 'advisory',
-    name: 'Numbered section markers (01 / 02 / 03)',
+    id: "numbered-section-markers",
+    category: "slop",
+    scopes: ["layout"],
+    severity: "advisory",
+    name: "Numbered section markers (01 / 02 / 03)",
     description:
-      'Numbered display markers as section labels (01, 02, 03) are the AI editorial scaffold one tier deeper than tracked eyebrow chips. If you find yourself reaching for them, choose a different section cadence.',
-    skillSection: 'Layout & Space',
-    skillGuideline: 'numbered section markers',
+      "Numbered display markers as section labels (01, 02, 03) are the AI editorial scaffold one tier deeper than tracked eyebrow chips. If you find yourself reaching for them, choose a different section cadence.",
+    skillSection: "Layout & Space",
+    skillGuideline: "numbered section markers",
   },
   {
-    id: 'em-dash-overuse',
-    category: 'slop',
-    name: 'Em-dash overuse',
+    id: "em-dash-overuse",
+    category: "slop",
+    name: "Em-dash overuse",
     description:
-      'More than two em-dashes (— or --) in body copy is an AI cadence tell. Use commas, colons, periods, or parentheses instead.',
-    skillSection: 'Copy',
-    skillGuideline: 'no em dashes',
+      "More than two em-dashes (— or --) in body copy is an AI cadence tell. Use commas, colons, periods, or parentheses instead.",
+    skillSection: "Copy",
+    skillGuideline: "no em dashes",
   },
   {
-    id: 'marketing-buzzword',
-    category: 'slop',
-    name: 'Marketing buzzword',
+    id: "marketing-buzzword",
+    category: "slop",
+    name: "Marketing buzzword",
     description:
-      'Generic SaaS phrases (streamline / empower / supercharge / world-class / enterprise-grade / next-generation / cutting-edge / etc) are instant AI tells. Pick a specific verb and noun that says what the product literally does.',
-    skillSection: 'Copy',
-    skillGuideline: 'marketing buzzwords',
+      "Generic SaaS phrases (streamline / empower / supercharge / world-class / enterprise-grade / next-generation / cutting-edge / etc) are instant AI tells. Pick a specific verb and noun that says what the product literally does.",
+    skillSection: "Copy",
+    skillGuideline: "marketing buzzwords",
   },
   {
-    id: 'aphoristic-cadence',
-    category: 'slop',
-    name: 'Aphoristic-cadence copy',
+    id: "aphoristic-cadence",
+    category: "slop",
+    name: "Aphoristic-cadence copy",
     description:
       'Three or more sections landing on a short rebuttal sentence ("X. No Y." / "X. Just Y.") or a manufactured-contrast aphorism ("Not a feature. A platform.") reads as AI cadence, not voice. Once is fine; the pattern is the tell.',
-    skillSection: 'Copy',
-    skillGuideline: 'aphoristic cadence',
+    skillSection: "Copy",
+    skillGuideline: "aphoristic cadence",
   },
   {
-    id: 'oversized-h1',
-    category: 'slop',
-    scopes: ['type'],
-    name: 'Oversized hero headline',
+    id: "oversized-h1",
+    category: "slop",
+    scopes: ["type"],
+    name: "Oversized hero headline",
     description:
-      'A full-sentence headline set at display size ends up dominating the viewport, leaving no room for anything else above the fold. A punchy one- or two-word headline at that size is fine — the problem is a long headline blown up too large. Set long headlines smaller, or tighten the copy.',
-    skillSection: 'Typography',
-    skillGuideline: 'long headline set at display size',
+      "A full-sentence headline set at display size ends up dominating the viewport, leaving no room for anything else above the fold. A punchy one- or two-word headline at that size is fine — the problem is a long headline blown up too large. Set long headlines smaller, or tighten the copy.",
+    skillSection: "Typography",
+    skillGuideline: "long headline set at display size",
   },
   {
-    id: 'extreme-negative-tracking',
-    category: 'slop',
-    scopes: ['type'],
-    name: 'Crushed letter spacing',
+    id: "extreme-negative-tracking",
+    category: "slop",
+    scopes: ["type"],
+    name: "Crushed letter spacing",
     description:
-      'Letter-spacing pulled tighter than the point where characters keep their own shapes costs legibility. Tighten display type optically, not destructively.',
-    skillSection: 'Typography',
-    skillGuideline: 'letter spacing crushed past legibility',
+      "Letter-spacing pulled tighter than the point where characters keep their own shapes costs legibility. Tighten display type optically, not destructively.",
+    skillSection: "Typography",
+    skillGuideline: "letter spacing crushed past legibility",
   },
   {
-    id: 'broken-image',
-    category: 'quality',
-    name: 'Broken or placeholder image',
+    id: "broken-image",
+    category: "quality",
+    name: "Broken or placeholder image",
     description:
-      '<img> tags with empty src, missing src, or placeholder values ship as broken-image boxes. Use real images, generated assets, or remove the tag.',
-    skillSection: 'Imagery',
-    skillGuideline: 'broken image references',
+      "<img> tags with empty src, missing src, or placeholder values ship as broken-image boxes. Use real images, generated assets, or remove the tag.",
+    skillSection: "Imagery",
+    skillGuideline: "broken image references",
   },
 
   // ── Quality: general design and accessibility issues ──
   {
-    id: 'gray-on-color',
-    category: 'quality',
-    name: 'Gray text on colored background',
+    id: "gray-on-color",
+    category: "quality",
+    name: "Gray text on colored background",
     description:
-      'Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.',
-    skillSection: 'Color & Contrast',
-    skillGuideline: 'gray text on colored backgrounds',
+      "Gray text looks washed out on colored backgrounds. Use a darker shade of the background color instead, or white/near-white for contrast.",
+    skillSection: "Color & Contrast",
+    skillGuideline: "gray text on colored backgrounds",
   },
   {
-    id: 'low-contrast',
-    category: 'quality',
-    name: 'Low contrast text',
+    id: "low-contrast",
+    category: "quality",
+    name: "Low contrast text",
     description:
-      'Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.',
+      "Text does not meet WCAG AA contrast requirements (4.5:1 for body, 3:1 for large text). Increase the contrast between text and background.",
   },
   {
-    id: 'layout-transition',
-    category: 'quality',
-    name: 'Layout property animation',
+    id: "layout-transition",
+    category: "quality",
+    name: "Layout property animation",
     description:
-      'Animating width, height, padding, or margin causes layout thrash and janky performance. Use transform and opacity instead, or grid-template-rows for height animations.',
-    skillSection: 'Motion',
-    skillGuideline: 'Animate layout properties',
+      "Animating width, height, padding, or margin causes layout thrash and janky performance. Use transform and opacity instead, or grid-template-rows for height animations.",
+    skillSection: "Motion",
+    skillGuideline: "Animate layout properties",
   },
   {
-    id: 'line-length',
-    category: 'quality',
-    scopes: ['type', 'layout'],
-    name: 'Line length too long',
+    id: "line-length",
+    category: "quality",
+    scopes: ["type", "layout"],
+    name: "Line length too long",
     description:
-      'Text lines wider than ~80 characters are hard to read. The eye loses its place tracking back to the start of the next line. Add a max-width (65ch to 75ch) to text containers.',
-    skillSection: 'Layout & Space',
-    skillGuideline: 'wrap beyond ~80 characters',
+      "Text lines wider than ~80 characters are hard to read. The eye loses its place tracking back to the start of the next line. Add a max-width (65ch to 75ch) to text containers.",
+    skillSection: "Layout & Space",
+    skillGuideline: "wrap beyond ~80 characters",
   },
   {
-    id: 'cramped-padding',
-    category: 'quality',
-    scopes: ['layout'],
-    name: 'Cramped padding',
+    id: "cramped-padding",
+    category: "quality",
+    scopes: ["layout"],
+    name: "Cramped padding",
     description:
-      'Text is too close to the edge of its container. Two shapes: (1) an element with its own text where the padding is too low for the font size, and (2) a wrapper with text-bearing children and near-zero padding against a visible boundary (border, outline, or non-transparent background) — children land flush against the boundary line. Add at least 8px (ideally 12–16px) of padding inside bordered, outlined, or colored containers.',
-    skillSection: 'Layout & Space',
-    skillGuideline: 'inside bordered or colored containers',
+      "Text is too close to the edge of its container. Two shapes: (1) an element with its own text where the padding is too low for the font size, and (2) a wrapper with text-bearing children and near-zero padding against a visible boundary (border, outline, or non-transparent background) — children land flush against the boundary line. Add at least 8px (ideally 12–16px) of padding inside bordered, outlined, or colored containers.",
+    skillSection: "Layout & Space",
+    skillGuideline: "inside bordered or colored containers",
   },
   {
-    id: 'body-text-viewport-edge',
-    category: 'quality',
-    scopes: ['layout'],
-    name: 'Body text touching viewport edge',
+    id: "body-text-viewport-edge",
+    category: "quality",
+    scopes: ["layout"],
+    name: "Body text touching viewport edge",
     description:
-      'Body paragraphs render flush against the left or right viewport edge with no container providing horizontal padding. Wrap content in a container with at least 16px (ideally 24-32px) of horizontal padding, or apply max-width with mx-auto.',
+      "Body paragraphs render flush against the left or right viewport edge with no container providing horizontal padding. Wrap content in a container with at least 16px (ideally 24-32px) of horizontal padding, or apply max-width with mx-auto.",
   },
   {
-    id: 'tight-leading',
-    category: 'quality',
-    scopes: ['type'],
-    name: 'Tight line height',
+    id: "tight-leading",
+    category: "quality",
+    scopes: ["type"],
+    name: "Tight line height",
     description:
-      'Line height below 1.3x the font size makes multi-line text hard to read. Use 1.5 to 1.7 for body text so lines have room to breathe.',
+      "Line height below 1.3x the font size makes multi-line text hard to read. Use 1.5 to 1.7 for body text so lines have room to breathe.",
   },
   {
-    id: 'skipped-heading',
-    category: 'quality',
-    scopes: ['type'],
-    name: 'Skipped heading level',
+    id: "skipped-heading",
+    category: "quality",
+    scopes: ["type"],
+    name: "Skipped heading level",
     description:
-      'Heading levels should not skip (e.g. h1 then h3 with no h2). Screen readers use heading hierarchy for navigation. Skipping levels breaks the document outline.',
+      "Heading levels should not skip (e.g. h1 then h3 with no h2). Screen readers use heading hierarchy for navigation. Skipping levels breaks the document outline.",
   },
   {
-    id: 'justified-text',
-    category: 'quality',
-    scopes: ['type'],
-    name: 'Justified text',
+    id: "justified-text",
+    category: "quality",
+    scopes: ["type"],
+    name: "Justified text",
     description:
       'Justified text without hyphenation creates uneven word spacing ("rivers of white"). Use text-align: left for body text, or enable hyphens: auto if you must justify.',
   },
   {
-    id: 'tiny-text',
-    category: 'quality',
-    scopes: ['type'],
-    name: 'Tiny body text',
+    id: "tiny-text",
+    category: "quality",
+    scopes: ["type"],
+    name: "Tiny body text",
     description:
-      'Body text below 12px is hard to read, especially on high-DPI screens. Use at least 14px for body content, 16px is ideal.',
+      "Body text below 12px is hard to read, especially on high-DPI screens. Use at least 14px for body content, 16px is ideal.",
   },
   {
-    id: 'all-caps-body',
-    category: 'quality',
-    scopes: ['type'],
-    name: 'All-caps body text',
+    id: "all-caps-body",
+    category: "quality",
+    scopes: ["type"],
+    name: "All-caps body text",
     description:
-      'Long passages in uppercase are hard to read. We recognize words by shape (ascenders and descenders), which all-caps removes. Reserve uppercase for short labels and headings.',
-    skillSection: 'Typography',
-    skillGuideline: 'long body passages in uppercase',
+      "Long passages in uppercase are hard to read. We recognize words by shape (ascenders and descenders), which all-caps removes. Reserve uppercase for short labels and headings.",
+    skillSection: "Typography",
+    skillGuideline: "long body passages in uppercase",
   },
   {
-    id: 'wide-tracking',
-    category: 'quality',
-    scopes: ['type'],
-    name: 'Wide letter spacing on body text',
+    id: "wide-tracking",
+    category: "quality",
+    scopes: ["type"],
+    name: "Wide letter spacing on body text",
     description:
-      'Letter spacing above 0.05em on body text disrupts natural character groupings and slows reading. Reserve wide tracking for short uppercase labels only.',
+      "Letter spacing above 0.05em on body text disrupts natural character groupings and slows reading. Reserve wide tracking for short uppercase labels only.",
   },
   {
-    id: 'text-overflow',
-    category: 'quality',
-    scopes: ['layout'],
-    name: 'Content overflowing its container',
+    id: "text-overflow",
+    category: "quality",
+    scopes: ["layout"],
+    name: "Content overflowing its container",
     description:
-      'Content renders wider than its container, spilling out or forcing a horizontal scrollbar. Let text wrap, constrain widths, or give the region a deliberate scroll affordance.',
-    skillSection: 'Layout & Space',
-    skillGuideline: 'content wider than its container',
+      "Content renders wider than its container, spilling out or forcing a horizontal scrollbar. Let text wrap, constrain widths, or give the region a deliberate scroll affordance.",
+    skillSection: "Layout & Space",
+    skillGuideline: "content wider than its container",
   },
   {
-    id: 'clipped-overflow-container',
-    category: 'quality',
-    scopes: ['layout'],
-    name: 'Positioned child clipped by overflow container',
+    id: "clipped-overflow-container",
+    category: "quality",
+    scopes: ["layout"],
+    name: "Positioned child clipped by overflow container",
     description:
-      'A clipping container (overflow hidden or clip) wrapping an absolutely-positioned child cuts off tooltips, menus, and popovers that need to escape. Let the overflow be visible, or move the positioned layer out of the clip.',
-    skillSection: 'Layout & Space',
-    skillGuideline: 'overflow container clipping positioned children',
+      "A clipping container (overflow hidden or clip) wrapping an absolutely-positioned child cuts off tooltips, menus, and popovers that need to escape. Let the overflow be visible, or move the positioned layer out of the clip.",
+    skillSection: "Layout & Space",
+    skillGuideline: "overflow container clipping positioned children",
   },
   {
-    id: 'design-system-font',
-    category: 'quality',
-    scopes: ['type'],
-    name: 'Font outside DESIGN.md',
+    id: "design-system-font",
+    category: "quality",
+    scopes: ["type"],
+    name: "Font outside DESIGN.md",
     description:
-      'A font is used that is not declared in DESIGN.md typography. Use the documented type system or update DESIGN.md if this is an intentional brand addition.',
-    skillSection: 'Typography',
-    skillGuideline: 'font family outside the project design system',
+      "A font is used that is not declared in DESIGN.md typography. Use the documented type system or update DESIGN.md if this is an intentional brand addition.",
+    skillSection: "Typography",
+    skillGuideline: "font family outside the project design system",
   },
   {
-    id: 'design-system-color',
-    category: 'quality',
-    severity: 'advisory',
-    name: 'Color outside DESIGN.md',
+    id: "design-system-color",
+    category: "quality",
+    severity: "advisory",
+    name: "Color outside DESIGN.md",
     description:
-      'A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.',
-    skillSection: 'Color & Contrast',
-    skillGuideline: 'literal color outside the project design system',
+      "A literal color is outside the DESIGN.md palette and sidecar tonal ramps. This may be legitimate, but it should be an intentional design-system addition rather than drift.",
+    skillSection: "Color & Contrast",
+    skillGuideline: "literal color outside the project design system",
   },
   {
-    id: 'design-system-radius',
-    category: 'quality',
-    severity: 'advisory',
-    name: 'Radius outside DESIGN.md',
+    id: "design-system-radius",
+    category: "quality",
+    severity: "advisory",
+    name: "Radius outside DESIGN.md",
     description:
-      'A border-radius value is outside the DESIGN.md rounded scale. Use a documented radius token or update the design system if the new shape is intentional.',
-    skillSection: 'Visual Details',
-    skillGuideline: 'border radius outside the project design system',
+      "A border-radius value is outside the DESIGN.md rounded scale. Use a documented radius token or update the design system if the new shape is intentional.",
+    skillSection: "Visual Details",
+    skillGuideline: "border radius outside the project design system",
   },
   {
-    id: 'design-system-font-size',
-    category: 'quality',
-    severity: 'advisory',
-    scopes: ['type'],
-    name: 'Font size outside DESIGN.md',
+    id: "design-system-font-size",
+    category: "quality",
+    severity: "advisory",
+    scopes: ["type"],
+    name: "Font size outside DESIGN.md",
     description:
-      'A literal font-size is off the type ramp documented in DESIGN.md typography. Use a documented size step or update the design system if the new step is intentional.',
-    skillSection: 'Typography',
-    skillGuideline: 'font size outside the project design system',
+      "A literal font-size is off the type ramp documented in DESIGN.md typography. Use a documented size step or update the design system if the new step is intentional.",
+    skillSection: "Typography",
+    skillGuideline: "font size outside the project design system",
   },
 
   // ── Provider tells: opt-in via --gpt / --gemini (gated off by default) ──
   {
-    id: 'gpt-thin-border-wide-shadow',
-    category: 'slop',
-    severity: 'advisory',
-    gated: 'gpt',
-    name: 'Hairline border with wide shadow',
+    id: "gpt-thin-border-wide-shadow",
+    category: "slop",
+    severity: "advisory",
+    gated: "gpt",
+    name: "Hairline border with wide shadow",
     description:
-      'A hairline border paired with a wide, diffuse shadow is a recurring generated-UI signature. Commit to one — a defined edge or a soft elevation — rather than both at once.',
-    skillSection: 'Visual Details',
-    skillGuideline: 'hairline border plus wide diffuse shadow',
+      "A hairline border paired with a wide, diffuse shadow is a recurring generated-UI signature. Commit to one — a defined edge or a soft elevation — rather than both at once.",
+    skillSection: "Visual Details",
+    skillGuideline: "hairline border plus wide diffuse shadow",
   },
   {
-    id: 'repeating-stripes-gradient',
-    category: 'slop',
-    severity: 'advisory',
-    gated: 'gpt',
-    name: 'Repeating-gradient stripes',
+    id: "repeating-stripes-gradient",
+    category: "slop",
+    severity: "advisory",
+    gated: "gpt",
+    name: "Repeating-gradient stripes",
     description:
-      'Repeating-gradient stripes used as surface decoration are a recurring generated-UI signature. Reach for a deliberate texture or leave the surface plain.',
-    skillSection: 'Visual Details',
-    skillGuideline: 'repeating-gradient decorative stripes',
+      "Repeating-gradient stripes used as surface decoration are a recurring generated-UI signature. Reach for a deliberate texture or leave the surface plain.",
+    skillSection: "Visual Details",
+    skillGuideline: "repeating-gradient decorative stripes",
   },
   {
-    id: 'codex-grid-background',
-    category: 'slop',
-    severity: 'advisory',
-    gated: 'gpt',
-    name: 'Decorative grid-line background',
+    id: "codex-grid-background",
+    category: "slop",
+    severity: "advisory",
+    gated: "gpt",
+    name: "Decorative grid-line background",
     description:
       'A two-axis grid drawn with hairline linear-gradient layers ("1px, transparent 1px" on both axes) is a recurring generated-UI signature. Reserve grid overlays for actual canvas, map, blueprint, or measurement surfaces; elsewhere use product structure or a plain surface.',
-    skillSection: 'Visual Details',
-    skillGuideline: 'two-axis grid-line gradient background',
+    skillSection: "Visual Details",
+    skillGuideline: "two-axis grid-line gradient background",
   },
   {
-    id: 'theater-slop-phrase',
-    category: 'slop',
-    severity: 'advisory',
-    gated: 'gpt',
-    name: 'Theater framing copy',
+    id: "theater-slop-phrase",
+    category: "slop",
+    severity: "advisory",
+    gated: "gpt",
+    name: "Theater framing copy",
     description:
       'Dismissing something as "theater" is a recurring generated-copy tic. Say plainly what the thing does or does not do.',
-    skillSection: 'Copy',
-    skillGuideline: 'theater framing copy',
+    skillSection: "Copy",
+    skillGuideline: "theater framing copy",
   },
   {
-    id: 'image-hover-transform',
-    category: 'slop',
-    severity: 'advisory',
-    gated: 'gemini',
-    name: 'Image hover transform',
+    id: "image-hover-transform",
+    category: "slop",
+    severity: "advisory",
+    gated: "gemini",
+    name: "Image hover transform",
     description:
-      'Scaling or rotating an image on hover is a recurring generated-UI signature. Let imagery sit still, or use a subtler, purposeful interaction.',
-    skillSection: 'Motion',
-    skillGuideline: 'image scale or rotate on hover',
+      "Scaling or rotating an image on hover is a recurring generated-UI signature. Let imagery sit still, or use a subtler, purposeful interaction.",
+    skillSection: "Motion",
+    skillGuideline: "image scale or rotate on hover",
   },
 ];
 
@@ -552,7 +552,7 @@ const ANTIPATTERNS = [
 // ─── Section 2: Color Utilities ─────────────────────────────────────────────
 
 function isNeutralColor(color) {
-  if (!color || color === 'transparent') return true;
+  if (!color || color === "transparent") return true;
 
   // rgb/rgba — use channel spread. Threshold 30 ≈ 11.7% of the 0–255 range.
   const rgb = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -603,7 +603,7 @@ function isNeutralColor(color) {
 }
 
 function parseRgb(color) {
-  if (!color || color === 'transparent') return null;
+  if (!color || color === "transparent") return null;
   const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
   if (!m) return null;
   return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
@@ -623,7 +623,7 @@ function contrastRatio(c1, c2) {
 }
 
 function parseGradientColors(bgImage) {
-  if (!bgImage || !bgImage.includes('gradient')) return [];
+  if (!bgImage || !bgImage.includes("gradient")) return [];
   const colors = [];
   for (const m of bgImage.matchAll(/rgba?\([^)]+\)/g)) {
     const c = parseRgb(m[0]);
@@ -659,17 +659,17 @@ function getHue(c) {
 }
 
 function colorToHex(c) {
-  if (!c) return '?';
-  return '#' + [c.r, c.g, c.b].map(v => v.toString(16).padStart(2, '0')).join('');
+  if (!c) return "?";
+  return "#" + [c.r, c.g, c.b].map(v => v.toString(16).padStart(2, "0")).join("");
 }
 
 // --- cli/engine/shared/fonts.mjs ---
 const GOOGLE_FONTS_URL_RE = /fonts\.googleapis\.com\/css2?\?[^"'\s)<>]*/gi;
 
 function normalizeGoogleFontFamilyParam(value) {
-  return String(value || '')
-    .split('|')
-    .map(part => part.split(':')[0].trim().toLowerCase())
+  return String(value || "")
+    .split("|")
+    .map(part => part.split(":")[0].trim().toLowerCase())
     .filter(Boolean);
 }
 
@@ -681,11 +681,11 @@ function extractGoogleFontFamilies(text) {
   let urlMatch;
   while ((urlMatch = GOOGLE_FONTS_URL_RE.exec(text)) !== null) {
     const url = urlMatch[0];
-    const queryStart = url.indexOf('?');
+    const queryStart = url.indexOf("?");
     if (queryStart === -1) continue;
 
-    const params = new URLSearchParams(url.slice(queryStart + 1).replace(/&amp;/g, '&'));
-    for (const value of params.getAll('family')) {
+    const params = new URLSearchParams(url.slice(queryStart + 1).replace(/&amp;/g, "&"));
+    for (const value of params.getAll("family")) {
       families.push(...normalizeGoogleFontFamilyParam(value));
     }
   }
@@ -694,14 +694,14 @@ function extractGoogleFontFamilies(text) {
 }
 
 // --- cli/engine/rules/checks.mjs ---
-const DETECTOR_IS_BROWSER = typeof window !== 'undefined';
+const DETECTOR_IS_BROWSER = typeof window !== "undefined";
 
 // ─── Section 3: Pure Detection ──────────────────────────────────────────────
 
 function checkBorders(tag, widths, colors, radius) {
   if (BORDER_SAFE_TAGS.has(tag)) return [];
   const findings = [];
-  const sides = ['Top', 'Right', 'Bottom', 'Left'];
+  const sides = ["Top", "Right", "Bottom", "Left"];
 
   for (const side of sides) {
     const w = widths[side];
@@ -712,13 +712,13 @@ function checkBorders(tag, widths, colors, radius) {
     if (!(w >= 2 && (maxOther <= 1 || w >= maxOther * 2))) continue;
 
     const sn = side.toLowerCase();
-    const isSide = side === 'Left' || side === 'Right';
+    const isSide = side === "Left" || side === "Right";
 
     if (isSide) {
-      if (radius > 0) findings.push({ id: 'side-tab', snippet: `border-${sn}: ${w}px + border-radius: ${radius}px` });
-      else if (w >= 3) findings.push({ id: 'side-tab', snippet: `border-${sn}: ${w}px` });
+      if (radius > 0) findings.push({ id: "side-tab", snippet: `border-${sn}: ${w}px + border-radius: ${radius}px` });
+      else if (w >= 3) findings.push({ id: "side-tab", snippet: `border-${sn}: ${w}px` });
     } else {
-      if (radius > 0 && w >= 2) findings.push({ id: 'border-accent-on-rounded', snippet: `border-${sn}: ${w}px + border-radius: ${radius}px` });
+      if (radius > 0 && w >= 2) findings.push({ id: "border-accent-on-rounded", snippet: `border-${sn}: ${w}px + border-radius: ${radius}px` });
     }
   }
 
@@ -734,7 +734,7 @@ const EMOJI_CHARS_GLOBAL = /[\u{1F1E6}-\u{1F1FF}\u{1F300}-\u{1F9FF}\u{1FA00}-\u{
 function isEmojiOnlyText(text) {
   if (!text) return false;
   if (!EMOJI_CHAR_RE.test(text)) return false;
-  return text.replace(EMOJI_CHARS_GLOBAL, '').trim() === '';
+  return text.replace(EMOJI_CHARS_GLOBAL, "").trim() === "";
 }
 
 function checkColors(opts) {
@@ -746,7 +746,7 @@ function checkColors(opts) {
     // ancestor surface is already the intended visual. When the element has
     // its own opaque background and direct text, it is a styled button — and
     // contrast on its own surface is a real, frequent bug worth flagging.
-    const isStyledButton = (tag === 'a' || tag === 'button')
+    const isStyledButton = (tag === "a" || tag === "button")
       && hasDirectText
       && bgColor && bgColor.a > 0.5;
     if (!isStyledButton) return [];
@@ -762,8 +762,8 @@ function checkColors(opts) {
       const textLum = relativeLuminance(textColor);
       const isGray = !hasChroma(textColor, 20) && textLum > 0.05 && textLum < 0.85;
       if (isGray && bgs.every(b => hasChroma(b, 40))) {
-        const bgLabel = effectiveBg ? colorToHex(effectiveBg) : `gradient(${bgs.map(colorToHex).join(', ')})`;
-        findings.push({ id: 'gray-on-color', snippet: `text ${colorToHex(textColor)} on bg ${bgLabel}` });
+        const bgLabel = effectiveBg ? colorToHex(effectiveBg) : `gradient(${bgs.map(colorToHex).join(", ")})`;
+        findings.push({ id: "gray-on-color", snippet: `text ${colorToHex(textColor)} on bg ${bgLabel}` });
       }
 
       // Low contrast (WCAG AA) — worst case across all bg stops
@@ -786,7 +786,7 @@ function checkColors(opts) {
         // like `text-paper/60` on `bg-ink` sections are the FP pattern.
         const isAlphaFallbackFP = !DETECTOR_IS_BROWSER && !effectiveBg && (textColor.a != null && textColor.a < 1);
         if (!isAlphaFallbackFP) {
-          findings.push({ id: 'low-contrast', snippet: `${ratio.toFixed(1)}:1 (need ${threshold}:1) — text ${colorToHex(textColor)} on ${colorToHex(bgs[worstIdx])}` });
+          findings.push({ id: "low-contrast", snippet: `${ratio.toFixed(1)}:1 (need ${threshold}:1) — text ${colorToHex(textColor)} on ${colorToHex(bgs[worstIdx])}` });
         }
       }
     }
@@ -794,38 +794,38 @@ function checkColors(opts) {
     // AI palette: purple/violet on headings
     if (hasChroma(textColor, 50)) {
       const hue = getHue(textColor);
-      if (hue >= 260 && hue <= 310 && (['h1', 'h2', 'h3'].includes(tag) || fontSize >= 20)) {
-        findings.push({ id: 'ai-color-palette', snippet: `Purple/violet text (${colorToHex(textColor)}) on heading` });
+      if (hue >= 260 && hue <= 310 && (["h1", "h2", "h3"].includes(tag) || fontSize >= 20)) {
+        findings.push({ id: "ai-color-palette", snippet: `Purple/violet text (${colorToHex(textColor)}) on heading` });
       }
     }
   }
 
   // Gradient text
-  if (bgClip === 'text' && bgImage && bgImage.includes('gradient')) {
-    findings.push({ id: 'gradient-text', snippet: 'background-clip: text + gradient' });
+  if (bgClip === "text" && bgImage && bgImage.includes("gradient")) {
+    findings.push({ id: "gradient-text", snippet: "background-clip: text + gradient" });
   }
 
   // Tailwind class checks
   if (classList) {
-    const classStr = typeof classList === 'string' ? classList : Array.from(classList).join(' ');
+    const classStr = typeof classList === "string" ? classList : Array.from(classList).join(" ");
 
     const grayMatch = classStr.match(/\btext-(?:gray|slate|zinc|neutral|stone)-\d+\b/);
     const colorBgMatch = classStr.match(/\bbg-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d+\b/);
     if (grayMatch && colorBgMatch) {
-      findings.push({ id: 'gray-on-color', snippet: `${grayMatch[0]} on ${colorBgMatch[0]}` });
+      findings.push({ id: "gray-on-color", snippet: `${grayMatch[0]} on ${colorBgMatch[0]}` });
     }
 
     if (/\bbg-clip-text\b/.test(classStr) && /\bbg-gradient-to-/.test(classStr)) {
-      findings.push({ id: 'gradient-text', snippet: 'bg-clip-text + bg-gradient (Tailwind)' });
+      findings.push({ id: "gradient-text", snippet: "bg-clip-text + bg-gradient (Tailwind)" });
     }
 
     const purpleText = classStr.match(/\btext-(?:purple|violet|indigo)-\d+\b/);
-    if (purpleText && (['h1', 'h2', 'h3'].includes(tag) || /\btext-(?:[2-9]xl)\b/.test(classStr))) {
-      findings.push({ id: 'ai-color-palette', snippet: `${purpleText[0]} on heading` });
+    if (purpleText && (["h1", "h2", "h3"].includes(tag) || /\btext-(?:[2-9]xl)\b/.test(classStr))) {
+      findings.push({ id: "ai-color-palette", snippet: `${purpleText[0]} on heading` });
     }
 
     if (/\bfrom-(?:purple|violet|indigo)-\d+\b/.test(classStr) && /\bto-(?:purple|violet|indigo|blue|cyan|pink|fuchsia)-\d+\b/.test(classStr)) {
-      findings.push({ id: 'ai-color-palette', snippet: 'Purple/violet gradient (Tailwind)' });
+      findings.push({ id: "ai-color-palette", snippet: "Purple/violet gradient (Tailwind)" });
     }
   }
 
@@ -837,7 +837,7 @@ function isCardLikeFromProps(hasShadow, hasBorder, hasRadius, hasBg) {
   return hasRadius || hasBg;
 }
 
-const HEADING_TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 
 // Pure check: given a heading and metrics about its previousElementSibling,
 // decide if the sibling is the canonical "icon-tile-stacked-above-heading" shape.
@@ -871,7 +871,7 @@ function checkIconTile(opts) {
 
   // Must have something that visually defines the tile
   const bgVisible = (siblingBgColor && siblingBgColor.a > 0.1)
-    || (siblingBgImage && siblingBgImage !== 'none' && siblingBgImage !== '');
+    || (siblingBgImage && siblingBgImage !== "none" && siblingBgImage !== "");
   const borderVisible = siblingBorderWidth > 0;
   if (!bgVisible && !borderVisible) return [];
 
@@ -886,9 +886,9 @@ function checkIconTile(opts) {
   // (Allow the check to skip when both top/bottom are 0 — jsdom layout case.)
   if (headingTop && siblingBottom && siblingBottom > headingTop + 4) return [];
 
-  const text = (headingText || '').trim().slice(0, 60);
+  const text = (headingText || "").trim().slice(0, 60);
   return [{
-    id: 'icon-tile-stack',
+    id: "icon-tile-stack",
     snippet: `${Math.round(siblingWidth)}x${Math.round(siblingHeight)}px icon tile above ${headingTag} "${text}"`,
   }];
 }
@@ -903,29 +903,29 @@ function checkIconTile(opts) {
 // Returns { primary, isSerif } so the snippet can name the face.
 function resolveSerif(fontFamily) {
   if (!fontFamily) return { primary: null, isSerif: false };
-  const tokens = fontFamily.split(',').map(f => f.trim().replace(/^['"]|['"]$/g, '').toLowerCase());
+  const tokens = fontFamily.split(",").map(f => f.trim().replace(/^['"]|['"]$/g, "").toLowerCase());
   const primary = tokens.find(f => f && !GENERIC_FONTS.has(f)) || null;
   if (!primary) return { primary: null, isSerif: false };
   if (KNOWN_SERIF_FONTS.has(primary)) return { primary, isSerif: true };
-  if (tokens.includes('serif')) return { primary, isSerif: true };
+  if (tokens.includes("serif")) return { primary, isSerif: true };
   return { primary, isSerif: false };
 }
 
 function checkItalicSerif(opts) {
   const { tag, fontStyle, fontFamily, fontSize, headingText } = opts;
-  if (fontStyle !== 'italic') return [];
+  if (fontStyle !== "italic") return [];
   // Anchor the rule on hero-scale text. h1 is the canonical hero element;
   // h2 ≥ 48px catches the cases where the design demotes the visual hero
   // to an h2 but keeps the size.
-  if (tag !== 'h1' && !(tag === 'h2' && fontSize >= 48)) return [];
+  if (tag !== "h1" && !(tag === "h2" && fontSize >= 48)) return [];
   if (fontSize < 48) return [];
   const { primary, isSerif } = resolveSerif(fontFamily);
   if (!isSerif) return [];
 
-  const text = (headingText || '').trim().slice(0, 60);
+  const text = (headingText || "").trim().slice(0, 60);
   return [{
-    id: 'italic-serif-display',
-    snippet: `italic serif ${tag} (${primary || 'serif'}) at ${Math.round(fontSize)}px "${text}"`,
+    id: "italic-serif-display",
+    snippet: `italic serif ${tag} (${primary || "serif"}) at ${Math.round(fontSize)}px "${text}"`,
   }];
 }
 
@@ -937,7 +937,7 @@ function isAccentColor(cssColor) {
   if (!cssColor) return false;
   const s = String(cssColor).trim();
   // rgb / rgba — direct channel-distance check.
-  const rgbM = /rgba?\(\s*(\d+)\s*,?\s+|\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(s.replace(/rgba?\(\s*/, 'rgb(').replace(/,/g, ', '));
+  const rgbM = /rgba?\(\s*(\d+)\s*,?\s+|\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(s.replace(/rgba?\(\s*/, "rgb(").replace(/,/g, ", "));
   const rgbStrict = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(s);
   if (rgbStrict) {
     const r = +rgbStrict[1], g = +rgbStrict[2], b = +rgbStrict[3];
@@ -947,7 +947,7 @@ function isAccentColor(cssColor) {
   const hexM = /^#([0-9a-f]{3,8})\b/i.exec(s);
   if (hexM) {
     let h = hexM[1];
-    if (h.length === 3 || h.length === 4) h = h.split('').map((c) => c + c).join('').slice(0, 6);
+    if (h.length === 3 || h.length === 4) h = h.split("").map((c) => c + c).join("").slice(0, 6);
     else h = h.slice(0, 6);
     if (h.length === 6) {
       const r = parseInt(h.slice(0, 2), 16);
@@ -987,7 +987,7 @@ function checkHeroEyebrow(opts) {
     siblingFontSize, siblingLetterSpacing,
     siblingFontWeight, siblingColor,
   } = opts;
-  if (headingTag !== 'h1') return [];
+  if (headingTag !== "h1") return [];
   // We previously gated on headingFontSize >= 48 to anchor "hero scale".
   // But modern hero h1s use clamp() / vw / var(--text-*), none of which
   // jsdom can resolve — the computed value comes back as "2em" or
@@ -1002,12 +1002,12 @@ function checkHeroEyebrow(opts) {
   // headings) — never an eyebrow.
   if (HEADING_TAGS.has(siblingTag)) return [];
 
-  const text = (siblingText || '').trim();
+  const text = (siblingText || "").trim();
   if (text.length < 2 || text.length > 60) return [];
   if (!(siblingFontSize > 0 && siblingFontSize <= 14)) return [];
 
   // Branch A: classic tracked-uppercase eyebrow.
-  const isUppercased = siblingTextTransform === 'uppercase'
+  const isUppercased = siblingTextTransform === "uppercase"
     || (/[A-Z]/.test(text) && !/[a-z]/.test(text));
   const isClassicTracked = isUppercased && siblingLetterSpacing >= 1.6;
 
@@ -1015,15 +1015,15 @@ function checkHeroEyebrow(opts) {
   // tracking, but bold + accent-colored. The style choices changed;
   // the pattern is the same kicker-above-headline anti-pattern.
   const weight = Number(siblingFontWeight) || 400;
-  const isAccentBold = weight >= 700 && isAccentColor(siblingColor || '');
+  const isAccentBold = weight >= 700 && isAccentColor(siblingColor || "");
 
   if (!isClassicTracked && !isAccentBold) return [];
 
-  const headingTextSnippet = (headingText || '').trim().slice(0, 60);
+  const headingTextSnippet = (headingText || "").trim().slice(0, 60);
   const eyebrowSnippet = text.slice(0, 40);
-  const style = isClassicTracked ? 'tracked-caps' : 'accent-bold';
+  const style = isClassicTracked ? "tracked-caps" : "accent-bold";
   return [{
-    id: 'hero-eyebrow-chip',
+    id: "hero-eyebrow-chip",
     snippet: `eyebrow chip (${style}) "${eyebrowSnippet}" above ${headingTag} "${headingTextSnippet}"`,
   }];
 }
@@ -1032,16 +1032,16 @@ function checkRepeatedSectionKickers(opts) {
   const { candidates, minCount = 3 } = opts;
   if (!Array.isArray(candidates) || candidates.length < minCount) return [];
   return candidates.map(candidate => ({
-    id: 'repeated-section-kickers',
+    id: "repeated-section-kickers",
     snippet: `repeated section kicker "${candidate.kickerText}" before ${candidate.headingTag} "${candidate.headingText}" (${candidates.length} on page)`,
   }));
 }
 
 const LAYOUT_TRANSITION_PROPS = new Set([
-  'width', 'height', 'padding', 'margin',
-  'max-height', 'max-width', 'min-height', 'min-width',
-  'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-  'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+  "width", "height", "padding", "margin",
+  "max-height", "max-width", "min-height", "min-width",
+  "padding-top", "padding-right", "padding-bottom", "padding-left",
+  "margin-top", "margin-right", "margin-bottom", "margin-left",
 ]);
 
 function checkMotion(opts) {
@@ -1050,11 +1050,11 @@ function checkMotion(opts) {
   const findings = [];
 
   // --- Bounce/elastic easing ---
-  if (animationName && animationName !== 'none' && /bounce|elastic|wobble|jiggle|spring/i.test(animationName)) {
-    findings.push({ id: 'bounce-easing', snippet: `animation: ${animationName}` });
+  if (animationName && animationName !== "none" && /bounce|elastic|wobble|jiggle|spring/i.test(animationName)) {
+    findings.push({ id: "bounce-easing", snippet: `animation: ${animationName}` });
   }
   if (classList && /\banimate-bounce\b/.test(classList)) {
-    findings.push({ id: 'bounce-easing', snippet: 'animate-bounce (Tailwind)' });
+    findings.push({ id: "bounce-easing", snippet: "animate-bounce (Tailwind)" });
   }
 
   // Check timing functions for overshoot cubic-bezier (y values outside [0, 1])
@@ -1064,18 +1064,18 @@ function checkMotion(opts) {
     while ((m = bezierRe.exec(timingFunctions)) !== null) {
       const y1 = parseFloat(m[2]), y2 = parseFloat(m[4]);
       if (y1 < -0.1 || y1 > 1.1 || y2 < -0.1 || y2 > 1.1) {
-        findings.push({ id: 'bounce-easing', snippet: `cubic-bezier(${m[1]}, ${m[2]}, ${m[3]}, ${m[4]})` });
+        findings.push({ id: "bounce-easing", snippet: `cubic-bezier(${m[1]}, ${m[2]}, ${m[3]}, ${m[4]})` });
         break;
       }
     }
   }
 
   // --- Layout property transition ---
-  if (transitionProperty && transitionProperty !== 'all' && transitionProperty !== 'none') {
-    const props = transitionProperty.split(',').map(p => p.trim().toLowerCase());
+  if (transitionProperty && transitionProperty !== "all" && transitionProperty !== "none") {
+    const props = transitionProperty.split(",").map(p => p.trim().toLowerCase());
     const layoutFound = props.filter(p => LAYOUT_TRANSITION_PROPS.has(p));
     if (layoutFound.length > 0) {
-      findings.push({ id: 'layout-transition', snippet: `transition: ${layoutFound.join(', ')}` });
+      findings.push({ id: "layout-transition", snippet: `transition: ${layoutFound.join(", ")}` });
     }
   }
 
@@ -1084,7 +1084,7 @@ function checkMotion(opts) {
 
 function checkGlow(opts) {
   const { boxShadow, effectiveBg } = opts;
-  if (!boxShadow || boxShadow === 'none') return [];
+  if (!boxShadow || boxShadow === "none") return [];
   if (!effectiveBg) return [];
 
   // Only flag on dark backgrounds (luminance < 0.1)
@@ -1107,7 +1107,7 @@ function checkGlow(opts) {
 
     // Third value is blur (offset-x, offset-y, blur, [spread])
     if (pxVals.length >= 3 && pxVals[2] > 4) {
-      return [{ id: 'dark-glow', snippet: `Colored glow (${colorToHex(color)}) on dark background` }];
+      return [{ id: "dark-glow", snippet: `Colored glow (${colorToHex(color)}) on dark background` }];
     }
   }
 
@@ -1128,7 +1128,7 @@ function checkHtmlPatterns(html) {
   if (purpleHexRe.test(html)) {
     const purpleTextRe = /(?:(?:^|;)\s*color\s*:\s*(?:.*?)(?:#(?:7c3aed|8b5cf6|a855f7|9333ea|7e22ce|6d28d9))|gradient.*?#(?:7c3aed|8b5cf6|a855f7|764ba2|667eea))/gi;
     if (purpleTextRe.test(html)) {
-      findings.push({ id: 'ai-color-palette', snippet: 'Purple/violet accent colors detected' });
+      findings.push({ id: "ai-color-palette", snippet: "Purple/violet accent colors detected" });
     }
   }
 
@@ -1139,12 +1139,12 @@ function checkHtmlPatterns(html) {
     const start = Math.max(0, gm.index - 200);
     const context = html.substring(start, gm.index + gm[0].length + 200);
     if (/gradient/i.test(context)) {
-      findings.push({ id: 'gradient-text', snippet: 'background-clip: text + gradient' });
+      findings.push({ id: "gradient-text", snippet: "background-clip: text + gradient" });
       break;
     }
   }
   if (/\bbg-clip-text\b/.test(html) && /\bbg-gradient-to-/.test(html)) {
-    findings.push({ id: 'gradient-text', snippet: 'bg-clip-text + bg-gradient (Tailwind)' });
+    findings.push({ id: "gradient-text", snippet: "bg-clip-text + bg-gradient (Tailwind)" });
   }
 
   // --- Layout ---
@@ -1180,7 +1180,7 @@ function checkHtmlPatterns(html) {
     if (dominantPct > 0.6 && unique.length <= 3) {
       const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
       findings.push({
-        id: 'monotonous-spacing',
+        id: "monotonous-spacing",
         snippet: `~${dominant}px used ${maxCount}/${roundedSpacing.length} times (${Math.round(dominantPct * 100)}%)`,
       });
     }
@@ -1195,7 +1195,7 @@ function checkHtmlPatterns(html) {
     const animationToken = bounceMatch[1]
       .split(/[,\s]+/)
       .find((part) => /bounce|elastic|wobble|jiggle|spring/i.test(part));
-    findings.push({ id: 'bounce-easing', snippet: `animation: ${animationToken || bounceMatch[1].trim()}` });
+    findings.push({ id: "bounce-easing", snippet: `animation: ${animationToken || bounceMatch[1].trim()}` });
   }
 
   // Overshoot cubic-bezier
@@ -1204,7 +1204,7 @@ function checkHtmlPatterns(html) {
   while ((bm = bezierRe.exec(html)) !== null) {
     const y1 = parseFloat(bm[2]), y2 = parseFloat(bm[4]);
     if (y1 < -0.1 || y1 > 1.1 || y2 < -0.1 || y2 > 1.1) {
-      findings.push({ id: 'bounce-easing', snippet: `cubic-bezier(${bm[1]}, ${bm[2]}, ${bm[3]}, ${bm[4]})` });
+      findings.push({ id: "bounce-easing", snippet: `cubic-bezier(${bm[1]}, ${bm[2]}, ${bm[3]}, ${bm[4]})` });
       break;
     }
   }
@@ -1217,7 +1217,7 @@ function checkHtmlPatterns(html) {
     if (/\ball\b/.test(val)) continue;
     const found = val.match(/\b(?:(?:max|min)-)?(?:width|height)\b|\bpadding(?:-(?:top|right|bottom|left))?\b|\bmargin(?:-(?:top|right|bottom|left))?\b/gi);
     if (found) {
-      findings.push({ id: 'layout-transition', snippet: `transition: ${found.join(', ')}` });
+      findings.push({ id: "layout-transition", snippet: `transition: ${found.join(", ")}` });
       break;
     }
   }
@@ -1237,7 +1237,7 @@ function checkHtmlPatterns(html) {
       if ((Math.max(r, g, b) - Math.min(r, g, b)) < 30) continue;
       const pxVals = [...val.matchAll(/(\d+)px|(?<![.\d])\b(0)\b(?![.\d])/g)].map(p => +(p[1] || p[2]));
       if (pxVals.length >= 3 && pxVals[2] > 4) {
-        findings.push({ id: 'dark-glow', snippet: `Colored glow (rgb(${r},${g},${b})) on dark page` });
+        findings.push({ id: "dark-glow", snippet: `Colored glow (rgb(${r},${g},${b})) on dark page` });
         break;
       }
     }
@@ -1245,7 +1245,7 @@ function checkHtmlPatterns(html) {
 
   // --- Provider tells (gated): repeating-gradient stripes (GPT) ---
   if (/repeating-(?:linear|radial|conic)-gradient\s*\(/i.test(html)) {
-    findings.push({ id: 'repeating-stripes-gradient', snippet: 'repeating-gradient decorative stripes' });
+    findings.push({ id: "repeating-stripes-gradient", snippet: "repeating-gradient decorative stripes" });
   }
 
   // --- Provider tells (gated): two-axis grid-line background (Codex/GPT) ---
@@ -1268,7 +1268,7 @@ function checkHtmlPatterns(html) {
     const blockRe = /\{([^{}]*)\}|style\s*=\s*"([^"]*)"|style\s*=\s*'([^']*)'/gi;
     let blk;
     while ((blk = blockRe.exec(html)) !== null) {
-      const block = blk[1] || blk[2] || blk[3] || '';
+      const block = blk[1] || blk[2] || blk[3] || "";
       if (!gridSizeRe.test(block)) continue;
       let hairlineCount = 0;
       let bm;
@@ -1278,7 +1278,7 @@ function checkHtmlPatterns(html) {
         if (stops) hairlineCount += stops.length;
       }
       if (hairlineCount >= 2) {
-        findings.push({ id: 'codex-grid-background', snippet: 'two-axis grid-line gradient background' });
+        findings.push({ id: "codex-grid-background", snippet: "two-axis grid-line gradient background" });
         break;
       }
     }
@@ -1289,11 +1289,11 @@ function checkHtmlPatterns(html) {
   // runs in the bundled browser path too, not just the CLI/static path.
   {
     const bodyText = html
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, ' ')
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, ' ')
-      .replace(/<[^>]+>/g, ' ');
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, " ")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, " ")
+      .replace(/<[^>]+>/g, " ");
     const tm = /\b(\w+)\s+theater\b/i.exec(bodyText);
-    if (tm) findings.push({ id: 'theater-slop-phrase', snippet: `"${tm[0].trim()}"` });
+    if (tm) findings.push({ id: "theater-slop-phrase", snippet: `"${tm[0].trim()}"` });
   }
 
   // --- Provider tells (gated): image hover transform (Gemini) ---
@@ -1302,13 +1302,13 @@ function checkHtmlPatterns(html) {
   // mechanism is its own finding.
   const imgHoverCss = /\bimg\b[^,{}]*:hover\b[^{}]*\{[^}]*\btransform\s*:\s*(?:scale|rotate|translate|matrix|skew)/i;
   if (imgHoverCss.test(html)) {
-    findings.push({ id: 'image-hover-transform', snippet: 'img:hover { transform } rule' });
+    findings.push({ id: "image-hover-transform", snippet: "img:hover { transform } rule" });
   }
   const imgTagRe = /<img\b[^>]*\bclass\s*=\s*"([^"]*)"/gi;
   let im;
   while ((im = imgTagRe.exec(html)) !== null) {
     if (/\bhover:(?:scale|rotate|translate|skew)-/.test(im[1])) {
-      findings.push({ id: 'image-hover-transform', snippet: 'Tailwind hover transform on <img>' });
+      findings.push({ id: "image-hover-transform", snippet: "Tailwind hover transform on <img>" });
     }
   }
 
@@ -1327,9 +1327,9 @@ function checkHtmlPatterns(html) {
 function readOwnBackgroundColor(el, computedStyle) {
   const bg = parseRgb(computedStyle.backgroundColor);
   if (DETECTOR_IS_BROWSER || (bg && bg.a >= 0.1)) return bg;
-  const rawStyle = el.getAttribute?.('style') || '';
+  const rawStyle = el.getAttribute?.("style") || "";
   const bgMatch = rawStyle.match(/background(?:-color)?\s*:\s*([^;]+)/i);
-  const inlineBg = bgMatch ? bgMatch[1].trim() : '';
+  const inlineBg = bgMatch ? bgMatch[1].trim() : "";
   if (!inlineBg) return bg;
   if (/gradient/i.test(inlineBg) || /url\s*\(/i.test(inlineBg)) return bg;
   const fromRgb = parseRgb(inlineBg);
@@ -1349,8 +1349,8 @@ function resolveBackground(el, win, customPropMap) {
   let current = el;
   while (current && current.nodeType === 1) {
     const style = DETECTOR_IS_BROWSER ? getComputedStyle(current) : win.getComputedStyle(current);
-    const bgImage = style.backgroundImage || '';
-    const hasGradientOrUrl = bgImage && bgImage !== 'none' && (/gradient/i.test(bgImage) || /url\s*\(/i.test(bgImage));
+    const bgImage = style.backgroundImage || "";
+    const hasGradientOrUrl = bgImage && bgImage !== "none" && (/gradient/i.test(bgImage) || /url\s*\(/i.test(bgImage));
 
     // Try the solid bg-color FIRST. If the element has both a solid color
     // and a gradient/url overlay (a common pattern: `background: var(--paper)
@@ -1369,9 +1369,9 @@ function resolveBackground(el, win, customPropMap) {
       if (!bg || bg.a < 0.1) {
         // Inline-style fallback. jsdom doesn't decompose background
         // shorthand, so colors set via inline style are otherwise invisible.
-        const rawStyle = current.getAttribute?.('style') || '';
+        const rawStyle = current.getAttribute?.("style") || "";
         const bgMatch = rawStyle.match(/background(?:-color)?\s*:\s*([^;]+)/i);
-        const inlineBg = bgMatch ? bgMatch[1].trim() : '';
+        const inlineBg = bgMatch ? bgMatch[1].trim() : "";
         if (inlineBg && !/gradient/i.test(inlineBg) && !/url\s*\(/i.test(inlineBg)) {
           bg = parseColorResolved(inlineBg, customPropMap) || parseAnyColor(inlineBg);
         }
@@ -1394,7 +1394,7 @@ function resolveBackground(el, win, customPropMap) {
     //     to gradient stops (gradient buttons / hero sections are real
     //     bgs worth checking against).
     if (hasGradientOrUrl) {
-      if (current.tagName === 'BODY' || current.tagName === 'HTML') {
+      if (current.tagName === "BODY" || current.tagName === "HTML") {
         return { r: 255, g: 255, b: 255, a: 1 };
       }
       return null;
@@ -1411,14 +1411,14 @@ function resolveGradientStops(el, win) {
   let current = el;
   while (current && current.nodeType === 1) {
     const style = DETECTOR_IS_BROWSER ? getComputedStyle(current) : win.getComputedStyle(current);
-    const bgImage = style.backgroundImage || '';
-    if (bgImage && bgImage !== 'none' && /gradient/i.test(bgImage)) {
+    const bgImage = style.backgroundImage || "";
+    if (bgImage && bgImage !== "none" && /gradient/i.test(bgImage)) {
       const stops = parseGradientColors(bgImage);
       if (stops.length > 0) return stops;
     }
     if (!DETECTOR_IS_BROWSER) {
       // jsdom doesn't decompose `background:` shorthand — peek at the raw inline style
-      const rawStyle = current.getAttribute?.('style') || '';
+      const rawStyle = current.getAttribute?.("style") || "";
       const bgMatch = rawStyle.match(/background(?:-image)?\s*:\s*([^;]+)/i);
       if (bgMatch && /gradient/i.test(bgMatch[1])) {
         const stops = parseGradientColors(bgMatch[1]);
@@ -1440,7 +1440,7 @@ function resolveGradientStops(el, win) {
 // isCardLike's hasRadius) still see a positive value, matching the
 // original parseFloat("50%") === 50 behavior.
 function parseRadiusToPx(value, widthPx) {
-  if (!value || typeof value !== 'string') return null;
+  if (!value || typeof value !== "string") return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
   const first = trimmed.split(/\s+/)[0];
@@ -1469,11 +1469,11 @@ function checkElementBordersDOM(el) {
   const rect = el.getBoundingClientRect();
   if (rect.width < 20 || rect.height < 20) return [];
   const style = getComputedStyle(el);
-  const sides = ['Top', 'Right', 'Bottom', 'Left'];
+  const sides = ["Top", "Right", "Bottom", "Left"];
   const widths = {}, colors = {};
   for (const s of sides) {
     widths[s] = parseFloat(style[`border${s}Width`]) || 0;
-    colors[s] = style[`border${s}Color`] || '';
+    colors[s] = style[`border${s}Color`] || "";
   }
   return checkBorders(tag, widths, colors, parseFloat(style.borderRadius) || 0);
 }
@@ -1486,7 +1486,7 @@ function checkElementColorsDOM(el) {
   const rect = el.getBoundingClientRect();
   if (rect.width < 10 || rect.height < 10) return [];
   const style = getComputedStyle(el);
-  const directText = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('');
+  const directText = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join("");
   const hasDirectText = directText.trim().length > 0;
   const effectiveBg = resolveBackground(el);
   return checkColors({
@@ -1499,9 +1499,9 @@ function checkElementColorsDOM(el) {
     fontWeight: parseInt(style.fontWeight) || 400,
     hasDirectText,
     isEmojiOnly: isEmojiOnlyText(directText),
-    bgClip: style.webkitBackgroundClip || style.backgroundClip || '',
-    bgImage: style.backgroundImage || '',
-    classList: el.getAttribute('class') || '',
+    bgClip: style.webkitBackgroundClip || style.backgroundClip || "",
+    bgImage: style.backgroundImage || "",
+    classList: el.getAttribute("class") || "",
   });
 }
 
@@ -1520,19 +1520,19 @@ function checkElementIconTileDOM(el) {
   // (the "card-icon" pattern from many AI-generated demos).
   const iconChild = sibling.querySelector('svg, i[data-lucide], i[class*="fa-"], i[class*="icon"]');
   const iconRect = iconChild?.getBoundingClientRect();
-  const sibDirectText = [...sibling.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('');
+  const sibDirectText = [...sibling.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join("");
   const hasInlineEmojiIcon = sibling.children.length === 0 && isEmojiOnlyText(sibDirectText);
 
   return checkIconTile({
     headingTag: tag,
-    headingText: el.textContent || '',
+    headingText: el.textContent || "",
     headingTop: headRect.top,
     siblingTag: sibling.tagName.toLowerCase(),
     siblingWidth: sibRect.width,
     siblingHeight: sibRect.height,
     siblingBottom: sibRect.bottom,
     siblingBgColor: parseRgb(sibStyle.backgroundColor),
-    siblingBgImage: sibStyle.backgroundImage || '',
+    siblingBgImage: sibStyle.backgroundImage || "",
     siblingBorderWidth: parseFloat(sibStyle.borderTopWidth) || 0,
     siblingBorderRadius: parseFloat(sibStyle.borderRadius) || 0,
     hasIconChild: !!iconChild || hasInlineEmojiIcon,
@@ -1542,35 +1542,35 @@ function checkElementIconTileDOM(el) {
 
 function checkElementItalicSerifDOM(el) {
   const tag = el.tagName.toLowerCase();
-  if (tag !== 'h1' && tag !== 'h2') return [];
+  if (tag !== "h1" && tag !== "h2") return [];
   const style = getComputedStyle(el);
   return checkItalicSerif({
     tag,
-    fontStyle: style.fontStyle || '',
-    fontFamily: style.fontFamily || '',
+    fontStyle: style.fontStyle || "",
+    fontFamily: style.fontFamily || "",
     fontSize: parseFloat(style.fontSize) || 0,
-    headingText: el.textContent || '',
+    headingText: el.textContent || "",
   });
 }
 
 function checkElementHeroEyebrowDOM(el) {
   const tag = el.tagName.toLowerCase();
-  if (tag !== 'h1') return [];
+  if (tag !== "h1") return [];
   const sibling = el.previousElementSibling;
   if (!sibling) return [];
   const headStyle = getComputedStyle(el);
   const sibStyle = getComputedStyle(sibling);
   return checkHeroEyebrow({
     headingTag: tag,
-    headingText: el.textContent || '',
+    headingText: el.textContent || "",
     headingFontSize: parseFloat(headStyle.fontSize) || 0,
     siblingTag: sibling.tagName.toLowerCase(),
-    siblingText: sibling.textContent || '',
-    siblingTextTransform: sibStyle.textTransform || '',
+    siblingText: sibling.textContent || "",
+    siblingTextTransform: sibStyle.textTransform || "",
     siblingFontSize: parseFloat(sibStyle.fontSize) || 0,
     siblingLetterSpacing: parseFloat(sibStyle.letterSpacing) || 0,
-    siblingFontWeight: sibStyle.fontWeight || '',
-    siblingColor: sibStyle.color || '',
+    siblingFontWeight: sibStyle.fontWeight || "",
+    siblingColor: sibStyle.color || "",
   });
 }
 
@@ -1598,13 +1598,13 @@ function buildCustomPropMap(document) {
         continue;
       }
       if (rule.type !== 1 /* STYLE_RULE */) continue;
-      const sel = rule.selectorText || '';
+      const sel = rule.selectorText || "";
       if (!/(^|,\s*)(:root|html|:host)\b/i.test(sel)) continue;
       const style = rule.style;
       if (!style) continue;
       for (let i = 0; i < style.length; i++) {
         const prop = style[i];
-        if (!prop || !prop.startsWith('--')) continue;
+        if (!prop || !prop.startsWith("--")) continue;
         const val = style.getPropertyValue(prop).trim();
         if (val) map.set(prop, val);
       }
@@ -1618,7 +1618,7 @@ function buildCustomPropMap(document) {
 // the original string when no refs are present or the chain doesn't
 // resolve. Safe to call on already-resolved values.
 function resolveVarRefs(raw, customPropMap, depth = 0) {
-  if (typeof raw !== 'string' || !raw.includes('var(')) return raw;
+  if (typeof raw !== "string" || !raw.includes("var(")) return raw;
   if (depth > 8) return raw;
   return raw.replace(/var\(\s*(--[a-zA-Z0-9_-]+)\s*(?:,\s*([^)]+))?\)/g, (_m, name, fallback) => {
     const v = customPropMap.get(name);
@@ -1660,9 +1660,9 @@ function oklchToRgb(L, C, H) {
 // Use this when the input might be any CSS color form; use plain parseRgb
 // when you only expect computed rgb() values from real browsers.
 function parseAnyColor(s) {
-  if (!s || typeof s !== 'string') return null;
+  if (!s || typeof s !== "string") return null;
   const str = s.trim();
-  if (str === 'transparent' || str === 'currentcolor' || str === 'inherit') return null;
+  if (str === "transparent" || str === "currentcolor" || str === "inherit") return null;
   let m;
   m = str.match(/rgba?\(\s*(\d+(?:\.\d+)?)\s*,?\s*(\d+(?:\.\d+)?)\s*,?\s*(\d+(?:\.\d+)?)(?:\s*[,/]\s*([\d.]+))?\s*\)/);
   if (m) return { r: Math.round(+m[1]), g: Math.round(+m[2]), b: Math.round(+m[3]), a: m[4] !== undefined ? +m[4] : 1 };
@@ -1692,11 +1692,11 @@ function parseAnyColor(s) {
   m = str.match(/oklch\(\s*([\d.]+)(%?)\s*[\s,]*\s*([\d.]+)\s*[\s,]+\s*([-\d.]+)(?:deg)?(?:\s*\/\s*([\d.]+)(%)?)?\s*\)/i);
   if (m) {
     const Lnum = parseFloat(m[1]);
-    const L = m[2] === '%' ? Lnum / 100 : Lnum;
+    const L = m[2] === "%" ? Lnum / 100 : Lnum;
     const rgb = oklchToRgb(L, parseFloat(m[3]), parseFloat(m[4]));
     if (m[5] !== undefined) {
       const alpha = parseFloat(m[5]);
-      rgb.a = m[6] === '%' ? alpha / 100 : alpha;
+      rgb.a = m[6] === "%" ? alpha / 100 : alpha;
     }
     return rgb;
   }
@@ -1713,39 +1713,39 @@ function parseColorResolved(str, customPropMap) {
 }
 
 const REPEATED_KICKER_SKIP_SELECTOR = [
-  'nav',
-  'form',
-  'table',
-  'thead',
-  'tbody',
-  'tfoot',
-  'figure',
-  'figcaption',
-  'ol',
-  'ul',
-  'li',
+  "nav",
+  "form",
+  "table",
+  "thead",
+  "tbody",
+  "tfoot",
+  "figure",
+  "figcaption",
+  "ol",
+  "ul",
+  "li",
   '[role="navigation"]',
   '[aria-label*="breadcrumb" i]',
   '[class*="breadcrumb" i]',
   '[aria-hidden="true"]',
-  '[data-impeccable-allow-kickers]',
-].join(',');
+  "[data-impeccable-allow-kickers]",
+].join(",");
 
 const REPEATED_KICKER_CARD_CONTEXT_SELECTOR = [
-  'article',
-  'button',
-  'a',
-  'li',
+  "article",
+  "button",
+  "a",
+  "li",
   '[role="listitem"]',
   '[role="option"]',
-].join(',');
+].join(",");
 
 function cleanInlineText(el) {
   return [...el.childNodes]
     .filter(n => n.nodeType === 3)
     .map(n => n.textContent)
-    .join(' ')
-    .replace(/\s+/g, ' ')
+    .join(" ")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -1765,16 +1765,16 @@ function isRepeatedKickerCandidate(opts) {
     kickerFontSize,
     kickerLetterSpacing,
   } = opts;
-  if (!['h2', 'h3', 'h4'].includes(headingTag)) return false;
+  if (!["h2", "h3", "h4"].includes(headingTag)) return false;
   if (!headingText || headingText.length < 3) return false;
-  if (/^\/[\w-]+/i.test(headingText.replace(/^"|"$/g, '').trim())) return false;
+  if (/^\/[\w-]+/i.test(headingText.replace(/^"|"$/g, "").trim())) return false;
   if (!(headingFontSize >= 20)) return false;
   if (!kickerTag || HEADING_TAGS.has(kickerTag)) return false;
-  if (!['p', 'span', 'div', 'small'].includes(kickerTag)) return false;
+  if (!["p", "span", "div", "small"].includes(kickerTag)) return false;
   if (!kickerText || kickerText.length < 2 || kickerText.length > 34) return false;
   if (/^step\s*\d+/i.test(kickerText) || /^\d{1,2}$/.test(kickerText)) return false;
 
-  const isUppercased = kickerTextTransform === 'uppercase'
+  const isUppercased = kickerTextTransform === "uppercase"
     || (/[A-Z]/.test(kickerText) && !/[a-z]/.test(kickerText));
   if (!isUppercased) return false;
   if (!(kickerFontSize > 0 && kickerFontSize <= 14)) return false;
@@ -1785,7 +1785,7 @@ function isRepeatedKickerCandidate(opts) {
 
 function collectRepeatedSectionKickerCandidates(doc, getStyle, resolveLetterSpacing) {
   const candidates = [];
-  for (const heading of doc.querySelectorAll('h2, h3, h4')) {
+  for (const heading of doc.querySelectorAll("h2, h3, h4")) {
     if (heading.closest?.(REPEATED_KICKER_SKIP_SELECTOR)) continue;
     const kicker = heading.previousElementSibling;
     if (!kicker || kicker.closest?.(REPEATED_KICKER_SKIP_SELECTOR)) continue;
@@ -1793,11 +1793,11 @@ function collectRepeatedSectionKickerCandidates(doc, getStyle, resolveLetterSpac
 
     const headingStyle = getStyle(heading);
     const kickerStyle = getStyle(kicker);
-    const headingText = (heading.textContent || '').replace(/\s+/g, ' ').trim();
-    const kickerText = cleanInlineText(kicker) || (kicker.textContent || '').replace(/\s+/g, ' ').trim();
-    const headingFontSize = resolveLetterSpacing(headingStyle.fontSize || '', 16) || parseFloat(headingStyle.fontSize) || 0;
-    const kickerFontSize = resolveLetterSpacing(kickerStyle.fontSize || '', 16) || parseFloat(kickerStyle.fontSize) || 0;
-    const kickerLetterSpacing = resolveLetterSpacing(kickerStyle.letterSpacing || '', kickerFontSize);
+    const headingText = (heading.textContent || "").replace(/\s+/g, " ").trim();
+    const kickerText = cleanInlineText(kicker) || (kicker.textContent || "").replace(/\s+/g, " ").trim();
+    const headingFontSize = resolveLetterSpacing(headingStyle.fontSize || "", 16) || parseFloat(headingStyle.fontSize) || 0;
+    const kickerFontSize = resolveLetterSpacing(kickerStyle.fontSize || "", 16) || parseFloat(kickerStyle.fontSize) || 0;
+    const kickerLetterSpacing = resolveLetterSpacing(kickerStyle.letterSpacing || "", kickerFontSize);
 
     if (!isRepeatedKickerCandidate({
       headingTag: heading.tagName.toLowerCase(),
@@ -1805,7 +1805,7 @@ function collectRepeatedSectionKickerCandidates(doc, getStyle, resolveLetterSpac
       headingFontSize,
       kickerTag: kicker.tagName.toLowerCase(),
       kickerText,
-      kickerTextTransform: kickerStyle.textTransform || '',
+      kickerTextTransform: kickerStyle.textTransform || "",
       kickerFontSize,
       kickerLetterSpacing,
     })) {
@@ -1814,7 +1814,7 @@ function collectRepeatedSectionKickerCandidates(doc, getStyle, resolveLetterSpac
 
     candidates.push({
       headingTag: heading.tagName.toLowerCase(),
-      headingText: headingText.replace(/^"|"$/g, '').slice(0, 60),
+      headingText: headingText.replace(/^"|"$/g, "").slice(0, 60),
       kickerText: kickerText.slice(0, 40),
     });
   }
@@ -1836,17 +1836,17 @@ function checkElementMotionDOM(el) {
   const style = getComputedStyle(el);
   return checkMotion({
     tag,
-    transitionProperty: style.transitionProperty || '',
-    animationName: style.animationName || '',
-    timingFunctions: [style.animationTimingFunction, style.transitionTimingFunction].filter(Boolean).join(' '),
-    classList: el.getAttribute('class') || '',
+    transitionProperty: style.transitionProperty || "",
+    animationName: style.animationName || "",
+    timingFunctions: [style.animationTimingFunction, style.transitionTimingFunction].filter(Boolean).join(" "),
+    classList: el.getAttribute("class") || "",
   });
 }
 
 function checkElementGlowDOM(el) {
   const tag = el.tagName.toLowerCase();
   const style = getComputedStyle(el);
-  if (!style.boxShadow || style.boxShadow === 'none') return [];
+  if (!style.boxShadow || style.boxShadow === "none") return [];
   // Use parent's background — glow radiates outward, so the surrounding context matters
   // If resolveBackground returns null (gradient), try to infer from the gradient colors
   let parentBg = el.parentElement ? resolveBackground(el.parentElement) : resolveBackground(el);
@@ -1854,7 +1854,7 @@ function checkElementGlowDOM(el) {
     // Gradient background — sample its colors to determine if it's dark
     let cur = el.parentElement;
     while (cur && cur.nodeType === 1) {
-      const bgImage = getComputedStyle(cur).backgroundImage || '';
+      const bgImage = getComputedStyle(cur).backgroundImage || "";
       const gradColors = parseGradientColors(bgImage);
       if (gradColors.length > 0) {
         // Average the gradient colors
@@ -1877,17 +1877,17 @@ function checkElementAIPaletteDOM(el) {
   const findings = [];
 
   // Check gradient backgrounds for purple/violet or cyan
-  const bgImage = style.backgroundImage || '';
+  const bgImage = style.backgroundImage || "";
   const gradColors = parseGradientColors(bgImage);
   for (const c of gradColors) {
     if (hasChroma(c, 50)) {
       const hue = getHue(c);
       if (hue >= 260 && hue <= 310) {
-        findings.push({ id: 'ai-color-palette', snippet: 'Purple/violet gradient background' });
+        findings.push({ id: "ai-color-palette", snippet: "Purple/violet gradient background" });
         break;
       }
       if (hue >= 160 && hue <= 200) {
-        findings.push({ id: 'ai-color-palette', snippet: 'Cyan gradient background' });
+        findings.push({ id: "ai-color-palette", snippet: "Cyan gradient background" });
         break;
       }
     }
@@ -1905,7 +1905,7 @@ function checkElementAIPaletteDOM(el) {
       if (!effectiveBg) {
         let cur = el.parentElement;
         while (cur && cur.nodeType === 1) {
-          const gi = getComputedStyle(cur).backgroundImage || '';
+          const gi = getComputedStyle(cur).backgroundImage || "";
           const gc = parseGradientColors(gi);
           if (gc.length > 0) {
             const avg = { r: 0, g: 0, b: 0 };
@@ -1920,8 +1920,8 @@ function checkElementAIPaletteDOM(el) {
         }
       }
       if (effectiveBg && relativeLuminance(effectiveBg) < 0.1) {
-        const label = hue >= 260 ? 'Purple/violet' : 'Cyan';
-        findings.push({ id: 'ai-color-palette', snippet: `${label} neon text on dark background` });
+        const label = hue >= 260 ? "Purple/violet" : "Cyan";
+        findings.push({ id: "ai-color-palette", snippet: `${label} neon text on dark background` });
       }
     }
   }
@@ -1929,7 +1929,7 @@ function checkElementAIPaletteDOM(el) {
   return findings;
 }
 
-const QUALITY_TEXT_TAGS = new Set(['p', 'li', 'td', 'th', 'dd', 'blockquote', 'figcaption']);
+const QUALITY_TEXT_TAGS = new Set(["p", "li", "td", "th", "dd", "blockquote", "figcaption"]);
 
 // Resolve a CSS font-size value to pixels by walking up the parent chain.
 // Browsers resolve em/rem/% to px in getComputedStyle, but jsdom returns the
@@ -1939,20 +1939,20 @@ function resolveFontSizePx(el, win) {
   let cur = el;
   while (cur && cur.nodeType === 1) {
     const fs = (win ? win.getComputedStyle(cur) : getComputedStyle(cur)).fontSize;
-    chain.push(fs || '');
+    chain.push(fs || "");
     cur = cur.parentElement;
   }
   // Walk root → leaf, resolving each value relative to its parent context.
   let px = 16; // root default
   for (let i = chain.length - 1; i >= 0; i--) {
     const v = chain[i];
-    if (!v || v === 'inherit') continue;
+    if (!v || v === "inherit") continue;
     const num = parseFloat(v);
     if (isNaN(num)) continue;
-    if (v.endsWith('px')) px = num;
-    else if (v.endsWith('rem')) px = num * 16;
-    else if (v.endsWith('em')) px = num * px;
-    else if (v.endsWith('%')) px = (num / 100) * px;
+    if (v.endsWith("px")) px = num;
+    else if (v.endsWith("rem")) px = num * 16;
+    else if (v.endsWith("em")) px = num * px;
+    else if (v.endsWith("%")) px = (num / 100) * px;
     else px = num; // unitless — already resolved
   }
   return px;
@@ -1961,13 +1961,13 @@ function resolveFontSizePx(el, win) {
 // Resolve a CSS length value (line-height, letter-spacing, etc.) given a
 // known font-size context. Returns null for "normal" / unparseable values.
 function resolveLengthPx(value, fontSizePx) {
-  if (!value || value === 'normal' || value === 'auto' || value === 'inherit') return null;
+  if (!value || value === "normal" || value === "auto" || value === "inherit") return null;
   const num = parseFloat(value);
   if (isNaN(num)) return null;
-  if (value.endsWith('px')) return num;
-  if (value.endsWith('rem')) return num * 16;
-  if (value.endsWith('em')) return num * fontSizePx;
-  if (value.endsWith('%')) return (num / 100) * fontSizePx;
+  if (value.endsWith("px")) return num;
+  if (value.endsWith("rem")) return num * 16;
+  if (value.endsWith("em")) return num * fontSizePx;
+  if (value.endsWith("%")) return (num / 100) * fontSizePx;
   // Unitless line-height = multiplier, return px equivalent
   return num * fontSizePx;
 }
@@ -1975,7 +1975,7 @@ function resolveLengthPx(value, fontSizePx) {
 function cssColorIsTransparent(value) {
   if (!value) return true;
   const str = String(value).trim().toLowerCase();
-  if (!str || str === 'transparent' || str === 'rgba(0, 0, 0, 0)') return true;
+  if (!str || str === "transparent" || str === "rgba(0, 0, 0, 0)") return true;
   const parsed = parseAnyColor(str);
   if (parsed) return (parsed.a ?? 1) <= 0.05;
   return /^rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0(?:\.0+)?\s*\)$/.test(str);
@@ -1995,23 +1995,23 @@ function colorsNearlyMatch(a, b) {
 }
 
 function getComputedStyleFor(win, el) {
-  if (win && typeof win.getComputedStyle === 'function') {
+  if (win && typeof win.getComputedStyle === "function") {
     try { return win.getComputedStyle(el); } catch {}
   }
-  if (typeof getComputedStyle === 'function') {
+  if (typeof getComputedStyle === "function") {
     try { return getComputedStyle(el); } catch {}
   }
   return null;
 }
 
 function hasVisibleBackgroundBoundary(style, el, win) {
-  const bg = style?.backgroundColor || '';
+  const bg = style?.backgroundColor || "";
   if (cssColorIsTransparent(bg)) return false;
 
   let parent = el?.parentElement || null;
   while (parent) {
     const parentStyle = getComputedStyleFor(win, parent);
-    const parentBg = parentStyle?.backgroundColor || '';
+    const parentBg = parentStyle?.backgroundColor || "";
     if (!cssColorIsTransparent(parentBg)) {
       return !colorsNearlyMatch(bg, parentBg);
     }
@@ -2021,7 +2021,7 @@ function hasVisibleBackgroundBoundary(style, el, win) {
   return true;
 }
 
-const TEXT_EDGE_TAGS = new Set(['A', 'BUTTON', 'CODE', 'DD', 'DT', 'FIGCAPTION', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'P', 'PRE', 'SPAN', 'TD', 'TH']);
+const TEXT_EDGE_TAGS = new Set(["A", "BUTTON", "CODE", "DD", "DT", "FIGCAPTION", "H1", "H2", "H3", "H4", "H5", "H6", "LI", "P", "PRE", "SPAN", "TD", "TH"]);
 
 function hasMeaningfulDirectText(node) {
   if (!node?.childNodes) return false;
@@ -2035,7 +2035,7 @@ function textDescendantsFlushSides(el, rect) {
   const flush = { top: false, right: false, bottom: false, left: false };
   if (!rect || !el?.querySelectorAll) return flush;
   const TEXT_EDGE_THRESHOLD = 4;
-  const candidates = el.querySelectorAll('a, button, code, dd, dt, figcaption, h1, h2, h3, h4, h5, h6, li, p, pre, span, td, th');
+  const candidates = el.querySelectorAll("a, button, code, dd, dt, figcaption, h1, h2, h3, h4, h5, h6, li, p, pre, span, td, th");
   for (const node of candidates) {
     if (!TEXT_EDGE_TAGS.has(node.tagName) || !hasMeaningfulDirectText(node)) continue;
     let nodeRect = null;
@@ -2061,14 +2061,14 @@ function checkQuality(opts) {
   const { el, tag, style, hasDirectText, textLen, fontSize, lineHeightPx, letterSpacingPx, rect, lineMax = 80, viewportWidth = 0, win = null } = opts;
   const findings = [];
   // Skip browser extension injected elements
-  const elId = el.id || '';
-  if (elId.startsWith('claude-') || elId.startsWith('cic-')) return findings;
+  const elId = el.id || "";
+  if (elId.startsWith("claude-") || elId.startsWith("cic-")) return findings;
 
   // --- Line length too long --- (browser-only: needs rect.width)
   if (rect && hasDirectText && QUALITY_TEXT_TAGS.has(tag) && rect.width > 0 && textLen > lineMax) {
     const charsPerLine = rect.width / (fontSize * 0.5);
     if (charsPerLine > lineMax + 5) {
-      findings.push({ id: 'line-length', snippet: `~${Math.round(charsPerLine)} chars/line (aim for <${lineMax})` });
+      findings.push({ id: "line-length", snippet: `~${Math.round(charsPerLine)} chars/line (aim for <${lineMax})` });
     }
   }
 
@@ -2079,7 +2079,7 @@ function checkQuality(opts) {
   // font-size — bigger text demands proportionally more padding.
   //   vertical:   max(4px, fontSize × 0.3)
   //   horizontal: max(8px, fontSize × 0.5)
-  const isInlineCode = tag === 'code' && !(el.closest && el.closest('pre'));
+  const isInlineCode = tag === "code" && !(el.closest && el.closest("pre"));
   if (!isInlineCode && rect && hasDirectText && textLen > 20 && rect.width > 100 && rect.height > 30) {
     const borders = {
       top: parseFloat(style.borderTopWidth) || 0,
@@ -2103,9 +2103,9 @@ function checkQuality(opts) {
 
       // Emit at most one finding per element — pick whichever axis is worse.
       if (vMin < vThresh) {
-        findings.push({ id: 'cramped-padding', snippet: `${vMin}px vertical padding (need ≥${vThresh.toFixed(1)}px for ${fontSize}px text)` });
+        findings.push({ id: "cramped-padding", snippet: `${vMin}px vertical padding (need ≥${vThresh.toFixed(1)}px for ${fontSize}px text)` });
       } else if (hMin < hThresh) {
-        findings.push({ id: 'cramped-padding', snippet: `${hMin}px horizontal padding (need ≥${hThresh.toFixed(1)}px for ${fontSize}px text)` });
+        findings.push({ id: "cramped-padding", snippet: `${hMin}px horizontal padding (need ≥${hThresh.toFixed(1)}px for ${fontSize}px text)` });
       }
     }
   }
@@ -2127,13 +2127,13 @@ function checkQuality(opts) {
   // outline count too: a colored card with zero padding has the same
   // visual failure mode.
   {
-    const FLUSH_SKIP_TAGS = new Set(['HTML', 'BODY', 'MAIN', 'HEADER', 'FOOTER', 'NAV', 'ARTICLE', 'ASIDE', 'BUTTON', 'A', 'LABEL', 'SUMMARY', 'CODE', 'PRE', 'INPUT', 'TEXTAREA', 'SELECT', 'FORM', 'FIGURE', 'TABLE', 'TBODY', 'THEAD', 'TR', 'TD', 'TH']);
-    const upperTag = tag ? tag.toUpperCase() : '';
-    const elPosition = style.position || '';
+    const FLUSH_SKIP_TAGS = new Set(["HTML", "BODY", "MAIN", "HEADER", "FOOTER", "NAV", "ARTICLE", "ASIDE", "BUTTON", "A", "LABEL", "SUMMARY", "CODE", "PRE", "INPUT", "TEXTAREA", "SELECT", "FORM", "FIGURE", "TABLE", "TBODY", "THEAD", "TR", "TD", "TH"]);
+    const upperTag = tag ? tag.toUpperCase() : "";
+    const elPosition = style.position || "";
     if (
       !FLUSH_SKIP_TAGS.has(upperTag) &&
       !hasDirectText &&
-      !['fixed', 'absolute'].includes(elPosition) &&
+      !["fixed", "absolute"].includes(elPosition) &&
       el.children && el.children.length > 0
     ) {
       const borderW = {
@@ -2153,20 +2153,20 @@ function checkQuality(opts) {
       // the longhands come back empty when the value was set via the
       // shorthand. Fall back to parsing `style.outline` ourselves.
       let outlineW = parseFloat(style.outlineWidth) || 0;
-      let outlineStyleVal = style.outlineStyle || '';
-      let outlineColorVal = style.outlineColor || '';
+      let outlineStyleVal = style.outlineStyle || "";
+      let outlineColorVal = style.outlineColor || "";
       if (!outlineW && style.outline) {
         const wMatch = style.outline.match(/(\d+(?:\.\d+)?)\s*px/);
         if (wMatch) outlineW = parseFloat(wMatch[1]) || 0;
         if (!outlineStyleVal) {
-          outlineStyleVal = /\b(solid|dashed|dotted|double|groove|ridge|inset|outset)\b/.test(style.outline) ? 'solid' : '';
+          outlineStyleVal = /\b(solid|dashed|dotted|double|groove|ridge|inset|outset)\b/.test(style.outline) ? "solid" : "";
         }
         if (!outlineColorVal) {
           const cMatch = style.outline.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8}|[a-zA-Z]+)\s*$/);
           if (cMatch) outlineColorVal = cMatch[1];
         }
       }
-      const outlineVisible = outlineW > 0 && !cssColorIsTransparent(outlineColorVal) && outlineStyleVal && outlineStyleVal !== 'none';
+      const outlineVisible = outlineW > 0 && !cssColorIsTransparent(outlineColorVal) && outlineStyleVal && outlineStyleVal !== "none";
       const bgVisible = hasVisibleBackgroundBoundary(style, el, win);
 
       const anyVisible = borderVisible.top || borderVisible.right || borderVisible.bottom || borderVisible.left || outlineVisible || bgVisible;
@@ -2209,7 +2209,7 @@ function checkQuality(opts) {
             bottom: resolveLengthPx(childStyle.marginBottom, fontSize) ?? 0,
             left:   resolveLengthPx(childStyle.marginLeft,   fontSize) ?? 0,
           };
-          if (rect && typeof child.getBoundingClientRect === 'function') {
+          if (rect && typeof child.getBoundingClientRect === "function") {
             try {
               const childRect = child.getBoundingClientRect();
               if (childRect && childRect.width > 0 && childRect.height > 0) {
@@ -2220,7 +2220,7 @@ function checkQuality(opts) {
               }
             } catch {}
           }
-          for (const s of ['top', 'right', 'bottom', 'left']) {
+          for (const s of ["top", "right", "bottom", "left"]) {
             if (childPad[s] >= CHILD_INSULATE_THRESHOLD || childMargin[s] >= CHILD_INSULATE_THRESHOLD) {
               childrenInsulate[s] = true;
             }
@@ -2230,8 +2230,8 @@ function checkQuality(opts) {
         const textFlush = rect ? textDescendantsFlushSides(el, rect) : null;
         const fullBleedBgBand = rect && viewportWidth > 0 && rect.width >= viewportWidth * 0.94 && bgVisible && !outlineVisible;
         const flushSides = [];
-        for (const side of ['top', 'right', 'bottom', 'left']) {
-          const bgBoundsSide = bgVisible && !(fullBleedBgBand && (side === 'left' || side === 'right'));
+        for (const side of ["top", "right", "bottom", "left"]) {
+          const bgBoundsSide = bgVisible && !(fullBleedBgBand && (side === "left" || side === "right"));
           const sideBounded = borderVisible[side] || outlineVisible || bgBoundsSide;
           if (sideBounded && pad[side] <= PAD_THRESHOLD && !childrenInsulate[side] && (!textFlush || textFlush[side])) {
             flushSides.push(side);
@@ -2244,26 +2244,26 @@ function checkQuality(opts) {
           // image-only card.
           let hasTextChild = false;
           for (const child of el.children) {
-            const childText = (child.textContent || '').trim();
+            const childText = (child.textContent || "").trim();
             if (childText.length > 4) { hasTextChild = true; break; }
           }
           if (hasTextChild) {
-            const cls = (typeof el.className === 'string' && el.className.trim())
+            const cls = (typeof el.className === "string" && el.className.trim())
               ? el.className.trim().split(/\s+/)[0]
-              : '';
+              : "";
             const boundaryParts = [];
-            const borderSidesVisible = ['top', 'right', 'bottom', 'left'].filter(s => borderVisible[s]);
-            if (borderSidesVisible.length === 4) boundaryParts.push('border');
-            else if (borderSidesVisible.length > 0) boundaryParts.push(`border-${borderSidesVisible.join('/')}`);
-            if (outlineVisible) boundaryParts.push('outline');
-            if (bgVisible) boundaryParts.push('bg');
-            const sidesLabel = flushSides.length === 4 ? 'all sides' : flushSides.join('/');
+            const borderSidesVisible = ["top", "right", "bottom", "left"].filter(s => borderVisible[s]);
+            if (borderSidesVisible.length === 4) boundaryParts.push("border");
+            else if (borderSidesVisible.length > 0) boundaryParts.push(`border-${borderSidesVisible.join("/")}`);
+            if (outlineVisible) boundaryParts.push("outline");
+            if (bgVisible) boundaryParts.push("bg");
+            const sidesLabel = flushSides.length === 4 ? "all sides" : flushSides.join("/");
             const ident = cls
               ? `<${tag.toLowerCase()}> "${cls}"`
               : `<${tag.toLowerCase()}>`;
             findings.push({
-              id: 'cramped-padding',
-              snippet: `${ident}: children flush against ${boundaryParts.join('+')} on ${sidesLabel} (no inset)`,
+              id: "cramped-padding",
+              snippet: `${ident}: children flush against ${boundaryParts.join("+")} on ${sidesLabel} (no inset)`,
             });
           }
         }
@@ -2288,10 +2288,10 @@ function checkQuality(opts) {
   //   - not inside <nav> or <header> (those legitimately bleed)
   //   - element itself has no background-color (intentional full-bleed
   //     sections set a bg-color and provide their own internal padding)
-  if (rect && hasDirectText && textLen > 40 && ['P', 'LI'].includes(tag.toUpperCase()) && viewportWidth > 0) {
-    const inNavHeader = el.closest && (el.closest('nav') || el.closest('header'));
-    const hasOwnBg = style.backgroundColor && style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent';
-    const isPositioned = ['fixed', 'absolute'].includes(style.position || '');
+  if (rect && hasDirectText && textLen > 40 && ["P", "LI"].includes(tag.toUpperCase()) && viewportWidth > 0) {
+    const inNavHeader = el.closest && (el.closest("nav") || el.closest("header"));
+    const hasOwnBg = style.backgroundColor && style.backgroundColor !== "rgba(0, 0, 0, 0)" && style.backgroundColor !== "transparent";
+    const isPositioned = ["fixed", "absolute"].includes(style.position || "");
     const widthRatio = rect.width / viewportWidth;
     const leftClose = rect.left < 16;
     const rightClose = rect.right > viewportWidth - 16;
@@ -2301,52 +2301,52 @@ function checkQuality(opts) {
         : leftClose
           ? `left ${Math.round(rect.left)}px`
           : `right ${Math.round(viewportWidth - rect.right)}px`;
-      findings.push({ id: 'body-text-viewport-edge', snippet: `<${tag.toLowerCase()}> with ${textLen}-char body bleeds to viewport edge (${which})` });
+      findings.push({ id: "body-text-viewport-edge", snippet: `<${tag.toLowerCase()}> with ${textLen}-char body bleeds to viewport edge (${which})` });
     }
   }
 
   // --- Tight line height ---
-  if (hasDirectText && textLen > 50 && !['h1','h2','h3','h4','h5','h6'].includes(tag)) {
+  if (hasDirectText && textLen > 50 && !["h1","h2","h3","h4","h5","h6"].includes(tag)) {
     if (lineHeightPx != null && fontSize > 0) {
       const ratio = lineHeightPx / fontSize;
       if (ratio > 0 && ratio < 1.3) {
-        findings.push({ id: 'tight-leading', snippet: `line-height ${ratio.toFixed(2)}x (need >=1.3)` });
+        findings.push({ id: "tight-leading", snippet: `line-height ${ratio.toFixed(2)}x (need >=1.3)` });
       }
     }
   }
 
   // --- Justified text (without hyphens) ---
-  if (hasDirectText && style.textAlign === 'justify') {
-    const hyphens = style.hyphens || style.webkitHyphens || '';
-    if (hyphens !== 'auto') {
-      findings.push({ id: 'justified-text', snippet: 'text-align: justify without hyphens: auto' });
+  if (hasDirectText && style.textAlign === "justify") {
+    const hyphens = style.hyphens || style.webkitHyphens || "";
+    if (hyphens !== "auto") {
+      findings.push({ id: "justified-text", snippet: "text-align: justify without hyphens: auto" });
     }
   }
 
   // --- Tiny body text ---
   // Only flag actual body content, not UI labels (buttons, tabs, badges, captions, footer text, etc.)
   if (hasDirectText && textLen > 20 && fontSize < 12) {
-    const skipTags = ['sub', 'sup', 'code', 'kbd', 'samp', 'var', 'caption', 'figcaption'];
+    const skipTags = ["sub", "sup", "code", "kbd", "samp", "var", "caption", "figcaption"];
     const inUIContext = el.closest && el.closest('button, a, label, summary, pre, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="option"], nav, footer, [aria-hidden="true"], [class*="badge" i], [class*="caption" i], [class*="chip" i], [class*="code" i], [class*="console" i], [class*="diff" i], [class*="label" i], [class*="meta" i], [class*="mock" i], [class*="pill" i], [class*="preview" i], [class*="tag" i], [class*="terminal" i], [class*="writes" i]');
-    const isUppercase = style.textTransform === 'uppercase';
+    const isUppercase = style.textTransform === "uppercase";
     if (!skipTags.includes(tag) && !inUIContext && !isUppercase) {
-      findings.push({ id: 'tiny-text', snippet: `${fontSize}px body text` });
+      findings.push({ id: "tiny-text", snippet: `${fontSize}px body text` });
     }
   }
 
   // --- All-caps body text ---
-  if (hasDirectText && textLen > 30 && style.textTransform === 'uppercase') {
-    if (!['h1','h2','h3','h4','h5','h6'].includes(tag)) {
-      findings.push({ id: 'all-caps-body', snippet: `text-transform: uppercase on ${textLen} chars of body text` });
+  if (hasDirectText && textLen > 30 && style.textTransform === "uppercase") {
+    if (!["h1","h2","h3","h4","h5","h6"].includes(tag)) {
+      findings.push({ id: "all-caps-body", snippet: `text-transform: uppercase on ${textLen} chars of body text` });
     }
   }
 
   // --- Wide letter spacing on body text ---
-  if (hasDirectText && textLen > 20 && style.textTransform !== 'uppercase') {
+  if (hasDirectText && textLen > 20 && style.textTransform !== "uppercase") {
     if (letterSpacingPx != null && letterSpacingPx > 0 && fontSize > 0) {
       const trackingEm = letterSpacingPx / fontSize;
       if (trackingEm > 0.05) {
-        findings.push({ id: 'wide-tracking', snippet: `letter-spacing: ${trackingEm.toFixed(2)}em on body text` });
+        findings.push({ id: "wide-tracking", snippet: `letter-spacing: ${trackingEm.toFixed(2)}em on body text` });
       }
     }
   }
@@ -2359,8 +2359,8 @@ function checkQuality(opts) {
     if (letterSpacingPx != null && letterSpacingPx < 0) {
       const trackingEm = letterSpacingPx / fontSize;
       if (trackingEm <= -0.05) {
-        const excerpt = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 40);
-        findings.push({ id: 'extreme-negative-tracking', snippet: `letter-spacing: ${trackingEm.toFixed(2)}em — "${excerpt}"` });
+        const excerpt = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 40);
+        findings.push({ id: "extreme-negative-tracking", snippet: `letter-spacing: ${trackingEm.toFixed(2)}em — "${excerpt}"` });
       }
     }
   }
@@ -2379,24 +2379,24 @@ function checkElementQualityDOM(el) {
   const lineHeightPx = resolveLengthPx(style.lineHeight, fontSize);
   const letterSpacingPx = resolveLengthPx(style.letterSpacing, fontSize);
   const rect = el.getBoundingClientRect();
-  const lineMax = (typeof window !== 'undefined' && window.__IMPECCABLE_CONFIG__?.lineLengthMax) || 80;
-  const viewportWidth = (typeof window !== 'undefined' ? window.innerWidth : 0) || 0;
-  return checkQuality({ el, tag, style, hasDirectText, textLen, fontSize, lineHeightPx, letterSpacingPx, rect, lineMax, viewportWidth, win: typeof window !== 'undefined' ? window : null });
+  const lineMax = (typeof window !== "undefined" && window.__IMPECCABLE_CONFIG__?.lineLengthMax) || 80;
+  const viewportWidth = (typeof window !== "undefined" ? window.innerWidth : 0) || 0;
+  return checkQuality({ el, tag, style, hasDirectText, textLen, fontSize, lineHeightPx, letterSpacingPx, rect, lineMax, viewportWidth, win: typeof window !== "undefined" ? window : null });
 }
 
 // Pure page-level skipped-heading walk. Takes a Document so it works in both
 // the browser and jsdom.
 function checkPageQualityFromDoc(doc) {
   const findings = [];
-  const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  const headings = doc.querySelectorAll("h1, h2, h3, h4, h5, h6");
   let prevLevel = 0;
-  let prevText = '';
+  let prevText = "";
   for (const h of headings) {
     const level = parseInt(h.tagName[1]);
-    const text = (h.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 60);
+    const text = (h.textContent || "").trim().replace(/\s+/g, " ").slice(0, 60);
     if (prevLevel > 0 && level > prevLevel + 1) {
       findings.push({
-        id: 'skipped-heading',
+        id: "skipped-heading",
         snippet: `<h${prevLevel}> "${prevText}" followed by <h${level}> "${text}" (missing h${prevLevel + 1})`,
       });
     }
@@ -2427,11 +2427,11 @@ function checkElementQuality(el, style, tag, window) {
 }
 
 function checkElementBorders(tag, style, overrides, resolvedRadius) {
-  const sides = ['Top', 'Right', 'Bottom', 'Left'];
+  const sides = ["Top", "Right", "Bottom", "Left"];
   const widths = {}, colors = {};
   for (const s of sides) {
     widths[s] = parseFloat(style[`border${s}Width`]) || 0;
-    colors[s] = style[`border${s}Color`] || '';
+    colors[s] = style[`border${s}Color`] || "";
     // jsdom silently drops any border shorthand containing var(), leaving
     // both width and color empty on the computed style. When the detectHtml
     // pre-pass pulled a resolved value off the rule, use it to fill in the
@@ -2440,7 +2440,7 @@ function checkElementBorders(tag, style, overrides, resolvedRadius) {
     if (widths[s] === 0 && overrides && overrides[s]) {
       widths[s] = overrides[s].width;
       colors[s] = overrides[s].color;
-    } else if (colors[s] && colors[s].startsWith('var(') && overrides && overrides[s]) {
+    } else if (colors[s] && colors[s].startsWith("var(") && overrides && overrides[s]) {
       // Longhand case: jsdom kept the width but left the color as the
       // literal `var(...)` string. Substitute the resolved color.
       colors[s] = overrides[s].color;
@@ -2457,7 +2457,7 @@ function checkElementBorders(tag, style, overrides, resolvedRadius) {
 }
 
 function checkElementColors(el, style, tag, window, customPropMap, hasAnchorInheritRule) {
-  const directText = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('');
+  const directText = [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join("");
   const hasDirectText = directText.trim().length > 0;
 
   const effectiveBg = resolveBackground(el, window, customPropMap);
@@ -2478,11 +2478,11 @@ function checkElementColors(el, style, tag, window, customPropMap, hasAnchorInhe
     hasAnchorInheritRule &&
     textColor &&
     textColor.r === 0 && textColor.g === 0 && textColor.b === 238 &&
-    (tag === 'a' || el.closest?.('a'))
+    (tag === "a" || el.closest?.("a"))
   ) {
     let cur = el.parentElement;
-    while (cur && cur.tagName !== 'HTML') {
-      if (cur.tagName !== 'A') {
+    while (cur && cur.tagName !== "HTML") {
+      if (cur.tagName !== "A") {
         const ps = window.getComputedStyle(cur);
         const inh = (customPropMap ? parseColorResolved(ps.color, customPropMap) : null) || parseRgb(ps.color);
         if (inh && !(inh.r === 0 && inh.g === 0 && inh.b === 238)) {
@@ -2504,9 +2504,9 @@ function checkElementColors(el, style, tag, window, customPropMap, hasAnchorInhe
     fontWeight: parseInt(style.fontWeight) || 400,
     hasDirectText,
     isEmojiOnly: isEmojiOnlyText(directText),
-    bgClip: style.webkitBackgroundClip || style.backgroundClip || '',
-    bgImage: style.backgroundImage || '',
-    classList: el.getAttribute?.('class') || el.className || '',
+    bgClip: style.webkitBackgroundClip || style.backgroundClip || "",
+    bgImage: style.backgroundImage || "",
+    classList: el.getAttribute?.("class") || el.className || "",
   });
 }
 
@@ -2524,22 +2524,22 @@ function checkElementIconTile(el, tag, window) {
   let iconWidth = 0;
   if (iconChild) {
     const iconStyle = window.getComputedStyle(iconChild);
-    iconWidth = parseFloat(iconStyle.width) || parseFloat(iconChild.getAttribute('width')) || 0;
+    iconWidth = parseFloat(iconStyle.width) || parseFloat(iconChild.getAttribute("width")) || 0;
   }
   // Or: tile contains an emoji/symbol character directly as its only content
-  const sibDirectText = [...sibling.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('');
+  const sibDirectText = [...sibling.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join("");
   const hasInlineEmojiIcon = sibling.children.length === 0 && isEmojiOnlyText(sibDirectText);
 
   return checkIconTile({
     headingTag: tag,
-    headingText: el.textContent || '',
+    headingText: el.textContent || "",
     headingTop: 0, // jsdom: no layout, skip vertical-stacking gate
     siblingTag: sibling.tagName.toLowerCase(),
     siblingWidth: sibWidth,
     siblingHeight: sibHeight,
     siblingBottom: 0,
     siblingBgColor: parseRgb(sibStyle.backgroundColor),
-    siblingBgImage: sibStyle.backgroundImage || '',
+    siblingBgImage: sibStyle.backgroundImage || "",
     siblingBorderWidth: parseFloat(sibStyle.borderTopWidth) || 0,
     siblingBorderRadius: resolveBorderRadiusPx(sibling, sibStyle, sibWidth, window),
     hasIconChild: !!iconChild || hasInlineEmojiIcon,
@@ -2548,18 +2548,18 @@ function checkElementIconTile(el, tag, window) {
 }
 
 function checkElementItalicSerif(el, style, tag) {
-  if (tag !== 'h1' && tag !== 'h2') return [];
+  if (tag !== "h1" && tag !== "h2") return [];
   return checkItalicSerif({
     tag,
-    fontStyle: style.fontStyle || '',
-    fontFamily: style.fontFamily || '',
+    fontStyle: style.fontStyle || "",
+    fontFamily: style.fontFamily || "",
     fontSize: parseFloat(style.fontSize) || 0,
-    headingText: el.textContent || '',
+    headingText: el.textContent || "",
   });
 }
 
 function checkElementHeroEyebrow(el, style, tag, window, customPropMap) {
-  if (tag !== 'h1') return [];
+  if (tag !== "h1") return [];
   const sibling = el.previousElementSibling;
   if (!sibling) return [];
   const sibStyle = window.getComputedStyle(sibling);
@@ -2577,15 +2577,15 @@ function checkElementHeroEyebrow(el, style, tag, window, customPropMap) {
   // (e.g. '0.15em'), unlike real browsers, so this conversion is required.
   return checkHeroEyebrow({
     headingTag: tag,
-    headingText: el.textContent || '',
+    headingText: el.textContent || "",
     headingFontSize: parseFloat(headingFontSizeRaw) || 0,
     siblingTag: sibling.tagName.toLowerCase(),
-    siblingText: sibling.textContent || '',
-    siblingTextTransform: sibStyle.textTransform || '',
+    siblingText: sibling.textContent || "",
+    siblingTextTransform: sibStyle.textTransform || "",
     siblingFontSize,
     siblingLetterSpacing: resolveLengthPx(letterSpacingRaw, siblingFontSize) || 0,
-    siblingFontWeight: fontWeightRaw || '',
-    siblingColor: colorRaw || '',
+    siblingFontWeight: fontWeightRaw || "",
+    siblingColor: colorRaw || "",
   });
 }
 
@@ -2601,15 +2601,15 @@ function checkRepeatedSectionKickersFromDoc(doc, win) {
 function checkElementMotion(tag, style) {
   return checkMotion({
     tag,
-    transitionProperty: style.transitionProperty || '',
-    animationName: style.animationName || '',
-    timingFunctions: [style.animationTimingFunction, style.transitionTimingFunction].filter(Boolean).join(' '),
-    classList: '',
+    transitionProperty: style.transitionProperty || "",
+    animationName: style.animationName || "",
+    timingFunctions: [style.animationTimingFunction, style.transitionTimingFunction].filter(Boolean).join(" "),
+    classList: "",
   });
 }
 
 function checkElementGlow(tag, style, effectiveBg) {
-  if (!style.boxShadow || style.boxShadow === 'none') return [];
+  if (!style.boxShadow || style.boxShadow === "none") return [];
   return checkGlow({ tag, boxShadow: style.boxShadow, effectiveBg });
 }
 
@@ -2626,16 +2626,16 @@ function checkTypography() {
   // anti-patterns), and counts what the user actually sees.
   const fontUsage = new Map(); // primary font name → count of elements
   let totalTextElements = 0;
-  for (const el of document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, td, th, dd, blockquote, figcaption, a, button, label, span')) {
+  for (const el of document.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li, td, th, dd, blockquote, figcaption, a, button, label, span")) {
     // Skip impeccable's own elements
-    if (el.closest && el.closest('.impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip')) continue;
+    if (el.closest && el.closest(".impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip")) continue;
     // Only count elements that actually have visible direct text
     const hasText = [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim().length > 0);
     if (!hasText) continue;
     const style = getComputedStyle(el);
     const ff = style.fontFamily;
     if (!ff) continue;
-    const stack = ff.split(',').map(f => f.trim().replace(/^['"]|['"]$/g, '').toLowerCase());
+    const stack = ff.split(",").map(f => f.trim().replace(/^['"]|['"]$/g, "").toLowerCase());
     const primary = stack.find(f => f && !GENERIC_FONTS.has(f));
     if (!primary) continue;
     fontUsage.set(primary, (fontUsage.get(primary) || 0) + 1);
@@ -2650,18 +2650,18 @@ function checkTypography() {
       if (share < PRIMARY_THRESHOLD) continue;
       if (!OVERUSED_FONTS.has(font)) continue;
       if (isBrandFontOnOwnDomain(font)) continue;
-      findings.push({ type: 'overused-font', detail: `Primary font: ${font} (${Math.round(share * 100)}% of text)` });
+      findings.push({ type: "overused-font", detail: `Primary font: ${font} (${Math.round(share * 100)}% of text)` });
     }
 
     // Single-font check: only one distinct primary font across all text
     if (fontUsage.size === 1) {
       const only = [...fontUsage.keys()][0];
-      findings.push({ type: 'single-font', detail: `only font used is ${only}` });
+      findings.push({ type: "single-font", detail: `only font used is ${only}` });
     }
   }
 
   const sizes = new Set();
-  for (const el of document.querySelectorAll('h1,h2,h3,h4,h5,h6,p,span,a,li,td,th,label,button,div')) {
+  for (const el of document.querySelectorAll("h1,h2,h3,h4,h5,h6,p,span,a,li,td,th,label,button,div")) {
     const fs = parseFloat(getComputedStyle(el).fontSize);
     if (fs > 0 && fs < 200) sizes.add(Math.round(fs * 10) / 10);
   }
@@ -2669,7 +2669,7 @@ function checkTypography() {
     const sorted = [...sizes].sort((a, b) => a - b);
     const ratio = sorted[sorted.length - 1] / sorted[0];
     if (ratio < 2.0) {
-      findings.push({ type: 'flat-type-hierarchy', detail: `Sizes: ${sorted.map(s => s + 'px').join(', ')} (ratio ${ratio.toFixed(1)}:1)` });
+      findings.push({ type: "flat-type-hierarchy", detail: `Sizes: ${sorted.map(s => s + "px").join(", ")} (ratio ${ratio.toFixed(1)}:1)` });
     }
   }
 
@@ -2678,13 +2678,13 @@ function checkTypography() {
 
 function isCardLikeDOM(el) {
   const tag = el.tagName.toLowerCase();
-  if (SAFE_TAGS.has(tag) || ['input','select','textarea','img','video','canvas','picture'].includes(tag)) return false;
+  if (SAFE_TAGS.has(tag) || ["input","select","textarea","img","video","canvas","picture"].includes(tag)) return false;
   const style = getComputedStyle(el);
-  const cls = el.getAttribute('class') || '';
-  const hasShadow = (style.boxShadow && style.boxShadow !== 'none') || /\bshadow(?:-sm|-md|-lg|-xl|-2xl)?\b/.test(cls);
+  const cls = el.getAttribute("class") || "";
+  const hasShadow = (style.boxShadow && style.boxShadow !== "none") || /\bshadow(?:-sm|-md|-lg|-xl|-2xl)?\b/.test(cls);
   const hasBorder = /\bborder\b/.test(cls);
   const hasRadius = parseFloat(style.borderRadius) > 0 || /\brounded(?:-sm|-md|-lg|-xl|-2xl|-full)?\b/.test(cls);
-  const hasBg = (style.backgroundColor && style.backgroundColor !== 'rgba(0, 0, 0, 0)') || /\bbg-(?:white|gray-\d+|slate-\d+)\b/.test(cls);
+  const hasBg = (style.backgroundColor && style.backgroundColor !== "rgba(0, 0, 0, 0)") || /\bbg-(?:white|gray-\d+|slate-\d+)\b/.test(cls);
   return isCardLikeFromProps(hasShadow, hasBorder, hasRadius, hasBg);
 }
 
@@ -2692,11 +2692,11 @@ function checkLayout() {
   const findings = [];
   const flaggedEls = new Set();
 
-  for (const el of document.querySelectorAll('*')) {
+  for (const el of document.querySelectorAll("*")) {
     if (!isCardLikeDOM(el) || flaggedEls.has(el)) continue;
-    const cls = el.getAttribute('class') || '';
+    const cls = el.getAttribute("class") || "";
     const style = getComputedStyle(el);
-    if (style.position === 'absolute' || style.position === 'fixed') continue;
+    if (style.position === "absolute" || style.position === "fixed") continue;
     if (/\b(?:dropdown|popover|tooltip|menu|modal|dialog)\b/i.test(cls)) continue;
     if ((el.textContent?.trim().length || 0) < 10) continue;
     const rect = el.getBoundingClientRect();
@@ -2714,7 +2714,7 @@ function checkLayout() {
     for (const other of flaggedEls) {
       if (other !== el && el.contains(other)) { isAncestor = true; break; }
     }
-    if (!isAncestor) findings.push({ type: 'nested-cards', detail: 'Card inside card', el });
+    if (!isAncestor) findings.push({ type: "nested-cards", detail: "Card inside card", el });
   }
 
   return findings;
@@ -2736,7 +2736,7 @@ function checkPageTypography(doc, win) {
       if (rule.type !== 1) continue;
       const ff = rule.style?.fontFamily;
       if (!ff) continue;
-      const stack = ff.split(',').map(f => f.trim().replace(/^['"]|['"]$/g, '').toLowerCase());
+      const stack = ff.split(",").map(f => f.trim().replace(/^['"]|['"]$/g, "").toLowerCase());
       const primary = stack.find(f => f && !GENERIC_FONTS.has(f));
       if (primary) {
         fonts.add(primary);
@@ -2746,7 +2746,7 @@ function checkPageTypography(doc, win) {
   }
 
   // Check Google Fonts links in HTML
-  const html = doc.documentElement?.outerHTML || '';
+  const html = doc.documentElement?.outerHTML || "";
   for (const f of extractGoogleFontFamilies(html)) {
     fonts.add(f);
     if (OVERUSED_FONTS.has(f)) overusedFound.add(f);
@@ -2756,7 +2756,7 @@ function checkPageTypography(doc, win) {
   const ffRe = /font-family\s*:\s*([^;}]+)/gi;
   let fm;
   while ((fm = ffRe.exec(html)) !== null) {
-    for (const f of fm[1].split(',').map(f => f.trim().replace(/^['"]|['"]$/g, '').toLowerCase())) {
+    for (const f of fm[1].split(",").map(f => f.trim().replace(/^['"]|['"]$/g, "").toLowerCase())) {
       if (f && !GENERIC_FONTS.has(f)) {
         fonts.add(f);
         if (OVERUSED_FONTS.has(f)) overusedFound.add(f);
@@ -2765,20 +2765,20 @@ function checkPageTypography(doc, win) {
   }
 
   for (const font of overusedFound) {
-    findings.push({ id: 'overused-font', snippet: `Primary font: ${font}` });
+    findings.push({ id: "overused-font", snippet: `Primary font: ${font}` });
   }
 
   // Single font
   if (fonts.size === 1) {
-    const els = doc.querySelectorAll('*');
+    const els = doc.querySelectorAll("*");
     if (els.length >= 20) {
-      findings.push({ id: 'single-font', snippet: `only font used is ${[...fonts][0]}` });
+      findings.push({ id: "single-font", snippet: `only font used is ${[...fonts][0]}` });
     }
   }
 
   // Flat type hierarchy
   const sizes = new Set();
-  const textEls = doc.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, a, li, td, th, label, button, div');
+  const textEls = doc.querySelectorAll("h1, h2, h3, h4, h5, h6, p, span, a, li, td, th, label, button, div");
   for (const el of textEls) {
     const fontSize = parseFloat(win.getComputedStyle(el).fontSize);
     // Filter out sub-8px values (jsdom doesn't resolve relative units properly)
@@ -2788,7 +2788,7 @@ function checkPageTypography(doc, win) {
     const sorted = [...sizes].sort((a, b) => a - b);
     const ratio = sorted[sorted.length - 1] / sorted[0];
     if (ratio < 2.0) {
-      findings.push({ id: 'flat-type-hierarchy', snippet: `Sizes: ${sorted.map(s => s + 'px').join(', ')} (ratio ${ratio.toFixed(1)}:1)` });
+      findings.push({ id: "flat-type-hierarchy", snippet: `Sizes: ${sorted.map(s => s + "px").join(", ")} (ratio ${ratio.toFixed(1)}:1)` });
     }
   }
 
@@ -2797,13 +2797,13 @@ function checkPageTypography(doc, win) {
 
 function isCardLike(el, win) {
   const tag = el.tagName.toLowerCase();
-  if (SAFE_TAGS.has(tag) || ['input', 'select', 'textarea', 'img', 'video', 'canvas', 'picture'].includes(tag)) return false;
+  if (SAFE_TAGS.has(tag) || ["input", "select", "textarea", "img", "video", "canvas", "picture"].includes(tag)) return false;
 
   const style = win.getComputedStyle(el);
-  const rawStyle = el.getAttribute?.('style') || '';
-  const cls = el.getAttribute?.('class') || '';
+  const rawStyle = el.getAttribute?.("style") || "";
+  const cls = el.getAttribute?.("class") || "";
 
-  const hasShadow = (style.boxShadow && style.boxShadow !== 'none') ||
+  const hasShadow = (style.boxShadow && style.boxShadow !== "none") ||
     /\bshadow(?:-sm|-md|-lg|-xl|-2xl)?\b/.test(cls) || /box-shadow/i.test(rawStyle);
   const hasBorder = /\bborder\b/.test(cls);
   const widthPx = parseFloat(style.width) || 0;
@@ -2819,17 +2819,17 @@ function checkPageLayout(doc, win) {
   const findings = [];
 
   // Nested cards
-  const allEls = doc.querySelectorAll('*');
+  const allEls = doc.querySelectorAll("*");
   const flaggedEls = new Set();
   for (const el of allEls) {
     if (!isCardLike(el, win)) continue;
     if (flaggedEls.has(el)) continue;
 
     const tag = el.tagName.toLowerCase();
-    const cls = el.getAttribute?.('class') || '';
-    const rawStyle = el.getAttribute?.('style') || '';
+    const cls = el.getAttribute?.("class") || "";
+    const rawStyle = el.getAttribute?.("style") || "";
 
-    if (['pre', 'code'].includes(tag)) continue;
+    if (["pre", "code"].includes(tag)) continue;
     if (/\b(?:absolute|fixed)\b/.test(cls) || /position\s*:\s*(?:absolute|fixed)/i.test(rawStyle)) continue;
     if ((el.textContent?.trim().length || 0) < 10) continue;
     if (/\b(?:dropdown|popover|tooltip|menu|modal|dialog)\b/i.test(cls)) continue;
@@ -2855,7 +2855,7 @@ function checkPageLayout(doc, win) {
       }
     }
     if (!isAncestorOfFlagged) {
-      findings.push({ id: 'nested-cards', snippet: `Card inside card (${el.tagName.toLowerCase()})` });
+      findings.push({ id: "nested-cards", snippet: `Card inside card (${el.tagName.toLowerCase()})` });
     }
   }
 
@@ -2881,17 +2881,17 @@ function isCreamColor(rgb) {
 // filtered through isCreamColor, so neutral grays (stone) and over-saturated
 // shades drop out on their own.
 const TAILWIND_BG_HEX = {
-  'bg-amber-50': '#fffbeb', 'bg-amber-100': '#fef3c7',
-  'bg-orange-50': '#fff7ed', 'bg-orange-100': '#ffedd5',
-  'bg-yellow-50': '#fefce8',
-  'bg-stone-50': '#fafaf9', 'bg-stone-100': '#f5f5f4', 'bg-stone-200': '#e7e5e4',
+  "bg-amber-50": "#fffbeb", "bg-amber-100": "#fef3c7",
+  "bg-orange-50": "#fff7ed", "bg-orange-100": "#ffedd5",
+  "bg-yellow-50": "#fefce8",
+  "bg-stone-50": "#fafaf9", "bg-stone-100": "#f5f5f4", "bg-stone-200": "#e7e5e4",
 };
 
 function creamFromClassList(cls) {
   if (!cls) return null;
   // Arbitrary value: bg-[#f5f0e6] / bg-[rgb(245_240_230)] (underscores = spaces).
   const arb = cls.match(/\bbg-\[([^\]]+)\]/);
-  if (arb && isCreamColor(parseAnyColor(arb[1].replace(/_/g, ' ')))) return `bg-[${arb[1]}]`;
+  if (arb && isCreamColor(parseAnyColor(arb[1].replace(/_/g, " ")))) return `bg-[${arb[1]}]`;
   // Named warm-light utilities.
   for (const [tok, hex] of Object.entries(TAILWIND_BG_HEX)) {
     if (new RegExp(`(^|\\s)${tok}($|\\s)`).test(cls) && isCreamColor(parseAnyColor(hex))) return tok;
@@ -2901,7 +2901,7 @@ function creamFromClassList(cls) {
 
 function checkCreamPalette(doc, win) {
   const findings = [];
-  const body = doc.body || (doc.querySelector ? doc.querySelector('body') : null);
+  const body = doc.body || (doc.querySelector ? doc.querySelector("body") : null);
   if (!body) return findings;
   const html = doc.documentElement;
   const getCS = (el) => (win ? win.getComputedStyle(el) : getComputedStyle(el));
@@ -2913,16 +2913,16 @@ function checkCreamPalette(doc, win) {
     if (html) bg = readOwnBackgroundColor(html, getCS(html));
   }
   if (isCreamColor(bg)) {
-    findings.push({ id: 'cream-palette', snippet: `cream/beige page background rgb(${bg.r}, ${bg.g}, ${bg.b})` });
+    findings.push({ id: "cream-palette", snippet: `cream/beige page background rgb(${bg.r}, ${bg.g}, ${bg.b})` });
     return findings;
   }
 
   // 2. Tailwind class fallback — for the static path, where utility classes
   //    never resolve to computed CSS.
   for (const el of [body, html]) {
-    const tok = creamFromClassList(el && el.getAttribute ? el.getAttribute('class') : '');
+    const tok = creamFromClassList(el && el.getAttribute ? el.getAttribute("class") : "");
     if (tok) {
-      findings.push({ id: 'cream-palette', snippet: `cream/beige page background (Tailwind ${tok})` });
+      findings.push({ id: "cream-palette", snippet: `cream/beige page background (Tailwind ${tok})` });
       break;
     }
   }
@@ -2939,10 +2939,10 @@ const OVERSIZED_H1_MIN_CHARS = 40;
 const OVERSIZED_H1_MIN_VIEWPORT_HEIGHT_RATIO = 0.28;
 const OVERSIZED_H1_MIN_VIEWPORT_AREA_RATIO = 0.25;
 function checkOversizedH1({ tag, fontSize, headingText, rect = null, viewportWidth = 0, viewportHeight = 0 }) {
-  if (tag !== 'h1') return [];
+  if (tag !== "h1") return [];
   const textLen = headingText.length;
   if (fontSize >= OVERSIZED_H1_FONT_PX && textLen >= OVERSIZED_H1_MIN_CHARS) {
-    let viewportDetail = '';
+    let viewportDetail = "";
     if (rect && viewportWidth > 0 && viewportHeight > 0) {
       const heightRatio = rect.height / viewportHeight;
       const areaRatio = (rect.width * rect.height) / (viewportWidth * viewportHeight);
@@ -2951,27 +2951,27 @@ function checkOversizedH1({ tag, fontSize, headingText, rect = null, viewportWid
       if (!dominatesViewport) return [];
       viewportDetail = `, ${Math.round(heightRatio * 100)}vh`;
     }
-    return [{ id: 'oversized-h1', snippet: `${Math.round(fontSize)}px h1, ${textLen} chars${viewportDetail} "${headingText.slice(0, 60)}"` }];
+    return [{ id: "oversized-h1", snippet: `${Math.round(fontSize)}px h1, ${textLen} chars${viewportDetail} "${headingText.slice(0, 60)}"` }];
   }
   return [];
 }
 
 function checkElementOversizedH1(el, style, tag, window) {
-  if (tag !== 'h1') return [];
+  if (tag !== "h1") return [];
   const fontSize = resolveFontSizePx(el, window);
-  const headingText = (el.textContent || '').trim().replace(/\s+/g, ' ');
+  const headingText = (el.textContent || "").trim().replace(/\s+/g, " ");
   return checkOversizedH1({ tag, fontSize, headingText });
 }
 
 function checkElementOversizedH1DOM(el) {
   const tag = el.tagName.toLowerCase();
-  if (tag !== 'h1') return [];
+  if (tag !== "h1") return [];
   const style = getComputedStyle(el);
   const fontSize = parseFloat(style.fontSize) || 0;
-  const headingText = (el.textContent || '').trim().replace(/\s+/g, ' ');
+  const headingText = (el.textContent || "").trim().replace(/\s+/g, " ");
   const rect = el.getBoundingClientRect();
-  const viewportWidth = (typeof window !== 'undefined' ? window.innerWidth : 0) || 0;
-  const viewportHeight = (typeof window !== 'undefined' ? window.innerHeight : 0) || 0;
+  const viewportWidth = (typeof window !== "undefined" ? window.innerWidth : 0) || 0;
+  const viewportHeight = (typeof window !== "undefined" ? window.innerHeight : 0) || 0;
   return checkOversizedH1({ tag, fontSize, headingText, rect, viewportWidth, viewportHeight });
 }
 
@@ -2982,13 +2982,13 @@ function shadowLayerAlpha(layer) {
   CSS_COLOR_TOKEN_RE.lastIndex = 0;
   const match = CSS_COLOR_TOKEN_RE.exec(layer);
   if (!match) return 1;
-  if (match[0].toLowerCase() === 'transparent') return 0;
+  if (match[0].toLowerCase() === "transparent") return 0;
   const parsed = parseAnyColor(match[0]);
   return parsed ? (parsed.a ?? 1) : 1;
 }
 
 function shadowMaxBlurPx(boxShadow, { minAlpha = 0 } = {}) {
-  if (!boxShadow || boxShadow === 'none') return 0;
+  if (!boxShadow || boxShadow === "none") return 0;
   let maxBlur = 0;
   // Split into layers on commas not inside parentheses (rgba(...) etc.).
   for (const layer of boxShadow.split(/,(?![^()]*\))/)) {
@@ -2997,7 +2997,7 @@ function shadowMaxBlurPx(boxShadow, { minAlpha = 0 } = {}) {
     // ordered length tokens: offsetX offsetY blur [spread]. Static jsdom keeps
     // unitless zeros ("0 0 24px"); browsers normalize to px ("0px 0px 24px") —
     // both reduce to the same numbers here.
-    const cleaned = layer.replace(CSS_COLOR_TOKEN_RE, ' ').replace(/\b[a-z]+\b/gi, ' ');
+    const cleaned = layer.replace(CSS_COLOR_TOKEN_RE, " ").replace(/\b[a-z]+\b/gi, " ");
     const nums = [...cleaned.matchAll(/-?\d*\.?\d+/g)].map(m => parseFloat(m[0]));
     if (nums.length >= 3) maxBlur = Math.max(maxBlur, nums[2]);
   }
@@ -3012,12 +3012,12 @@ function cssColorAlpha(value) {
 
 function checkGptThinBorderWideShadow({ borderWidths, borderColors, boxShadow }) {
   const visibleThinBorders = borderWidths
-    .map((width, index) => ({ width, alpha: cssColorAlpha(borderColors?.[index] || '') }))
+    .map((width, index) => ({ width, alpha: cssColorAlpha(borderColors?.[index] || "") }))
     .filter(({ width, alpha }) => width > 0 && width <= 1.5 && alpha >= 0.28);
   const maxBorder = Math.max(0, ...visibleThinBorders.map(({ width }) => width));
   const blur = shadowMaxBlurPx(boxShadow, { minAlpha: 0.12 });
   if (visibleThinBorders.length >= 2 && blur >= 16) {
-    return [{ id: 'gpt-thin-border-wide-shadow', snippet: `${maxBorder}px border + ${Math.round(blur)}px shadow blur` }];
+    return [{ id: "gpt-thin-border-wide-shadow", snippet: `${maxBorder}px border + ${Math.round(blur)}px shadow blur` }];
   }
   return [];
 }
@@ -3033,40 +3033,40 @@ function borderWidthsFromStyle(style) {
 
 function borderColorsFromStyle(style) {
   return [
-    style.borderTopColor || '',
-    style.borderRightColor || '',
-    style.borderBottomColor || '',
-    style.borderLeftColor || '',
+    style.borderTopColor || "",
+    style.borderRightColor || "",
+    style.borderBottomColor || "",
+    style.borderLeftColor || "",
   ];
 }
 
 function checkElementGptBorderShadow(el, style) {
-  return checkGptThinBorderWideShadow({ borderWidths: borderWidthsFromStyle(style), borderColors: borderColorsFromStyle(style), boxShadow: style.boxShadow || '' });
+  return checkGptThinBorderWideShadow({ borderWidths: borderWidthsFromStyle(style), borderColors: borderColorsFromStyle(style), boxShadow: style.boxShadow || "" });
 }
 
 function checkElementGptBorderShadowDOM(el) {
   const style = getComputedStyle(el);
-  return checkGptThinBorderWideShadow({ borderWidths: borderWidthsFromStyle(style), borderColors: borderColorsFromStyle(style), boxShadow: style.boxShadow || '' });
+  return checkGptThinBorderWideShadow({ borderWidths: borderWidthsFromStyle(style), borderColors: borderColorsFromStyle(style), boxShadow: style.boxShadow || "" });
 }
 
 // ─── Clipped overflow container ───────────────────────────────────────────────
 // A clipping container (overflow hidden/clip, not a scroll region) wrapping an
 // absolutely/fixed-positioned descendant clips popovers/menus that must escape.
 function classSelector(el) {
-  const cls = (el.getAttribute ? el.getAttribute('class') : el.className) || '';
+  const cls = (el.getAttribute ? el.getAttribute("class") : el.className) || "";
   const tokens = String(cls).trim().split(/\s+/).filter(Boolean);
-  const tag = el.tagName ? el.tagName.toLowerCase() : 'el';
-  return tokens.length ? `${tag}.${tokens.join('.')}` : tag;
+  const tag = el.tagName ? el.tagName.toLowerCase() : "el";
+  return tokens.length ? `${tag}.${tokens.join(".")}` : tag;
 }
 
 function positionedChildIsDecorative(child) {
-  if (!child || typeof child.getAttribute !== 'function') return false;
+  if (!child || typeof child.getAttribute !== "function") return false;
   if (child.closest?.('[aria-hidden="true"]')) return true;
-  const role = (child.getAttribute('role') || '').toLowerCase();
-  if (role === 'none' || role === 'presentation') return true;
-  const tag = child.tagName ? child.tagName.toLowerCase() : '';
-  if (['img', 'svg', 'canvas', 'video'].includes(tag)) return true;
-  const ident = `${child.getAttribute('class') || ''} ${child.getAttribute('id') || ''}`;
+  const role = (child.getAttribute("role") || "").toLowerCase();
+  if (role === "none" || role === "presentation") return true;
+  const tag = child.tagName ? child.tagName.toLowerCase() : "";
+  if (["img", "svg", "canvas", "video"].includes(tag)) return true;
+  const ident = `${child.getAttribute("class") || ""} ${child.getAttribute("id") || ""}`;
   if (
     /\b(art|bg|background|badge|blob|crop|decor|dot|glow|grain|image|mask|ornament|overlay|photo|scrim|shadow|shine|texture)\b/i.test(ident) &&
     !positionedChildHasSubstantiveContent(child)
@@ -3077,12 +3077,12 @@ function positionedChildIsDecorative(child) {
 }
 
 const POSITIONED_CHILD_INTERACTIVE_SELECTOR = [
-  'a[href]',
-  'button',
-  'input',
-  'select',
-  'summary',
-  'textarea',
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "summary",
+  "textarea",
   '[tabindex]:not([tabindex="-1"])',
   '[role="button"]',
   '[role="dialog"]',
@@ -3092,17 +3092,17 @@ const POSITIONED_CHILD_INTERACTIVE_SELECTOR = [
   '[role="menuitem"]',
   '[role="option"]',
   '[role="tooltip"]',
-].join(',');
+].join(",");
 
 function positionedChildHasSubstantiveContent(child) {
-  const text = (child.textContent || '').replace(/\s+/g, ' ').trim();
+  const text = (child.textContent || "").replace(/\s+/g, " ").trim();
   if (text.length > 0) return true;
-  if (typeof child.matches === 'function') {
+  if (typeof child.matches === "function") {
     try {
       if (child.matches(POSITIONED_CHILD_INTERACTIVE_SELECTOR)) return true;
     } catch {}
   }
-  if (typeof child.querySelector === 'function') {
+  if (typeof child.querySelector === "function") {
     try {
       if (child.querySelector(POSITIONED_CHILD_INTERACTIVE_SELECTOR)) return true;
     } catch {}
@@ -3111,16 +3111,16 @@ function positionedChildHasSubstantiveContent(child) {
 }
 
 function clippingContainerIsIntentionalViewport(el) {
-  if (!el || typeof el.getAttribute !== 'function') return false;
-  const roleDescription = (el.getAttribute('aria-roledescription') || '').toLowerCase();
+  if (!el || typeof el.getAttribute !== "function") return false;
+  const roleDescription = (el.getAttribute("aria-roledescription") || "").toLowerCase();
   if (/\b(carousel|slider)\b/.test(roleDescription)) return true;
-  const ident = `${el.getAttribute('class') || ''} ${el.getAttribute('id') || ''}`.toLowerCase();
+  const ident = `${el.getAttribute("class") || ""} ${el.getAttribute("id") || ""}`.toLowerCase();
   return /\b(carousel|comparison|compare|fisheye|marquee|preview|scroller|slider|slideshow|split|viewport)\b/.test(ident) ||
     /\b(demo-area|demo-stage|demo-viewport)\b/.test(ident);
 }
 
 function elementRect(el) {
-  if (!el || typeof el.getBoundingClientRect !== 'function') return null;
+  if (!el || typeof el.getBoundingClientRect !== "function") return null;
   try {
     const rect = el.getBoundingClientRect();
     if (!rect) return null;
@@ -3166,9 +3166,9 @@ function positionedChildEscapesClip(el, child, clipX, clipY) {
 }
 
 function checkClippedOverflow(el, style, getStyle) {
-  const clips = (v) => v === 'hidden' || v === 'clip';
-  const scrolls = (v) => v === 'auto' || v === 'scroll';
-  const ox = style.overflowX || '', oy = style.overflowY || '', ov = style.overflow || '';
+  const clips = (v) => v === "hidden" || v === "clip";
+  const scrolls = (v) => v === "auto" || v === "scroll";
+  const ox = style.overflowX || "", oy = style.overflowY || "", ov = style.overflow || "";
   const clipX = clips(ox) || clips(ov);
   const clipY = clips(oy) || clips(ov);
   const anyClip = clipX || clipY;
@@ -3176,15 +3176,15 @@ function checkClippedOverflow(el, style, getStyle) {
   if (!anyClip || anyScroll) return [];
   if (clippingContainerIsIntentionalViewport(el)) return [];
   if (!el.querySelectorAll) return [];
-  for (const child of el.querySelectorAll('*')) {
+  for (const child of el.querySelectorAll("*")) {
     const childStyle = getStyle(child);
-    const pos = childStyle.position || '';
-    if (pos === 'absolute' || pos === 'fixed') {
+    const pos = childStyle.position || "";
+    if (pos === "absolute" || pos === "fixed") {
       if (positionedChildIsDecorative(child)) continue;
       const escapes = positionedChildEscapesClip(el, child, clipX, clipY);
       if (escapes === false) continue;
       if (escapes === null && !positionedStyleImpliesEscape(childStyle)) continue;
-      return [{ id: 'clipped-overflow-container', snippet: `${classSelector(el)} clips a positioned child` }];
+      return [{ id: "clipped-overflow-container", snippet: `${classSelector(el)} clips a positioned child` }];
     }
   }
   return [];
@@ -3200,11 +3200,11 @@ function checkElementClippedOverflowDOM(el) {
 }
 
 // ─── Text overflow (browser-only: needs scrollWidth/clientWidth) ──────────────
-const TEXT_OVERFLOW_SKIP_TAGS = new Set(['pre', 'code', 'textarea', 'svg', 'canvas', 'select', 'option', 'marquee']);
+const TEXT_OVERFLOW_SKIP_TAGS = new Set(["pre", "code", "textarea", "svg", "canvas", "select", "option", "marquee"]);
 
 function metricLengthPx(value, fontSizePx = 16) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value !== 'string') return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
   return resolveLengthPx(value, fontSizePx);
 }
 
@@ -3224,7 +3224,7 @@ function expandBoxShorthand(parts) {
 }
 
 function clippedByInset(clipPath) {
-  const match = String(clipPath || '').trim().toLowerCase().match(/^inset\s*\(([^)]*)\)$/);
+  const match = String(clipPath || "").trim().toLowerCase().match(/^inset\s*\(([^)]*)\)$/);
   if (!match) return false;
   const beforeRound = match[1].split(/\s+round\s+/)[0].trim();
   if (!beforeRound) return false;
@@ -3236,7 +3236,7 @@ function clippedByInset(clipPath) {
 }
 
 function clippedByRect(clip) {
-  const match = String(clip || '').trim().toLowerCase().match(/^rect\s*\(([^)]*)\)$/);
+  const match = String(clip || "").trim().toLowerCase().match(/^rect\s*\(([^)]*)\)$/);
   if (!match) return false;
   const values = match[1].split(/[,\s]+/).map(value => value.trim()).filter(Boolean);
   if (values.length !== 4) return false;
@@ -3248,28 +3248,28 @@ function clippedByRect(clip) {
 function isScreenReaderOnlyTextStyle(style, metrics = {}) {
   if (!style) return false;
   const overflowValues = [style.overflow, style.overflowX, style.overflowY]
-    .map(value => String(value || '').toLowerCase());
-  const clipsOverflow = overflowValues.some(value => value === 'hidden' || value === 'clip');
+    .map(value => String(value || "").toLowerCase());
+  const clipsOverflow = overflowValues.some(value => value === "hidden" || value === "clip");
 
   const fontSize = metricLengthPx(style.fontSize, 16) || 16;
   const width = firstMetricLengthPx(fontSize, metrics.width, metrics.clientWidth, style.width, style.inlineSize);
   const height = firstMetricLengthPx(fontSize, metrics.height, metrics.clientHeight, style.height, style.blockSize);
   const isTiny = width !== null && height !== null && width <= 2 && height <= 2;
-  const isAbsolutelyHidden = String(style.position || '').toLowerCase() === 'absolute' && isTiny && clipsOverflow;
+  const isAbsolutelyHidden = String(style.position || "").toLowerCase() === "absolute" && isTiny && clipsOverflow;
 
-  const clipPath = String(style.clipPath || style.webkitClipPath || '').trim();
-  const clip = String(style.clip || '').trim();
+  const clipPath = String(style.clipPath || style.webkitClipPath || "").trim();
+  const clip = String(style.clip || "").trim();
   return isAbsolutelyHidden || clippedByInset(clipPath) || clippedByRect(clip);
 }
 
 function isRenderedForBrowserRule(el) {
   for (let cur = el; cur && cur.nodeType === 1; cur = cur.parentElement) {
-    if (cur.getAttribute?.('aria-hidden') === 'true') return false;
+    if (cur.getAttribute?.("aria-hidden") === "true") return false;
     const style = getComputedStyle(cur);
-    const visibility = String(style.visibility || '').toLowerCase();
-    if (style.display === 'none' || visibility === 'hidden' || visibility === 'collapse') return false;
+    const visibility = String(style.visibility || "").toLowerCase();
+    if (style.display === "none" || visibility === "hidden" || visibility === "collapse") return false;
     if ((parseFloat(style.opacity) || 0) <= 0.01) return false;
-    if (String(style.contentVisibility || '').toLowerCase() === 'hidden') return false;
+    if (String(style.contentVisibility || "").toLowerCase() === "hidden") return false;
   }
   return true;
 }
@@ -3290,7 +3290,7 @@ function checkElementTextOverflowDOM(el) {
     clientWidth: el.clientWidth,
     clientHeight: el.clientHeight,
   })) return [];
-  const isScrollRegion = (s) => /(auto|scroll)/.test(s.overflowX || '') || /(auto|scroll)/.test(s.overflow || '');
+  const isScrollRegion = (s) => /(auto|scroll)/.test(s.overflowX || "") || /(auto|scroll)/.test(s.overflow || "");
   if (isScrollRegion(style)) return [];
   // A scrollable ancestor means this overflow is intentional and scrollable.
   for (let p = el.parentElement; p; p = p.parentElement) {
@@ -3298,13 +3298,13 @@ function checkElementTextOverflowDOM(el) {
   }
   const delta = el.scrollWidth - el.clientWidth;
   if (el.clientWidth > 0 && delta >= 16) {
-    return [{ id: 'text-overflow', snippet: `${classSelector(el)} overflows its box by ${Math.round(delta)}px` }];
+    return [{ id: "text-overflow", snippet: `${classSelector(el)} overflows its box by ${Math.round(delta)}px` }];
   }
   return [];
 }
 
 // --- cli/engine/browser/injected/index.mjs ---
-const IS_BROWSER = typeof window !== 'undefined';
+const IS_BROWSER = typeof window !== "undefined";
 
 // ─── Section 7: Browser UI (IS_BROWSER only) ────────────────────────────────
 
@@ -3312,8 +3312,8 @@ if (IS_BROWSER) {
   // Detect extension mode via the script tag's data attribute or the document element fallback.
   // currentScript is reliable for synchronously-executing scripts (which our IIFE is).
   const _myScript = document.currentScript;
-  const EXTENSION_MODE = (_myScript && _myScript.dataset.impeccableExtension === 'true')
-    || document.documentElement.dataset.impeccableExtension === 'true';
+  const EXTENSION_MODE = (_myScript && _myScript.dataset.impeccableExtension === "true")
+    || document.documentElement.dataset.impeccableExtension === "true";
 
   // Kinpaku gold — pinned to the site's brand token (see
   // site/styles/kinpaku-tokens.css --ks-kinpaku). Keep this in sync with
@@ -3327,14 +3327,14 @@ if (IS_BROWSER) {
   // against the leaf gold, so reading the rule name is solid in both
   // modes. Hover deepens the gold (preserves chroma — never drops it,
   // dropping chroma washes the gold into a sand/olive tone).
-  const BRAND_COLOR = 'oklch(84% 0.19 80.46)';
-  const BRAND_COLOR_HOVER = 'oklch(74% 0.18 80)';
-  const LABEL_INK = 'oklch(4% 0.004 95)';
+  const BRAND_COLOR = "oklch(84% 0.19 80.46)";
+  const BRAND_COLOR_HOVER = "oklch(74% 0.18 80)";
+  const LABEL_INK = "oklch(4% 0.004 95)";
   const LABEL_BG = BRAND_COLOR;
   const OUTLINE_COLOR = BRAND_COLOR;
 
   // Inject hover styles via CSS (more reliable than JS event listeners)
-  const styleEl = document.createElement('style');
+  const styleEl = document.createElement("style");
   styleEl.textContent = `
     @keyframes impeccable-reveal {
       from { opacity: 0; }
@@ -3381,7 +3381,7 @@ if (IS_BROWSER) {
     .impeccable-spotlight-backdrop.impeccable-visible {
       opacity: 1;
     }
-    .impeccable-hidden .impeccable-overlay${EXTENSION_MODE ? '' : ':not(.impeccable-banner)'} {
+    .impeccable-hidden .impeccable-overlay${EXTENSION_MODE ? "" : ":not(.impeccable-banner)"} {
       display: none !important;
     }
   `;
@@ -3393,8 +3393,8 @@ if (IS_BROWSER) {
 
   function getSpotlightBackdrop() {
     if (!spotlightBackdrop) {
-      spotlightBackdrop = document.createElement('div');
-      spotlightBackdrop.className = 'impeccable-spotlight-backdrop';
+      spotlightBackdrop = document.createElement("div");
+      spotlightBackdrop.className = "impeccable-spotlight-backdrop";
       document.body.appendChild(spotlightBackdrop);
     }
     return spotlightBackdrop;
@@ -3427,12 +3427,12 @@ if (IS_BROWSER) {
     spotlightTarget = target;
     const bd = getSpotlightBackdrop();
     updateSpotlightClipPath();
-    bd.classList.add('impeccable-visible');
+    bd.classList.add("impeccable-visible");
   }
 
   function hideSpotlight() {
     spotlightTarget = null;
-    if (spotlightBackdrop) spotlightBackdrop.classList.remove('impeccable-visible');
+    if (spotlightBackdrop) spotlightBackdrop.classList.remove("impeccable-visible");
   }
 
   function isInViewport(el) {
@@ -3441,10 +3441,10 @@ if (IS_BROWSER) {
   }
 
   // Reposition spotlight on scroll/resize
-  window.addEventListener('scroll', () => {
+  window.addEventListener("scroll", () => {
     if (spotlightTarget) updateSpotlightClipPath();
   }, { passive: true });
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     if (spotlightTarget) updateSpotlightClipPath();
   });
 
@@ -3453,13 +3453,13 @@ if (IS_BROWSER) {
   const RULE_CATEGORY = {};
   for (const ap of ANTIPATTERNS) {
     TYPE_LABELS[ap.id] = ap.name.toLowerCase();
-    RULE_CATEGORY[ap.id] = ap.category || 'quality';
+    RULE_CATEGORY[ap.id] = ap.category || "quality";
   }
 
   function isInFixedContext(el) {
     let p = el;
     while (p && p !== document.body) {
-      if (getComputedStyle(p).position === 'fixed') return true;
+      if (getComputedStyle(p).position === "fixed") return true;
       p = p.parentElement;
     }
     return false;
@@ -3484,9 +3484,9 @@ if (IS_BROWSER) {
 
   function repositionOverlays() {
     for (const o of overlays) {
-      if (!o._targetEl || o.classList.contains('impeccable-banner')) continue;
+      if (!o._targetEl || o.classList.contains("impeccable-banner")) continue;
       // Skip overlays whose target is currently hidden (display: none on the overlay)
-      if (o.style.display === 'none') continue;
+      if (o.style.display === "none") continue;
       positionOverlay(o);
     }
   }
@@ -3496,11 +3496,11 @@ if (IS_BROWSER) {
     cancelAnimationFrame(resizeRAF);
     resizeRAF = requestAnimationFrame(repositionOverlays);
   };
-  window.addEventListener('resize', onResize);
+  window.addEventListener("resize", onResize);
   // Reposition on scroll too -- catches sticky/parallax shifts
-  window.addEventListener('scroll', onResize, { passive: true });
+  window.addEventListener("scroll", onResize, { passive: true });
   // Reposition when body resizes (lazy-loaded images, dynamic content, fonts loading)
-  if (typeof ResizeObserver !== 'undefined') {
+  if (typeof ResizeObserver !== "undefined") {
     const bodyResizeObserver = new ResizeObserver(onResize);
     bodyResizeObserver.observe(document.body);
   }
@@ -3515,31 +3515,31 @@ if (IS_BROWSER) {
       const overlay = entry.target._impeccableOverlay;
       if (!overlay) continue;
       if (entry.isIntersecting) {
-        overlay.style.display = '';
+        overlay.style.display = "";
         positionOverlay(overlay);
         if (!overlay._revealed) {
           overlay._revealed = true;
           if (firstScanDone) {
             // Subsequent reveals (re-scans, scroll-into-view): instant, no animation
-            overlay.style.animation = 'none';
+            overlay.style.animation = "none";
           } else {
             // Initial scan: staggered cascade reveal
             overlay.style.animationDelay = `${Math.min((overlay._staggerIndex || 0) * 60, 600)}ms`;
           }
           requestAnimationFrame(() => {
-            overlay.classList.add('impeccable-visible');
+            overlay.classList.add("impeccable-visible");
             if (overlay._checkLabel) overlay._checkLabel();
           });
         }
       } else {
-        overlay.style.display = 'none';
+        overlay.style.display = "none";
       }
     }
-  }, { rootMargin: '99999px' });
+  }, { rootMargin: "99999px" });
 
   function detachOverlay(overlay) {
     if (!overlay) return;
-    if (typeof overlay._cleanup === 'function') {
+    if (typeof overlay._cleanup === "function") {
       try { overlay._cleanup(); } catch { /* best effort overlay teardown */ }
     }
     if (overlay._targetEl && overlay._targetEl._impeccableOverlay === overlay) {
@@ -3554,10 +3554,10 @@ if (IS_BROWSER) {
   // Reposition overlays after CSS transitions end (e.g. reveal animations).
   // Listens at document level so it catches transitions on ancestor elements
   // (the transform may be on a parent, not the flagged element itself).
-  document.addEventListener('transitionend', (e) => {
-    if (e.propertyName !== 'transform') return;
+  document.addEventListener("transitionend", (e) => {
+    if (e.propertyName !== "transform") return;
     for (const o of overlays) {
-      if (!o._targetEl || o.classList.contains('impeccable-banner') || o.style.display === 'none') continue;
+      if (!o._targetEl || o.classList.contains("impeccable-banner") || o.style.display === "none") continue;
       if (e.target === o._targetEl || e.target.contains(o._targetEl)) {
         positionOverlay(o);
       }
@@ -3566,45 +3566,45 @@ if (IS_BROWSER) {
 
   const highlight = function(el, findings) {
     if (el._impeccableOverlay) detachOverlay(el._impeccableOverlay);
-    const hasSlop = findings.some(f => RULE_CATEGORY[f.type || f.id] === 'slop');
+    const hasSlop = findings.some(f => RULE_CATEGORY[f.type || f.id] === "slop");
 
     const fixed = isInFixedContext(el);
     const rect = el.getBoundingClientRect();
-    const outline = document.createElement('div');
-    outline.className = 'impeccable-overlay';
+    const outline = document.createElement("div");
+    outline.className = "impeccable-overlay";
     outline._targetEl = el;
     outline._isFixed = fixed;
     Object.assign(outline.style, {
-      position: fixed ? 'fixed' : 'absolute',
+      position: fixed ? "fixed" : "absolute",
       top: fixed ? `${rect.top - 2}px` : `${rect.top + scrollY - 2}px`,
       left: fixed ? `${rect.left - 2}px` : `${rect.left + scrollX - 2}px`,
       width: `${rect.width + 4}px`, height: `${rect.height + 4}px`,
-      zIndex: '99999', boxSizing: 'border-box',
+      zIndex: "99999", boxSizing: "border-box",
     });
 
     // Build per-finding label entries: ✦ prefix for slop
     const entries = findings.map(f => {
       const name = TYPE_LABELS[f.type || f.id] || f.type || f.id;
-      const prefix = RULE_CATEGORY[f.type || f.id] === 'slop' ? '\u2726 ' : '';
+      const prefix = RULE_CATEGORY[f.type || f.id] === "slop" ? "\u2726 " : "";
       return { name: prefix + name, detail: f.detail || f.snippet };
     });
-    const allText = entries.map(e => e.name).join(', ');
+    const allText = entries.map(e => e.name).join(", ");
 
-    const label = document.createElement('div');
-    label.className = 'impeccable-label';
+    const label = document.createElement("div");
+    label.className = "impeccable-label";
     Object.assign(label.style, {
-      position: 'absolute', bottom: '100%', left: '-2px',
-      display: 'flex', alignItems: 'center',
-      whiteSpace: 'nowrap',
-      fontSize: '11px', fontWeight: '600', letterSpacing: '0.02em',
-      color: LABEL_INK, lineHeight: '14px',
+      position: "absolute", bottom: "100%", left: "-2px",
+      display: "flex", alignItems: "center",
+      whiteSpace: "nowrap",
+      fontSize: "11px", fontWeight: "600", letterSpacing: "0.02em",
+      color: LABEL_INK, lineHeight: "14px",
       background: LABEL_BG,
-      fontFamily: 'system-ui, sans-serif',
-      borderRadius: '4px 4px 0 0',
+      fontFamily: "system-ui, sans-serif",
+      borderRadius: "4px 4px 0 0",
     });
 
-    const textSpan = document.createElement('span');
-    textSpan.style.padding = '3px 8px';
+    const textSpan = document.createElement("span");
+    textSpan.style.padding = "3px 8px";
     textSpan.textContent = allText;
     label.appendChild(textSpan);
 
@@ -3624,32 +3624,32 @@ if (IS_BROWSER) {
       cycleMode = true;
 
       const btnStyle = {
-        background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)',
-        fontSize: '11px', cursor: 'pointer', padding: '3px 4px',
-        fontFamily: 'system-ui, sans-serif', lineHeight: '14px',
-        pointerEvents: 'auto',
+        background: "none", border: "none", color: "rgba(255,255,255,0.7)",
+        fontSize: "11px", cursor: "pointer", padding: "3px 4px",
+        fontFamily: "system-ui, sans-serif", lineHeight: "14px",
+        pointerEvents: "auto",
       };
 
-      const navGroup = document.createElement('span');
+      const navGroup = document.createElement("span");
       Object.assign(navGroup.style, {
-        display: 'inline-flex', alignItems: 'center', flexShrink: '0',
+        display: "inline-flex", alignItems: "center", flexShrink: "0",
       });
 
-      prevBtn = document.createElement('button');
-      prevBtn.textContent = '\u2039';
+      prevBtn = document.createElement("button");
+      prevBtn.textContent = "\u2039";
       Object.assign(prevBtn.style, btnStyle);
-      prevBtn.style.paddingLeft = '6px';
-      prevBtn.addEventListener('click', (e) => {
+      prevBtn.style.paddingLeft = "6px";
+      prevBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         cycleIndex = (cycleIndex - 1 + entries.length) % entries.length;
         updateCycleText();
       });
 
-      nextBtn = document.createElement('button');
-      nextBtn.textContent = '\u203A';
+      nextBtn = document.createElement("button");
+      nextBtn.textContent = "\u203A";
       Object.assign(nextBtn.style, btnStyle);
-      nextBtn.style.paddingRight = '2px';
-      nextBtn.addEventListener('click', (e) => {
+      nextBtn.style.paddingRight = "2px";
+      nextBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         cycleIndex = (cycleIndex + 1) % entries.length;
         updateCycleText();
@@ -3658,14 +3658,14 @@ if (IS_BROWSER) {
       navGroup.appendChild(prevBtn);
       navGroup.appendChild(nextBtn);
       label.insertBefore(navGroup, textSpan);
-      textSpan.style.padding = '3px 8px 3px 4px';
+      textSpan.style.padding = "3px 8px 3px 4px";
       updateCycleText();
     }
 
     outline.appendChild(label);
 
     // Start hidden; the IntersectionObserver will show it once the target is rendered
-    outline.style.display = 'none';
+    outline.style.display = "none";
     outline._staggerIndex = overlayIndex++;
     el._impeccableOverlay = outline;
     visibilityObserver.observe(el);
@@ -3680,19 +3680,19 @@ if (IS_BROWSER) {
     // Hover: show detail text, darken
     const onMouseEnter = () => {
       isHovered = true;
-      outline.classList.add('impeccable-hover');
+      outline.classList.add("impeccable-hover");
       outline.style.outlineColor = BRAND_COLOR_HOVER;
       label.style.background = BRAND_COLOR_HOVER;
       if (cycleMode) {
         updateCycleText();
       } else {
-        textSpan.textContent = entries.map(e => e.detail).join(' | ');
+        textSpan.textContent = entries.map(e => e.detail).join(" | ");
       }
     };
     const onMouseLeave = () => {
       isHovered = false;
-      outline.classList.remove('impeccable-hover');
-      outline.style.outlineColor = '';
+      outline.classList.remove("impeccable-hover");
+      outline.style.outlineColor = "";
       label.style.background = LABEL_BG;
       if (cycleMode) {
         updateCycleText();
@@ -3700,11 +3700,11 @@ if (IS_BROWSER) {
         textSpan.textContent = allText;
       }
     };
-    el.addEventListener('mouseenter', onMouseEnter);
-    el.addEventListener('mouseleave', onMouseLeave);
+    el.addEventListener("mouseenter", onMouseEnter);
+    el.addEventListener("mouseleave", onMouseLeave);
     outline._cleanup = () => {
-      el.removeEventListener('mouseenter', onMouseEnter);
-      el.removeEventListener('mouseleave', onMouseLeave);
+      el.removeEventListener("mouseenter", onMouseEnter);
+      el.removeEventListener("mouseleave", onMouseLeave);
     };
 
     document.body.appendChild(outline);
@@ -3713,37 +3713,37 @@ if (IS_BROWSER) {
 
   const showPageBanner = function(findings) {
     if (!findings.length) return;
-    const banner = document.createElement('div');
-    banner.className = 'impeccable-overlay impeccable-banner';
+    const banner = document.createElement("div");
+    banner.className = "impeccable-overlay impeccable-banner";
     Object.assign(banner.style, {
-      position: 'fixed', top: '0', left: '0', right: '0', zIndex: '100000',
+      position: "fixed", top: "0", left: "0", right: "0", zIndex: "100000",
       background: LABEL_BG, color: LABEL_INK,
-      fontFamily: 'system-ui, sans-serif', fontSize: '13px',
-      display: 'flex', alignItems: 'center', pointerEvents: 'auto',
-      height: '36px', overflow: 'hidden', maxWidth: '100vw',
-      transform: 'translateY(-100%)',
-      transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+      fontFamily: "system-ui, sans-serif", fontSize: "13px",
+      display: "flex", alignItems: "center", pointerEvents: "auto",
+      height: "36px", overflow: "hidden", maxWidth: "100vw",
+      transform: "translateY(-100%)",
+      transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
     });
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      banner.style.transform = 'translateY(0)';
+      banner.style.transform = "translateY(0)";
     }));
 
     // Scrollable findings area
-    const scrollArea = document.createElement('div');
+    const scrollArea = document.createElement("div");
     Object.assign(scrollArea.style, {
-      flex: '1', minWidth: '0', overflowX: 'auto', overflowY: 'hidden',
-      display: 'flex', gap: '8px', alignItems: 'center',
-      padding: '0 12px', scrollSnapType: 'x mandatory',
-      scrollbarWidth: 'none',
+      flex: "1", minWidth: "0", overflowX: "auto", overflowY: "hidden",
+      display: "flex", gap: "8px", alignItems: "center",
+      padding: "0 12px", scrollSnapType: "x mandatory",
+      scrollbarWidth: "none",
     });
     for (const f of findings) {
-      const prefix = RULE_CATEGORY[f.type] === 'slop' ? '\u2726 ' : '';
-      const tag = document.createElement('span');
+      const prefix = RULE_CATEGORY[f.type] === "slop" ? "\u2726 " : "";
+      const tag = document.createElement("span");
       tag.textContent = `${prefix}${TYPE_LABELS[f.type] || f.type}: ${f.detail}`;
       Object.assign(tag.style, {
-        background: 'rgba(255,255,255,0.15)', padding: '2px 8px',
-        borderRadius: '3px', fontSize: '12px', fontFamily: 'ui-monospace, monospace',
-        whiteSpace: 'nowrap', flexShrink: '0', scrollSnapAlign: 'start',
+        background: "rgba(255,255,255,0.15)", padding: "2px 8px",
+        borderRadius: "3px", fontSize: "12px", fontFamily: "ui-monospace, monospace",
+        whiteSpace: "nowrap", flexShrink: "0", scrollSnapAlign: "start",
       });
       scrollArea.appendChild(tag);
     }
@@ -3751,39 +3751,39 @@ if (IS_BROWSER) {
 
     // Controls area (only in standalone mode, not extension)
     if (!EXTENSION_MODE) {
-      const controls = document.createElement('div');
+      const controls = document.createElement("div");
       Object.assign(controls.style, {
-        display: 'flex', alignItems: 'center', gap: '2px',
-        padding: '0 8px', flexShrink: '0',
+        display: "flex", alignItems: "center", gap: "2px",
+        padding: "0 8px", flexShrink: "0",
       });
 
       // Toggle visibility button
-      const toggle = document.createElement('button');
-      toggle.textContent = '\u25C9'; // circle with dot (visible state)
-      toggle.title = 'Toggle overlay visibility';
+      const toggle = document.createElement("button");
+      toggle.textContent = "\u25C9"; // circle with dot (visible state)
+      toggle.title = "Toggle overlay visibility";
       Object.assign(toggle.style, {
-        background: 'none', border: 'none',
-        color: 'white', fontSize: '16px', cursor: 'pointer', padding: '0 4px',
-        opacity: '0.85', transition: 'opacity 0.15s',
+        background: "none", border: "none",
+        color: "white", fontSize: "16px", cursor: "pointer", padding: "0 4px",
+        opacity: "0.85", transition: "opacity 0.15s",
       });
       let overlaysVisible = true;
-      toggle.addEventListener('click', () => {
+      toggle.addEventListener("click", () => {
         overlaysVisible = !overlaysVisible;
-        document.body.classList.toggle('impeccable-hidden', !overlaysVisible);
-        toggle.textContent = overlaysVisible ? '\u25C9' : '\u25CB'; // filled vs empty circle
-        toggle.style.opacity = overlaysVisible ? '0.85' : '0.5';
+        document.body.classList.toggle("impeccable-hidden", !overlaysVisible);
+        toggle.textContent = overlaysVisible ? "\u25C9" : "\u25CB"; // filled vs empty circle
+        toggle.style.opacity = overlaysVisible ? "0.85" : "0.5";
       });
       controls.appendChild(toggle);
 
       // Close button
-      const close = document.createElement('button');
-      close.textContent = '\u00d7';
-      close.title = 'Dismiss banner';
+      const close = document.createElement("button");
+      close.textContent = "\u00d7";
+      close.title = "Dismiss banner";
       Object.assign(close.style, {
-        background: 'none', border: 'none',
-        color: 'white', fontSize: '18px', cursor: 'pointer', padding: '0 4px',
+        background: "none", border: "none",
+        color: "white", fontSize: "18px", cursor: "pointer", padding: "0 4px",
       });
-      close.addEventListener('click', () => banner.remove());
+      close.addEventListener("click", () => banner.remove());
       controls.appendChild(close);
 
       banner.appendChild(controls);
@@ -3808,10 +3808,10 @@ if (IS_BROWSER) {
 
     if (el.classList && el.classList.length > 0) {
       const classes = [...el.classList]
-        .filter(c => !c.startsWith('impeccable-') && !isLikelyHashedClass(c))
+        .filter(c => !c.startsWith("impeccable-") && !isLikelyHashedClass(c))
         .slice(0, 2);
       if (classes.length > 0) {
-        sel += '.' + classes.map(c => CSS.escape(c)).join('.');
+        sel += "." + classes.map(c => CSS.escape(c)).join(".");
       }
     }
 
@@ -3819,7 +3819,7 @@ if (IS_BROWSER) {
     const parent = el.parentElement;
     if (parent) {
       try {
-        const matching = parent.querySelectorAll(':scope > ' + sel);
+        const matching = parent.querySelectorAll(":scope > " + sel);
         if (matching.length > 1) {
           const sameType = [...parent.children].filter(c => c.tagName === el.tagName);
           const idx = sameType.indexOf(el) + 1;
@@ -3834,9 +3834,9 @@ if (IS_BROWSER) {
   }
 
   function generateSelector(el) {
-    if (el === document.body) return 'body';
-    if (el === document.documentElement) return 'html';
-    if (el.id) return '#' + CSS.escape(el.id);
+    if (el === document.body) return "body";
+    if (el === document.documentElement) return "html";
+    if (el.id) return "#" + CSS.escape(el.id);
 
     const parts = [];
     let current = el;
@@ -3848,12 +3848,12 @@ if (IS_BROWSER) {
 
       // Anchor on an ancestor's ID and stop walking up
       if (current.id) {
-        parts[0] = '#' + CSS.escape(current.id);
+        parts[0] = "#" + CSS.escape(current.id);
         break;
       }
 
       // Stop as soon as the partial selector uniquely identifies the target
-      const trySelector = parts.join(' > ');
+      const trySelector = parts.join(" > ");
       try {
         const matches = document.querySelectorAll(trySelector);
         if (matches.length === 1 && matches[0] === el) {
@@ -3865,20 +3865,20 @@ if (IS_BROWSER) {
       depth++;
     }
 
-    return parts.join(' > ');
+    return parts.join(" > ");
   }
 
   function getDirectText(el) {
     return [...el.childNodes]
       .filter(n => n.nodeType === 3)
-      .map(n => n.textContent || '')
-      .join('');
+      .map(n => n.textContent || "")
+      .join("");
   }
 
   function getDirectTextRect(el) {
     const rects = [];
     for (const node of el.childNodes) {
-      if (node.nodeType !== 3 || !(node.textContent || '').trim()) continue;
+      if (node.nodeType !== 3 || !(node.textContent || "").trim()) continue;
       const range = document.createRange();
       range.selectNodeContents(node);
       for (const rect of range.getClientRects()) {
@@ -3905,31 +3905,31 @@ if (IS_BROWSER) {
 
   function collectVisualContrastReasons(el, style) {
     const reasons = new Set();
-    const bgClip = style.webkitBackgroundClip || style.backgroundClip || '';
-    const ownBgImage = style.backgroundImage || '';
-    if (bgClip === 'text' && ownBgImage && ownBgImage !== 'none') {
-      reasons.add('background-clip text');
+    const bgClip = style.webkitBackgroundClip || style.backgroundClip || "";
+    const ownBgImage = style.backgroundImage || "";
+    if (bgClip === "text" && ownBgImage && ownBgImage !== "none") {
+      reasons.add("background-clip text");
     }
-    if (style.textShadow && style.textShadow !== 'none') reasons.add('text shadow');
+    if (style.textShadow && style.textShadow !== "none") reasons.add("text shadow");
 
     let current = el;
     while (current && current.nodeType === 1) {
       const tag = current.tagName?.toLowerCase();
       const currentStyle = getComputedStyle(current);
-      const bgImage = currentStyle.backgroundImage || '';
-      const isDocumentSurface = tag === 'body' || tag === 'html';
+      const bgImage = currentStyle.backgroundImage || "";
+      const isDocumentSurface = tag === "body" || tag === "html";
 
-      if (!isDocumentSurface && bgImage && bgImage !== 'none') {
-        if (/url\s*\(/i.test(bgImage)) reasons.add('image background');
-        if (/gradient/i.test(bgImage)) reasons.add('gradient background');
+      if (!isDocumentSurface && bgImage && bgImage !== "none") {
+        if (/url\s*\(/i.test(bgImage)) reasons.add("image background");
+        if (/gradient/i.test(bgImage)) reasons.add("gradient background");
       }
-      if (parseFloat(currentStyle.opacity) < 0.99) reasons.add('opacity stack');
-      if (currentStyle.mixBlendMode && currentStyle.mixBlendMode !== 'normal') reasons.add('blend mode');
-      if (currentStyle.filter && currentStyle.filter !== 'none') reasons.add('filter');
-      if (currentStyle.backdropFilter && currentStyle.backdropFilter !== 'none') reasons.add('backdrop filter');
+      if (parseFloat(currentStyle.opacity) < 0.99) reasons.add("opacity stack");
+      if (currentStyle.mixBlendMode && currentStyle.mixBlendMode !== "normal") reasons.add("blend mode");
+      if (currentStyle.filter && currentStyle.filter !== "none") reasons.add("filter");
+      if (currentStyle.backdropFilter && currentStyle.backdropFilter !== "none") reasons.add("backdrop filter");
 
       const solidBg = parseRgb(currentStyle.backgroundColor);
-      if (solidBg && solidBg.a >= 0.95 && (!bgImage || bgImage === 'none')) break;
+      if (solidBg && solidBg.a >= 0.95 && (!bgImage || bgImage === "none")) break;
       current = current.parentElement;
     }
 
@@ -3947,7 +3947,7 @@ if (IS_BROWSER) {
         if (selfIndex < 0) continue;
         for (const node of stack.slice(selfIndex + 1)) {
           const nodeTag = node.tagName?.toLowerCase();
-          if (nodeTag === 'img' || nodeTag === 'picture' || nodeTag === 'video' || nodeTag === 'canvas' || nodeTag === 'svg') {
+          if (nodeTag === "img" || nodeTag === "picture" || nodeTag === "video" || nodeTag === "canvas" || nodeTag === "svg") {
             reasons.add(`${nodeTag} underlay`);
             break;
           }
@@ -3961,22 +3961,22 @@ if (IS_BROWSER) {
   function collectVisualContrastCandidates(options = {}) {
     const maxCandidates = Number.isFinite(options.maxCandidates) ? options.maxCandidates : 12;
     const candidates = [];
-    for (const el of document.querySelectorAll('*')) {
+    for (const el of document.querySelectorAll("*")) {
       if (candidates.length >= maxCandidates) break;
-      if (el.closest('.impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip')) continue;
+      if (el.closest(".impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip")) continue;
       if (el.closest('[id^="impeccable-live-"]')) continue;
       if (el === document.body || el === document.documentElement) continue;
       if (!isRenderedForBrowserRule(el)) continue;
 
       const tag = el.tagName.toLowerCase();
       const style = getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden') continue;
+      if (style.display === "none" || style.visibility === "hidden") continue;
       const directText = getDirectText(el);
       const hasDirectText = directText.trim().length > 0;
       if (!hasDirectText || isEmojiOnlyText(directText)) continue;
 
       const bgColor = readOwnBackgroundColor(el, style);
-      const isStyledButton = (tag === 'a' || tag === 'button')
+      const isStyledButton = (tag === "a" || tag === "button")
         && bgColor && bgColor.a > 0.5;
       if (SAFE_TAGS.has(tag) && !isStyledButton) continue;
 
@@ -4001,19 +4001,19 @@ if (IS_BROWSER) {
       candidates.push({
         selector: generateSelector(el),
         tagName: tag,
-        text: directText.trim().replace(/\s+/g, ' ').slice(0, 80),
+        text: directText.trim().replace(/\s+/g, " ").slice(0, 80),
         threshold,
         reasons,
         clip,
         textColor,
         preferRenderedForeground: !textColor || textColor.a < 0.99 || reasons.some(reason =>
-          reason === 'opacity stack' ||
-          reason === 'blend mode' ||
-          reason === 'filter' ||
-          reason === 'backdrop filter' ||
-          reason === 'background-clip text'
+          reason === "opacity stack" ||
+          reason === "blend mode" ||
+          reason === "filter" ||
+          reason === "backdrop filter" ||
+          reason === "background-clip text"
         ),
-        backgroundClipText: reasons.includes('background-clip text'),
+        backgroundClipText: reasons.includes("background-clip text"),
       });
     }
     return candidates;
@@ -4056,19 +4056,19 @@ if (IS_BROWSER) {
   }
 
   function firstCssUrl(value) {
-    const match = String(value || '').match(/url\((?:"([^"]+)"|'([^']+)'|([^)]*))\)/i);
-    if (!match) return '';
-    return (match[1] || match[2] || match[3] || '').trim();
+    const match = String(value || "").match(/url\((?:"([^"]+)"|'([^']+)'|([^)]*))\)/i);
+    if (!match) return "";
+    return (match[1] || match[2] || match[3] || "").trim();
   }
 
   function getLayerValue(value, index = 0) {
-    return String(value || '').split(',')[index]?.trim() || '';
+    return String(value || "").split(",")[index]?.trim() || "";
   }
 
   function parsePositionToken(token, container, painted) {
-    if (!token || token === 'center') return (container - painted) / 2;
-    if (token === 'left' || token === 'top') return 0;
-    if (token === 'right' || token === 'bottom') return container - painted;
+    if (!token || token === "center") return (container - painted) / 2;
+    if (token === "left" || token === "top") return 0;
+    if (token === "right" || token === "bottom") return container - painted;
     if (/%$/.test(token)) {
       const pct = parseFloat(token) / 100;
       return (container - painted) * pct;
@@ -4078,13 +4078,13 @@ if (IS_BROWSER) {
   }
 
   function parsePositionPair(positionValue) {
-    const tokens = String(positionValue || '50% 50%').trim().split(/\s+/).filter(Boolean);
-    const first = tokens[0] || '50%';
+    const tokens = String(positionValue || "50% 50%").trim().split(/\s+/).filter(Boolean);
+    const first = tokens[0] || "50%";
     if (tokens.length < 2) {
-      if (first === 'top' || first === 'bottom') return ['50%', first];
-      return [first, '50%'];
+      if (first === "top" || first === "bottom") return ["50%", first];
+      return [first, "50%"];
     }
-    return [first, tokens[1] || '50%'];
+    return [first, tokens[1] || "50%"];
   }
 
   function resolvePaintedImageRect(containerRect, image, sizeValue, positionValue) {
@@ -4092,21 +4092,21 @@ if (IS_BROWSER) {
     const intrinsicHeight = image.naturalHeight || image.videoHeight || image.height || 1;
     let paintedWidth = intrinsicWidth;
     let paintedHeight = intrinsicHeight;
-    const size = String(sizeValue || 'auto').trim();
+    const size = String(sizeValue || "auto").trim();
 
-    if (size === 'cover' || size === 'contain') {
-      const scale = size === 'cover'
+    if (size === "cover" || size === "contain") {
+      const scale = size === "cover"
         ? Math.max(containerRect.width / intrinsicWidth, containerRect.height / intrinsicHeight)
         : Math.min(containerRect.width / intrinsicWidth, containerRect.height / intrinsicHeight);
       paintedWidth = intrinsicWidth * scale;
       paintedHeight = intrinsicHeight * scale;
-    } else if (size && size !== 'auto') {
+    } else if (size && size !== "auto") {
       const parts = size.split(/\s+/);
       const widthToken = parts[0];
-      const heightToken = parts[1] || 'auto';
+      const heightToken = parts[1] || "auto";
       if (/%$/.test(widthToken)) paintedWidth = containerRect.width * (parseFloat(widthToken) / 100);
       else if (/px$/.test(widthToken)) paintedWidth = parseFloat(widthToken) || paintedWidth;
-      if (heightToken === 'auto') paintedHeight = paintedWidth * (intrinsicHeight / intrinsicWidth);
+      if (heightToken === "auto") paintedHeight = paintedWidth * (intrinsicHeight / intrinsicWidth);
       else if (/%$/.test(heightToken)) paintedHeight = containerRect.height * (parseFloat(heightToken) / 100);
       else if (/px$/.test(heightToken)) paintedHeight = parseFloat(heightToken) || paintedHeight;
     }
@@ -4131,19 +4131,19 @@ if (IS_BROWSER) {
   function resolveObjectImageRect(containerRect, image, style) {
     const intrinsicWidth = image.naturalWidth || image.videoWidth || image.width || 1;
     const intrinsicHeight = image.naturalHeight || image.videoHeight || image.height || 1;
-    const fit = style.objectFit || 'fill';
+    const fit = style.objectFit || "fill";
     let paintedWidth = containerRect.width;
     let paintedHeight = containerRect.height;
-    if (fit === 'contain' || fit === 'cover') {
-      const scale = fit === 'cover'
+    if (fit === "contain" || fit === "cover") {
+      const scale = fit === "cover"
         ? Math.max(containerRect.width / intrinsicWidth, containerRect.height / intrinsicHeight)
         : Math.min(containerRect.width / intrinsicWidth, containerRect.height / intrinsicHeight);
       paintedWidth = intrinsicWidth * scale;
       paintedHeight = intrinsicHeight * scale;
-    } else if (fit === 'none') {
+    } else if (fit === "none") {
       paintedWidth = intrinsicWidth;
       paintedHeight = intrinsicHeight;
-    } else if (fit === 'scale-down') {
+    } else if (fit === "scale-down") {
       const containScale = Math.min(containerRect.width / intrinsicWidth, containerRect.height / intrinsicHeight, 1);
       paintedWidth = intrinsicWidth * containScale;
       paintedHeight = intrinsicHeight * containScale;
@@ -4189,8 +4189,8 @@ if (IS_BROWSER) {
       const timer = setTimeout(() => finish(null), 800);
       try {
         const absolute = new URL(src, location.href);
-        if (absolute.origin !== location.origin && absolute.protocol !== 'data:' && absolute.protocol !== 'blob:') {
-          img.crossOrigin = 'anonymous';
+        if (absolute.origin !== location.origin && absolute.protocol !== "data:" && absolute.protocol !== "blob:") {
+          img.crossOrigin = "anonymous";
         }
       } catch {
         // Let the browser resolve unusual URLs itself.
@@ -4206,32 +4206,32 @@ if (IS_BROWSER) {
   function sampleDrawablePixel(drawable, sourcePoint) {
     if (visualContrastRasterCache.has(drawable)) {
       const cached = visualContrastRasterCache.get(drawable);
-      if (!cached || !cached.ctx) return { status: 'unresolved', reason: cached?.reason || 'image sample failed' };
+      if (!cached || !cached.ctx) return { status: "unresolved", reason: cached?.reason || "image sample failed" };
       try {
         const x = Math.max(0, Math.min(cached.width - 1, Math.floor(sourcePoint.x * cached.scaleX)));
         const y = Math.max(0, Math.min(cached.height - 1, Math.floor(sourcePoint.y * cached.scaleY)));
         const data = cached.ctx.getImageData(x, y, 1, 1).data;
         return {
-          status: 'sampled',
+          status: "sampled",
           color: { r: data[0], g: data[1], b: data[2], a: data[3] / 255 },
         };
       } catch (err) {
         return {
-          status: 'unresolved',
-          reason: /taint|cross-origin|Security/i.test(err?.message || '') ? 'tainted image' : 'image sample failed',
+          status: "unresolved",
+          reason: /taint|cross-origin|Security/i.test(err?.message || "") ? "tainted image" : "image sample failed",
         };
       }
     }
 
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     const intrinsicWidth = drawable.naturalWidth || drawable.videoWidth || drawable.width || 1;
     const intrinsicHeight = drawable.naturalHeight || drawable.videoHeight || drawable.height || 1;
     const maxRasterSide = 640;
     const scale = Math.min(1, maxRasterSide / Math.max(intrinsicWidth, intrinsicHeight));
     canvas.width = Math.max(1, Math.round(intrinsicWidth * scale));
     canvas.height = Math.max(1, Math.round(intrinsicHeight * scale));
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return { status: 'unresolved', reason: 'canvas unavailable' };
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return { status: "unresolved", reason: "canvas unavailable" };
     try {
       ctx.drawImage(drawable, 0, 0, canvas.width, canvas.height);
       const cached = {
@@ -4246,14 +4246,14 @@ if (IS_BROWSER) {
       const y = Math.max(0, Math.min(cached.height - 1, Math.floor(sourcePoint.y * cached.scaleY)));
       const data = ctx.getImageData(x, y, 1, 1).data;
       return {
-        status: 'sampled',
+        status: "sampled",
         color: { r: data[0], g: data[1], b: data[2], a: data[3] / 255 },
       };
     } catch (err) {
-      const reason = /taint|cross-origin|Security/i.test(err?.message || '') ? 'tainted image' : 'image sample failed';
+      const reason = /taint|cross-origin|Security/i.test(err?.message || "") ? "tainted image" : "image sample failed";
       visualContrastRasterCache.set(drawable, { ctx: null, reason });
       return {
-        status: 'unresolved',
+        status: "unresolved",
         reason,
       };
     }
@@ -4261,31 +4261,31 @@ if (IS_BROWSER) {
 
   async function sampleCssBackground(el, style, point, textColor) {
     const rect = el.getBoundingClientRect();
-    const bgImage = style.backgroundImage || '';
-    if (bgImage && bgImage !== 'none') {
+    const bgImage = style.backgroundImage || "";
+    if (bgImage && bgImage !== "none") {
       if (/gradient/i.test(bgImage)) {
         const color = pickWorstContrastColor(textColor, parseGradientColors(bgImage));
-        if (color) return { status: 'sampled', color, method: 'analytic-gradient' };
+        if (color) return { status: "sampled", color, method: "analytic-gradient" };
       }
       if (/url\s*\(/i.test(bgImage)) {
         const img = await loadVisualContrastImage(firstCssUrl(bgImage));
-        if (!img) return { status: 'unresolved', reason: 'image unavailable' };
+        if (!img) return { status: "unresolved", reason: "image unavailable" };
         const paintedRect = resolvePaintedImageRect(
           rect,
           img,
-          getLayerValue(style.backgroundSize) || 'auto',
-          getLayerValue(style.backgroundPosition) || '50% 50%',
+          getLayerValue(style.backgroundSize) || "auto",
+          getLayerValue(style.backgroundPosition) || "50% 50%",
         );
         const sourcePoint = pointToImageSource(point, paintedRect);
-        if (!sourcePoint) return { status: 'unresolved', reason: 'point outside background image' };
+        if (!sourcePoint) return { status: "unresolved", reason: "point outside background image" };
         const sample = sampleDrawablePixel(img, sourcePoint);
-        if (sample.status === 'sampled') return { ...sample, method: 'canvas-background-image' };
+        if (sample.status === "sampled") return { ...sample, method: "canvas-background-image" };
         return sample;
       }
     }
     const bg = parseRgb(style.backgroundColor);
-    if (bg && bg.a > 0.05) return { status: 'sampled', color: bg, method: 'solid-background' };
-    return { status: 'unresolved', reason: 'no readable background' };
+    if (bg && bg.a > 0.05) return { status: "sampled", color: bg, method: "solid-background" };
+    return { status: "unresolved", reason: "no readable background" };
   }
 
   async function sampleImageElement(img, point) {
@@ -4293,9 +4293,9 @@ if (IS_BROWSER) {
     const style = getComputedStyle(img);
     const paintedRect = resolveObjectImageRect(rect, img, style);
     const sourcePoint = pointToImageSource(point, paintedRect);
-    if (!sourcePoint) return { status: 'unresolved', reason: 'point outside image' };
+    if (!sourcePoint) return { status: "unresolved", reason: "point outside image" };
     const sample = sampleDrawablePixel(img, sourcePoint);
-    if (sample.status === 'sampled') return { ...sample, method: 'canvas-img-underlay' };
+    if (sample.status === "sampled") return { ...sample, method: "canvas-img-underlay" };
 
     if (img.currentSrc || img.src) {
       const loaded = await loadVisualContrastImage(img.currentSrc || img.src);
@@ -4304,7 +4304,7 @@ if (IS_BROWSER) {
         const loadedPoint = pointToImageSource(point, loadedRect);
         if (loadedPoint) {
           const loadedSample = sampleDrawablePixel(loaded, loadedPoint);
-          if (loadedSample.status === 'sampled') return { ...loadedSample, method: 'canvas-img-underlay' };
+          if (loadedSample.status === "sampled") return { ...loadedSample, method: "canvas-img-underlay" };
         }
       }
     }
@@ -4331,9 +4331,9 @@ if (IS_BROWSER) {
 
   async function sampleVisualBackgroundAtPoint(el, point, textColor, depth = 0) {
     if (depth > 8) {
-      return { status: 'unresolved', reason: 'background stack too deep' };
+      return { status: "unresolved", reason: "background stack too deep" };
     }
-    const stack = typeof document.elementsFromPoint === 'function'
+    const stack = typeof document.elementsFromPoint === "function"
       ? document.elementsFromPoint(point.x, point.y)
       : [];
     const selfIndex = stack.findIndex(node => node === el || el.contains(node));
@@ -4342,15 +4342,15 @@ if (IS_BROWSER) {
 
     for (const node of nodes) {
       if (!node || node.nodeType !== 1) continue;
-      if (node.closest?.('.impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip')) continue;
+      if (node.closest?.(".impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip")) continue;
       const tag = node.tagName?.toLowerCase();
-      if (tag === 'img') {
+      if (tag === "img") {
         const sample = await sampleImageElement(node, point);
-        if (sample.status === 'sampled') return sample;
+        if (sample.status === "sampled") return sample;
         unresolved.push(sample.reason);
         continue;
       }
-      if (tag === 'canvas' || tag === 'video') {
+      if (tag === "canvas" || tag === "video") {
         const rect = node.getBoundingClientRect();
         const sourcePoint = pointToImageSource(point, {
           left: rect.left,
@@ -4362,19 +4362,19 @@ if (IS_BROWSER) {
         });
         if (sourcePoint) {
           const sample = sampleDrawablePixel(node, sourcePoint);
-          if (sample.status === 'sampled') return { ...sample, method: `canvas-${tag}-underlay` };
+          if (sample.status === "sampled") return { ...sample, method: `canvas-${tag}-underlay` };
           unresolved.push(sample.reason);
         }
         continue;
       }
       const style = getComputedStyle(node);
       const sample = await sampleCssBackground(node, style, point, textColor);
-      if (sample.status === 'sampled') {
+      if (sample.status === "sampled") {
         if (!sample.color || sample.color.a == null || sample.color.a >= 0.95) return sample;
         const under = await sampleVisualBackgroundAtPoint(node.parentElement || document.body, point, textColor, depth + 1);
-        if (under.status === 'sampled') {
+        if (under.status === "sampled") {
           return {
-            status: 'sampled',
+            status: "sampled",
             color: blendRgba(sample.color, under.color),
             method: `${sample.method}+alpha`,
           };
@@ -4385,8 +4385,8 @@ if (IS_BROWSER) {
     }
 
     return {
-      status: 'unresolved',
-      reason: [...new Set(unresolved.filter(Boolean))].slice(0, 3).join(', ') || 'no readable visual background',
+      status: "unresolved",
+      reason: [...new Set(unresolved.filter(Boolean))].slice(0, 3).join(", ") || "no readable visual background",
     };
   }
 
@@ -4395,35 +4395,35 @@ if (IS_BROWSER) {
     try {
       el = document.querySelector(candidate.selector);
     } catch {
-      return { ...candidate, status: 'unresolved', confidence: 'none', reason: 'stale selector' };
+      return { ...candidate, status: "unresolved", confidence: "none", reason: "stale selector" };
     }
-    if (!el) return { ...candidate, status: 'unresolved', confidence: 'none', reason: 'missing element' };
-    if (!isRenderedForBrowserRule(el)) return { ...candidate, status: 'unresolved', confidence: 'none', reason: 'hidden element' };
+    if (!el) return { ...candidate, status: "unresolved", confidence: "none", reason: "missing element" };
+    if (!isRenderedForBrowserRule(el)) return { ...candidate, status: "unresolved", confidence: "none", reason: "hidden element" };
 
     const blockingReason = (candidate.reasons || []).find(reason =>
-      reason === 'background-clip text' ||
-      reason === 'blend mode' ||
-      reason === 'filter' ||
-      reason === 'backdrop filter' ||
-      reason === 'opacity stack' ||
-      reason === 'text shadow'
+      reason === "background-clip text" ||
+      reason === "blend mode" ||
+      reason === "filter" ||
+      reason === "backdrop filter" ||
+      reason === "opacity stack" ||
+      reason === "text shadow"
     );
     if (blockingReason) {
-      return { ...candidate, status: 'unresolved', confidence: 'none', reason: `${blockingReason} needs screenshot pixels` };
+      return { ...candidate, status: "unresolved", confidence: "none", reason: `${blockingReason} needs screenshot pixels` };
     }
 
     const style = getComputedStyle(el);
     const textColor = parseRgb(style.color) || candidate.textColor;
-    if (!textColor) return { ...candidate, status: 'unresolved', confidence: 'none', reason: 'unreadable text color' };
+    if (!textColor) return { ...candidate, status: "unresolved", confidence: "none", reason: "unreadable text color" };
 
     const rect = getDirectTextRect(el) || el.getBoundingClientRect();
     if (!rect || rect.width < 4 || rect.height < 4) {
-      return { ...candidate, status: 'unresolved', confidence: 'none', reason: 'missing text rect' };
+      return { ...candidate, status: "unresolved", confidence: "none", reason: "missing text rect" };
     }
 
     const points = textSamplePoints(rect);
     if (points.length === 0) {
-      return { ...candidate, status: 'unresolved', confidence: 'none', reason: 'text outside viewport' };
+      return { ...candidate, status: "unresolved", confidence: "none", reason: "text outside viewport" };
     }
 
     const ratios = [];
@@ -4431,7 +4431,7 @@ if (IS_BROWSER) {
     const unresolved = [];
     for (const point of points) {
       const sample = await sampleVisualBackgroundAtPoint(el, point, textColor);
-      if (sample.status !== 'sampled' || !sample.color) {
+      if (sample.status !== "sampled" || !sample.color) {
         unresolved.push(sample.reason);
         continue;
       }
@@ -4443,10 +4443,10 @@ if (IS_BROWSER) {
     if (ratios.length < Math.min(3, points.length)) {
       return {
         ...candidate,
-        status: 'unresolved',
-        confidence: 'none',
+        status: "unresolved",
+        confidence: "none",
         samples: ratios.length,
-        reason: [...new Set(unresolved.filter(Boolean))].slice(0, 3).join(', ') || 'not enough readable samples',
+        reason: [...new Set(unresolved.filter(Boolean))].slice(0, 3).join(", ") || "not enough readable samples",
       };
     }
 
@@ -4454,19 +4454,19 @@ if (IS_BROWSER) {
     const pick = pct => ratios[Math.min(ratios.length - 1, Math.max(0, Math.floor((pct / 100) * ratios.length)))];
     const measuredRatio = pick(10);
     const medianRatio = pick(50);
-    const status = measuredRatio < candidate.threshold ? 'fail' : 'pass';
-    const method = [...methods].sort().join(', ') || 'browser-visual';
-    const textLabel = candidate.text ? ` "${candidate.text}"` : '';
+    const status = measuredRatio < candidate.threshold ? "fail" : "pass";
+    const method = [...methods].sort().join(", ") || "browser-visual";
+    const textLabel = candidate.text ? ` "${candidate.text}"` : "";
     const detail = `browser contrast ${measuredRatio.toFixed(1)}:1 median ${medianRatio.toFixed(1)}:1 (need ${candidate.threshold}:1) via ${method}${textLabel}`;
     return {
       ...candidate,
       status,
-      confidence: method.includes('canvas-') ? 'high' : 'medium',
+      confidence: method.includes("canvas-") ? "high" : "medium",
       method,
       ratio: measuredRatio,
       medianRatio,
       samples: ratios.length,
-      finding: status === 'fail' ? { id: 'low-contrast', snippet: detail } : null,
+      finding: status === "fail" ? { id: "low-contrast", snippet: detail } : null,
     };
   }
 
@@ -4487,15 +4487,15 @@ if (IS_BROWSER) {
         await waitForVisualPaint();
       }
       let result = await analyzeVisualContrastCandidate(candidate);
-      if (shouldScrollOffscreen && result.status === 'unresolved' && result.reason === 'text outside viewport') {
+      if (shouldScrollOffscreen && result.status === "unresolved" && result.reason === "text outside viewport") {
         let el = null;
         try {
           el = document.querySelector(candidate.selector);
         } catch {
           el = null;
         }
-        if (el && typeof el.scrollIntoView === 'function') {
-          el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+        if (el && typeof el.scrollIntoView === "function") {
+          el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
           await waitForVisualPaint();
           result = await analyzeVisualContrastCandidate(candidate);
         }
@@ -4510,7 +4510,7 @@ if (IS_BROWSER) {
 
   function isElementHidden(el) {
     if (!el || el === document.body || el === document.documentElement) return false;
-    if (typeof el.checkVisibility === 'function') return !el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
+    if (typeof el.checkVisibility === "function") return !el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
     // Fallback: zero size or no offsetParent (covers display:none and detached subtrees)
     return el.offsetWidth === 0 && el.offsetHeight === 0;
   }
@@ -4518,7 +4518,7 @@ if (IS_BROWSER) {
   function serializeFindings(allFindings) {
     return allFindings.map(({ el, findings }) => ({
       selector: generateSelector(el),
-      tagName: el.tagName?.toLowerCase() || 'unknown',
+      tagName: el.tagName?.toLowerCase() || "unknown",
       rect: (el !== document.body && el !== document.documentElement && el.getBoundingClientRect)
         ? el.getBoundingClientRect().toJSON() : null,
       isPageLevel: el === document.body || el === document.documentElement,
@@ -4527,12 +4527,12 @@ if (IS_BROWSER) {
         const ap = ANTIPATTERNS.find(a => a.id === (f.type || f.id));
         return {
           type: f.type || f.id,
-          category: ap ? ap.category : 'quality',
-          severity: ap?.severity || 'warning',
+          category: ap ? ap.category : "quality",
+          severity: ap?.severity || "warning",
           detail: f.detail || f.snippet,
-          ignoreValue: f.ignoreValue || f.value || '',
+          ignoreValue: f.ignoreValue || f.value || "",
           name: ap ? ap.name : (f.type || f.id),
-          description: ap ? ap.description : '',
+          description: ap ? ap.description : "",
         };
       }),
     }));
@@ -4540,17 +4540,17 @@ if (IS_BROWSER) {
 
   const printSummary = function(allFindings) {
     if (allFindings.length === 0) {
-      console.log('%c[impeccable] No anti-patterns found.', 'color: #22c55e; font-weight: bold');
+      console.log("%c[impeccable] No anti-patterns found.", "color: #22c55e; font-weight: bold");
       return;
     }
     console.group(
-      `%c[impeccable] ${allFindings.length} anti-pattern${allFindings.length === 1 ? '' : 's'} found`,
-      'color: oklch(84% 0.19 80.46); font-weight: bold'
+      `%c[impeccable] ${allFindings.length} anti-pattern${allFindings.length === 1 ? "" : "s"} found`,
+      "color: oklch(84% 0.19 80.46); font-weight: bold"
     );
     for (const { el, findings } of allFindings) {
       for (const f of findings) {
         console.log(`%c${f.type || f.id}%c ${f.detail || f.snippet}`,
-          'color: oklch(84% 0.19 80.46); font-weight: bold', 'color: inherit', el);
+          "color: oklch(84% 0.19 80.46); font-weight: bold", "color: inherit", el);
       }
     }
     console.groupEnd();
@@ -4569,23 +4569,23 @@ if (IS_BROWSER) {
 
   const DESIGN_COLOR_TOLERANCE = 6;
   const DESIGN_RADIUS_TOLERANCE_PX = 0.5;
-  const DESIGN_SKIP_TAGS = new Set(['head', 'title', 'meta', 'link', 'style', 'script', 'noscript', 'template', 'source']);
+  const DESIGN_SKIP_TAGS = new Set(["head", "title", "meta", "link", "style", "script", "noscript", "template", "source"]);
 
   function normalizeBrowserFontName(value) {
-    return String(value || '')
+    return String(value || "")
       .trim()
-      .replace(/^["']|["']$/g, '')
-      .replace(/\+/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(/^["']|["']$/g, "")
+      .replace(/\+/g, " ")
+      .replace(/\s+/g, " ")
       .toLowerCase();
   }
 
   function browserPrimaryFont(stack) {
-    if (!stack || /var\(/i.test(stack)) return '';
-    return String(stack || '')
-      .split(',')
+    if (!stack || /var\(/i.test(stack)) return "";
+    return String(stack || "")
+      .split(",")
       .map(normalizeBrowserFontName)
-      .find(font => font && !GENERIC_FONTS.has(font)) || '';
+      .find(font => font && !GENERIC_FONTS.has(font)) || "";
   }
 
   function browserDesignSystemConfig() {
@@ -4621,9 +4621,9 @@ if (IS_BROWSER) {
 
   function isBrowserDesignColorAllowed(raw, designSystem) {
     if (!designSystem?.hasColors) return true;
-    const text = String(raw || '').trim().toLowerCase();
-    if (!text || text === 'transparent' || text === 'currentcolor' || text === 'inherit' || text === 'initial') return true;
-    if (text.includes('var(')) return true;
+    const text = String(raw || "").trim().toLowerCase();
+    if (!text || text === "transparent" || text === "currentcolor" || text === "inherit" || text === "initial") return true;
+    if (text.includes("var(")) return true;
     const parsed = parseAnyColor(text);
     if (!parsed) return true;
     if ((parsed.a ?? 1) <= 0.05) return true;
@@ -4631,17 +4631,17 @@ if (IS_BROWSER) {
   }
 
   function isBrowserTransparentCss(value) {
-    const text = String(value || '').trim().toLowerCase();
-    if (!text || text === 'transparent') return true;
+    const text = String(value || "").trim().toLowerCase();
+    if (!text || text === "transparent") return true;
     const parsed = parseAnyColor(text);
     return parsed ? (parsed.a ?? 1) <= 0.05 : false;
   }
 
   function isBrowserDesignRadiusAllowed(raw, designSystem) {
     if (!designSystem?.hasRadii) return true;
-    const text = String(raw || '').trim().toLowerCase();
-    if (!text || text === '0' || text === 'none' || text === 'initial' || text === 'inherit') return true;
-    if (text.includes('var(') || text.includes('%')) return true;
+    const text = String(raw || "").trim().toLowerCase();
+    if (!text || text === "0" || text === "none" || text === "initial" || text === "inherit") return true;
+    if (text.includes("var(") || text.includes("%")) return true;
     const px = resolveLengthPx(text, 16);
     if (px == null || !Number.isFinite(px) || px <= DESIGN_RADIUS_TOLERANCE_PX) return true;
     if (designSystem.hasPillRadius && px >= 99) return true;
@@ -4649,8 +4649,8 @@ if (IS_BROWSER) {
   }
 
   function browserRadiusTokens(value) {
-    return String(value || '')
-      .replace(/\s*\/\s*/g, ' ')
+    return String(value || "")
+      .replace(/\s*\/\s*/g, " ")
       .split(/\s+/)
       .map(token => token.trim())
       .filter(Boolean);
@@ -4661,27 +4661,27 @@ if (IS_BROWSER) {
   }
 
   function browserSampleText(el) {
-    const text = String(el.textContent || '').replace(/\s+/g, ' ').trim();
-    return text ? ` "${text.slice(0, 40)}"` : '';
+    const text = String(el.textContent || "").replace(/\s+/g, " ").trim();
+    return text ? ` "${text.slice(0, 40)}"` : "";
   }
 
   function shouldSkipDesignElement(el) {
-    const tag = el.tagName?.toLowerCase?.() || '';
+    const tag = el.tagName?.toLowerCase?.() || "";
     return DESIGN_SKIP_TAGS.has(tag) || isElementHidden(el);
   }
 
   function checkElementDesignSystemDOM(el, designSystem, seen) {
     if (!designSystem?.present || shouldSkipDesignElement(el)) return [];
     const findings = [];
-    const tag = el.tagName?.toLowerCase?.() || 'unknown';
+    const tag = el.tagName?.toLowerCase?.() || "unknown";
     const style = getComputedStyle(el);
 
     if (designSystem.hasFonts && browserHasDirectText(el)) {
-      const font = browserPrimaryFont(style.fontFamily || '');
+      const font = browserPrimaryFont(style.fontFamily || "");
       if (font && !designSystem.allowedFonts.has(font) && !seen.fonts.has(font)) {
         seen.fonts.add(font);
         findings.push({
-          type: 'design-system-font',
+          type: "design-system-font",
           detail: `${tag}${browserSampleText(el)} uses ${font}; not declared in DESIGN.md typography`,
           ignoreValue: font,
         });
@@ -4690,23 +4690,23 @@ if (IS_BROWSER) {
 
     if (designSystem.hasColors) {
       const colorChecks = [];
-      if (browserHasDirectText(el)) colorChecks.push(['text color', style.color]);
-      if (!isBrowserTransparentCss(style.backgroundColor)) colorChecks.push(['background', style.backgroundColor]);
-      for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
+      if (browserHasDirectText(el)) colorChecks.push(["text color", style.color]);
+      if (!isBrowserTransparentCss(style.backgroundColor)) colorChecks.push(["background", style.backgroundColor]);
+      for (const side of ["Top", "Right", "Bottom", "Left"]) {
         if ((parseFloat(style[`border${side}Width`]) || 0) > 0) {
           colorChecks.push([`border-${side.toLowerCase()}`, style[`border${side}Color`]]);
         }
       }
-      if ((parseFloat(style.outlineWidth) || 0) > 0) colorChecks.push(['outline', style.outlineColor]);
+      if ((parseFloat(style.outlineWidth) || 0) > 0) colorChecks.push(["outline", style.outlineColor]);
 
       for (const [kind, raw] of colorChecks) {
-        const label = String(raw || '').trim().replace(/\s+/g, ' ');
+        const label = String(raw || "").trim().replace(/\s+/g, " ");
         if (isBrowserDesignColorAllowed(label, designSystem)) continue;
         const key = `${kind}:${label}`;
         if (seen.colors.has(key)) continue;
         seen.colors.add(key);
         findings.push({
-          type: 'design-system-color',
+          type: "design-system-color",
           detail: `${kind} ${label} on ${tag}${browserSampleText(el)} is outside DESIGN.md colors`,
           ignoreValue: label,
         });
@@ -4714,12 +4714,12 @@ if (IS_BROWSER) {
     }
 
     if (designSystem.hasRadii) {
-      for (const token of browserRadiusTokens(style.borderRadius || '')) {
+      for (const token of browserRadiusTokens(style.borderRadius || "")) {
         if (isBrowserDesignRadiusAllowed(token, designSystem)) continue;
         if (seen.radii.has(token)) continue;
         seen.radii.add(token);
         findings.push({
-          type: 'design-system-radius',
+          type: "design-system-radius",
           detail: `border-radius ${token} on ${tag}${browserSampleText(el)} is outside the DESIGN.md rounded scale`,
           ignoreValue: token,
         });
@@ -4730,7 +4730,7 @@ if (IS_BROWSER) {
   }
 
   function decodeBrowserGoogleFamily(value) {
-    const family = String(value || '').split(':')[0].replace(/\+/g, ' ');
+    const family = String(value || "").split(":")[0].replace(/\+/g, " ");
     try {
       return decodeURIComponent(family);
     } catch {
@@ -4742,14 +4742,14 @@ if (IS_BROWSER) {
     if (!designSystem?.hasFonts) return [];
     const findings = [];
     for (const link of document.querySelectorAll('link[href*="fonts.googleapis.com/css"]')) {
-      const href = link.getAttribute('href') || '';
+      const href = link.getAttribute("href") || "";
       for (const match of href.matchAll(/[?&]family=([^&]+)/g)) {
         const display = decodeBrowserGoogleFamily(match[1]);
         const font = normalizeBrowserFontName(display);
         if (!font || designSystem.allowedFonts.has(font) || seen.fonts.has(font)) continue;
         seen.fonts.add(font);
         findings.push({
-          type: 'design-system-font',
+          type: "design-system-font",
           detail: `Google Fonts: ${display} is not declared in DESIGN.md typography`,
           ignoreValue: display,
         });
@@ -4769,12 +4769,12 @@ if (IS_BROWSER) {
     // check is free, so we always surface them; the gating is purely a CLI
     // output concern, applied in the Node engines' detect* return paths.
 
-    for (const el of document.querySelectorAll('*')) {
+    for (const el of document.querySelectorAll("*")) {
       // Skip impeccable's own elements and any descendants (overlays, labels, banner, nav buttons)
-      if (el.closest('.impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip')) continue;
+      if (el.closest(".impeccable-overlay, .impeccable-label, .impeccable-banner, .impeccable-tooltip")) continue;
       // Skip browser extension elements (Claude, etc.)
-      const elId = el.id || '';
-      if (elId.startsWith('claude-') || elId.startsWith('cic-')) continue;
+      const elId = el.id || "";
+      if (elId.startsWith("claude-") || elId.startsWith("cic-")) continue;
       // Skip the impeccable live-mode overlay (highlight, tooltip, bar, picker, toast).
       // These are inspector chrome, not part of the user's design.
       if (el.closest('[id^="impeccable-live-"]')) continue;
@@ -4881,11 +4881,11 @@ if (IS_BROWSER) {
 
   function visualContrastOptions(options = {}) {
     const config = window.__IMPECCABLE_CONFIG__ || {};
-    const scrollOffscreen = typeof options.scrollOffscreen === 'boolean'
+    const scrollOffscreen = typeof options.scrollOffscreen === "boolean"
       ? options.scrollOffscreen
-      : typeof options.visualContrastScrollOffscreen === 'boolean'
+      : typeof options.visualContrastScrollOffscreen === "boolean"
         ? options.visualContrastScrollOffscreen
-        : typeof config.visualContrastScrollOffscreen === 'boolean'
+        : typeof config.visualContrastScrollOffscreen === "boolean"
           ? config.visualContrastScrollOffscreen
           : false;
     return {
@@ -4926,7 +4926,7 @@ if (IS_BROWSER) {
   }
 
   function addVisualContrastResult(groupMap, result, options = {}) {
-    if (result.status !== 'fail' || !result.finding || !result.selector) return false;
+    if (result.status !== "fail" || !result.finding || !result.selector) return false;
     let el = null;
     try {
       el = document.querySelector(result.selector);
@@ -4934,7 +4934,7 @@ if (IS_BROWSER) {
       el = null;
     }
     if (!el) return false;
-    const findingType = result.finding.type || result.finding.id || 'low-contrast';
+    const findingType = result.finding.type || result.finding.id || "low-contrast";
     const existing = groupMap.get(el) || [];
     if (existing.some(f => (f.type || f.id) === findingType)) return false;
     addBrowserFindings(groupMap, el, [{
@@ -4949,7 +4949,7 @@ if (IS_BROWSER) {
 
   function scanResultMeta(options = {}) {
     const scanId = options.scanId;
-    if (typeof scanId !== 'string' && typeof scanId !== 'number') return {};
+    if (typeof scanId !== "string" && typeof scanId !== "number") return {};
     return { scanId: String(scanId) };
   }
 
@@ -4957,23 +4957,23 @@ if (IS_BROWSER) {
     if (!EXTENSION_MODE) return;
     const allFindings = browserFindingsFromMap(groupMap);
     window.postMessage({
-      source: 'impeccable-results',
+      source: "impeccable-results",
       findings: serializeFindings(allFindings),
       count: allFindings.length,
       ...scanResultMeta(options),
-    }, '*');
+    }, "*");
   }
 
   function postExtensionError(err) {
     if (!EXTENSION_MODE) return;
     window.postMessage({
-      source: 'impeccable-error',
+      source: "impeccable-error",
       message: err?.message || String(err),
-    }, '*');
+    }, "*");
   }
 
   function reportVisualContrastError(err, detail = {}) {
-    window.dispatchEvent(new CustomEvent('impeccable-visual-contrast-error', {
+    window.dispatchEvent(new CustomEvent("impeccable-visual-contrast-error", {
       detail: {
         ...detail,
         message: err?.message || String(err),
@@ -4982,17 +4982,17 @@ if (IS_BROWSER) {
     if (EXTENSION_MODE) {
       postExtensionError(err);
     } else {
-      console.warn('[impeccable] visual contrast scan failed', err);
+      console.warn("[impeccable] visual contrast scan failed", err);
     }
   }
 
   function scheduleLazyVisualContrast(groupMap, analyses, options = {}, runtime = {}) {
     disconnectLazyVisualContrastObserver();
     if (options.visualContrastLazy === false || options.scrollOffscreen !== false) return;
-    if (typeof IntersectionObserver === 'undefined') return;
+    if (typeof IntersectionObserver === "undefined") return;
     const unresolved = (analyses || []).filter(result =>
-      result?.status === 'unresolved' &&
-      result.reason === 'text outside viewport' &&
+      result?.status === "unresolved" &&
+      result.reason === "text outside viewport" &&
       result.selector
     );
     if (unresolved.length === 0) return;
@@ -5015,7 +5015,7 @@ if (IS_BROWSER) {
             const added = addVisualContrastResult(groupMap, result, { decorate: true });
             if (added) {
               postSerializedFindings(groupMap, options);
-              window.dispatchEvent(new CustomEvent('impeccable-visual-contrast-resolved', {
+              window.dispatchEvent(new CustomEvent("impeccable-visual-contrast-resolved", {
                 detail: {
                   selector: result.selector,
                   status: result.status,
@@ -5099,11 +5099,11 @@ if (IS_BROWSER) {
     // In extension mode, post serialized results for the DevTools panel
     if (EXTENSION_MODE) {
       window.postMessage({
-        source: 'impeccable-results',
+        source: "impeccable-results",
         findings: serializeFindings(allFindings),
         count: allFindings.length,
         ...scanResultMeta(options),
-      }, '*');
+      }, "*");
     }
 
     // After this scan completes, all subsequent reveals are instant (no stagger, no animation)
@@ -5160,9 +5160,9 @@ if (IS_BROWSER) {
 
   if (EXTENSION_MODE) {
     // Extension mode: listen for commands, don't auto-scan
-    window.addEventListener('message', (e) => {
-      if (e.source !== window || !e.data || e.data.source !== 'impeccable-command') return;
-      if (e.data.action === 'scan') {
+    window.addEventListener("message", (e) => {
+      if (e.source !== window || !e.data || e.data.source !== "impeccable-command") return;
+      if (e.data.action === "scan") {
         if (e.data.config) window.__IMPECCABLE_CONFIG__ = e.data.config;
         try {
           scan(e.data.config || {});
@@ -5170,35 +5170,35 @@ if (IS_BROWSER) {
           postExtensionError(err);
         }
       }
-      if (e.data.action === 'toggle-overlays') {
-        const visible = !document.body.classList.contains('impeccable-hidden');
-        document.body.classList.toggle('impeccable-hidden', visible);
-        window.postMessage({ source: 'impeccable-overlays-toggled', visible: !visible }, '*');
+      if (e.data.action === "toggle-overlays") {
+        const visible = !document.body.classList.contains("impeccable-hidden");
+        document.body.classList.toggle("impeccable-hidden", visible);
+        window.postMessage({ source: "impeccable-overlays-toggled", visible: !visible }, "*");
       }
-      if (e.data.action === 'remove') {
+      if (e.data.action === "remove") {
         clearOverlays();
         styleEl.remove();
         if (spotlightBackdrop) { spotlightBackdrop.remove(); spotlightBackdrop = null; }
-        document.body.classList.remove('impeccable-hidden');
+        document.body.classList.remove("impeccable-hidden");
       }
-      if (e.data.action === 'highlight') {
+      if (e.data.action === "highlight") {
         try {
           const target = e.data.selector ? document.querySelector(e.data.selector) : null;
           if (target) {
             // Scroll first so positionOverlay reads the post-scroll rect
             if (!isInViewport(target) && target.scrollIntoView) {
-              target.scrollIntoView({ behavior: 'instant', block: 'center' });
+              target.scrollIntoView({ behavior: "instant", block: "center" });
             }
             for (const o of overlays) {
-              if (o.classList.contains('impeccable-banner')) continue;
+              if (o.classList.contains("impeccable-banner")) continue;
               const isMatch = o._targetEl === target;
-              o.classList.toggle('impeccable-spotlight', isMatch);
-              o.classList.toggle('impeccable-spotlight-dimmed', !isMatch);
+              o.classList.toggle("impeccable-spotlight", isMatch);
+              o.classList.toggle("impeccable-spotlight-dimmed", !isMatch);
               if (isMatch) {
                 // Force the matching overlay visible immediately, don't wait for IntersectionObserver
-                o.style.display = '';
-                o.style.animation = 'none';
-                o.classList.add('impeccable-visible');
+                o.style.display = "";
+                o.style.animation = "none";
+                o.classList.add("impeccable-visible");
                 o._revealed = true;
                 positionOverlay(o);
               }
@@ -5207,26 +5207,26 @@ if (IS_BROWSER) {
           }
         } catch { /* invalid selector */ }
       }
-      if (e.data.action === 'unhighlight') {
+      if (e.data.action === "unhighlight") {
         hideSpotlight();
         for (const o of overlays) {
-          o.classList.remove('impeccable-spotlight');
-          o.classList.remove('impeccable-spotlight-dimmed');
+          o.classList.remove("impeccable-spotlight");
+          o.classList.remove("impeccable-spotlight-dimmed");
         }
       }
     });
-    window.postMessage({ source: 'impeccable-ready' }, '*');
+    window.postMessage({ source: "impeccable-ready" }, "*");
   } else {
     if (window.__IMPECCABLE_CONFIG__?.autoScan !== false) {
       const runAutoScan = () => {
         try {
           scan();
         } catch (err) {
-          console.warn('[impeccable] scan failed', err);
+          console.warn("[impeccable] scan failed", err);
         }
       };
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(runAutoScan, 100));
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => setTimeout(runAutoScan, 100));
       } else {
         setTimeout(runAutoScan, 100);
       }
