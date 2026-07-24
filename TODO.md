@@ -25,6 +25,49 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Git/CI cleanup, history purge, impeccable CodeQL remediation (2026-07-23)
+
+Full cleanup pass: merged the GitHub-platform-setup PR, collapsed every branch
+down to `main` (Dependabot auto-deletes head branches on merge, so the 4 stale
+feature branches and the working branch all disappeared on their own), ran
+`git filter-repo` to purge `docs/planning/` from history (including the
+initial commit) per the go-ahead already recorded in `.gitignore`'s own
+comment, fixed the first-ever `Deploy Docs to GitHub Pages` run (v3 of
+`upload-pages-artifact` calls an unpinned nested action, which this repo's
+SHA-pinning policy blocks), and triaged all 53 CodeQL findings the merge
+surfaced in the `impeccable` skill (a locally-authored dev tool, not the
+SenseBridge app/website) — see PR #28 for the fix commit. Along the way,
+converted `impeccable/scripts/` (4 of 5 mirror copies) and `react-doctor` (3
+of 4 copies) from independent files to symlinks, since they were byte-for-byte
+identical and drifting was exactly how one CodeQL-scanned copy (`.github`'s)
+ended up different from the one being hand-edited (`.claude`'s).
+
+- [ ] **[P2]** **[Needs owner]** Confirm Claude Code, Cursor, Gemini CLI, and
+      GitHub Copilot's skill loaders all resolve the new `impeccable`/
+      `react-doctor` symlinks correctly at runtime (not just `git`/the
+      filesystem, which already prove the symlinks materialize and read
+      correctly) — invoke each tool's version of the skill once and confirm
+      it behaves identically to before the symlink conversion.
+- [ ] **[P2]** Confirm the next CodeQL run still analyzes
+      `.github/skills/impeccable/scripts/**` now that it's the one real copy
+      (the other 4 mirrors are symlinks to it) — this was a deliberate choice
+      to avoid losing scan coverage (CodeQL might not follow symlinks; this
+      keeps the scanned path a real file either way), but wasn't empirically
+      confirmed one way or the other about symlink-following behavior.
+- [ ] **[P3]** The single→double quote conversion (`eslint --rule quotes`)
+      only covers the 24 files touched by the CodeQL fix, not the rest of
+      `impeccable/scripts/`'s real files (now only one copy to edit, at
+      `.github/skills/impeccable/scripts/`, since the other 4 are symlinks) —
+      extend it for full-skill consistency whenever there's a reason to touch
+      the rest of the skill anyway.
+- [ ] **[P3]** `core.symlinks` is unset in both local and global git config
+      (defaults to `true` on this filesystem, proven by the symlinks above
+      materializing and resolving correctly) — no action needed on this
+      machine, but flag it if this repo is ever cloned on Windows: that
+      machine needs `git config core.symlinks true` (and Developer
+      Mode/admin rights) for these symlinks to check out as real symlinks
+      rather than placeholder text files.
+
 ### actionlint + commitlint setup (2026-07-23)
 
 Full session log: [`sessions/2026-07-23/1400-PST.md`](sessions/2026-07-23/1400-PST.md).
