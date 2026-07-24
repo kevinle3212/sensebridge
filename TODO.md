@@ -25,6 +25,88 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Git/CI cleanup, history purge, impeccable CodeQL remediation (2026-07-23)
+
+Full cleanup pass: merged the GitHub-platform-setup PR, collapsed every branch
+down to `main` (Dependabot auto-deletes head branches on merge, so the 4 stale
+feature branches and the working branch all disappeared on their own), ran
+`git filter-repo` to purge `docs/planning/` from history (including the
+initial commit) per the go-ahead already recorded in `.gitignore`'s own
+comment, fixed the first-ever `Deploy Docs to GitHub Pages` run (v3 of
+`upload-pages-artifact` calls an unpinned nested action, which this repo's
+SHA-pinning policy blocks), and triaged all 53 CodeQL findings the merge
+surfaced in the `impeccable` skill (a locally-authored dev tool, not the
+SenseBridge app/website) — see PR #28 for the fix commit. Along the way,
+converted `impeccable/scripts/` (4 of 5 mirror copies) and `react-doctor` (3
+of 4 copies) from independent files to symlinks, since they were byte-for-byte
+identical and drifting was exactly how one CodeQL-scanned copy (`.github`'s)
+ended up different from the one being hand-edited (`.claude`'s).
+
+- [ ] **[P2]** **[Needs owner]** Confirm Claude Code, Cursor, Gemini CLI, and
+      GitHub Copilot's skill loaders all resolve the new `impeccable`/
+      `react-doctor` symlinks correctly at runtime (not just `git`/the
+      filesystem, which already prove the symlinks materialize and read
+      correctly) — invoke each tool's version of the skill once and confirm
+      it behaves identically to before the symlink conversion.
+- [x] **[P2]** Confirm the next CodeQL run still analyzes
+      `.github/skills/impeccable/scripts/**` now that it's the one real copy
+      (the other 4 mirrors are symlinks to it) — this was a deliberate choice
+      to avoid losing scan coverage (CodeQL might not follow symlinks; this
+      keeps the scanned path a real file either way), but wasn't empirically
+      confirmed one way or the other about symlink-following behavior.
+      **Done 2026-07-23** — confirmed: the 2000-PST session's 23 new alerts
+      on PR #28 were attributed to real files under that exact path,
+      proving CodeQL follows through to the canonical copy rather than
+      skipping symlinked mirrors or losing coverage.
+- [ ] **[P1]** **[Needs owner]** PR #28: confirm the CodeQL check goes green
+      once `CodeQL (Swift)` finishes and the aggregate check re-runs (the
+      Code Scanning Alerts API, scoped to this branch, already shows zero
+      open alerts for every rule the 23-alert check listed — the one still-
+      failing check run is a self-flagged incomplete snapshot taken before
+      Swift's config was available: "1 configuration present on `main` was
+      not found"). Then merge to `main` per the owner's one-time go-ahead to
+      bypass the standing "never merge to `main` directly" rule.
+- [ ] **[P1]** **[Needs owner]** Register `~/.ssh/kevinle3212-GitHub.pub` as
+      an SSH **signing** key on GitHub (Settings → SSH and GPG keys → New
+      SSH key → Key type: Signing Key — it's currently only registered as
+      an *authentication* key). Root cause found for the recurring Vercel
+      "Canceled from the Vercel Dashboard" status: every one of the
+      project's ~20 recent deployments with `target: null` (preview, i.e.
+      every branch/PR push) was `CANCELED`, while every `target: production`
+      (main) deployment was `READY` — 100% correlated with GitHub's commit
+      `verified`/`unverified` flag, per Vercel's own `errorLink` on the
+      canceled deployment pointing at
+      vercel.com/docs/project-configuration/git-settings#verified-commits.
+      Configured repo-local SSH commit signing with the existing key
+      (`git config --local gpg.format ssh` / `user.signingkey` /
+      `commit.gpgsign true`) and confirmed via `git cat-file commit HEAD`
+      that it produces a real `gpgsig` SSH-signature block — but GitHub
+      only shows a commit "Verified" once the *same* key is separately
+      added there as a signing key, which needs the owner (adding a key
+      requires either the GitHub web UI, or `gh auth refresh -s
+      admin:ssh_signing_key` — an interactive OAuth approval — followed by
+      `gh ssh-key add ~/.ssh/kevinle3212-GitHub.pub --type signing`).
+- [ ] **[P3]** **[Needs owner]** Confirm the Railway dashboard project
+      itself is configured as intended — the owner's request named it but
+      the text was garbled; likely "sensebridge" per
+      `railway-preview-deploy.yml`'s `--service sensebridge`. The GitHub-side
+      `RAILWAY_TOKEN` repo secret is confirmed present (added 2026-07-23),
+      but the Railway-side project config isn't checkable from here (no
+      Railway API/MCP access in this session).
+- [ ] **[P3]** The single→double quote conversion (`eslint --rule quotes`)
+      only covers the 24 files touched by the CodeQL fix, not the rest of
+      `impeccable/scripts/`'s real files (now only one copy to edit, at
+      `.github/skills/impeccable/scripts/`, since the other 4 are symlinks) —
+      extend it for full-skill consistency whenever there's a reason to touch
+      the rest of the skill anyway.
+- [ ] **[P3]** `core.symlinks` is unset in both local and global git config
+      (defaults to `true` on this filesystem, proven by the symlinks above
+      materializing and resolving correctly) — no action needed on this
+      machine, but flag it if this repo is ever cloned on Windows: that
+      machine needs `git config core.symlinks true` (and Developer
+      Mode/admin rights) for these symlinks to check out as real symlinks
+      rather than placeholder text files.
+
 ### actionlint + commitlint setup (2026-07-23)
 
 Full session log: [`sessions/2026-07-23/1400-PST.md`](sessions/2026-07-23/1400-PST.md).

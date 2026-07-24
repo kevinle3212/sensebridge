@@ -13,9 +13,9 @@
  *      within the first ~300 characters — catches non-git projects.
  */
 
-import { execSync } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 const HEADER_SCAN_BYTES = 300;
 const HEADER_MARKERS = [
@@ -41,9 +41,9 @@ export function isGeneratedFile(filePath, options = {}) {
 
 function isGitIgnored(absPath, cwd) {
   try {
-    execSync(`git check-ignore --quiet ${JSON.stringify(absPath)}`, {
+    execFileSync("git", ["check-ignore", "--quiet", absPath], {
       cwd,
-      stdio: 'ignore',
+      stdio: "ignore",
     });
     return true; // exit 0 = ignored
   } catch (err) {
@@ -56,10 +56,10 @@ function isGitIgnored(absPath, cwd) {
 function hasGeneratedHeader(absPath) {
   let fd;
   try {
-    fd = fs.openSync(absPath, 'r');
+    fd = fs.openSync(absPath, "r");
     const buf = Buffer.alloc(HEADER_SCAN_BYTES);
     const bytesRead = fs.readSync(fd, buf, 0, HEADER_SCAN_BYTES, 0);
-    const head = buf.slice(0, bytesRead).toString('utf-8');
+    const head = buf.slice(0, bytesRead).toString("utf-8");
     return HEADER_MARKERS.some((re) => re.test(head));
   } catch {
     return false;

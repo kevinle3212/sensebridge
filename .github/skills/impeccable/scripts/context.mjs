@@ -18,29 +18,29 @@
  * server-side scripts (live.mjs, live-server.mjs) that need the structured
  * shape rather than the markdown block.
  */
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { parseTargetOptions } from './lib/target-args.mjs';
-import { IMPECCABLE_COMMAND } from './lib/provider.mjs';
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { parseTargetOptions } from "./lib/target-args.mjs";
+import { IMPECCABLE_COMMAND } from "./lib/provider.mjs";
 
-const PRODUCT_NAMES = ['PRODUCT.md', 'Product.md', 'product.md'];
-const DESIGN_NAMES = ['DESIGN.md', 'Design.md', 'design.md'];
-const FALLBACK_DIRS = ['.agents/context', 'docs'];
-const MONOREPO_MARKER_FILES = ['pnpm-workspace.yaml', 'turbo.json', 'nx.json', 'lerna.json'];
-const MONOREPO_FALLBACK_PROJECT_DIRS = ['apps', 'packages'];
+const PRODUCT_NAMES = ["PRODUCT.md", "Product.md", "product.md"];
+const DESIGN_NAMES = ["DESIGN.md", "Design.md", "design.md"];
+const FALLBACK_DIRS = [".agents/context", "docs"];
+const MONOREPO_MARKER_FILES = ["pnpm-workspace.yaml", "turbo.json", "nx.json", "lerna.json"];
+const MONOREPO_FALLBACK_PROJECT_DIRS = ["apps", "packages"];
 const WORKSPACE_DISCOVERY_IGNORED_DIRS = new Set([
-  'node_modules',
-  '.git',
-  'dist',
-  'build',
-  '.next',
-  '.nuxt',
-  '.svelte-kit',
-  '.turbo',
-  '.cache',
-  'coverage',
+  "node_modules",
+  ".git",
+  "dist",
+  "build",
+  ".next",
+  ".nuxt",
+  ".svelte-kit",
+  ".turbo",
+  ".cache",
+  "coverage",
 ]);
 
 // ─── Update check ──────────────────────────────────────────────────────────
@@ -50,9 +50,9 @@ const WORKSPACE_DISCOVERY_IGNORED_DIRS = new Set([
 // silent on failure: a network problem, sandbox, or missing cache must never
 // block context output or print an error.
 
-const UPDATE_HOST = (process.env.IMPECCABLE_UPDATE_HOST || 'https://impeccable.style').replace(/\/$/, '');
+const UPDATE_HOST = (process.env.IMPECCABLE_UPDATE_HOST || "https://impeccable.style").replace(/\/$/, "");
 const UPDATE_CACHE_PATH =
-  process.env.IMPECCABLE_UPDATE_CACHE || path.join(os.homedir(), '.impeccable', 'update-check.json');
+  process.env.IMPECCABLE_UPDATE_CACHE || path.join(os.homedir(), ".impeccable", "update-check.json");
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // throttle the network poll to once a day
 const RENOTIFY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000; // don't re-surface the same version for a week
 const FETCH_TIMEOUT_MS = 1200;
@@ -180,7 +180,7 @@ function resolveProject(cwd = process.cwd(), options = {}) {
 
 function isPathInside(candidate, root) {
   const rel = path.relative(root, candidate);
-  return !!rel && !rel.startsWith('..') && !path.isAbsolute(rel);
+  return !!rel && !rel.startsWith("..") && !path.isAbsolute(rel);
 }
 
 function resolveLocalContextDir(root) {
@@ -204,7 +204,7 @@ function resolveEnvContextDir(cwd) {
 }
 
 function resolveTargetDir(cwd, options = {}) {
-  const targetPath = options && typeof options === 'object' ? options.targetPath : null;
+  const targetPath = options && typeof options === "object" ? options.targetPath : null;
   if (!targetPath || !String(targetPath).trim()) return cwd;
   const abs = path.isAbsolute(targetPath) ? targetPath : path.resolve(cwd, targetPath);
   try {
@@ -235,13 +235,13 @@ function findMonorepoRoot(startDir) {
 }
 
 function isMonorepoRoot(dir) {
-  if (readWorkspacePatterns(dir).some((pattern) => !normalizeWorkspacePattern(pattern).startsWith('!'))) return true;
+  if (readWorkspacePatterns(dir).some((pattern) => !normalizeWorkspacePattern(pattern).startsWith("!"))) return true;
   if (!MONOREPO_MARKER_FILES.some((file) => fs.existsSync(path.join(dir, file)))) return false;
   return hasFallbackWorkspaceChildren(dir);
 }
 
 function hasGitBoundary(dir) {
-  return fs.existsSync(path.join(dir, '.git'));
+  return fs.existsSync(path.join(dir, ".git"));
 }
 
 function hasFallbackWorkspaceChildren(dir) {
@@ -263,7 +263,7 @@ function discoverTargetCandidates(repoRoot) {
   const patterns = readWorkspacePatterns(repoRoot);
   for (const pattern of patterns) {
     for (const root of discoverRootsForPattern(repoRoot, pattern)) {
-      roots.set(path.relative(repoRoot, root).split(path.sep).join('/'), root);
+      roots.set(path.relative(repoRoot, root).split(path.sep).join("/"), root);
     }
   }
   if (MONOREPO_MARKER_FILES.some((file) => fs.existsSync(path.join(repoRoot, file)))) {
@@ -278,16 +278,16 @@ function discoverTargetCandidates(repoRoot) {
       for (const entry of entries) {
         if (!entry.isDirectory() || isIgnoredWorkspaceDiscoveryDir(entry.name)) continue;
         const root = path.join(base, entry.name);
-        roots.set(path.relative(repoRoot, root).split(path.sep).join('/'), root);
+        roots.set(path.relative(repoRoot, root).split(path.sep).join("/"), root);
       }
     }
   }
   return [...roots.entries()]
-    .filter(([rel]) => rel && !rel.startsWith('..'))
+    .filter(([rel]) => rel && !rel.startsWith(".."))
     // Honor negated workspace patterns (e.g. "!packages/internal"). resolveWorkspaceProjectRoot
     // sends an excluded package back to the repo root, so an excluded folder must not appear as a
     // selectable target — choosing it would silently resolve to the root instead.
-    .filter(([rel]) => !isExcludedByWorkspacePattern(rel.split('/').filter(Boolean), patterns))
+    .filter(([rel]) => !isExcludedByWorkspacePattern(rel.split("/").filter(Boolean), patterns))
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([rel, root]) => {
       const targetExample = findTargetExample(repoRoot, root);
@@ -317,38 +317,38 @@ function resolveCandidateContextSummary(repoRoot, projectRoot, targetPath) {
 // root but in a subdirectory (FALLBACK_DIRS, e.g. `.agents/context/`), and a file
 // outside both the project and repo roots (IMPECCABLE_CONTEXT_DIR override).
 function contextSourceStatus(filePath, repoRoot, projectRoot) {
-  if (!filePath) return 'missing';
+  if (!filePath) return "missing";
   const absPath = path.resolve(filePath);
   const absProjectRoot = path.resolve(projectRoot);
   const absRepoRoot = path.resolve(repoRoot);
   if (isPathInsideOrEqual(absPath, absProjectRoot)) {
-    return path.dirname(absPath) === absProjectRoot ? 'child' : 'fallback';
+    return path.dirname(absPath) === absProjectRoot ? "child" : "fallback";
   }
   if (absProjectRoot !== absRepoRoot && isPathInsideOrEqual(absPath, absRepoRoot)) {
-    return 'inherited';
+    return "inherited";
   }
-  return 'fallback';
+  return "fallback";
 }
 
 function contextSourcePath(filePath, repoRoot) {
   if (!filePath) return null;
   const rel = path.relative(repoRoot, filePath);
-  if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) {
-    return rel.split(path.sep).join('/');
+  if (rel && !rel.startsWith("..") && !path.isAbsolute(rel)) {
+    return rel.split(path.sep).join("/");
   }
   return filePath;
 }
 
 function discoverRootsForPattern(repoRoot, rawPattern) {
   const pattern = normalizeWorkspacePattern(rawPattern);
-  if (!pattern || pattern.startsWith('!')) return [];
-  const segments = pattern.split('/').filter(Boolean);
+  if (!pattern || pattern.startsWith("!")) return [];
+  const segments = pattern.split("/").filter(Boolean);
   if (!segments.length) return [];
-  const firstGlobIndex = segments.findIndex((segment) => segment.includes('*'));
+  const firstGlobIndex = segments.findIndex((segment) => segment.includes("*"));
   const literalPrefix = firstGlobIndex === -1 ? segments : segments.slice(0, firstGlobIndex);
   const base = path.join(repoRoot, ...literalPrefix);
   if (!fs.existsSync(base)) return [];
-  if (segments.includes('**')) {
+  if (segments.includes("**")) {
     const packageRoots = [];
     walkDirs(base, (dir) => {
       if (dir !== base && isCandidateProjectRoot(dir)) packageRoots.push(dir);
@@ -362,7 +362,7 @@ function discoverRootsForPattern(repoRoot, rawPattern) {
 function expandSimplePattern(repoRoot, patternSegments, index = 0, current = repoRoot) {
   if (index >= patternSegments.length) return fs.existsSync(current) ? [current] : [];
   const segment = patternSegments[index];
-  if (!segment.includes('*')) {
+  if (!segment.includes("*")) {
     return expandSimplePattern(repoRoot, patternSegments, index + 1, path.join(current, segment));
   }
   let entries;
@@ -407,41 +407,41 @@ function walkDirs(root, visit) {
 
 function isCandidateProjectRoot(dir) {
   return !!(
-    fs.existsSync(path.join(dir, 'package.json'))
+    fs.existsSync(path.join(dir, "package.json"))
     || firstExisting(dir, [...PRODUCT_NAMES, ...DESIGN_NAMES])
-    || fs.existsSync(path.join(dir, 'src'))
-    || fs.existsSync(path.join(dir, 'app'))
-    || fs.existsSync(path.join(dir, 'pages'))
-    || fs.existsSync(path.join(dir, 'public'))
+    || fs.existsSync(path.join(dir, "src"))
+    || fs.existsSync(path.join(dir, "app"))
+    || fs.existsSync(path.join(dir, "pages"))
+    || fs.existsSync(path.join(dir, "public"))
   );
 }
 
 function isIgnoredWorkspaceDiscoveryDir(name) {
-  return name.startsWith('.') || WORKSPACE_DISCOVERY_IGNORED_DIRS.has(name);
+  return name.startsWith(".") || WORKSPACE_DISCOVERY_IGNORED_DIRS.has(name);
 }
 
 function findTargetExample(repoRoot, projectRoot) {
   const examples = [
-    'src/App.jsx',
-    'src/App.tsx',
-    'src/main.jsx',
-    'src/main.tsx',
-    'src/index.jsx',
-    'src/index.ts',
-    'app/page.tsx',
-    'pages/index.tsx',
-    'public/index.html',
+    "src/App.jsx",
+    "src/App.tsx",
+    "src/main.jsx",
+    "src/main.tsx",
+    "src/index.jsx",
+    "src/index.ts",
+    "app/page.tsx",
+    "pages/index.tsx",
+    "public/index.html",
   ];
   for (const rel of examples) {
     const abs = path.join(projectRoot, rel);
-    if (fs.existsSync(abs)) return path.relative(repoRoot, abs).split(path.sep).join('/');
+    if (fs.existsSync(abs)) return path.relative(repoRoot, abs).split(path.sep).join("/");
   }
-  return path.relative(repoRoot, projectRoot).split(path.sep).join('/');
+  return path.relative(repoRoot, projectRoot).split(path.sep).join("/");
 }
 
 function resolveWorkspaceProjectRoot(repoRoot, targetDir) {
   const rel = path.relative(repoRoot, targetDir);
-  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return repoRoot;
+  if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) return repoRoot;
   const relSegments = rel.split(path.sep).filter(Boolean);
   const patterns = readWorkspacePatterns(repoRoot);
   const excluded = isExcludedByWorkspacePattern(relSegments, patterns);
@@ -466,7 +466,7 @@ function resolveWorkspaceProjectRoot(repoRoot, targetDir) {
 function isExcludedByWorkspacePattern(relSegments, patterns) {
   return patterns.some((rawPattern) => {
     const pattern = normalizeWorkspacePattern(rawPattern);
-    if (!pattern.startsWith('!')) return false;
+    if (!pattern.startsWith("!")) return false;
     return workspacePatternMatchesRel(pattern.slice(1), relSegments);
   });
 }
@@ -477,7 +477,7 @@ function nearestProjectLikeRoot(repoRoot, targetDir) {
   while (dir && dir !== stop) {
     if (
       firstExisting(dir, [...PRODUCT_NAMES, ...DESIGN_NAMES])
-      || fs.existsSync(path.join(dir, 'package.json'))
+      || fs.existsSync(path.join(dir, "package.json"))
     ) {
       return dir;
     }
@@ -493,7 +493,7 @@ function nearestPackageRootBetween(repoRoot, targetDir, stopDir) {
   const stop = path.resolve(stopDir || repoRoot);
   const root = path.resolve(repoRoot);
   while (dir && dir !== stop && isPathInsideOrEqual(dir, root)) {
-    if (fs.existsSync(path.join(dir, 'package.json'))) return dir;
+    if (fs.existsSync(path.join(dir, "package.json"))) return dir;
     const parent = path.dirname(dir);
     if (parent === dir) break;
     dir = parent;
@@ -506,10 +506,10 @@ function isPathInsideOrEqual(candidate, root) {
 }
 
 function workspacePatternMatchesRel(pattern, relSegments) {
-  const patternSegments = normalizeWorkspacePattern(pattern).split('/').filter(Boolean);
+  const patternSegments = normalizeWorkspacePattern(pattern).split("/").filter(Boolean);
   if (!patternSegments.length) return false;
-  if (patternSegments.includes('**')) {
-    const firstGlobIndex = patternSegments.findIndex((segment) => segment.includes('*'));
+  if (patternSegments.includes("**")) {
+    const firstGlobIndex = patternSegments.findIndex((segment) => segment.includes("*"));
     const literalPrefix = firstGlobIndex === -1
       ? patternSegments
       : patternSegments.slice(0, firstGlobIndex);
@@ -535,7 +535,7 @@ function readWorkspacePatterns(repoRoot) {
 }
 
 function readPackageWorkspaces(repoRoot) {
-  const pkg = readJson(path.join(repoRoot, 'package.json'));
+  const pkg = readJson(path.join(repoRoot, "package.json"));
   const workspaces = pkg?.workspaces;
   if (Array.isArray(workspaces)) return workspaces;
   if (Array.isArray(workspaces?.packages)) return workspaces.packages;
@@ -543,18 +543,18 @@ function readPackageWorkspaces(repoRoot) {
 }
 
 function readLernaWorkspaces(repoRoot) {
-  const lerna = readJson(path.join(repoRoot, 'lerna.json'));
+  const lerna = readJson(path.join(repoRoot, "lerna.json"));
   return Array.isArray(lerna?.packages) ? lerna.packages : [];
 }
 
 function readPnpmWorkspaces(repoRoot) {
   try {
-    const body = fs.readFileSync(path.join(repoRoot, 'pnpm-workspace.yaml'), 'utf-8');
+    const body = fs.readFileSync(path.join(repoRoot, "pnpm-workspace.yaml"), "utf-8");
     const patterns = [];
     let inPackages = false;
     for (const line of body.split(/\r?\n/)) {
       const trimmed = stripYamlInlineComment(line).trim();
-      if (!trimmed || trimmed.startsWith('#')) continue;
+      if (!trimmed || trimmed.startsWith("#")) continue;
       const flowMatch = trimmed.match(/^packages:\s*\[(.*)\]\s*$/);
       if (flowMatch) {
         patterns.push(...parseYamlFlowList(flowMatch[1]));
@@ -581,11 +581,11 @@ function stripYamlInlineComment(line) {
   let quote = null;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
-    if ((ch === '"' || ch === "'") && line[i - 1] !== '\\') {
+    if ((ch === '"' || ch === "'") && line[i - 1] !== "\\") {
       quote = quote === ch ? null : quote || ch;
       continue;
     }
-    if (ch === '#' && !quote) return line.slice(0, i);
+    if (ch === "#" && !quote) return line.slice(0, i);
   }
   return line;
 }
@@ -593,18 +593,18 @@ function stripYamlInlineComment(line) {
 function parseYamlFlowList(body) {
   const items = [];
   let quote = null;
-  let current = '';
+  let current = "";
   for (let i = 0; i < body.length; i++) {
     const ch = body[i];
-    if ((ch === '"' || ch === "'") && body[i - 1] !== '\\') {
+    if ((ch === '"' || ch === "'") && body[i - 1] !== "\\") {
       quote = quote === ch ? null : quote || ch;
       current += ch;
       continue;
     }
-    if (ch === ',' && !quote) {
+    if (ch === "," && !quote) {
       const value = unquoteYamlValue(current);
       if (value) items.push(value);
-      current = '';
+      current = "";
       continue;
     }
     current += ch;
@@ -615,14 +615,14 @@ function parseYamlFlowList(body) {
 }
 
 function unquoteYamlValue(value) {
-  return String(value || '')
+  return String(value || "")
     .trim()
-    .replace(/^['"]|['"]$/g, '');
+    .replace(/^['"]|['"]$/g, "");
 }
 
 function readJson(filePath) {
   try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    return JSON.parse(fs.readFileSync(filePath, "utf-8"));
   } catch {
     return null;
   }
@@ -630,10 +630,10 @@ function readJson(filePath) {
 
 function projectRootFromWorkspacePattern(repoRoot, relSegments, rawPattern) {
   const pattern = normalizeWorkspacePattern(rawPattern);
-  if (!pattern || pattern.startsWith('!')) return null;
-  const patternSegments = pattern.split('/').filter(Boolean);
+  if (!pattern || pattern.startsWith("!")) return null;
+  const patternSegments = pattern.split("/").filter(Boolean);
   if (!patternSegments.length) return null;
-  if (patternSegments.includes('**')) {
+  if (patternSegments.includes("**")) {
     return projectRootFromDoubleStarPattern(repoRoot, relSegments, patternSegments);
   }
   if (relSegments.length < patternSegments.length) return null;
@@ -644,7 +644,7 @@ function projectRootFromWorkspacePattern(repoRoot, relSegments, rawPattern) {
 }
 
 function projectRootFromDoubleStarPattern(repoRoot, relSegments, patternSegments) {
-  const firstGlobIndex = patternSegments.findIndex((segment) => segment.includes('*'));
+  const firstGlobIndex = patternSegments.findIndex((segment) => segment.includes("*"));
   const literalPrefix = firstGlobIndex === -1
     ? patternSegments
     : patternSegments.slice(0, firstGlobIndex);
@@ -660,17 +660,17 @@ function projectRootFromDoubleStarPattern(repoRoot, relSegments, patternSegments
 }
 
 function normalizeWorkspacePattern(pattern) {
-  return String(pattern || '')
+  return String(pattern || "")
     .trim()
-    .replace(/^['"]|['"]$/g, '')
-    .replace(/^\.\//, '')
-    .replace(/\/+$/, '');
+    .replace(/^['"]|['"]$/g, "")
+    .replace(/^\.\//, "")
+    .replace(/\/+$/, "");
 }
 
 function segmentMatches(patternSegment, relSegment) {
-  if (patternSegment === '*') return true;
-  if (!patternSegment.includes('*')) return patternSegment === relSegment;
-  const re = new RegExp(`^${escapeRegExp(patternSegment).replace(/\\\*/g, '[^/]*')}$`);
+  if (patternSegment === "*") return true;
+  if (!patternSegment.includes("*")) return patternSegment === relSegment;
+  const re = new RegExp(`^${escapeRegExp(patternSegment).replace(/\\\*/g, "[^/]*")}$`);
   return re.test(relSegment);
 }
 
@@ -684,14 +684,14 @@ function firstExisting(dir, names) {
 
 function safeRead(p) {
   try {
-    return fs.readFileSync(p, 'utf-8');
+    return fs.readFileSync(p, "utf-8");
   } catch {
     return null;
   }
 }
 
 function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
@@ -702,8 +702,8 @@ function escapeRegExp(value) {
  */
 export function extractSectionValue(product, heading) {
   if (!product) return null;
-  const headingRe = new RegExp(`^##\\s+${escapeRegExp(heading)}\\s*$`, 'i');
-  const lines = product.split('\n');
+  const headingRe = new RegExp(`^##\\s+${escapeRegExp(heading)}\\s*$`, "i");
+  const lines = product.split("\n");
   for (let i = 0; i < lines.length; i++) {
     if (headingRe.test(lines[i].trim())) {
       for (let j = i + 1; j < lines.length; j++) {
@@ -723,8 +723,8 @@ export function extractSectionValue(product, heading) {
  * follows it. Returns null when the file is legacy / register-less.
  */
 export function extractRegister(product) {
-  const word = (extractSectionValue(product, 'Register') || '').toLowerCase();
-  return word === 'brand' || word === 'product' ? word : null;
+  const word = (extractSectionValue(product, "Register") || "").toLowerCase();
+  return word === "brand" || word === "product" ? word : null;
 }
 
 /**
@@ -737,17 +737,17 @@ export function extractRegister(product) {
  * (the default the general rules already assume).
  */
 export function extractPlatform(product) {
-  const value = (extractSectionValue(product, 'Platform') || '').toLowerCase();
+  const value = (extractSectionValue(product, "Platform") || "").toLowerCase();
   if (!value) return null;
-  if (value === 'web' || value === 'ios' || value === 'android' || value === 'adaptive') return value;
+  if (value === "web" || value === "ios" || value === "android" || value === "adaptive") return value;
   // A short list naming both native targets (`ios, android`, `ios and
   // android`) = adaptive. Only list separators and the two platform words may
   // appear; anything else (prose, negations) is unrecognized and falls
   // through to the CLI's WARNING path.
-  const tokens = value.split(/[\s,+&/]+/).filter(t => t && t !== 'and');
-  if (tokens.length >= 2 && tokens.every(t => t === 'ios' || t === 'android')
-    && tokens.includes('ios') && tokens.includes('android')) {
-    return 'adaptive';
+  const tokens = value.split(/[\s,+&/]+/).filter(t => t && t !== "and");
+  if (tokens.length >= 2 && tokens.every(t => t === "ios" || t === "android")
+    && tokens.includes("ios") && tokens.includes("android")) {
+    return "adaptive";
   }
   return null;
 }
@@ -760,10 +760,10 @@ export function extractPlatform(product) {
 function readLocalSkillVersion() {
   try {
     const here = path.dirname(fileURLToPath(import.meta.url));
-    const skillMd = path.join(here, '..', 'SKILL.md');
-    const content = fs.readFileSync(skillMd, 'utf-8');
+    const skillMd = path.join(here, "..", "SKILL.md");
+    const content = fs.readFileSync(skillMd, "utf-8");
     const match = content.match(/^version:\s*(.+)$/m);
-    return match ? match[1].trim().replace(/^["']|["']$/g, '') : null;
+    return match ? match[1].trim().replace(/^["']|["']$/g, "") : null;
   } catch {
     return null;
   }
@@ -771,7 +771,7 @@ function readLocalSkillVersion() {
 
 function readUpdateCache() {
   try {
-    return JSON.parse(fs.readFileSync(UPDATE_CACHE_PATH, 'utf-8'));
+    return JSON.parse(fs.readFileSync(UPDATE_CACHE_PATH, "utf-8"));
   } catch {
     return {};
   }
@@ -780,7 +780,11 @@ function readUpdateCache() {
 function writeUpdateCache(cache) {
   try {
     fs.mkdirSync(path.dirname(UPDATE_CACHE_PATH), { recursive: true });
-    fs.writeFileSync(UPDATE_CACHE_PATH, JSON.stringify(cache));
+    // `cache` is the version string from our own update-check API response,
+    // written to a fixed local cache path — no user-controlled path, never
+    // re-executed or interpreted as code. The codeql[] tag must stay on
+    // this same line (GitHub only honors it on the flagged line itself).
+    fs.writeFileSync(UPDATE_CACHE_PATH, JSON.stringify(cache)); // codeql[js/http-to-file-access]
   } catch {
     // Best-effort: a read-only home dir just means we re-poll next session.
   }
@@ -788,8 +792,8 @@ function writeUpdateCache(cache) {
 
 /** Compare dotted numeric versions. Returns >0 when a is newer than b. */
 function compareSemver(a, b) {
-  const pa = String(a).split('.').map(n => parseInt(n, 10) || 0);
-  const pb = String(b).split('.').map(n => parseInt(n, 10) || 0);
+  const pa = String(a).split(".").map(n => parseInt(n, 10) || 0);
+  const pb = String(b).split(".").map(n => parseInt(n, 10) || 0);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
     const diff = (pa[i] || 0) - (pb[i] || 0);
     if (diff !== 0) return diff;
@@ -802,7 +806,7 @@ async function fetchLatestSkillVersion() {
     const res = await fetch(`${UPDATE_HOST}/api/version`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return null;
     const data = await res.json();
-    return typeof data?.skills === 'string' ? data.skills : null;
+    return typeof data?.skills === "string" ? data.skills : null;
   } catch {
     return null; // offline, sandboxed, timed out, or bad JSON: all non-fatal
   }
@@ -810,12 +814,12 @@ async function fetchLatestSkillVersion() {
 
 function buildUpdateDirective(localVersion, latestVersion) {
   return (
-    `UPDATE_AVAILABLE: A newer Impeccable skill is available ` +
+    "UPDATE_AVAILABLE: A newer Impeccable skill is available " +
     `(installed v${localVersion}, latest v${latestVersion}). ` +
     `Before continuing, ask the user once: "A newer Impeccable (v${latestVersion}) is available. ` +
-    `Update now? It runs \`npx impeccable update\`." ` +
-    `If they agree, run \`npx impeccable update\` (the update applies to the next session, not this one). ` +
-    `Either way, continue the current task without waiting, and do not raise this again.`
+    "Update now? It runs `npx impeccable update`.\" " +
+    "If they agree, run `npx impeccable update` (the update applies to the next session, not this one). " +
+    "Either way, continue the current task without waiting, and do not raise this again."
   );
 }
 
@@ -829,10 +833,10 @@ function buildUpdateDirective(localVersion, latestVersion) {
 // Inlined rather than importing hook-lib so the boot path stays lightweight.
 function updateCheckDisabledByConfig(cwd = process.cwd()) {
   let value;
-  for (const name of ['config.json', 'config.local.json']) {
+  for (const name of ["config.json", "config.local.json"]) {
     try {
-      const raw = JSON.parse(fs.readFileSync(path.join(cwd, '.impeccable', name), 'utf-8'));
-      if (raw && typeof raw === 'object' && typeof raw.updateCheck === 'boolean') value = raw.updateCheck;
+      const raw = JSON.parse(fs.readFileSync(path.join(cwd, ".impeccable", name), "utf-8"));
+      if (raw && typeof raw === "object" && typeof raw.updateCheck === "boolean") value = raw.updateCheck;
     } catch { /* missing or malformed: ignore */ }
   }
   return value === false;
@@ -878,7 +882,7 @@ async function cli() {
   try {
     cliOptions = parseCliOptions(process.argv.slice(2));
   } catch (err) {
-    if (err?.name === 'TargetArgError') {
+    if (err?.name === "TargetArgError") {
       process.stderr.write(`${err.message}\n`);
       process.exit(1);
     }
@@ -888,7 +892,7 @@ async function cli() {
   const targetExists = targetProvided ? pathExistsForTarget(process.cwd(), cliOptions.targetPath) : null;
   const selection = resolveTargetSelection(process.cwd(), cliOptions);
   if (selection) {
-    process.stdout.write(buildTargetSelectionDirective(selection) + '\n');
+    process.stdout.write(buildTargetSelectionDirective(selection) + "\n");
     process.exit(0);
   }
   const ctx = loadContext(process.cwd(), cliOptions);
@@ -898,11 +902,11 @@ async function cli() {
     // Direct stdout message instead of relying on empty output as a signal
     // — cheap models miss the empty case more often than the explicit one.
     const parts = [
-      'NO_PRODUCT_MD: This project has no PRODUCT.md yet. ' +
-      'Follow SKILL.md Setup step 1: for `init`, `teach`, `craft`, `shape`, ' +
-      'or wording that clearly maps to a from-scratch build/shape flow, load ' +
-      'reference/init.md and write PRODUCT.md first; for any other (scoped) ' +
-      'command against existing code, proceed using the code as context and ' +
+      "NO_PRODUCT_MD: This project has no PRODUCT.md yet. " +
+      "Follow SKILL.md Setup step 1: for `init`, `teach`, `craft`, `shape`, " +
+      "or wording that clearly maps to a from-scratch build/shape flow, load " +
+      "reference/init.md and write PRODUCT.md first; for any other (scoped) " +
+      "command against existing code, proceed using the code as context and " +
       `offer \`${IMPECCABLE_COMMAND} init\` as a suggestion (do not block).`,
     ];
     parts.push(buildResolvedContextDirective(ctx, cliOptions, { targetExists }));
@@ -910,7 +914,7 @@ async function cli() {
       parts.push(buildMissingTargetDirective());
     }
     if (updateDirective) parts.push(updateDirective);
-    process.stdout.write(parts.join('\n\n---\n\n') + '\n');
+    process.stdout.write(parts.join("\n\n---\n\n") + "\n");
     process.exit(0);
   }
   const parts = [`# PRODUCT.md\n\n${ctx.product.trim()}`];
@@ -924,14 +928,14 @@ async function cli() {
   const register = extractRegister(ctx.product);
   const next = register
     ? `NEXT STEP: This project's register is \`${register}\`. You MUST now read \`reference/${register}.md\` before producing any design output.`
-    : `NEXT STEP: You MUST now read the matching register reference (\`reference/brand.md\` or \`reference/product.md\`) before producing any design output. Pick based on PRODUCT.md above.`;
+    : "NEXT STEP: You MUST now read the matching register reference (`reference/brand.md` or `reference/product.md`) before producing any design output. Pick based on PRODUCT.md above.";
   parts.push(next);
   const platform = extractPlatform(ctx.product);
   const nativeRefs =
-    platform === 'adaptive' ? ['ios', 'android'] : platform === 'ios' || platform === 'android' ? [platform] : [];
+    platform === "adaptive" ? ["ios", "android"] : platform === "ios" || platform === "android" ? [platform] : [];
   if (nativeRefs.length) {
-    const refList = nativeRefs.map(p => `\`reference/${p}.md\``).join(' and ');
-    const label = platform === 'adaptive' ? '`adaptive` (both iOS and Android)' : `\`${platform}\``;
+    const refList = nativeRefs.map(p => `\`reference/${p}.md\``).join(" and ");
+    const label = platform === "adaptive" ? "`adaptive` (both iOS and Android)" : `\`${platform}\``;
     parts.push(
       `NEXT STEP: This project targets ${label}. Also read ${refList} for native conventions, in addition to the register reference.`,
     );
@@ -939,7 +943,7 @@ async function cli() {
     // A `## Platform` section that names something we don't recognize (a
     // toolchain like `flutter`, a typo) would otherwise silently fall back to
     // web — the wrong default exactly when the user tried to say "native".
-    const rawPlatform = extractSectionValue(ctx.product, 'Platform');
+    const rawPlatform = extractSectionValue(ctx.product, "Platform");
     if (rawPlatform) {
       parts.push(
         `WARNING: PRODUCT.md's \`## Platform\` value \`${rawPlatform}\` is not recognized; treating the project as \`web\`. Valid values are \`web\`, \`ios\`, \`android\`, or \`adaptive\` (cross-platform, ships both). If this project is native, fix the field (name the design language the app renders, not the toolchain) and surface it to the user.`,
@@ -947,7 +951,7 @@ async function cli() {
     }
   }
   if (updateDirective) parts.push(updateDirective);
-  process.stdout.write(parts.join('\n\n---\n\n') + '\n');
+  process.stdout.write(parts.join("\n\n---\n\n") + "\n");
 }
 
 function parseCliOptions(args) {
@@ -955,7 +959,7 @@ function parseCliOptions(args) {
 }
 
 function hasTargetOption(options) {
-  return !!(options && typeof options.targetPath === 'string' && options.targetPath.trim());
+  return !!(options && typeof options.targetPath === "string" && options.targetPath.trim());
 }
 
 function pathExistsForTarget(cwd, targetPath) {
@@ -987,10 +991,10 @@ function shouldWarnMissingTarget(ctx, targetProvided, targetExists = null) {
 }
 
 function buildMissingTargetDirective() {
-  const script = process.argv[1] || 'context.mjs';
+  const script = process.argv[1] || "context.mjs";
   return (
-    'MONOREPO_TARGET_REQUIRED: This is a monorepo and context.mjs ran without --target. ' +
-    'If the user named a file, route, or child app, do not answer from this output. ' +
+    "MONOREPO_TARGET_REQUIRED: This is a monorepo and context.mjs ran without --target. " +
+    "If the user named a file, route, or child app, do not answer from this output. " +
     `Rerun \`node ${script} --target <path>\` and answer from that run's RESOLVED_CONTEXT fields.`
   );
 }
@@ -998,9 +1002,9 @@ function buildMissingTargetDirective() {
 function buildTargetSelectionDirective(selection) {
   return (
     `TARGET_SELECTION_REQUIRED:\n${JSON.stringify(selection, null, 2)}\n\n` +
-    'Show each app with its productStatus/productPath and designStatus/designPath so the user can see child overrides, inherited root files, fallback files, or missing files before choosing. ' +
-    'Ask the user which app Impeccable should use, then rerun Impeccable helper commands from that child app cwd using this same scripts directory. ' +
-    'Use `--target <path>` only as a fallback when changing cwd is not possible, or when the user explicitly named a file/path.'
+    "Show each app with its productStatus/productPath and designStatus/designPath so the user can see child overrides, inherited root files, fallback files, or missing files before choosing. " +
+    "Ask the user which app Impeccable should use, then rerun Impeccable helper commands from that child app cwd using this same scripts directory. " +
+    "Use `--target <path>` only as a fallback when changing cwd is not possible, or when the user explicitly named a file/path."
   );
 }
 

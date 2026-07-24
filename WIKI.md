@@ -62,4 +62,4 @@ This page's rendered form is also published live at
 
 ---
 
-Need help? See [`SUPPORT.md`](SUPPORT.md).
+Need help? See `SUPPORT.md`.

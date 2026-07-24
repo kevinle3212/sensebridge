@@ -1,30 +1,30 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from "node:fs";
+import path from "node:path";
 
-import { loadDesignSystemForCwd } from '../design-system.mjs';
-import { RULE_SCOPES, filterByScopes } from '../registry/antipatterns.mjs';
-import { createBrowserDetector, detectUrl } from '../engines/browser/detect-url.mjs';
-import { detectHtml } from '../engines/static-html/detect-html.mjs';
-import { detectText } from '../engines/regex/detect-text.mjs';
+import { loadDesignSystemForCwd } from "../design-system.mjs";
+import { RULE_SCOPES, filterByScopes } from "../registry/antipatterns.mjs";
+import { createBrowserDetector, detectUrl } from "../engines/browser/detect-url.mjs";
+import { detectHtml } from "../engines/static-html/detect-html.mjs";
+import { detectText } from "../engines/regex/detect-text.mjs";
 import {
   filterDetectionFindings,
   readDetectionConfig,
   shouldIgnoreDetectionFile,
-} from '../../lib/impeccable-config.mjs';
+} from "../../lib/impeccable-config.mjs";
 import {
   HTML_EXTENSIONS,
   buildImportGraph,
   detectFrameworkConfig,
   isPortListening,
   walkDir,
-} from '../node/file-system.mjs';
+} from "../node/file-system.mjs";
 
 // ---------------------------------------------------------------------------
 // Output formatting
 // ---------------------------------------------------------------------------
 
 function formatFindingSummary(count) {
-  return `${count} anti-pattern${count === 1 ? '' : 's'} found.`;
+  return `${count} anti-pattern${count === 1 ? "" : "s"} found.`;
 }
 
 function formatFindings(findings, jsonMode) {
@@ -37,15 +37,15 @@ function formatFindings(findings, jsonMode) {
   }
   const out = [];
   for (const [file, items] of Object.entries(grouped)) {
-    const importNote = items[0]?.importedBy?.length ? ` (imported by ${items[0].importedBy.join(', ')})` : '';
+    const importNote = items[0]?.importedBy?.length ? ` (imported by ${items[0].importedBy.join(", ")})` : "";
     out.push(`\n${file}${importNote}`);
     for (const item of items) {
-      out.push(`  ${item.line ? `line ${item.line}: ` : ''}[${item.antipattern}] ${item.snippet}`);
+      out.push(`  ${item.line ? `line ${item.line}: ` : ""}[${item.antipattern}] ${item.snippet}`);
       out.push(`    → ${item.description}`);
     }
   }
   out.push(`\n${formatFindingSummary(findings.length)}`);
-  return out.join('\n');
+  return out.join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -55,16 +55,16 @@ function formatFindings(findings, jsonMode) {
 async function handleStdin(options = {}) {
   const chunks = [];
   for await (const chunk of process.stdin) chunks.push(chunk);
-  const input = Buffer.concat(chunks).toString('utf-8');
+  const input = Buffer.concat(chunks).toString("utf-8");
   try {
     const parsed = JSON.parse(input);
     const fp = parsed?.tool_input?.file_path;
     if (fp && fs.existsSync(fp)) {
       return HTML_EXTENSIONS.has(path.extname(fp).toLowerCase())
-        ? detectHtml(fp, options) : detectText(fs.readFileSync(fp, 'utf-8'), fp, options);
+        ? detectHtml(fp, options) : detectText(fs.readFileSync(fp, "utf-8"), fp, options);
     }
   } catch { /* not JSON */ }
-  return detectText(input, '<stdin>', options);
+  return detectText(input, "<stdin>", options);
 }
 
 
@@ -73,7 +73,7 @@ async function handleStdin(options = {}) {
 // ---------------------------------------------------------------------------
 
 async function confirm(question) {
-  const rl = (await import('node:readline')).default.createInterface({
+  const rl = (await import("node:readline")).default.createInterface({
     input: process.stdin, output: process.stderr,
   });
   return new Promise((resolve) => {
@@ -130,43 +130,43 @@ Examples:
 
 async function detectCli() {
   let args = process.argv.slice(2).map(arg => {
-    if (arg === '-json') return '--json';
-    if (arg === '-fast') return '--fast';
+    if (arg === "-json") return "--json";
+    if (arg === "-fast") return "--fast";
     return arg;
   });
-  if (args[0] === 'detect') args = args.slice(1);
-  const jsonMode = args.includes('--json');
-  const quietMode = args.includes('--quiet');
-  const helpMode = args.includes('--help');
+  if (args[0] === "detect") args = args.slice(1);
+  const jsonMode = args.includes("--json");
+  const quietMode = args.includes("--quiet");
+  const helpMode = args.includes("--help");
   // --fast (regex-only) is deprecated: since the jsdom removal, the static
   // HTML/CSS analysis is fast and covers every rule, so the regex-only path
   // only loses coverage for no real speed win. Accept the flag for back-compat
   // but ignore it and run the full scan.
-  if (args.includes('--fast')) {
+  if (args.includes("--fast")) {
     process.stderr.write(
-      'Note: --fast is deprecated and ignored. The full scan is fast now and runs every rule.\n',
+      "Note: --fast is deprecated and ignored. The full scan is fast now and runs every rule.\n",
     );
   }
-  const configEnabled = !args.includes('--no-config');
+  const configEnabled = !args.includes("--no-config");
   const detectionConfig = configEnabled
     ? readDetectionConfig(process.cwd())
     : { ignoreRules: [], ignoreFiles: [], ignoreValues: [] };
   const providers = [];
-  if (args.includes('--gpt')) providers.push('gpt');
-  if (args.includes('--gemini')) providers.push('gemini');
+  if (args.includes("--gpt")) providers.push("gpt");
+  if (args.includes("--gemini")) providers.push("gemini");
   const scopes = [];
   for (let i = 0; i < args.length; i++) {
-    if (args[i] !== '--scope' && !args[i].startsWith('--scope=')) continue;
-    const inline = args[i].startsWith('--scope=');
-    const value = inline ? args[i].slice('--scope='.length) : args[i + 1];
-    const parsed = (value && !value.startsWith('--'))
-      ? value.split(',').map(s => s.trim()).filter(Boolean)
+    if (args[i] !== "--scope" && !args[i].startsWith("--scope=")) continue;
+    const inline = args[i].startsWith("--scope=");
+    const value = inline ? args[i].slice("--scope=".length) : args[i + 1];
+    const parsed = (value && !value.startsWith("--"))
+      ? value.split(",").map(s => s.trim()).filter(Boolean)
       : [];
     // A bare `--scope` would otherwise fall out of `targets` and scan unscoped;
     // fail loudly so a mistyped pre-scan never runs the wrong rule set.
     if (parsed.length === 0) {
       process.stderr.write(
-        `Error: --scope requires a value. Valid scopes: ${[...RULE_SCOPES].join(', ')}\n`,
+        `Error: --scope requires a value. Valid scopes: ${[...RULE_SCOPES].join(", ")}\n`,
       );
       process.exit(1);
     }
@@ -177,19 +177,19 @@ async function detectCli() {
   const unknownScopes = scopes.filter(s => !RULE_SCOPES.has(s));
   if (unknownScopes.length > 0) {
     process.stderr.write(
-      `Error: unknown --scope value(s): ${unknownScopes.join(', ')}. Valid scopes: ${[...RULE_SCOPES].join(', ')}\n`,
+      `Error: unknown --scope value(s): ${unknownScopes.join(", ")}. Valid scopes: ${[...RULE_SCOPES].join(", ")}\n`,
     );
     process.exit(1);
   }
-  const designSystemEnabled = configEnabled && !args.includes('--no-design-system') && detectionConfig.designSystem?.enabled !== false;
+  const designSystemEnabled = configEnabled && !args.includes("--no-design-system") && detectionConfig.designSystem?.enabled !== false;
   const designSystem = designSystemEnabled ? loadDesignSystemForCwd(process.cwd()) : null;
   // Inline `impeccable-disable*` waivers are part of the scanned file, so they
   // apply by default. `--no-config` (raw scan) and the dedicated
   // `--no-inline-ignores` both turn them off.
-  const inlineIgnoresEnabled = configEnabled && !args.includes('--no-inline-ignores');
+  const inlineIgnoresEnabled = configEnabled && !args.includes("--no-inline-ignores");
   const scanOptions = { providers, inlineIgnores: inlineIgnoresEnabled };
   if (designSystem) scanOptions.designSystem = designSystem;
-  const targets = args.filter(a => !a.startsWith('--'));
+  const targets = args.filter(a => !a.startsWith("--"));
 
   if (helpMode) { printUsage(); process.exit(0); }
 
@@ -215,11 +215,28 @@ async function detectCli() {
         }
 
         const resolved = path.resolve(target);
+        // Open first and derive the type from the open file descriptor
+        // (fstat) rather than a separate path-based stat, so there's no
+        // check-then-use gap where the path could be swapped for something
+        // else between deciding what it is and reading it below.
+        let fd;
+        try {
+          fd = fs.openSync(resolved, "r");
+        } catch {
+          process.stderr.write(`Warning: cannot access ${target}\n`);
+          continue;
+        }
         let stat;
-        try { stat = fs.statSync(resolved); }
-        catch { process.stderr.write(`Warning: cannot access ${target}\n`); continue; }
+        try {
+          stat = fs.fstatSync(fd);
+        } catch {
+          fs.closeSync(fd);
+          process.stderr.write(`Warning: cannot access ${target}\n`);
+          continue;
+        }
 
         if (stat.isDirectory()) {
+          fs.closeSync(fd);
           // Check for framework dev server config (skip in JSON/quiet modes to avoid polluting output)
           if (!jsonMode && !quietMode) {
             const fwConfig = detectFrameworkConfig(resolved);
@@ -228,7 +245,7 @@ async function detectCli() {
               if (probe.listening && probe.matched) {
                 process.stderr.write(
                   `\n${fwConfig.name} dev server detected on localhost:${fwConfig.port}.\n` +
-                  `For more accurate results, scan the running site:\n` +
+                  "For more accurate results, scan the running site:\n" +
                   `  npx impeccable detect http://localhost:${fwConfig.port}\n\n`
                 );
               } else if (probe.listening && !probe.matched) {
@@ -239,7 +256,7 @@ async function detectCli() {
               } else {
                 process.stderr.write(
                   `\n${fwConfig.name} project detected (${path.basename(fwConfig.configPath)}).\n` +
-                  `Start the dev server and scan via URL for best results:\n` +
+                  "Start the dev server and scan via URL for best results:\n" +
                   `  npx impeccable detect http://localhost:${fwConfig.port}\n\n`
                 );
               }
@@ -254,11 +271,11 @@ async function detectCli() {
           if (files.length > 50 && process.stdin.isTTY && !jsonMode && !quietMode) {
             process.stderr.write(
               `\nFound ${files.length} files (${htmlCount} HTML) in ${target}.\n` +
-              `Scanning may take a while${htmlCount > 10 ? ' (static HTML/CSS processes each HTML file individually)' : ''}.\n` +
-              `Target a specific subdirectory to narrow scope.\n`
+              `Scanning may take a while${htmlCount > 10 ? " (static HTML/CSS processes each HTML file individually)" : ""}.\n` +
+              "Target a specific subdirectory to narrow scope.\n"
             );
-            const ok = await confirm('Continue?');
-            if (!ok) { process.stderr.write('Aborted.\n'); process.exit(0); }
+            const ok = await confirm("Continue?");
+            if (!ok) { process.stderr.write("Aborted.\n"); process.exit(0); }
           }
 
           // Build import graph for multi-file awareness
@@ -278,7 +295,7 @@ async function detectCli() {
             if (HTML_EXTENSIONS.has(ext)) {
               fileFindings = await detectHtml(file, scanOptions);
             } else {
-              fileFindings = detectText(fs.readFileSync(file, 'utf-8'), file, scanOptions);
+              fileFindings = detectText(fs.readFileSync(file, "utf-8"), file, scanOptions);
             }
             // Annotate findings with import context
             const importers = importedByMap.get(file);
@@ -291,13 +308,23 @@ async function detectCli() {
             allFindings.push(...fileFindings);
           }
         } else if (stat.isFile()) {
-          if (shouldIgnoreDetectionFile(resolved, process.cwd(), detectionConfig)) continue;
+          if (shouldIgnoreDetectionFile(resolved, process.cwd(), detectionConfig)) { fs.closeSync(fd); continue; }
           const ext = path.extname(resolved).toLowerCase();
           if (HTML_EXTENSIONS.has(ext)) {
+            fs.closeSync(fd);
             allFindings.push(...await detectHtml(resolved, scanOptions));
           } else {
-            allFindings.push(...detectText(fs.readFileSync(resolved, 'utf-8'), resolved, scanOptions));
+            // Read via the fd already opened above (not the path) so the
+            // read can't observe a different underlying file than the
+            // fstat() that decided this was a plain file.
+            try {
+              allFindings.push(...detectText(fs.readFileSync(fd, "utf-8"), resolved, scanOptions));
+            } finally {
+              fs.closeSync(fd);
+            }
           }
+        } else {
+          fs.closeSync(fd);
         }
       }
     } finally {
@@ -309,12 +336,12 @@ async function detectCli() {
   allFindings = filterByScopes(allFindings, scopes);
 
   if (allFindings.length > 0) {
-    if (jsonMode) process.stdout.write(formatFindings(allFindings, true) + '\n');
-    else if (quietMode) process.stderr.write(formatFindingSummary(allFindings.length) + '\n');
-    else process.stderr.write(formatFindings(allFindings, false) + '\n');
+    if (jsonMode) process.stdout.write(formatFindings(allFindings, true) + "\n");
+    else if (quietMode) process.stderr.write(formatFindingSummary(allFindings.length) + "\n");
+    else process.stderr.write(formatFindings(allFindings, false) + "\n");
     process.exit(2);
   }
-  if (jsonMode) process.stdout.write('[]\n');
+  if (jsonMode) process.stdout.write("[]\n");
   process.exit(0);
 }
 
