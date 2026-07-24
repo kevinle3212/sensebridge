@@ -540,7 +540,7 @@ function stripStyleAndJoin(lines, block) {
       do {
         previousLine = line;
         line = line
-          .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/g, "")
+          .replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/g, "")
           .replace(/<style\b[^>]*\/\s*>/g, "");
       } while (line !== previousLine);
 
@@ -554,10 +554,10 @@ function stripStyleAndJoin(lines, block) {
       out.push(line);
     } else {
       // In multi-line style body; drop everything until we see </style>.
-      const closeIdx = line.search(/<\/style\s*>/);
+      const closeIdx = line.search(/<\/style\b[^>]*>/);
       if (closeIdx !== -1) {
         inStyle = false;
-        out.push(line.slice(closeIdx).replace(/<\/style\s*>/, ""));
+        out.push(line.slice(closeIdx).replace(/<\/style\b[^>]*>/, ""));
       }
       // else: skip line entirely
     }
@@ -616,7 +616,7 @@ function extractOriginal(lines, block) {
  */
 function extractVariant(lines, block, variantNum) {
   const text = stripStyleAndJoin(lines, block);
-  const inner = extractInnerByAttr(text, 'data-impeccable-variant="' + variantNum + '"');
+  const inner = extractInnerByAttr(text, 'data-impeccable-variant="' + escapeRegExp(String(variantNum)) + '"');
   if (inner === null) return null;
   const result = inner.split("\n");
   // Collapse a lone empty leading/trailing line (common after string splice).

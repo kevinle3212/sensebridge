@@ -106,9 +106,9 @@ export function substitutePropsWithExprs(markup, contract) {
 
 export function parseSvelteComponentFile(content) {
   const text = String(content || "");
-  const scriptMatch = text.match(/^([\s\S]*?)<script\b[^>]*>[\s\S]*?<\/script\s*>/i);
+  const scriptMatch = text.match(/^([\s\S]*?)<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/i);
   const withoutScript = scriptMatch ? text.slice(scriptMatch[0].length) : text;
-  const styleMatch = withoutScript.match(/<style\b[^>]*>[\s\S]*?<\/style\s*>/i);
+  const styleMatch = withoutScript.match(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/i);
   const styleBlock = styleMatch ? styleMatch[0] : "";
   const markup = styleMatch
     ? withoutScript.slice(0, styleMatch.index).trim()
@@ -116,7 +116,7 @@ export function parseSvelteComponentFile(content) {
   const cssLines = styleBlock
     ? styleBlock
       .replace(/^<style\b[^>]*>/i, "")
-      .replace(/<\/style\s*>$/i, "")
+      .replace(/<\/style\b[^>]*>$/i, "")
       .split("\n")
       .map((line) => line.trimEnd())
     : [];
@@ -295,7 +295,7 @@ function appendCssToSvelteStyle(lines, cssLines) {
 
 function findLastStyleCloseLine(lines) {
   for (let i = lines.length - 1; i >= 0; i--) {
-    if (/<\/style\s*>/.test(lines[i])) return i;
+    if (/<\/style\b[^>]*>/.test(lines[i])) return i;
   }
   return -1;
 }
@@ -655,8 +655,8 @@ function stripScriptStyleAndComments(input) {
   do {
     previous = text;
     text = text
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, "")
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/gi, "")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style\b[^>]*>/gi, "")
       .replace(/<!--[\s\S]*?-->/g, "");
   } while (text !== previous);
   return text;
@@ -813,7 +813,10 @@ export function applyDeferredSvelteComponentAccepts(cwd = process.cwd()) {
     }
   }
   if (remaining.length > 0) {
-    fs.writeFileSync(file, JSON.stringify({ accepts: remaining }, null, 2) + "\n", "utf-8");
+    // os.tmpdir() may be a shared, multi-user directory — restrict both the
+    // directory and file to the owning user only, same as writeDeferredAccept.
+    fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(file, JSON.stringify({ accepts: remaining }, null, 2) + "\n", { encoding: "utf-8", mode: 0o600 });
   } else {
     try { fs.rmSync(file, { force: true }); } catch {}
   }

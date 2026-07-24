@@ -215,11 +215,28 @@ async function detectCli() {
         }
 
         const resolved = path.resolve(target);
+        // Open first and derive the type from the open file descriptor
+        // (fstat) rather than a separate path-based stat, so there's no
+        // check-then-use gap where the path could be swapped for something
+        // else between deciding what it is and reading it below.
+        let fd;
+        try {
+          fd = fs.openSync(resolved, "r");
+        } catch {
+          process.stderr.write(`Warning: cannot access ${target}\n`);
+          continue;
+        }
         let stat;
-        try { stat = fs.statSync(resolved); }
-        catch { process.stderr.write(`Warning: cannot access ${target}\n`); continue; }
+        try {
+          stat = fs.fstatSync(fd);
+        } catch {
+          fs.closeSync(fd);
+          process.stderr.write(`Warning: cannot access ${target}\n`);
+          continue;
+        }
 
         if (stat.isDirectory()) {
+          fs.closeSync(fd);
           // Check for framework dev server config (skip in JSON/quiet modes to avoid polluting output)
           if (!jsonMode && !quietMode) {
             const fwConfig = detectFrameworkConfig(resolved);
@@ -291,23 +308,23 @@ async function detectCli() {
             allFindings.push(...fileFindings);
           }
         } else if (stat.isFile()) {
-          if (shouldIgnoreDetectionFile(resolved, process.cwd(), detectionConfig)) continue;
+          if (shouldIgnoreDetectionFile(resolved, process.cwd(), detectionConfig)) { fs.closeSync(fd); continue; }
           const ext = path.extname(resolved).toLowerCase();
           if (HTML_EXTENSIONS.has(ext)) {
+            fs.closeSync(fd);
             allFindings.push(...await detectHtml(resolved, scanOptions));
           } else {
-            // Open once and read via the fd (not the path) so the read can't
-            // observe a different underlying file than the stat() above did.
-            let fd;
+            // Read via the fd already opened above (not the path) so the
+            // read can't observe a different underlying file than the
+            // fstat() that decided this was a plain file.
             try {
-              fd = fs.openSync(resolved, "r");
               allFindings.push(...detectText(fs.readFileSync(fd, "utf-8"), resolved, scanOptions));
             } finally {
-              if (fd !== undefined) {
-                try { fs.closeSync(fd); } catch {}
-              }
+              fs.closeSync(fd);
             }
           }
+        } else {
+          fs.closeSync(fd);
         }
       }
     } finally {

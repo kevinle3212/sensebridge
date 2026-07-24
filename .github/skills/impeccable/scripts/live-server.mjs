@@ -752,7 +752,13 @@ function handlePollGet(req, res, url) {
   const timeout = Number.isFinite(requestedTimeout)
     ? Math.min(Math.max(requestedTimeout, 1000), DEFAULT_POLL_TIMEOUT)
     : DEFAULT_POLL_TIMEOUT;
-  const leaseMs = parseInt(url.searchParams.get("leaseMs") || "30000", 10);
+  // Same clamp rationale as `timeout` above: leaseMs flows into
+  // entry.leaseUntil and from there into scheduleLeaseFlush()'s setTimeout,
+  // so an unbounded caller-supplied value could pin a timer open indefinitely.
+  const requestedLeaseMs = parseInt(url.searchParams.get("leaseMs") || "30000", 10);
+  const leaseMs = Number.isFinite(requestedLeaseMs)
+    ? Math.min(Math.max(requestedLeaseMs, 1000), DEFAULT_POLL_TIMEOUT)
+    : 30000;
   const available = findAvailablePendingEvent();
   if (available) {
     res.writeHead(200, { "Content-Type": "application/json" });
@@ -1031,10 +1037,11 @@ if (args.includes("stop")) {
   const keepInject = args.includes("--keep-inject");
   try {
     const { info } = readLiveServerInfo(process.cwd()) || {};
-    // codeql[js/file-access-to-http]: `info` comes from the local
-    // server-info file this same tool wrote; the request target is
-    // hardcoded to localhost — local IPC auth, not data exfiltration.
-    const res = await fetch(`http://localhost:${info.port}/stop?token=${info.token}`);
+    // `info` comes from the local server-info file this same tool wrote;
+    // the request target is hardcoded to localhost — local IPC auth, not
+    // data exfiltration. The codeql[] tag must stay on this same line
+    // (GitHub only honors it on the flagged line itself).
+    const res = await fetch(`http://localhost:${info.port}/stop?token=${info.token}`); // codeql[js/file-access-to-http]
     if (res.ok) console.log(`Stopped live server on port ${info.port}.`);
   } catch {
     console.log("No running live server found.");

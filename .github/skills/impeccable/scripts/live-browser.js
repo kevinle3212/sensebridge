@@ -6817,11 +6817,12 @@
     if (msLoadPromise) return msLoadPromise;
     msLoadPromise = new Promise((resolve, reject) => {
       const s = document.createElement("script");
-      // codeql[js/functionality-from-untrusted-source]: loads only from the
-      // same localhost dev server that injected this script (PORT comes from
-      // window.__IMPECCABLE_PORT__, set by that server) — plain http:// is
-      // unavoidable for a loopback address, which has no MITM threat model.
-      s.src = "http://localhost:" + PORT + "/modern-screenshot.js";
+      // Loads only from the same localhost dev server that injected this
+      // script (PORT comes from window.__IMPECCABLE_PORT__, set by that
+      // server) — plain http:// is unavoidable for a loopback address,
+      // which has no MITM threat model. The codeql[] tag must stay on this
+      // same line (GitHub only honors it on the flagged line itself).
+      s.src = "http://localhost:" + PORT + "/modern-screenshot.js"; // codeql[js/functionality-from-untrusted-source]
       s.onload = () => resolve(window.modernScreenshot);
       s.onerror = () => { msLoadPromise = null; reject(new Error("modern-screenshot failed to load")); };
       uiAppendStyle(s);
@@ -9976,11 +9977,12 @@ void main() {
     if (detectScriptLoaded) return;
     detectScriptLoaded = true;
     const s = document.createElement("script");
-    // codeql[js/functionality-from-untrusted-source]: loads only from the
-    // same localhost dev server that injected this script (PORT comes from
-    // window.__IMPECCABLE_PORT__, set by that server) — plain http:// is
-    // unavoidable for a loopback address, which has no MITM threat model.
-    s.src = "http://localhost:" + PORT + "/detect.js";
+    // Loads only from the same localhost dev server that injected this
+    // script (PORT comes from window.__IMPECCABLE_PORT__, set by that
+    // server) — plain http:// is unavoidable for a loopback address, which
+    // has no MITM threat model. The codeql[] tag must stay on this same
+    // line (GitHub only honors it on the flagged line itself).
+    s.src = "http://localhost:" + PORT + "/detect.js"; // codeql[js/functionality-from-untrusted-source]
     s.dataset.impeccableExtension = "true";
     document.head.appendChild(s);
   }
