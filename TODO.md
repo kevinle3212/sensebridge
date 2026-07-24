@@ -48,12 +48,30 @@ ended up different from the one being hand-edited (`.claude`'s).
       filesystem, which already prove the symlinks materialize and read
       correctly) — invoke each tool's version of the skill once and confirm
       it behaves identically to before the symlink conversion.
-- [ ] **[P2]** Confirm the next CodeQL run still analyzes
+- [x] **[P2]** Confirm the next CodeQL run still analyzes
       `.github/skills/impeccable/scripts/**` now that it's the one real copy
       (the other 4 mirrors are symlinks to it) — this was a deliberate choice
       to avoid losing scan coverage (CodeQL might not follow symlinks; this
       keeps the scanned path a real file either way), but wasn't empirically
       confirmed one way or the other about symlink-following behavior.
+      **Done 2026-07-23** — confirmed: the 2000-PST session's 23 new alerts
+      on PR #28 were attributed to real files under that exact path,
+      proving CodeQL follows through to the canonical copy rather than
+      skipping symlinked mirrors or losing coverage.
+- [ ] **[P1]** **[Needs owner]** PR #28: confirm the CodeQL check and Vercel
+      deployment both go green on the re-scan/redeploy triggered by commits
+      `e2ecb6b`/`4e6751b` (23 CodeQL alerts fixed — 11 of them were a prior
+      suppression comment placed one line too high, silently not
+      suppressing anything since it was written; plus a genuine wiki-link
+      fix), then merge to `main` per the owner's one-time go-ahead to bypass
+      the standing "never merge to `main` directly" rule.
+- [ ] **[P3]** **[Needs owner]** Confirm the Railway dashboard project
+      itself is configured as intended — the owner's request named it but
+      the text was garbled; likely "sensebridge" per
+      `railway-preview-deploy.yml`'s `--service sensebridge`. The GitHub-side
+      `RAILWAY_TOKEN` repo secret is confirmed present (added 2026-07-23),
+      but the Railway-side project config isn't checkable from here (no
+      Railway API/MCP access in this session).
 - [ ] **[P3]** The single→double quote conversion (`eslint --rule quotes`)
       only covers the 24 files touched by the CodeQL fix, not the rest of
       `impeccable/scripts/`'s real files (now only one copy to edit, at
