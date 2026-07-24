@@ -58,13 +58,34 @@ ended up different from the one being hand-edited (`.claude`'s).
       on PR #28 were attributed to real files under that exact path,
       proving CodeQL follows through to the canonical copy rather than
       skipping symlinked mirrors or losing coverage.
-- [ ] **[P1]** **[Needs owner]** PR #28: confirm the CodeQL check and Vercel
-      deployment both go green on the re-scan/redeploy triggered by commits
-      `e2ecb6b`/`4e6751b` (23 CodeQL alerts fixed — 11 of them were a prior
-      suppression comment placed one line too high, silently not
-      suppressing anything since it was written; plus a genuine wiki-link
-      fix), then merge to `main` per the owner's one-time go-ahead to bypass
-      the standing "never merge to `main` directly" rule.
+- [ ] **[P1]** **[Needs owner]** PR #28: confirm the CodeQL check goes green
+      once `CodeQL (Swift)` finishes and the aggregate check re-runs (the
+      Code Scanning Alerts API, scoped to this branch, already shows zero
+      open alerts for every rule the 23-alert check listed — the one still-
+      failing check run is a self-flagged incomplete snapshot taken before
+      Swift's config was available: "1 configuration present on `main` was
+      not found"). Then merge to `main` per the owner's one-time go-ahead to
+      bypass the standing "never merge to `main` directly" rule.
+- [ ] **[P1]** **[Needs owner]** Register `~/.ssh/kevinle3212-GitHub.pub` as
+      an SSH **signing** key on GitHub (Settings → SSH and GPG keys → New
+      SSH key → Key type: Signing Key — it's currently only registered as
+      an *authentication* key). Root cause found for the recurring Vercel
+      "Canceled from the Vercel Dashboard" status: every one of the
+      project's ~20 recent deployments with `target: null` (preview, i.e.
+      every branch/PR push) was `CANCELED`, while every `target: production`
+      (main) deployment was `READY` — 100% correlated with GitHub's commit
+      `verified`/`unverified` flag, per Vercel's own `errorLink` on the
+      canceled deployment pointing at
+      vercel.com/docs/project-configuration/git-settings#verified-commits.
+      Configured repo-local SSH commit signing with the existing key
+      (`git config --local gpg.format ssh` / `user.signingkey` /
+      `commit.gpgsign true`) and confirmed via `git cat-file commit HEAD`
+      that it produces a real `gpgsig` SSH-signature block — but GitHub
+      only shows a commit "Verified" once the *same* key is separately
+      added there as a signing key, which needs the owner (adding a key
+      requires either the GitHub web UI, or `gh auth refresh -s
+      admin:ssh_signing_key` — an interactive OAuth approval — followed by
+      `gh ssh-key add ~/.ssh/kevinle3212-GitHub.pub --type signing`).
 - [ ] **[P3]** **[Needs owner]** Confirm the Railway dashboard project
       itself is configured as intended — the owner's request named it but
       the text was garbled; likely "sensebridge" per
