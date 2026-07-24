@@ -97,7 +97,20 @@ a {
 a:not([class]) {
   background-image: linear-gradient(currentcolor, currentcolor);
   background-repeat: no-repeat;
-  background-position: 0 100%;
+
+  // Two corrections so the drawn line lands where the resting underline
+  // already is, instead of several pixels below it — hovering should change
+  // the line's width, never its height.
+  //   content-box, not the default padding-box: links that pad themselves out
+  //     to a comfortable hit target (the header nav's 0.75rem block padding)
+  //     would otherwise draw this at the bottom of that padding. It is a no-op
+  //     for unpadded links, where the two boxes are the same.
+  //   the 0.35em lift: the content box is the *line* box, whose bottom sits a
+  //     half-leading plus a descender below the glyphs. Backgrounds cannot be
+  //     anchored to the baseline, so this raises the line by the measured
+  //     difference, putting it where the browser's own underline draws.
+  background-origin: content-box;
+  background-position: 0 calc(100% - 0.35em);
   background-size: 0 1px;
 
   @include motion-safe {

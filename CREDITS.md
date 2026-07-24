@@ -4,6 +4,8 @@ SenseBridge is built and maintained by Kevin K. Le.
 
 ## Maintainers
 
+<img src="docs/assets/kevin-le.jpg" alt="Kevin K. Le, the current sole developer of the project" width="120">
+
 - Kevin K. Le — <kevinle3212@gmail.com>
 
 ## Contributors

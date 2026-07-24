@@ -68,6 +68,8 @@ export interface Translations {
     heading: string;
     body: string;
     supporting: string;
+    /** Label for the control that replays the bridge construction animation. */
+    replay: string;
   };
   phone: {
     heading: string;
@@ -95,9 +97,25 @@ export interface Translations {
     tagline: string;
     githubLink: string;
     notAvailable: string;
+    makerPhotoAlt: string;
   };
   disclaimer: {
     ariaLabel: string;
     text: string;
+  };
+  errorPages: {
+    backHome: string;
+    notFound: {
+      heading: string;
+      body: string;
+    };
+    badRequest: {
+      heading: string;
+      body: string;
+    };
+    serverError: {
+      heading: string;
+      body: string;
+    };
   };
 }

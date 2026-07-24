@@ -4,6 +4,7 @@
 // its own lazy chunk, fetched only once a [data-scene] container is about to
 // enter view. Self-running, same side-effect-import pattern as ../motion.
 import type { MountedScene, SceneFactory } from "./core";
+import { debugLog } from "../debug";
 import { webglAllowed } from "./quality-gate";
 
 export {};
@@ -28,7 +29,13 @@ function isSceneName(value: string | undefined): value is SceneName {
   );
 }
 
-if (webglAllowed()) {
+// A missing 3D scene is either this gate saying no (weak GPU, reduced motion,
+// no WebGL) or a chunk that never got fetched — the two logs below tell those
+// apart without guessing.
+const allowed = webglAllowed();
+debugLog("scenes", "webgl quality gate:", allowed ? "allowed" : "blocked");
+
+if (allowed) {
   const mountedScenes: MountedScene[] = [];
 
   const observer = new IntersectionObserver(
@@ -49,6 +56,7 @@ if (webglAllowed()) {
         void Promise.all([sceneImporters[sceneName](), import("./core")]).then(
           ([{ default: factory }, { mountScene }]) => {
             mountedScenes.push(mountScene(container, factory));
+            debugLog("scenes", "mounted:", sceneName);
           },
         );
       }

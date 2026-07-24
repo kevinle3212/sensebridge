@@ -1,0 +1,245 @@
+---
+/**
+ * Decorative line-art illustration for the error pages (404/400/500): a
+ * wireframe cow that walks to the edge of a hole, tips in, sinks out of sight,
+ * and starts over — same stroke-only vocabulary as SignalBridge.astro's inline
+ * SVG. Purely decorative (aria-hidden); the accessible information lives in
+ * ErrorPage.astro's heading/body text, not here.
+ *
+ * The disappearance is a clip, not a fade: everything is drawn inside a
+ * clipPath that unions "above the ground line" with "the hole opening", so a
+ * falling cow is visible exactly while it is above ground or inside the hole,
+ * and is cut off the moment it passes the far side of the rim. Nothing has to
+ * be painted over it and no fill has to match the page background, which is
+ * what keeps it correct in both themes.
+ *
+ * Motion is gated behind prefers-reduced-motion. The resting state — what
+ * reduced-motion visitors see, and the state the loop returns to — is the cow
+ * standing at the lip of the hole, which reads correctly as a still drawing.
+ */
+interface Props {
+  /** "500" adds an inner ring inside the hole, reading as a deeper drop. */
+  variant?: "404" | "400" | "500";
+}
+
+const { variant = "404" } = Astro.props;
+const deep = variant === "500";
+
+// One illustration per error page, so keying the clipPath id to the variant is
+// enough to keep it unique within the document.
+const clipId = `cow-hole-clip-${variant}`;
+---
+
+<svg class="cow-hole" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
+  <defs>
+    <!-- Union of the two shapes: everything down to the ground line, plus the
+         hole opening itself. -->
+    <clipPath id={clipId}>
+      <rect x="0" y="0" width="240" height="116"></rect>
+      <ellipse cx="120" cy="116" rx="38" ry="10"></ellipse>
+    </clipPath>
+  </defs>
+
+  <!-- Ground, broken where the hole opens -->
+  <path d="M4 116 H82"></path>
+  <path d="M158 116 H236"></path>
+
+  <!-- Hole interior, painted before the cow so a cow inside the hole reads as
+       being in it rather than in front of it -->
+  <ellipse class="hole-fill" cx="120" cy="116" rx="38" ry="10"></ellipse>
+  {deep && <ellipse class="hole-depth" cx="120" cy="118" rx="24" ry="6" />}
+
+  <g clip-path={`url(#${clipId})`}>
+    <!-- Positioned so the resting state puts the front hooves right at the
+         lip (the hole opens at x=82) and the head out over it. -->
+    <g class="cow">
+      <!-- Body, head, and markings -->
+      <ellipse cx="60" cy="84" rx="26" ry="15"></ellipse>
+      <circle cx="92" cy="74" r="11"></circle>
+      <path d="M85 65 l-5 -7 M99 65 l5 -7"></path>
+      <circle class="eye" cx="95" cy="71" r="1.5"></circle>
+      <circle class="spot" cx="52" cy="80" r="5"></circle>
+      <circle class="spot" cx="70" cy="88" r="3.5"></circle>
+      <path d="M34 78 q-10 6 -6 16"></path>
+
+      <!-- Legs, split into two pairs so they can swing in opposition -->
+      <g class="legs legs-back">
+        <path d="M42 97 V116 M50 97 V116"></path>
+      </g>
+      <g class="legs legs-front">
+        <path d="M72 97 V116 M80 97 V116"></path>
+      </g>
+    </g>
+  </g>
+
+  <!-- Rim drawn last so its edge stays crisp over a cow crossing it -->
+  <ellipse class="hole-rim" cx="120" cy="116" rx="38" ry="10"></ellipse>
+
+  <!-- Surprise spark, timed to the moment the cow tips in -->
+  <g class="spark">
+    <path d="M114 48 l2 -9 M124 52 l9 -3 M120 60 l7 6"></path>
+  </g>
+</svg>
+
+<style lang="scss">
+  @use "@styles/abstracts" as *;
+
+  .cow-hole {
+    width: 100%;
+    max-width: 18rem;
+    height: auto;
+    color: color("text-secondary");
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  // hairline rather than surface: the dark palette has nothing darker than bg
+  // to dig a hole with, so the opening has to separate by contrast in whichever
+  // direction the theme allows. hairline is the one neutral that manages it
+  // both ways — clearly lighter than bg in dark mode, clearly darker in light —
+  // where surface (#eef1f7) sits so close to the light bg (#f7f8fb) that the
+  // hole all but vanished and only its rim read.
+  .hole-fill {
+    fill: color("hairline");
+    stroke: none;
+  }
+
+  .hole-depth {
+    fill: none;
+    stroke: color("text-secondary");
+    opacity: 0.5;
+  }
+
+  .hole-rim {
+    fill: none;
+    stroke: color("accent-primary");
+  }
+
+  .eye,
+  .spot {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .spot {
+    opacity: 0.45;
+  }
+
+  .spark {
+    color: color("accent-warm");
+    opacity: 0;
+  }
+
+  @include motion-safe {
+    // One loop: walk in from just off-frame, tip over the lip, fall out of
+    // sight, then a short beat of empty hole before it happens again. The
+    // reset leg (85% -> 86%) travels back across the frame, so opacity holds
+    // it hidden through that jump — the clip alone would not cover the
+    // diagonal it takes. -110px is chosen to park the cow immediately outside
+    // the viewBox rather than far outside it, so almost none of the cycle is
+    // spent on an empty frame waiting for it to arrive.
+    .cow {
+      animation: cow-walk-and-fall 6.5s linear infinite;
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+    }
+
+    .legs {
+      transform-box: fill-box;
+      transform-origin: 50% 0%;
+    }
+
+    .legs-front {
+      animation: leg-swing 0.5s ease("in-out") infinite alternate;
+    }
+
+    .legs-back {
+      animation: leg-swing 0.5s ease("in-out") infinite alternate-reverse;
+    }
+
+    .spark {
+      animation: spark-pop 6.5s linear infinite;
+      transform-box: fill-box;
+      transform-origin: 50% 50%;
+    }
+
+    @keyframes cow-walk-and-fall {
+      0% {
+        opacity: 1;
+        transform: translate(-110px, 0) rotate(0deg);
+        animation-timing-function: linear;
+      }
+
+      52% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+        animation-timing-function: ease-out;
+      }
+
+      60% {
+        opacity: 1;
+        transform: translate(20px, 2px) rotate(10deg);
+        animation-timing-function: ease-in;
+      }
+
+      65% {
+        opacity: 1;
+        transform: translate(30px, 6px) rotate(18deg);
+        animation-timing-function: ease-in;
+      }
+
+      84% {
+        opacity: 1;
+        transform: translate(60px, 70px) rotate(46deg);
+      }
+
+      85% {
+        opacity: 0;
+        transform: translate(60px, 70px) rotate(46deg);
+      }
+
+      86%,
+      96% {
+        opacity: 0;
+        transform: translate(-110px, 0) rotate(0deg);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(-110px, 0) rotate(0deg);
+      }
+    }
+
+    @keyframes leg-swing {
+      from {
+        transform: rotate(-16deg);
+      }
+
+      to {
+        transform: rotate(16deg);
+      }
+    }
+
+    @keyframes spark-pop {
+      0%,
+      58% {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+
+      64% {
+        opacity: 0.9;
+        transform: scale(1);
+      }
+
+      78%,
+      100% {
+        opacity: 0;
+        transform: scale(1.15);
+      }
+    }
+  }
+</style>

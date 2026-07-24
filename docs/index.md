@@ -40,6 +40,15 @@ and the [README](https://github.com/kevinle3212/sensebridge#readme).
 - [Local AI (Ollama)](OLLAMA.md) — local LLM experiments (not an app dependency)
 - [NotebookLM](NOTEBOOKLM.md) — manual setup for project research
 
+## Maintainer
+
+<img src="assets/kevin-le.jpg" alt="Kevin K. Le, the current sole developer of the project" width="120">
+
+**Kevin K. Le** — sole maintainer. Contact details are in
+[`MAINTAINERS.md`](https://github.com/kevinle3212/sensebridge/blob/main/MAINTAINERS.md);
+acknowledgments and third-party credits are in
+[`CREDITS.md`](https://github.com/kevinle3212/sensebridge/blob/main/CREDITS.md).
+
 ---
 
 Need help? See [`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

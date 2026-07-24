@@ -7,11 +7,22 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 
 <footer class="site-footer">
   <div class="wrap">
-    <p>{t.footer.tagline}</p>
-    <p>
-      <a href="https://github.com/kevinle3212/sensebridge">{t.footer.githubLink}</a>
-    </p>
-    <p>{t.footer.notAvailable}</p>
+    <img
+      class="maker-photo"
+      src="/images/team/kevin-le.jpg"
+      alt={t.footer.makerPhotoAlt}
+      width="88"
+      height="88"
+      loading="lazy"
+      decoding="async"
+    />
+    <div class="footer-copy">
+      <p>{t.footer.tagline}</p>
+      <p>
+        <a href="https://github.com/kevinle3212/sensebridge">{t.footer.githubLink}</a>
+      </p>
+      <p>{t.footer.notAvailable}</p>
+    </div>
   </div>
 </footer>
 
@@ -23,9 +34,37 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
     padding-block: space("3");
     border-top: 1px solid color("hairline");
     color: color("text-secondary");
+  }
 
-    p + p {
-      margin-top: space("1");
+  .site-footer .wrap {
+    display: flex;
+    align-items: center;
+    gap: space("2");
+  }
+
+  // Small and restrained on purpose — a credit, not a hero photo. Hairline
+  // border matches the site's other bordered surfaces (cards, the theme
+  // toggle) rather than introducing a new visual treatment.
+  .maker-photo {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    object-fit: cover;
+    border: 1px solid color("hairline");
+    border-radius: 50%;
+  }
+
+  .footer-copy p + p {
+    margin-top: space("1");
+  }
+
+  // Below this width the photo-beside-text row gets cramped against the
+  // longest line (the "not yet available" notice) — stack instead of
+  // shrinking the photo further.
+  @media (width < 26rem) {
+    .site-footer .wrap {
+      flex-direction: column;
+      align-items: flex-start;
     }
   }
 </style>

@@ -35,13 +35,20 @@ jobs:
           fi
 
       - name: Local Swift package build and test
+        # `xcodebuild test` already builds the package before testing it —
+        # the standalone `swift build` that used to run first here was a
+        # full second compilation through a different build system (SPM's
+        # own .build/, not Xcode's DerivedData), so its output was never
+        # reused by the xcodebuild step that followed. Dropping it removes
+        # that redundant compile pass without changing what gets built or
+        # tested.
         run: |
           shopt -s nullglob
           for manifest in app/Packages/*/Package.swift; do
             dir="$(dirname "$manifest")"
             name="$(basename "$dir")"
             echo "== $dir =="
-            (cd "$dir" && swift build && xcodebuild test -scheme "$name" -destination 'platform=macOS' | xcpretty && exit "${PIPESTATUS[0]}")
+            (cd "$dir" && xcodebuild test -scheme "$name" -destination 'platform=macOS' | xcpretty && exit "${PIPESTATUS[0]}")
           done
 
       - name: Detect project layout
@@ -82,7 +89,16 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Install SwiftLint and SwiftFormat
+        # HOMEBREW_NO_AUTO_UPDATE skips brew's implicit `brew update` (a full
+        # homebrew-core index refresh) before installing — usually the
+        # single biggest chunk of wall time in a macOS CI `brew install`
+        # step for packages that are already bottled. NO_INSTALL_CLEANUP
+        # skips the post-install cache-eviction pass, irrelevant on an
+        # ephemeral runner.
         run: brew install swiftlint swiftformat
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_INSTALL_CLEANUP: "1"
       - name: Run scripts/lint.sh
         run: scripts/lint.sh
 

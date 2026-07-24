@@ -84,9 +84,11 @@ routing (no i18n library dependency): `/` (English, default/unprefixed),
 silent fallback); components read from them via `useTranslations()`, keyed
 off `Astro.currentLocale` (or `document.documentElement.lang` in the two
 client scripts that need it, `read-aloud.ts` and the theme toggle in
-`Header.astro`). The header's language switcher is plain `<a>` links —
-keyboard-operable natively, with `aria-current="true"` marking the active
-locale. See
+`Header.astro`). The header's language switcher is a native
+`<details>`/`<summary>` dropdown — keyboard-operable and screen-reader
+labeled without any ARIA state management (the browser exposes
+`aria-expanded` on `<summary>` for free), with `aria-current="page"` marking
+the active locale in the menu. See
 [`../docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`](../docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md)
 for the full design (this covers the website half only; the iOS app has its
 own localization).
@@ -100,6 +102,29 @@ npm run dev        # dev server with HMR
 npm run build      # prerender to dist/
 npm run preview    # serve the built dist/ locally
 ```
+
+### Verbose logging
+
+The client scripts log their decision points to the browser console through
+`src/scripts/debug.ts` — the reduced-motion branch, the WebGL quality gate and
+each 3D scene mount, read-aloud availability, and the resolved theme. This is
+always on under `npm run dev`.
+
+On a built or deployed site it is off until you opt in:
+
+```js
+localStorage.setItem("sb-debug", "1"); // then reload
+localStorage.removeItem("sb-debug"); // back off
+```
+
+The flag is read once at load, so a reload is required either way. Filter the
+console by `[sb:` for everything, or `[sb:motion` / `[sb:scenes` /
+`[sb:read-aloud` / `[sb:theme` for one subsystem.
+
+Vercel has no equivalent browser-side switch — this is a static deployment, so
+its own verbosity is build-log only (`vercel build --debug` locally, or the
+full build log in the dashboard). Nothing on the Vercel side reaches the
+visitor's console.
 
 ## Tooling
 
