@@ -1,10 +1,10 @@
 ---
-description: Groom TODO.md — verify each open item against the current repo state, annotate completed ones per the file's completion rule, flag stale or superseded items, and report. Never silently deletes.
+description: Tidy TODO.md — verify each open item against the current repo state, annotate completed ones per the file's completion rule, flag stale or superseded items, and report. Never silently deletes.
 ---
 
-# todo-groom
+# todo-tidy
 
-Groom `TODO.md` (repo root). Items go stale silently: work lands without the
+Tidy `TODO.md` (repo root). Items go stale silently: work lands without the
 box being ticked, priorities shift, and blocked items unblock. This command
 re-grounds the list in the actual repo state.
 

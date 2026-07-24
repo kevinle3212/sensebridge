@@ -50,7 +50,7 @@ not prose, and casing rules never apply to them:
 
 - Slash-command files (`.claude/commands/*.md`, and equivalents under
   `.codex/`, `.github/`, etc.) whose H1 is the command's own invocation name
-  — `# cleanup-commit`, `# docker-clean`, `# handoff`. The heading *is* the
+  — `# cleanup-commit`, `# cleanup-notes`, `# todo-tidy`. The heading *is* the
   identifier; changing its case would misrepresent the command name. (A
   command file with a genuine descriptive title, like
   `# Security Review — SenseBridge`, is ordinary prose and follows the normal

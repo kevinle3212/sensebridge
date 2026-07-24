@@ -44,7 +44,7 @@ It scans staged and tracked files only, so it never sees — and never protects 
 
 Gitignored via [`.gitignore`](.gitignore), excluded from markdownlint via
 [`.markdownlintignore`](.markdownlintignore), and never committed. It holds the
-full session-handoff trail written by [`/handoff`](.claude/commands/handoff.md),
+full session-handoff trail written by the user-global `/handoff` command,
 plus personal setup and machine-specific configuration. Its transient twin
 `tmp/handoff.md` is likewise gitignored and auto-loads on the next `/clear`.
 
