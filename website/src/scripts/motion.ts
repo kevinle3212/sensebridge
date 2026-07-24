@@ -10,10 +10,19 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { debugLog } from "./debug";
 
 export {};
 
 gsap.registerPlugin(ScrollTrigger);
+
+// "Nothing animates" is almost always this gate rather than a broken tween, so
+// log the branch before anything else has a chance to fail.
+debugLog(
+  "motion",
+  "prefers-reduced-motion:",
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "reduce" : "no-preference",
+);
 
 // Mirror --duration-fast/base/slow/slower from src/styles/abstracts/_motion.scss
 // (GSAP needs numeric seconds; the CSS custom properties are for CSS
@@ -66,8 +75,8 @@ mm.add("(prefers-reduced-motion: no-preference)", () => {
   initSpatialFutureReveal();
   initScrollProgress();
   initMagneticCta();
-  initMagneticNav();
   initHeroPointerGlow();
+  debugLog("motion", "motion layer initialized (Lenis + ScrollTrigger active)");
 
   return () => {
     gsap.ticker.remove(driveLenis);
@@ -225,6 +234,15 @@ function initSignalBridge(): void {
       pulse ? "-=0.2" : undefined,
     );
   }
+
+  // Build itself once immediately on mount, regardless of scroll position
+  // (DESIGN.md: shouldn't require scrolling to begin) — overrides whatever
+  // paused/progress state ScrollTrigger just set based on the section's
+  // current viewport position. The attached scrollTrigger above keeps
+  // working exactly as before afterward: scrolling past the trigger again
+  // is a no-op on an already-finished timeline, and scrolling back above it
+  // still reverses, same as if a visitor had triggered this by scroll alone.
+  timeline.play(0);
 }
 
 // Signal Blue pulse crossing the finished deck (48 → 272, the same two
@@ -450,37 +468,14 @@ function initMagneticCta(): void {
   });
 }
 
-// Magnetic header nav links (Header.astro → [data-magnetic-nav]): a smaller,
-// same-gate cousin of initMagneticCta() above — each link nudges toward the
-// cursor and springs back with a short, bounce-free tween on leave. Transform
-// only, so it never shifts layout. Hover-capable + fine pointer only.
-function initMagneticNav(): void {
-  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    return;
-  }
-  const links = document.querySelectorAll<HTMLElement>("[data-magnetic-nav]");
-  if (links.length === 0) {
-    return;
-  }
-
-  const MAX_OFFSET_PX = 3;
-  links.forEach((link) => {
-    const moveX = gsap.quickTo(link, "x", { duration: DURATION_BASE, ease: "power2.out" });
-    const moveY = gsap.quickTo(link, "y", { duration: DURATION_BASE, ease: "power2.out" });
-
-    link.addEventListener("pointermove", (event) => {
-      const rect = link.getBoundingClientRect();
-      const relativeX = event.clientX - (rect.left + rect.width / 2);
-      const relativeY = event.clientY - (rect.top + rect.height / 2);
-      moveX(gsap.utils.clamp(-MAX_OFFSET_PX, MAX_OFFSET_PX, relativeX * 0.3));
-      moveY(gsap.utils.clamp(-MAX_OFFSET_PX, MAX_OFFSET_PX, relativeY * 0.3));
-    });
-
-    link.addEventListener("pointerleave", () => {
-      gsap.to(link, { x: 0, y: 0, duration: DURATION_FAST, ease: EASE_REVEAL });
-    });
-  });
-}
+// Header nav links deliberately carry no magnetic pull. A per-link translate
+// is fine on a standalone control like the hero CTA (initMagneticCta above),
+// but in a row of four sibling links any offset — even a correct one — reads
+// as the hovered item falling out of alignment with its neighbours, and the
+// spring-back could never land exactly on the shared baseline because the
+// pull tween and the release tween drove the same x/y at once. The hover
+// affordance is the drawn-in underline in styles/global/_base.scss, which is
+// painted rather than laid out and so cannot move the box at all.
 
 // Pointer-reactive hero glow (Hero.astro → [data-hero-visual], Hero.module.scss
 // → .visual-glow): eases the existing Perception Glow bloom toward the

@@ -78,6 +78,22 @@ const DECK_DRAW_START = 0.6;
 const DECK_DRAW_END = 0.9;
 const TRAVELER_GATE_PROGRESS = 0.92;
 
+// Construction auto-play (DESIGN.md: the bridge should build itself, without
+// waiting for scroll). Runs against a timer, eased the same way scroll
+// scrubbing is (approachScalar below) so the motion feel matches, and can be
+// replayed any number of times — see replayConstruction() in the factory.
+const INTRO_DURATION_SECONDS = 2.5;
+
+// Idle camera drift. Once the span is finished the camera stops taking its
+// position from scroll and free-runs a slow there-and-back sweep between the
+// same two ends, so a visitor who has stopped scrolling still sees a scene in
+// motion rather than a frozen still. Long and cosine-eased on purpose: this
+// plays under body copy, so it has to read as drift, not as a pan demanding
+// attention. Scrolling out of the section re-arms the build (replayObserver
+// below), which hands the camera back to scroll for the next construction.
+const DRIFT_START_PROGRESS = 0.98;
+const DRIFT_CYCLE_SECONDS = 18;
+
 const SIGNAL_INTERVAL_SECONDS = 6;
 const SIGNAL_TRAVEL_SECONDS = 2.2;
 const SIGNAL_PULSE_SECONDS = 0.6;
@@ -298,12 +314,71 @@ export default function createBridgeScene(ctx: SceneContext): SceneInstance {
   composer.addPass(renderPass);
   composer.addPass(bloomPass);
 
-  // The section this scene's construction progress scrubs against — see
-  // SignalBridge.astro's [data-scene="bridge"] container, a child of the
-  // #bridge section. Looked up once; read via a fresh getBoundingClientRect()
-  // every frame below (cheap, single element).
+  // The section this scene scrubs against — see SignalBridge.astro's
+  // [data-scene="bridge"] container, a child of the #bridge section. Looked up
+  // once; read via a fresh getBoundingClientRect() every frame below (cheap,
+  // single element).
   const track = container.closest<HTMLElement>("section");
-  let smoothProgress = 0;
+
+  // Two independent progress values, because "runs with scroll" and "builds
+  // itself" want different things from the same 0..1 number:
+  //   scrollProgress — always and only how far the section has scrolled
+  //     through the viewport. Drives the camera tracking shot while the span
+  //     is going up, so scrubbing the section visibly moves the shot; the
+  //     idle drift takes the camera over once construction finishes.
+  //   buildProgress  — what the construction sub-ranges read. Takes whichever
+  //     is further along, the timed build or the scroll position, so neither
+  //     input can ever un-build what the other already assembled. That is the
+  //     bug this replaces: the old single value snapped back to the scroll
+  //     position the instant the timed build finished, partially
+  //     disassembling the deck and closing the traveler gate again.
+  let scrollProgress = 0;
+  let buildProgress = 0;
+  let introElapsed = 0;
+  let introPlaying = true;
+
+  // Camera position along CAMERA_X_START..CAMERA_X_END, as a 0..1 sweep.
+  // Scroll owns it while the span is under construction; the drift owns it
+  // afterwards. driftPhase is null until the handover, then holds the angle
+  // the sweep is currently at — see the camera block in render().
+  let cameraSweep = 0;
+  let driftPhase: number | null = null;
+
+  // Tears the span back down and rebuilds it from nothing. While the build is
+  // playing it owns buildProgress outright (see render below) so the sequence
+  // reads as a true 0 -> 1 assembly even when the visitor is parked mid-section
+  // and scrollProgress is already high.
+  function replayConstruction(): void {
+    introElapsed = 0;
+    introPlaying = true;
+    buildProgress = 0;
+  }
+
+  // Scrolling away re-arms the build so scrolling back plays it again. Only
+  // arms on leave — core.ts's mountScene() skips render() entirely while the
+  // container is off-screen, so a replay started here would sit frozen until
+  // the section is back in view anyway; this way it starts from the top at
+  // exactly the moment there is someone to see it.
+  const replayObserver = new IntersectionObserver((entries) => {
+    if (entries.at(-1)?.isIntersecting === false) {
+      replayConstruction();
+    }
+  });
+  if (track) {
+    replayObserver.observe(track);
+  }
+
+  // Replay control (SignalBridge.astro → [data-bridge-replay]): lets the build
+  // be watched again on demand, without scrolling away and back. Ships hidden
+  // and is revealed only here, once the scene is actually live — visitors who
+  // never get this scene (reduced motion, no WebGL, failed quality gate) are
+  // rendering the static finished SVG instead, where the button would be a
+  // control that does nothing.
+  const replayButton = track?.querySelector<HTMLButtonElement>("[data-bridge-replay]");
+  if (replayButton) {
+    replayButton.hidden = false;
+    replayButton.addEventListener("click", replayConstruction);
+  }
 
   // Theme-lerped colors/opacities, reused every frame (never reallocated) —
   // see core.ts's approachColor/approachScalar.
@@ -336,31 +411,46 @@ export default function createBridgeScene(ctx: SceneContext): SceneInstance {
       waterField.setOpacity(WATER_OPACITY * palette.particleOpacityScale);
       waterField.update(deltaSeconds);
 
-      // Construction scrub: how far the section has scrolled through the
-      // viewport, smoothed so scrubbing never snaps.
+      // How far the section has scrolled through the viewport, smoothed so
+      // scrubbing never snaps. Tracked every frame regardless of what the
+      // construction is doing — the camera below reads this directly.
       const rect = track?.getBoundingClientRect();
-      const rawProgress = rect
+      const rawScrollProgress = rect
         ? clamp01((window.innerHeight - rect.top) / (window.innerHeight * 0.9 + rect.height * 0.5))
         : 0;
-      smoothProgress = approachScalar(smoothProgress, rawProgress, deltaSeconds);
+      scrollProgress = approachScalar(scrollProgress, rawScrollProgress, deltaSeconds);
 
-      const pylonRise = subProgress(PYLON_RISE_START, PYLON_RISE_END, smoothProgress);
+      // Timed build. smoothstep clamps, so introValue stays at 1 once the
+      // sequence finishes and holds the span assembled until the next
+      // replayConstruction() — which is what keeps the traveler gate open
+      // instead of letting a mid-section scroll position close it again.
+      if (introPlaying) {
+        introElapsed += deltaSeconds;
+        if (introElapsed >= INTRO_DURATION_SECONDS) {
+          introPlaying = false;
+        }
+      }
+      const introValue = smoothstep(0, INTRO_DURATION_SECONDS, introElapsed);
+      const buildTarget = introPlaying ? introValue : Math.max(scrollProgress, introValue);
+      buildProgress = approachScalar(buildProgress, buildTarget, deltaSeconds);
+
+      const pylonRise = subProgress(PYLON_RISE_START, PYLON_RISE_END, buildProgress);
       pylonLeft.scale.y = pylonRise;
       pylonRight.scale.y = pylonRise;
 
-      const cableReveal = subProgress(CABLE_DRAW_START, CABLE_DRAW_END, smoothProgress);
+      const cableReveal = subProgress(CABLE_DRAW_START, CABLE_DRAW_END, buildProgress);
       const cableCount = Math.floor(CABLE_POINT_COUNT * cableReveal);
       cableGeometryLeft.setDrawRange(0, cableCount);
       cableGeometryRight.setDrawRange(0, cableCount);
 
       for (const hanger of hangers) {
-        const target = smoothProgress >= hanger.revealThreshold ? 1 : 0;
+        const target = buildProgress >= hanger.revealThreshold ? 1 : 0;
         hanger.opacity = approachScalar(hanger.opacity, target, deltaSeconds);
         hanger.material.color.copy(currentLineColor);
         hanger.material.opacity = currentStructureOpacity * hanger.opacity;
       }
 
-      const deckReveal = subProgress(DECK_DRAW_START, DECK_DRAW_END, smoothProgress);
+      const deckReveal = subProgress(DECK_DRAW_START, DECK_DRAW_END, buildProgress);
       deckGroupLeft.scale.x = deckReveal;
       deckGroupRight.scale.x = deckReveal;
       structureMaterial.opacity = currentStructureOpacity;
@@ -371,10 +461,27 @@ export default function createBridgeScene(ctx: SceneContext): SceneInstance {
       // Camera tracking shot: cameraBase is mutated here, then applied
       // directly — createPointerParallax()'s update() only takes over
       // camera.position/lookAt for hover-capable, fine-pointer visitors (see
-      // core.ts), so this scroll-driven dolly has to be set unconditionally
-      // first; parallax.update() below layers its pointer offset on top for
-      // the visitors it supports, and is a no-op everywhere else.
-      cameraBase.x = THREE.MathUtils.lerp(CAMERA_X_START, CAMERA_X_END, smoothProgress);
+      // core.ts), so this dolly has to be set unconditionally first;
+      // parallax.update() below layers its pointer offset on top for the
+      // visitors it supports, and is a no-op everywhere else.
+      if (buildProgress < DRIFT_START_PROGRESS) {
+        // Under construction: scroll drives the camera, so scrubbing the
+        // section always visibly moves the shot. Dropping driftPhase here is
+        // what re-arms the handover after a replay or a scroll-away.
+        cameraSweep = scrollProgress;
+        driftPhase = null;
+      } else {
+        // Finished: hand off to the free-running sweep. Seeding the phase with
+        // acos of the same 0.5 - 0.5*cos mapping the drift uses means it picks
+        // up at exactly the position scroll left the camera at, so the handover
+        // has no visible jump. acos lands in [0, PI] — the ascending half of
+        // the cycle — so the sweep always continues toward CAMERA_X_END first
+        // rather than reversing on the spot.
+        driftPhase ??= Math.acos(1 - 2 * cameraSweep);
+        driftPhase += (deltaSeconds * 2 * Math.PI) / DRIFT_CYCLE_SECONDS;
+        cameraSweep = 0.5 - 0.5 * Math.cos(driftPhase);
+      }
+      cameraBase.x = THREE.MathUtils.lerp(CAMERA_X_START, CAMERA_X_END, cameraSweep);
       camera.position.set(cameraBase.x, cameraBase.y, cameraBase.z);
       camera.lookAt(cameraBase.x, cameraBase.y, 0);
       parallax.update();
@@ -382,7 +489,7 @@ export default function createBridgeScene(ctx: SceneContext): SceneInstance {
       // Signal traveler: hidden until the span is built, then a repeating
       // cycle — cross the deck, warming near arrival, then a soft warm
       // pulse at the right pylon.
-      const travelerGateOpen = smoothProgress > TRAVELER_GATE_PROGRESS;
+      const travelerGateOpen = buildProgress > TRAVELER_GATE_PROGRESS;
       const cycleSeconds = elapsedSeconds % SIGNAL_INTERVAL_SECONDS;
       if (travelerGateOpen && cycleSeconds < SIGNAL_TRAVEL_SECONDS) {
         const travelProgress = cycleSeconds / SIGNAL_TRAVEL_SECONDS;
@@ -439,6 +546,15 @@ export default function createBridgeScene(ctx: SceneContext): SceneInstance {
     },
 
     dispose(): void {
+      replayObserver.disconnect();
+      // Re-hidden as well as unbound: the button is only meaningful while this
+      // scene is live, and dispose() also runs on a lost WebGL context, which
+      // drops the page back to the static SVG mid-visit.
+      if (replayButton) {
+        replayButton.removeEventListener("click", replayConstruction);
+        replayButton.hidden = true;
+      }
+
       pylonBoxGeometry.dispose();
       pylonEdges.dispose();
       crossbeamBoxGeometry.dispose();

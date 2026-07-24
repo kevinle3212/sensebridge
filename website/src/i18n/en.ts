@@ -75,6 +75,7 @@ export const en: Translations = {
     body: "SenseBridge exists to connect two things: a camera's raw signal, and the plain sentence a person is trying to hear. Everything between them — perception, reasoning, rendering — is the span of that bridge, assembled entirely on your phone.",
     supporting:
       "No cloud crossing. No account gate. Just the shortest path from sensing to understanding.",
+    replay: "Replay the bridge animation",
   },
   phone: {
     heading: "The whole system is the phone in your pocket",
@@ -117,9 +118,25 @@ export const en: Translations = {
     githubLink: "SenseBridge on GitHub",
     notAvailable:
       "Not yet available on the App Store — SenseBridge is pre-launch and in open development.",
+    makerPhotoAlt: "Kevin K. Le, the current sole developer of the project",
   },
   disclaimer: {
     ariaLabel: "Safety disclaimer",
     text: "SenseBridge raises awareness of your surroundings. It is not a mobility or navigation safety device, and its descriptions can be wrong — always use it alongside your own judgment, a cane, or a guide dog.",
+  },
+  errorPages: {
+    backHome: "Back to the homepage",
+    notFound: {
+      heading: "This page fell in a hole.",
+      body: "Somewhere between here and there, this page wandered off and, well, ended up in a hole. It happens to the best of us — the rest of the site is still on solid ground.",
+    },
+    badRequest: {
+      heading: "Something about that request wasn't quite right.",
+      body: "The page didn't fall in a hole this time — the request itself took a wrong turn before it got here.",
+    },
+    serverError: {
+      heading: "Something broke on our end. Sorry about that.",
+      body: "Even a wireframe cow has an off day. Nothing you did caused this — try again in a moment.",
+    },
   },
 };

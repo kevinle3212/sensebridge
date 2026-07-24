@@ -75,6 +75,7 @@ export const es: Translations = {
     body: "SenseBridge existe para conectar dos cosas: la señal en bruto de una cámara y la oración sencilla que una persona intenta escuchar. Todo lo que hay entre ellas — percepción, razonamiento, renderizado — es el tramo de ese puente, ensamblado enteramente en tu teléfono.",
     supporting:
       "Sin cruce por la nube. Sin barrera de cuenta. Solo el camino más corto de la percepción a la comprensión.",
+    replay: "Repetir la animación del puente",
   },
   phone: {
     heading: "Todo el sistema es el teléfono en tu bolsillo",
@@ -117,9 +118,25 @@ export const es: Translations = {
     githubLink: "SenseBridge en GitHub",
     notAvailable:
       "Aún no disponible en la App Store — SenseBridge está en fase previa al lanzamiento y en desarrollo abierto.",
+    makerPhotoAlt: "Kevin K. Le, actualmente el único desarrollador del proyecto",
   },
   disclaimer: {
     ariaLabel: "Aviso de seguridad",
     text: "SenseBridge te ayuda a tomar conciencia de tu entorno. No es un dispositivo de seguridad para movilidad o navegación, y sus descripciones pueden ser incorrectas — úsalo siempre junto con tu propio juicio, un bastón o un perro guía.",
+  },
+  errorPages: {
+    backHome: "Volver al inicio",
+    notFound: {
+      heading: "Esta página se cayó en un hoyo.",
+      body: "En algún punto entre aquí y allá, esta página se desvió y terminó en un hoyo. Le pasa a los mejores — el resto del sitio sigue en terreno firme.",
+    },
+    badRequest: {
+      heading: "Algo en esa solicitud no estaba del todo bien.",
+      body: "Esta vez la página no cayó en un hoyo — la solicitud tomó un desvío antes de llegar aquí.",
+    },
+    serverError: {
+      heading: "Algo falló de nuestro lado. Lo sentimos.",
+      body: "Hasta una vaca de líneas tiene un mal día. Esto no fue algo que hiciste tú — intenta de nuevo en un momento.",
+    },
   },
 };

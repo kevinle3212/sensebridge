@@ -28,6 +28,71 @@
   max-width: 40rem;
 }
 
+// Positioning context for the replay control, which floats over the scene's
+// top-right corner. It is a separate element from .bridge-visual because that
+// one is aria-hidden decorative art — see the comment on the button in
+// SignalBridge.astro.
+.bridge-stage {
+  position: relative;
+  align-self: center;
+  width: 100%;
+  max-width: 26rem;
+}
+
+// Deliberately quiet: the scene is the subject and this only ever replays
+// something the visitor has already been shown, so at rest it is a bare
+// 16px glyph with no chrome, and the pill/border treatment the site's other
+// buttons wear only appears on hover and focus. The glyph itself stays at
+// full-strength text-secondary rather than being faded — "almost hidden"
+// here is a matter of size and chrome, not of dimming a control below the
+// 3:1 non-text contrast floor.
+// 44px is the pointer target (the glyph is 16px inside it), which is the
+// tap-size floor and is why padding is 0 — the box is the target.
+// `[hidden]` is restated because this element sets `display`, which would
+// otherwise beat the UA stylesheet's `[hidden] { display: none }` and leave
+// the button visible for the visitors bridge.ts never reveals it to.
+.bridge-replay {
+  position: absolute;
+  top: space("1");
+  right: space("1");
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: color("text-secondary");
+  cursor: pointer;
+
+  @include motion-safe {
+    transition:
+      color duration("fast") ease("standard"),
+      background-color duration("fast") ease("standard"),
+      border-color duration("fast") ease("standard");
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color("surface");
+    border-color: color("hairline");
+    color: color("accent-primary");
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.bridge-replay-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentcolor;
+}
+
 // Line-art suspension bridge, same stroke-only vocabulary as the hero's
 // LiDAR rings: pylons + suspenders read as structure (Hairline Navy), cable +
 // deck read as the signal path itself (Signal Blue, per the Two-Accent
@@ -36,9 +101,7 @@
 // sequence when motion is enabled.
 .bridge-visual {
   position: relative;
-  align-self: center;
   width: 100%;
-  max-width: 26rem;
 
   svg {
     display: block;
@@ -163,7 +226,7 @@
     flex: 1;
   }
 
-  .bridge-visual {
+  .bridge-stage {
     flex: 1;
   }
 }

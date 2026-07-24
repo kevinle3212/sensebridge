@@ -137,3 +137,7 @@ _bmad/**/*.user.toml
 # generated planning/implementation artifact scratch space (regenerable,
 # session-specific); keep it local like graphify-out/ and .gitnexus/ above.
 _bmad-output/
+
+# Personal scratch assets (raw generated media, working files) — never
+# meant for the repo history.
+private/

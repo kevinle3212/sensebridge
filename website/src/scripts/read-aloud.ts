@@ -16,6 +16,7 @@
 // only revealed here, after confirming each is actually usable, so
 // unsupported/unavailable options never show a dead control. Starting one
 // stops the other.
+import { debugLog } from "./debug";
 import { useTranslations } from "../i18n";
 
 type StopFn = (message?: string) => void;
@@ -63,6 +64,7 @@ export {};
       return;
     }
     if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+      debugLog("read-aloud", "device voice unavailable: no Web Speech API");
       return;
     }
 
@@ -187,6 +189,7 @@ export {};
       "error",
       () => {
         toggleButton.hidden = true;
+        debugLog("read-aloud", "natural voice hidden: /audio/main.mp3 failed to load");
       },
       { once: true },
     );
