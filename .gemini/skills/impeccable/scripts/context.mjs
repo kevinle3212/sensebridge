@@ -780,6 +780,9 @@ function readUpdateCache() {
 function writeUpdateCache(cache) {
   try {
     fs.mkdirSync(path.dirname(UPDATE_CACHE_PATH), { recursive: true });
+    // codeql[js/http-to-file-access]: `cache` is the version string from our
+    // own update-check API response, written to a fixed local cache path —
+    // no user-controlled path, never re-executed or interpreted as code.
     fs.writeFileSync(UPDATE_CACHE_PATH, JSON.stringify(cache));
   } catch {
     // Best-effort: a read-only home dir just means we re-poll next session.

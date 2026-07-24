@@ -57,6 +57,9 @@ async function completeThroughServer(info, args) {
       ? 'error'
       : 'complete';
   try {
+    // codeql[js/file-access-to-http]: `info.token`/`info.port` come from the
+    // local server-info file this same tool wrote; the request target is
+    // hardcoded to localhost — local IPC auth, not data exfiltration.
     const res = await fetch(`http://localhost:${info.port}/poll`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

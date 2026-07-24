@@ -15,7 +15,7 @@
  *   }
  */
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, openSync, fstatSync, closeSync } from 'node:fs';
 import { join, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 
 export function getConfigPath(root) {
@@ -598,7 +598,7 @@ export function ensureConfigGitExclude(root) {
     const gitDir = resolveGitDir(root);
     if (!gitDir) return false;
     const target = join(gitDir, 'info', 'exclude');
-    const existing = existsSync(target) ? readFileSync(target, 'utf-8') : '';
+    const existing = readTextOrEmpty(target);
     const block = [EXCLUDE_OPEN, ...EXCLUDE_PATTERNS, EXCLUDE_CLOSE].join('\n');
     const markerRe = new RegExp(`${escapeRegExp(EXCLUDE_OPEN)}[\\s\\S]*?${escapeRegExp(EXCLUDE_CLOSE)}`);
     let updated;
@@ -620,19 +620,38 @@ export function ensureConfigGitExclude(root) {
 
 function resolveGitDir(root) {
   const dotGit = join(root, '.git');
-  if (!existsSync(dotGit)) return null;
+  // Stat and read via the same fd so both observe the same underlying file.
+  let fd;
   try {
-    if (statSync(dotGit).isDirectory()) return dotGit;
+    fd = openSync(dotGit, 'r');
+    if (fstatSync(fd).isDirectory()) return dotGit;
     // A `.git` file (worktree/submodule) points elsewhere: "gitdir: <path>".
-    const match = readFileSync(dotGit, 'utf-8').match(/gitdir:\s*(.+)/);
+    const match = readFileSync(fd, 'utf-8').match(/gitdir:\s*(.+)/);
     if (match) {
       const resolved = match[1].trim();
       return isAbsolute(resolved) ? resolved : join(root, resolved);
     }
   } catch {
     /* fall through */
+  } finally {
+    if (fd !== undefined) {
+      try {
+        closeSync(fd);
+      } catch {}
+    }
   }
   return null;
+}
+
+// Reads a text file, returning '' if it doesn't exist yet (never a stale
+// existsSync check racing the subsequent read).
+function readTextOrEmpty(filePath) {
+  try {
+    return readFileSync(filePath, 'utf-8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return '';
+    throw err;
+  }
 }
 
 function escapeRegExp(value) {

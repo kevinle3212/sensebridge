@@ -746,7 +746,12 @@ function handlePollGet(req, res, url) {
     return;
   }
   state.lastPollAt = Date.now();
-  const timeout = parseInt(url.searchParams.get('timeout') || DEFAULT_POLL_TIMEOUT, 10);
+  // Clamp to a sane range: a caller-supplied duration must not be able to
+  // pin a pending-poll timer open indefinitely (or fire with a bogus value).
+  const requestedTimeout = parseInt(url.searchParams.get('timeout') || DEFAULT_POLL_TIMEOUT, 10);
+  const timeout = Number.isFinite(requestedTimeout)
+    ? Math.min(Math.max(requestedTimeout, 1000), DEFAULT_POLL_TIMEOUT)
+    : DEFAULT_POLL_TIMEOUT;
   const leaseMs = parseInt(url.searchParams.get('leaseMs') || '30000', 10);
   const available = findAvailablePendingEvent();
   if (available) {
@@ -1026,6 +1031,9 @@ if (args.includes('stop')) {
   const keepInject = args.includes('--keep-inject');
   try {
     const { info } = readLiveServerInfo(process.cwd()) || {};
+    // codeql[js/file-access-to-http]: `info` comes from the local
+    // server-info file this same tool wrote; the request target is
+    // hardcoded to localhost — local IPC auth, not data exfiltration.
     const res = await fetch(`http://localhost:${info.port}/stop?token=${info.token}`);
     if (res.ok) console.log(`Stopped live server on port ${info.port}.`);
   } catch {

@@ -349,13 +349,16 @@ function normalizeText(value) {
 }
 
 function decodeBasicHtml(value) {
+  // &amp; must decode last: decoding it first would turn a defensively
+  // double-encoded entity like &amp;lt; into &lt; and then, on the next
+  // step below, into a raw '<' — one unescape pass too many.
   return value
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
 }
 
 function escapeRegExp(value) {

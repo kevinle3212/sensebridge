@@ -110,6 +110,9 @@ export function requiresAgentReply(event) {
 }
 
 export async function postReply(base, token, reply) {
+  // codeql[js/file-access-to-http]: callers always build `base` as
+  // `http://localhost:<port>` and `token` from the local server-info file
+  // this same tool wrote — local IPC auth, not data exfiltration.
   const res = await fetch(`${base}/poll`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -123,6 +126,9 @@ export async function postReply(base, token, reply) {
 }
 
 export async function fetchServerStatus(base, token) {
+  // codeql[js/file-access-to-http]: callers always build `base` as
+  // `http://localhost:<port>` and `token` from the local server-info file
+  // this same tool wrote — local IPC auth, not data exfiltration.
   const res = await fetch(`${base}/status?token=${token}`);
   if (res.status === 401) {
     const err = new Error('Authentication failed. The server token may have changed.');
@@ -162,6 +168,9 @@ export async function fetchNextEvent(base, token, { totalDeadline } = {}) {
       ? totalDeadline - Date.now()
       : PER_REQUEST_TIMEOUT_MS;
     const slice = Math.min(Math.max(remaining, 1000), PER_REQUEST_TIMEOUT_MS);
+    // codeql[js/file-access-to-http]: callers always build `base` as
+    // `http://localhost:<port>` and `token` from the local server-info file
+    // this same tool wrote — local IPC auth, not data exfiltration.
     const res = await fetch(`${base}/poll?token=${token}&timeout=${slice}&leaseMs=${DEFAULT_EVENT_LEASE_MS}`);
 
     if (res.status === 401) {

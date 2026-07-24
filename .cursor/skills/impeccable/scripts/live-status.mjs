@@ -14,6 +14,9 @@ function readServerInfo() {
 async function fetchServerStatus(info) {
   if (!info) return null;
   try {
+    // codeql[js/file-access-to-http]: `info` comes from the local
+    // server-info file this same tool wrote; the request target is
+    // hardcoded to localhost — local IPC auth, not data exfiltration.
     const res = await fetch(`http://localhost:${info.port}/status?token=${info.token}`);
     if (!res.ok) return null;
     return await res.json();

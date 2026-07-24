@@ -163,12 +163,26 @@ function replaceOnce(original, oldString, newString) {
 function readExistingProjectFile(filePath, cwd) {
   if (!isInsideProject(filePath, cwd)) return null;
   if (SENSITIVE_PATH.test(filePath) || GENERATED_PATH.test(filePath)) return null;
+  return readCappedFile(filePath);
+}
+
+// Stats and reads via a single open file descriptor so the size check and
+// the read can't observe two different underlying files (TOCTOU-safe).
+function readCappedFile(filePath, maxBytes = 1024 * 1024) {
+  let fd;
   try {
-    const stat = fs.statSync(filePath);
-    if (!stat.isFile() || stat.size > 1024 * 1024) return null;
-    return fs.readFileSync(filePath, 'utf-8');
+    fd = fs.openSync(filePath, 'r');
+    const stat = fs.fstatSync(fd);
+    if (!stat.isFile() || stat.size > maxBytes) return null;
+    return fs.readFileSync(fd, 'utf-8');
   } catch {
     return null;
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
   }
 }
 
@@ -234,13 +248,7 @@ function shellCopiedFileContent(command, cwd) {
   const sourcePath = path.isAbsolute(source) ? source : path.resolve(cwd, source);
   if (!isInsideProject(sourcePath, cwd)) return '';
   if (SENSITIVE_PATH.test(sourcePath) || GENERATED_PATH.test(sourcePath)) return '';
-  try {
-    const stat = fs.statSync(sourcePath);
-    if (!stat.isFile() || stat.size > 1024 * 1024) return '';
-    return fs.readFileSync(sourcePath, 'utf-8');
-  } catch {
-    return '';
-  }
+  return readCappedFile(sourcePath) ?? '';
 }
 
 function shellCopyPaths(command) {

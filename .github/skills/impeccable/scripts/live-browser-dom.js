@@ -66,7 +66,10 @@
 
     function id8() {
       if (crypto?.randomUUID) return crypto.randomUUID().replace(/-/g, '').slice(0, 8);
-      return (Math.random().toString(16).slice(2) + Date.now().toString(16)).slice(0, 8);
+      // Any browser modern enough to run this tool has crypto.getRandomValues
+      // even where randomUUID is missing — no need for a Math.random() fallback.
+      const bytes = crypto.getRandomValues(new Uint8Array(4));
+      return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
     }
 
     function cssId(id) {

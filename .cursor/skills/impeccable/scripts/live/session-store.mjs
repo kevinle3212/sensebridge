@@ -35,8 +35,14 @@ export function createLiveSessionStore({ cwd = process.cwd(), sessionId } = {}) 
       const journalPath = getJournalPath(rootDir, normalized.id);
       const snapshotPath = getSnapshotPath(rootDir, normalized.id);
       const legacyJournalPath = getJournalPath(legacyRootDir, normalized.id);
-      if (!fs.existsSync(journalPath) && fs.existsSync(legacyJournalPath)) {
-        fs.copyFileSync(legacyJournalPath, journalPath);
+      if (fs.existsSync(legacyJournalPath)) {
+        // Exclusive copy: atomically no-ops if journalPath already exists,
+        // instead of checking existence and copying as two separate steps.
+        try {
+          fs.copyFileSync(legacyJournalPath, journalPath, fs.constants.COPYFILE_EXCL);
+        } catch (err) {
+          if (err.code !== 'EEXIST') throw err;
+        }
       }
       const prior = loadCachedOrRebuild(normalized.id);
       const seq = prior.nextSeq;

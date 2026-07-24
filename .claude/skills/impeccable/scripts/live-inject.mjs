@@ -122,8 +122,8 @@ Output (JSON):
     }
     const results = resolvedFiles.map((relFile) => {
       const absFile = path.resolve(process.cwd(), relFile);
-      if (!fs.existsSync(absFile)) return { file: relFile, error: 'file_not_found' };
-      const content = fs.readFileSync(absFile, 'utf-8');
+      const content = readFileOrNull(absFile);
+      if (content === null) return { file: relFile, error: 'file_not_found' };
       const detagged = removeTag(content, config.commentSyntax);
       const updated = revertCspMeta(detagged);
       if (updated === content) return { file: relFile, removed: false, note: 'no tag present' };
@@ -155,8 +155,8 @@ Output (JSON):
 
   const results = resolvedFiles.map((relFile) => {
     const absFile = path.resolve(process.cwd(), relFile);
-    if (!fs.existsSync(absFile)) return { file: relFile, error: 'file_not_found' };
-    const content = fs.readFileSync(absFile, 'utf-8');
+    const content = readFileOrNull(absFile);
+    if (content === null) return { file: relFile, error: 'file_not_found' };
     const withoutOld = revertCspMeta(removeTag(content, config.commentSyntax));
     const withTag = insertTag(withoutOld, config, port, relFile);
     if (withTag === withoutOld) {
@@ -177,7 +177,7 @@ Output (JSON):
 
 export function ensureLiveGitIgnores(cwd = process.cwd()) {
   const target = resolveIgnoreTarget(cwd);
-  const existing = fs.existsSync(target.path) ? fs.readFileSync(target.path, 'utf-8') : '';
+  const existing = readTextOrEmpty(target.path);
   const block = [
     IGNORE_MARKER_OPEN,
     ...LIVE_IGNORE_PATTERNS,
@@ -216,17 +216,50 @@ function resolveIgnoreTarget(cwd) {
 
 function resolveGitInfoExcludePath(cwd) {
   const dotGit = path.join(cwd, '.git');
-  if (!fs.existsSync(dotGit)) return null;
+  // Stat and read via the same fd so both observe the same underlying file.
+  let fd;
+  try {
+    fd = fs.openSync(dotGit, 'r');
+    const stat = fs.fstatSync(fd);
+    if (stat.isDirectory()) return path.join(dotGit, 'info', 'exclude');
+    if (!stat.isFile()) return null;
 
-  const stat = fs.statSync(dotGit);
-  if (stat.isDirectory()) return path.join(dotGit, 'info', 'exclude');
-  if (!stat.isFile()) return null;
+    const body = fs.readFileSync(fd, 'utf-8').trim();
+    const match = body.match(/^gitdir:\s*(.+)$/i);
+    if (!match) return null;
+    const gitDir = path.isAbsolute(match[1]) ? match[1] : path.resolve(cwd, match[1]);
+    return path.join(gitDir, 'info', 'exclude');
+  } catch {
+    return null;
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+  }
+}
 
-  const body = fs.readFileSync(dotGit, 'utf-8').trim();
-  const match = body.match(/^gitdir:\s*(.+)$/i);
-  if (!match) return null;
-  const gitDir = path.isAbsolute(match[1]) ? match[1] : path.resolve(cwd, match[1]);
-  return path.join(gitDir, 'info', 'exclude');
+// Reads a text file, returning '' if it doesn't exist yet (never a stale
+// existsSync check racing the subsequent read).
+function readTextOrEmpty(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf-8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return '';
+    throw err;
+  }
+}
+
+// Reads a text file, returning null if it doesn't exist yet (never a stale
+// existsSync check racing the subsequent read).
+function readFileOrNull(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf-8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return null;
+    throw err;
+  }
 }
 
 function escapeRegExp(value) {

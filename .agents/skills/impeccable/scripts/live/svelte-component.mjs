@@ -32,10 +32,19 @@ export function manifestPathForSession(id, cwd = process.cwd()) {
 
 export function ensureRuntimeHelper(cwd = process.cwd()) {
   const file = path.join(cwd, SVELTE_RUNTIME_FILE);
-  if (fs.existsSync(file)) return file;
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, `export { mount, unmount } from 'svelte';\n`, 'utf-8');
+  writeFileIfMissing(file, `export { mount, unmount } from 'svelte';\n`);
   return file;
+}
+
+// Atomically creates the file only if it doesn't already exist, instead of
+// checking existence and writing as two separate (racy) steps.
+function writeFileIfMissing(filePath, content) {
+  try {
+    fs.writeFileSync(filePath, content, { encoding: 'utf-8', flag: 'wx' });
+  } catch (err) {
+    if (err.code !== 'EEXIST') throw err;
+  }
 }
 
 /**
@@ -97,7 +106,7 @@ export function substitutePropsWithExprs(markup, contract) {
 
 export function parseSvelteComponentFile(content) {
   const text = String(content || '');
-  const scriptMatch = text.match(/^([\s\S]*?)<script\b[^>]*>[\s\S]*?<\/script>/i);
+  const scriptMatch = text.match(/^([\s\S]*?)<script\b[^>]*>[\s\S]*?<\/script\s*>/i);
   const withoutScript = scriptMatch ? text.slice(scriptMatch[0].length) : text;
   const styleMatch = withoutScript.match(/<style\b[^>]*>[\s\S]*?<\/style\s*>/i);
   const styleBlock = styleMatch ? styleMatch[0] : '';
@@ -170,9 +179,7 @@ export function scaffoldSvelteComponentSession({
 
   for (let n = 1; n <= count; n++) {
     const variantFile = path.join(dir, `v${n}.svelte`);
-    if (!fs.existsSync(variantFile)) {
-      fs.writeFileSync(variantFile, buildVariantStub(n, originalWithProps, contract), 'utf-8');
-    }
+    writeFileIfMissing(variantFile, buildVariantStub(n, originalWithProps, contract));
   }
 
   return {
@@ -220,9 +227,7 @@ export function scaffoldSvelteComponentInsertSession({
 
   for (let n = 1; n <= count; n++) {
     const variantFile = path.join(dir, `v${n}.svelte`);
-    if (!fs.existsSync(variantFile)) {
-      fs.writeFileSync(variantFile, buildInsertVariantStub(n), 'utf-8');
-    }
+    writeFileIfMissing(variantFile, buildInsertVariantStub(n));
   }
 
   return {
@@ -632,15 +637,29 @@ function inlineSvelteComponentInsertAccept({
 }
 
 function svelteMarkupHasVisibleContent(markup) {
-  const text = String(markup || '')
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
+  const text = stripScriptStyleAndComments(String(markup || ''))
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   if (text.length > 0) return true;
   return /<(img|svg|canvas|video|audio|picture|input|button|select|textarea)\b/i.test(markup || '');
+}
+
+// Strips <script>/<style>/comment blocks to a fixed point (re-running until
+// a pass makes no further change), so replacement can't leave behind a tag
+// reassembled from fragments straddling two blocks, and tolerates whitespace
+// before the closing '>' (</script >, </style  >).
+function stripScriptStyleAndComments(input) {
+  let text = input;
+  let previous;
+  do {
+    previous = text;
+    text = text
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '')
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+  } while (text !== previous);
+  return text;
 }
 
 function mergeOriginalTopLevelAttrs(markup, originalMarkup) {
@@ -757,11 +776,13 @@ export function readDeferredAccepts(cwd = process.cwd()) {
 
 export function writeDeferredAccept(entry, cwd = process.cwd()) {
   const file = deferredAcceptsPath(cwd);
-  fs.mkdirSync(path.dirname(file), { recursive: true });
+  // os.tmpdir() may be a shared, multi-user directory (e.g. /tmp on Linux).
+  // Restrict both the directory and file to the owning user only.
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
   const data = readDeferredAccepts(cwd);
   data.accepts = (data.accepts || []).filter((item) => item.id !== entry.id);
   data.accepts.push({ ...entry, createdAt: new Date().toISOString() });
-  fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', 'utf-8');
+  fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', { encoding: 'utf-8', mode: 0o600 });
 }
 
 export function applyDeferredSvelteComponentAccepts(cwd = process.cwd()) {

@@ -343,10 +343,10 @@ function repairHookManifests(cwd) {
 
     const fresh = target.manifest();
     let next = fresh;
-    if (fs.existsSync(dest)) {
-      try {
-        next = mergeHookManifests(JSON.parse(fs.readFileSync(dest, 'utf-8')), fresh);
-      } catch {
+    try {
+      next = mergeHookManifests(JSON.parse(fs.readFileSync(dest, 'utf-8')), fresh);
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
         const backup = `${dest}.bak`;
         fs.copyFileSync(dest, backup);
         result.backups.push(backup);
@@ -354,7 +354,7 @@ function repairHookManifests(cwd) {
     }
 
     const serialized = `${JSON.stringify(next, null, 2)}\n`;
-    const current = fs.existsSync(dest) ? safeReadText(dest) : null;
+    const current = safeReadText(dest);
     if (current === serialized) {
       result.already.push(target.provider);
       continue;

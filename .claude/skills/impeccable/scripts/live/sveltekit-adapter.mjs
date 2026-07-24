@@ -15,6 +15,17 @@ export const SVELTE_LAYOUT_MARKER_OPEN = '<!-- impeccable-live-svelte-start -->'
 export const SVELTE_LAYOUT_MARKER_CLOSE = '<!-- impeccable-live-svelte-end -->';
 export const SVELTE_ROOT_IMPORT = "import ImpeccableLiveRoot from '$lib/impeccable/ImpeccableLiveRoot.svelte';";
 
+// Reads a text file, returning null if it doesn't exist yet (never a stale
+// existsSync check racing the subsequent read).
+function readFileOrNull(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf-8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return null;
+    throw err;
+  }
+}
+
 export function detectSvelteKitProject(cwd = process.cwd(), config = null) {
   const appHtml = findSvelteKitAppHtml(cwd, config);
   if (!appHtml) return null;
@@ -48,8 +59,9 @@ export function applySvelteKitLiveAdapter({ cwd = process.cwd(), port, config = 
   const layoutRel = detected.layoutFile;
   const layoutAbs = path.join(cwd, layoutRel);
   fs.mkdirSync(path.dirname(layoutAbs), { recursive: true });
-  const layoutExisted = fs.existsSync(layoutAbs);
-  const before = layoutExisted ? fs.readFileSync(layoutAbs, 'utf-8') : defaultSvelteLayout();
+  const existingLayout = readFileOrNull(layoutAbs);
+  const layoutExisted = existingLayout !== null;
+  const before = layoutExisted ? existingLayout : defaultSvelteLayout();
   const after = patchSvelteLayout(before);
   fs.writeFileSync(layoutAbs, after, 'utf-8');
 
@@ -68,8 +80,8 @@ export function removeSvelteKitLiveAdapter({ cwd = process.cwd(), config = null 
 
   const layoutAbs = path.join(cwd, detected.layoutFile);
   let removed = false;
-  if (fs.existsSync(layoutAbs)) {
-    const before = fs.readFileSync(layoutAbs, 'utf-8');
+  const before = readFileOrNull(layoutAbs);
+  if (before !== null) {
     const after = unpatchSvelteLayout(before);
     if (after !== before) {
       fs.writeFileSync(layoutAbs, after, 'utf-8');

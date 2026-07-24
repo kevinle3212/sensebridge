@@ -5105,7 +5105,11 @@
   }
 
   function scopeCssToSveltePreview(css, sessionId) {
-    const prefix = '[data-impeccable-variants="' + String(sessionId).replace(/"/g, '\\"') + '"] ';
+    // Escape backslashes before quotes: escaping '"' alone lets a sessionId
+    // ending in '\' turn the following '"' into an escaped literal quote in
+    // the generated CSS string, letting the selector break out early.
+    const escapedId = String(sessionId).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    const prefix = '[data-impeccable-variants="' + escapedId + '"] ';
     return scopeCssBlock(String(css || ''), prefix).trim();
   }
 
@@ -5637,7 +5641,11 @@
     let out = String(prop || '').trim().replace(/^["']|["']$/g, '');
     if (!out) return '';
     if (out.startsWith('--')) return out;
-    return out.replace(/[A-Z]/g, (ch) => '-' + ch.toLowerCase()).replace(/^-ms-/, '-ms-');
+    // "msTransform" has a lowercase leading "ms" (CSSOM's one exception to
+    // the vendor-prefix capitalization convention), so the generic
+    // camelCase-to-kebab pass above yields "ms-transform" with no leading
+    // dash — add it back so the CSS prefix is actually "-ms-transform".
+    return out.replace(/[A-Z]/g, (ch) => '-' + ch.toLowerCase()).replace(/^ms-/, '-ms-');
   }
 
   function buildSvelteExpressionTextMap(sourceOriginal, liveOriginal) {
@@ -6809,6 +6817,10 @@
     if (msLoadPromise) return msLoadPromise;
     msLoadPromise = new Promise((resolve, reject) => {
       const s = document.createElement('script');
+      // codeql[js/functionality-from-untrusted-source]: loads only from the
+      // same localhost dev server that injected this script (PORT comes from
+      // window.__IMPECCABLE_PORT__, set by that server) — plain http:// is
+      // unavoidable for a loopback address, which has no MITM threat model.
       s.src = 'http://localhost:' + PORT + '/modern-screenshot.js';
       s.onload = () => resolve(window.modernScreenshot);
       s.onerror = () => { msLoadPromise = null; reject(new Error('modern-screenshot failed to load')); };
@@ -9964,12 +9976,19 @@ void main() {
     if (detectScriptLoaded) return;
     detectScriptLoaded = true;
     const s = document.createElement('script');
+    // codeql[js/functionality-from-untrusted-source]: loads only from the
+    // same localhost dev server that injected this script (PORT comes from
+    // window.__IMPECCABLE_PORT__, set by that server) — plain http:// is
+    // unavoidable for a loopback address, which has no MITM threat model.
     s.src = 'http://localhost:' + PORT + '/detect.js';
     s.dataset.impeccableExtension = 'true';
     document.head.appendChild(s);
   }
 
   function onDetectMessage(e) {
+    // Only accept messages from the detect.js script we injected ourselves
+    // (loaded from http://localhost:PORT) — reject any other origin/frame.
+    if (e.origin !== 'http://localhost:' + PORT) return;
     if (!e.data || typeof e.data.source !== 'string') return;
     // Detection script is loaded and ready
     if (e.data.source === 'impeccable-ready') {

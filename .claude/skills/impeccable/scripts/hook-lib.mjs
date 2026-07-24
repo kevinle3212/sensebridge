@@ -576,7 +576,7 @@ export function ensureHookGitExcludes(cwd = process.cwd()) {
     const markerSuffix = target.patternPrefix || '.';
     const markerOpen = `${HOOK_IGNORE_MARKER_OPEN} ${markerSuffix}`;
     const markerClose = `${HOOK_IGNORE_MARKER_CLOSE} ${markerSuffix}`;
-    const existing = fs.existsSync(target.path) ? fs.readFileSync(target.path, 'utf-8') : '';
+    const existing = readTextOrEmpty(target.path);
     const block = [markerOpen, ...patterns, markerClose].join('\n');
     const markerRe = new RegExp(`${escapeRegExp(markerOpen)}[\\s\\S]*?${escapeRegExp(markerClose)}`);
 
@@ -625,14 +625,35 @@ function resolveHookGitExcludeTarget(cwd) {
 }
 
 function resolveGitDir(dotGit, worktreeDir) {
-  const stat = fs.statSync(dotGit);
-  if (stat.isDirectory()) return dotGit;
-  if (!stat.isFile()) return null;
+  // Stat and read via the same fd so both observe the same underlying file.
+  let fd;
+  try {
+    fd = fs.openSync(dotGit, 'r');
+    const stat = fs.fstatSync(fd);
+    if (stat.isDirectory()) return dotGit;
+    if (!stat.isFile()) return null;
+    const body = fs.readFileSync(fd, 'utf-8').trim();
+    const match = body.match(/^gitdir:\s*(.+)$/i);
+    if (!match) return null;
+    return path.isAbsolute(match[1]) ? match[1] : path.resolve(worktreeDir, match[1]);
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+  }
+}
 
-  const body = fs.readFileSync(dotGit, 'utf-8').trim();
-  const match = body.match(/^gitdir:\s*(.+)$/i);
-  if (!match) return null;
-  return path.isAbsolute(match[1]) ? match[1] : path.resolve(worktreeDir, match[1]);
+// Reads a text file, returning '' if it doesn't exist yet (never a stale
+// existsSync check racing the subsequent read).
+function readTextOrEmpty(filePath) {
+  try {
+    return fs.readFileSync(filePath, 'utf-8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return '';
+    throw err;
+  }
 }
 
 function escapeRegExp(value) {

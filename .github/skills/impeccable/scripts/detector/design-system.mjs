@@ -381,11 +381,19 @@ function loadDesignSystemForCwd(cwd = process.cwd()) {
 
   let frontmatter = null;
   let mdStat = null;
+  let fd;
   try {
-    mdStat = fs.statSync(md.path);
-    frontmatter = parseFrontmatter(fs.readFileSync(md.path, 'utf-8'));
+    // Open once and stat+read via the same fd, so both observe the same
+    // underlying file.
+    fd = fs.openSync(md.path, 'r');
+    mdStat = fs.fstatSync(fd);
+    frontmatter = parseFrontmatter(fs.readFileSync(fd, 'utf-8'));
   } catch {
     return null;
+  } finally {
+    if (fd !== undefined) {
+      try { fs.closeSync(fd); } catch {}
+    }
   }
   if (!frontmatter || typeof frontmatter !== 'object') return null;
 

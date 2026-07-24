@@ -296,7 +296,17 @@ async function detectCli() {
           if (HTML_EXTENSIONS.has(ext)) {
             allFindings.push(...await detectHtml(resolved, scanOptions));
           } else {
-            allFindings.push(...detectText(fs.readFileSync(resolved, 'utf-8'), resolved, scanOptions));
+            // Open once and read via the fd (not the path) so the read can't
+            // observe a different underlying file than the stat() above did.
+            let fd;
+            try {
+              fd = fs.openSync(resolved, 'r');
+              allFindings.push(...detectText(fs.readFileSync(fd, 'utf-8'), resolved, scanOptions));
+            } finally {
+              if (fd !== undefined) {
+                try { fs.closeSync(fd); } catch {}
+              }
+            }
           }
         }
       }

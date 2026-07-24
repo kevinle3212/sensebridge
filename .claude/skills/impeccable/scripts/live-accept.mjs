@@ -64,6 +64,10 @@ Output (JSON):
 
   if (!id) { console.error('Missing --id'); process.exit(1); }
   if (!isDiscard && !variantNum) { console.error('Need --discard or --variant N'); process.exit(1); }
+  if (!isDiscard && !/^\d+$/.test(variantNum)) {
+    console.error(`--variant must be a plain number, got ${JSON.stringify(variantNum)}`);
+    process.exit(1);
+  }
 
   let paramValues = null;
   if (paramValuesRaw) {
@@ -529,10 +533,16 @@ function stripStyleAndJoin(lines, block) {
 
     if (!inStyle) {
       // Strip any complete <style> elements on this line (self-closed or
-      // same-line-closed), including their body content.
-      line = line
-        .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/g, '')
-        .replace(/<style\b[^>]*\/\s*>/g, '');
+      // same-line-closed), including their body content. Loop to a fixed
+      // point so fragments straddling two stripped tags can't reassemble
+      // into a new match after a single pass.
+      let previousLine;
+      do {
+        previousLine = line;
+        line = line
+          .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/g, '')
+          .replace(/<style\b[^>]*\/\s*>/g, '');
+      } while (line !== previousLine);
 
       // If a <style> opener remains (multi-line body starts here), strip from
       // the opener to end-of-line and flip into skip mode.
