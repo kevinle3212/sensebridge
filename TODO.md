@@ -25,6 +25,317 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Command relocation, alt text, debug logging (2026-07-24, afternoon)
+
+Landed on `chore/overnight-website-devex-audit` alongside the overnight batch
+below. Website gate re-run clean after these changes (`astro check` 0/0/0,
+ESLint, Stylelint, Prettier, `astro build` — 8 routes).
+
+- [ ] **[P1]** **[Needs owner]** Push `chore/overnight-website-devex-audit`
+      and open the PR — everything is committed locally; `git`/`gh` stay
+      owner-gated. Commands are in the session log for this date.
+- [ ] **[P1]** **[Needs owner]** The **main checkout** carries unrelated
+      uncommitted `app/` work (`OCRService.swift`, `CameraSource.swift`,
+      `OCRServiceTests.swift`, `CameraPreviewView.swift`, plus edits to five
+      feature views, `SpeechRenderTarget.swift`, the `.xcodeproj`, and both
+      `.xcstrings`). It must **not** be folded into the website PR. Stash or
+      branch it before merging, then land it as its own `feat(app): ...` PR
+      once the Swift build and test gates pass — neither has been run against
+      it.
+- [ ] **[P3]** `/claude-cli`, `/docker-clean`, and `/handoff` moved out of
+      this repo to user-global `~/.claude/commands/` (they were never
+      project-specific). That directory is machine state, not tracked here —
+      re-create it if this machine is rebuilt. `/todo-groom` was renamed
+      `/todo-tidy` and stays project-local.
+- [ ] **[P3]** The docs headshot (`docs/assets/kevin-le.jpg`) deliberately
+      stays a second, downscaled copy of
+      `website/public/images/team/kevin-le.jpg` — a symlink would be silently
+      dropped by the Pages build (`github-pages` forces Jekyll `safe => true`,
+      which ignores symlinks). Reasoning recorded in `docs/assets/README.md`;
+      revisit only if the docs site stops being built by Jekyll.
+- [ ] **[P3]** The stray `website/public/images/kevinkle_headshot.jpeg` in the
+      **main checkout** is untracked, unreferenced, and superseded by
+      `images/team/kevin-le.jpg`. Delete it once the merge lands.
+
+### Overnight website/DevEx audit follow-ups (2026-07-24)
+
+From `sessions/2026-07-24/1000-PST.md` and `tmp/OUTPUT.md` on branch
+`chore/overnight-website-devex-audit` (worktree, uncommitted, not merged —
+implemented, validated via typecheck/lint/build, and now also visually
+confirmed in a real headless browser — see below).
+
+- [x] **[P1]** Header nav underline hover — **reopened and re-fixed
+      2026-07-24 1300 PST; the earlier close was premature.** The 1000-PST
+      fix (cache the rect on `pointerenter`) made the magnetic *pull*
+      converge smoothly, which is all that session measured — but the owner
+      still saw the hovered link not lining up with its neighbours, because
+      a per-link translate in a row of four breaks that row's alignment by
+      design, and `pointerleave` fired a `gsap.to` that fought the live
+      `gsap.quickTo` tweens on the same `x`/`y`. Removed `initMagneticNav()`
+      and the `data-magnetic-nav` attributes entirely (`initMagneticCta()`
+      stays — a standalone control with no row to break). Verified: nav link
+      rects identical before/during hover, `transform: none` on all four.
+      Also fixed a second, separate misalignment found there — resting state
+      used the native underline while hover swapped to a box-anchored
+      gradient, so hovering dropped the line ~6px (~19px on the padded nav).
+      Corrected once at the shared `a:not([class])` rule in
+      `styles/global/_base.scss` via `background-origin: content-box` +
+      `background-position: 0 calc(100% - 0.35em)`; confirmed at 4x zoom.
+- [x] **[P2]** Language dropdown — **reopened and re-fixed 2026-07-24 1300
+      PST.** The 1000-PST check only confirmed the `<details>` *mechanics*
+      (open/close, Escape), never how it looked; owner reported it as blocky
+      and awkward. The uniformity break was the trigger, not the menu: a
+      bare-text `<summary>` beside a bordered 44px `.theme-toggle`. Trigger
+      now shares the toggle's exact shape plus an `[open]` fill; menu is
+      `width: max-content` floored at the trigger width (was a fixed
+      `10rem`), offset below it, with 44px `nowrap` rows and the in-menu
+      resting underline removed (the rows already fill on hover;
+      `aria-current` + bold still carry the current language).
+- [x] **[P2]** Bridge auto-play — **reopened and re-fixed 2026-07-24 1300
+      PST.** The intro did fire without scroll (what 1000-PST verified), but
+      on completion `smoothProgress` eased straight back down to the scroll
+      position, **partially disassembling the deck** (`DECK_DRAW` 0.6–0.9)
+      and re-closing the traveler gate (0.92) — the bridge un-built itself
+      right after building itself. Split into `scrollProgress` (camera only,
+      always scroll-driven) and `buildProgress` (`max(scroll, intro)`, so
+      neither input can un-build the other). Added `replayConstruction()`
+      wired to a Replay button and to leaving/re-entering the viewport, so
+      the sequence can be re-watched any number of times without scrolling.
+      Button ships `hidden`, revealed only when the WebGL scene actually
+      mounts. New `bridge.replay` string in `types.ts` + en/es/vi.
+- [x] **[P2]** Error-page cow illustration — **rewritten 2026-07-24 1300
+      PST** per owner request: walks in, tips at the lip, falls all the way
+      in, disappears, repeats (6.5s infinite loop). Disappearance is a
+      `clipPath` unioning "above ground" with "the hole opening", so nothing
+      is painted over the cow and no fill has to match the page background —
+      correct in both themes by construction. Caught a light-mode bug while
+      tuning: hole fill `color("surface")` (#eef1f7) against light bg
+      (#f7f8fb) made the hole all but vanish; moved to `color("hairline")`,
+      which separates in both directions. Reduced-motion resting state is the
+      cow standing at the lip; verified via the live CSSOM that every
+      cow/leg/spark rule sits inside `(prefers-reduced-motion:
+      no-preference)` — zero outside.
+- [x] **[P2]** Bridge idle drift — **added 2026-07-24 1400 PST** per owner
+      request ("keep moving back and forth after the scroll has finished the
+      whole bridge building… resets after the user scrolls up/back down").
+      This also fixed a real defect the 1300-PST session introduced: a bulk
+      `smoothProgress` → `buildProgress` rename swept up the camera lerp, so
+      the camera read construction progress instead of scroll — contradicting
+      that session's own stated design. Camera now runs off a dedicated
+      `cameraSweep`: scroll owns it while the span is going up, then a
+      free-running cosine sweep (`DRIFT_CYCLE_SECONDS` = 18) takes over at
+      `buildProgress >= 0.98`. The handover seeds its phase with
+      `acos(1 - 2 * cameraSweep)`, so it picks up at exactly the position
+      scroll left the camera at (no jump) and always continues toward
+      `CAMERA_X_END` rather than reversing on the spot. Reset is the existing
+      leave-the-viewport observer, which drops `driftPhase` and hands the
+      camera back to scroll for the next build. Verified by sampling the
+      luminance centroid of the live canvas for 64s without scrolling: the
+      timeline repeats **exactly** on an 18s period across 3.5 cycles
+      (0/2/4/6/8/10/12s = 92.3/94.8/90.7/74.5/63.3/67.8/66.5 vs
+      18/20/22/24/26/28/30s = 92.7/94.8/90.8/74.5/63.3/67.8/66.5). That clean
+      periodicity also proves `buildProgress` never dropped below 0.98 for the
+      whole run — had it, the camera would have snapped back to scroll and
+      broken the period.
+- [x] **[P3]** Replay control restyled — **2026-07-24 1400 PST** per owner
+      request (circular play button, "clean and almost hidden", top right of
+      the animation). Was a labelled pill under the body copy; now a 44px
+      circular button parked 8px inside the scene's top-right corner, holding
+      a 16px play glyph with no chrome at rest, gaining the site's standard
+      surface fill + hairline border + accent colour only on hover/focus.
+      "Almost hidden" is carried by size and absence of chrome, **not** by
+      dimming the glyph — fading it would have pushed the control under the
+      3:1 WCAG non-text contrast floor. Required a new `.bridge-stage`
+      wrapper: `[data-bridge-visual]` is `aria-hidden="true"` decorative art,
+      and a focusable control inside an aria-hidden subtree is a real defect
+      (unreachable for screen-reader users, still tab-stoppable for everyone
+      else), so the button is a sibling, not a child. Accessible name still
+      comes from `t.bridge.replay` via a `.visually-hidden` span. Verified:
+      44×44, `border-radius: 50%`, no aria-hidden ancestor, name intact,
+      legible in both themes, and no overlap with copy at 390px width.
+- [x] **[P3]** Maintainer headshot added to the Markdown docs —
+      **2026-07-24 1400 PST** per owner request. `README.md` gains a
+      `## Maintainer` section (plus a table-of-contents entry);
+      `MAINTAINERS.md`, `CREDITS.md`, and `docs/index.md` each gain the photo.
+      Needed a second copy of the image at `docs/assets/kevin-le.jpg`
+      (downscaled to 400px, ~22 KB): `.github/workflows/pages.yml` builds
+      Jekyll with `source: docs`, so a `../website/...` path would 404 on the
+      published docs site, while Astro only serves what is under
+      `website/public/`. Everything outside `website/` points at the
+      `docs/assets` copy; `docs/assets/README.md` records why the duplicate
+      exists and that both must be replaced together. Alt text matches the
+      site's existing `footer.makerPhotoAlt` string.
+- [x] **[P3]** Bridge replay teardown frame — **captured and closed
+      2026-07-24 1400 PST.** Screenshots kept losing the scroll position, so
+      this was measured instead of photographed: a `requestAnimationFrame`
+      sampler counted lit canvas pixels across a real click. Fully built
+      steady state ≈1300–1560 lit px; on click it falls to **120** (the span
+      is gone, only the faint water field remains), then climbs back
+      257 → 379 → 623 → 762 → 1085 → 1456 → 1607 over the following ~1.75s
+      and settles ≈1580. That is a true 0→1 teardown and rebuild, matching
+      `INTRO_DURATION_SECONDS` (2.5s) plus the `approachScalar` smoothing.
+- [x] **[P2]** Browser automation root cause — corrected. It is **not** an
+      OS-wide sandbox: a direct Bash-launched headless Chrome (same binary
+      the Puppeteer MCP server uses, `~/.cache/puppeteer/chrome/...`) runs
+      fine — navigation, clicks, keyboard, pointer events, screenshots, JS
+      eval all work, with or without `--no-sandbox`. The failure is scoped
+      to the **`mcp__puppeteer__*` MCP server's own subprocess spawn** —
+      that server is a separate long-lived process hosted by the Claude Code
+      app itself (not the Bash tool), and it still throws
+      `spawn Unknown system error -88` even with the `permissions.allow`
+      rule in place. Practical fix in use now: skip the Puppeteer MCP tool
+      entirely and drive Puppeteer's Node API directly via Bash
+      (`node -e "require('puppeteer').launch({executablePath: <chrome>, args:['--no-sandbox']})"`
+      or a small `.cjs` script) — this is a full substitute and is what
+      produced the confirmations above. Actually fixing the MCP server
+      itself would need Anthropic/Claude Code to change how it spawns MCP
+      server child processes (likely an app-level macOS sandbox/entitlement
+      on the MCP host, not anything exposed in `settings.json`) — not
+      something adjustable from user config. The earlier "Codex Companion
+      wrapper" theory from this session's first pass was a red herring.
+- [x] **[P2]** Puppeteer MCP `spawn Unknown system error -88` — root cause
+      revisited and closed out; **no fix exists**. The "app-level macOS
+      sandbox/entitlement" theory doesn't hold up: `codesign -d
+      --entitlements :-` on both `~/.local/bin/claude` and
+      `/Applications/Claude.app` shows **no** `com.apple.security.app-sandbox`
+      entitlement on either, and `log show` around a live repro shows zero
+      sandbox-deny events. **Done 2026-07-24** — dispatched the
+      `claude-code-guide` subagent (changelog + GitHub issues research):
+      Claude Code's public sandboxing docs cover the Bash tool's Seatbelt/
+      bubblewrap isolation exclusively and never mention MCP servers at all;
+      there is no `dangerouslyDisableSandbox`-equivalent, no
+      `sandbox.enabled`-style key, and no settings.json control surface for
+      MCP stdio server child-process spawning. Claude Code's MCP client also
+      only supports spawning `stdio` servers — no way to point it at an
+      externally-run HTTP/SSE server instead, which would have sidestepped
+      this. No matching GitHub issue found for this exact repro. **Owner
+      decided 2026-07-24** — accept the gstack `/browse` (CDP) workaround as
+      the permanent path; no GitHub issue filed. Revisit only if Claude Code
+      ships a documented fix for MCP stdio server subprocess spawning.
+      **Superseded 2026-07-24 1300 PST — the "no fix exists" conclusion was
+      wrong.** `mcp__puppeteer__puppeteer_navigate` works when passed an
+      explicit `launchOptions.executablePath` pointing at the *system*
+      Chrome (`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`).
+      The bare call still throws `-88`, so the failure is scoped to the
+      bundled `~/.cache/puppeteer/chrome/...` binary, **not** to MCP
+      subprocess spawning in general — which is what both prior sessions
+      concluded and built a workaround around. All browser verification in
+      the 1300-PST session ran through the Puppeteer MCP on that basis.
+      `pa11y-ci` needs the same treatment via `PUPPETEER_EXECUTABLE_PATH`.
+      **Re-tested 2026-07-24 1400 PST on a fresh session — not
+      session-local.** The `executablePath` launch option worked again from a
+      cold start, and every browser check in that session (scene mount, button
+      geometry, canvas pixel sampling, screenshots, `pa11y-ci` via
+      `PUPPETEER_EXECUTABLE_PATH`) ran through the Puppeteer MCP. The
+      gstack/CDP workaround is therefore optional, not required. Remaining
+      decision for the owner: whether to keep the CDP path as a fallback or
+      drop it.
+- [ ] **[P3]** `vercel.json`'s `cleanUrls`/`trailingSlash` config should
+      already produce 3xx redirects (e.g. stripping `.html`, normalizing
+      trailing slashes) on real Vercel infrastructure, but this couldn't be
+      empirically verified locally — `astro preview` doesn't replicate
+      Vercel's edge redirect behavior. Spot-check after the next deploy:
+      `curl -I https://sensebridge.vercel.app/index.html` should redirect.
+- [ ] **[P2]** Consider moving the CI `lint` job
+      (`.github/workflows/ci.yml`) to `ubuntu-latest` — SwiftLint/SwiftFormat
+      both publish Linux binaries and `scripts/lint.sh` isn't macOS-specific;
+      likely the single biggest remaining CI-time win, not applied because
+      it needs a real CI run to confirm the Linux binaries behave
+      identically here.
+- [ ] **[P3]** `/400` and `/500` error pages aren't reachable via Vercel's
+      platform-level error routing (no server/function component there to
+      intercept a real 4xx/5xx) — only the nginx/Railway deployment path
+      (`docker/nginx.conf.template`) has them wired. Fine as-is unless the
+      owner wants Vercel Edge Middleware to close that gap.
+- [ ] **[Needs owner]** Review, commit, and push
+      `chore/overnight-website-devex-audit` — fully implemented, nothing
+      committed per the session's instructions. Exact commands in
+      `tmp/OUTPUT.md`'s "To ship this" section.
+
+### Logo image-generation prompt (2026-07-24)
+
+Produced during the overnight website/DevEx audit
+(`sessions/2026-07-24/*-PST.md`) — a ready-to-run prompt for generating a
+modern SenseBridge logo, following the brand system in
+`.agents/context/DESIGN.md` ("First Light" / "Signal Bridge": wireframe
+structure + traveling light, near-black field, one signal-blue accent, one
+warm perception-glow accent).
+
+- [x] **[P3]** Generate a SenseBridge logo from this prompt (any capable
+      image model) and review candidates against `.agents/context/DESIGN.md`
+      before adopting one. **Done 2026-07-24** — generated 4 candidates
+      (Higgsfield `nano_banana_2`, 1024x1024) from the exact prompt below,
+      saved to `tmp/logo-candidates/candidate-{1..4}.png` in this worktree
+      (gitignored, not committed, not wired into the site). **[Needs owner]**
+      pick one (or discard and regenerate) — none have been reviewed against
+      `.agents/context/DESIGN.md` or adopted anywhere yet.
+
+      ```text
+      A modern, minimalist logo mark for "SenseBridge," an on-device
+      accessibility app that gives blind and low-vision users spoken
+      awareness of their surroundings. Style: a single-weight wireframe
+      line-art icon — thin glowing lines only, no filled shapes, no
+      gradients on the linework itself — evoking a suspension bridge
+      abstracted into a simple geometric glyph (two pylons, a catenary
+      cable, a level deck), rendered so it doubles as a stylized bridge
+      AND a subtle "S" / signal-path motif when viewed as a whole.
+      Palette: near-black background (#080a10), the bridge structure in a
+      soft muted blue-gray (#a7afc2) at rest, with one glowing accent
+      arc/point in signal blue (#5eb1ff) tracing across the deck like a
+      pulse of light or data — a single warm amber-orange point
+      (#ffb37a) where that signal "arrives," implying perception /
+      understanding rather than alarm. Mood: calm, precise, quietly
+      confident — engineering-grade, not clinical or medical, not
+      cutesy, no eye or camera iconography (privacy-first, not
+      surveillance), no red/green traffic-light color coding. Composition:
+      centered, symmetric, works as a small square app icon (safe margins,
+      no fine detail under 2px at 40x40) and as a flat vector wordmark
+      lockup with "SenseBridge" set in a clean geometric sans-serif
+      (Geist-like) beside the mark. Background: solid near-black or
+      transparent. Format: flat vector illustration, high contrast,
+      crisp edges, no photorealism, no drop shadows, no 3D bevels, no
+      text other than the wordmark.
+      ```
+
+### Session-log/link-check hooks resolved against the wrong repo (2026-07-24)
+
+Found while chasing the `session-log-reminder.sh` Stop hook repeatedly firing
+a false positive during the overnight audit worktree session (full
+investigation in `sessions/2026-07-24/1200-PST.md`).
+
+- [x] **[P2]** `.claude/settings.json` wires every hook command as
+      `"${CLAUDE_PROJECT_DIR}/.claude/hooks/<script>.sh"`, and
+      `CLAUDE_PROJECT_DIR` stays fixed to the main checkout for the whole
+      session — so any hook always executes the **main checkout's** copy of
+      the script, never a worktree's mirror, and the three hooks that also
+      used `${CLAUDE_PROJECT_DIR:-.}` internally (`session-log-reminder.sh`,
+      `check-md-links.sh`, `guard-main-commit.sh`) checked `git status`,
+      `sessions/`, and branch state against the main checkout even when the
+      actual session was working in a `.claude/worktrees/*` worktree on a
+      different branch — silently wrong for `guard-main-commit.sh`
+      specifically (it would check the main checkout's branch, not the
+      worktree's, when deciding whether to block a `git commit`).
+      **Done 2026-07-24** — switched all three to resolve root via the
+      hook's own `.cwd` input field (or the edited file's own path for
+      `check-md-links.sh`) piped through `git rev-parse --show-toplevel`,
+      confirmed via a live debug capture that `.cwd` correctly reflects the
+      session's actual working directory. Also fixed a second bug found
+      along the way in `check-md-links.sh`: it never mirrored `ci.yml`'s
+      docs-links job skip-list for gitignored targets (`GAPS.md`,
+      `sessions/`, `NOTES.local.md`, ...), so any edit to `TODO.md` or a
+      session log spuriously flagged links to those files as broken — added
+      the matching `git check-ignore` skip. Verified `check-md-links.sh`
+      end-to-end with real trigger edits (worktree-only file resolves clean,
+      gitignored target is skipped, a genuinely broken link is still
+      caught); did not live-test `guard-main-commit.sh` since that would
+      require an actual `git commit`.
+- [ ] **[Needs owner]** Commit the 3 hook fixes
+      (`.claude/hooks/{session-log-reminder,check-md-links,guard-main-commit}.sh`)
+      in the **main checkout** — currently uncommitted there, not part of
+      `chore/overnight-website-devex-audit` (unrelated concern, shouldn't be
+      bundled into that PR). Small standalone `fix(hooks): ...` commit on
+      its own branch.
+
 ### Git/CI cleanup, history purge, impeccable CodeQL remediation (2026-07-23)
 
 Full cleanup pass: merged the GitHub-platform-setup PR, collapsed every branch
@@ -350,9 +661,14 @@ haven't merged to `main` yet (`chore/github-platform-setup` is 12 commits
 ahead, 0 behind). Fixed `README.md`'s "Website" link, which duplicated the
 Docs link instead of pointing at the live marketing site.
 
-- [ ] Merge `chore/github-platform-setup` to `main` — required before Pages
+- [x] Merge `chore/github-platform-setup` to `main` — required before Pages
       builds, Wiki sync, CodeQL, Dependabot config, GitHub Models CI, and
       Copilot's environment bootstrap actually run for the first time.
+      **Done 2026-07-24** — landed as PR #18 (`8c7f08c chore(github): set up
+      Pages, Wiki, Models, CodeQL, and Copilot integrations`). Verified: the
+      branch no longer exists in `git branch -a`, and
+      `.github/workflows/pages.yml` + `.github/dependabot.yml` are tracked in
+      `main`. Pages deploy needed a follow-up pin (PR #27, `ab109ef`).
 - [ ] **[Needs owner]** Enable Copilot coding agent (Settings → Copilot →
       Coding agent) once a Copilot license tier that includes it is
       confirmed. No REST/CLI/MCP endpoint exists to toggle this remotely —
@@ -582,11 +898,15 @@ the global `~/.claude/CLAUDE.md` (personal config, not repo-tracked).
       secret (Settings → Secrets and variables → Actions), sourced from the
       GitGuardian dashboard (Personal access tokens → `scan` scope) — the new
       `ggshield` CI job fails closed on every push/PR until this exists.
-- [ ] **[P3]** Commit and ship this session's repo-side changes
+- [x] **[P3]** Commit and ship this session's repo-side changes
       (`.gitguardian.yaml`, `.githooks/pre-commit`,
       `.github/workflows/security.yml`, `scripts/setup.sh`,
       `docs/TOOLING.md`, `docs/ENVIRONMENT.md`) — none committed yet, no
       commit was requested this session.
+      **Done 2026-07-24** — all six are tracked in `main`
+      (`git ls-files --error-unmatch` resolves each). Shipped across the
+      2026-07-23 CI/security batch (PRs #17, #18). The `GITGUARDIAN_API_KEY`
+      secret above is still outstanding and still gates the `ggshield` job.
 
 ### Docker rewrite + website build/lint fixes (2026-07-20)
 
@@ -1002,7 +1322,7 @@ remaining open items.
 
 - [ ] **[P2]** **[Needs owner]** Commit the three new workflow commands
       (`.claude/commands/cleanup-notes.md`, `.claude/commands/session-log.md`,
-      `.claude/commands/todo-groom.md`) and the matching `docs/TOOLING.md`
+      `.claude/commands/todo-tidy.md`) and the matching `docs/TOOLING.md`
       "Workflow commands" row. Blocked behind this file's P0 filename-case
       rename item on `chore/uppercase-markdown-filenames`.
 
