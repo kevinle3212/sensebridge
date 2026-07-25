@@ -47,10 +47,20 @@ committed file, an environment variable, or a log — see
       Signing & Capabilities → pick your personal team from the dropdown.
       Xcode fills in `DEVELOPMENT_TEAM` for you; no manual bundle ID change
       needed unless you want one different from `com.sensebridge.app`.
-   3. Plug in your device, select it as the run destination, hit Run. First
+   3. Enable Developer Mode on the device: Settings → Privacy & Security →
+      Developer Mode → toggle on → restart → confirm "Turn On" in the
+      lock-screen prompt. Required since iOS 16 for any developer-signed
+      build (Xcode Run, `xcodebuild`, an ad-hoc IPA via AltStore/Sideloadly,
+      etc.) — the only installs that skip it are App Store and TestFlight,
+      both of which need the paid Developer Program (see
+      [DISTRIBUTION.md](DISTRIBUTION.md)). Without it, `xcodebuild` reaches
+      the device but times out waiting for the destination instead of
+      building. One-time per device — it stays on until manually disabled,
+      independent of the 7-day signing expiry below.
+   4. Plug in your device, select it as the run destination, hit Run. First
       launch: on-device Settings → General → VPN & Device Management →
       trust your developer certificate.
-   4. **The catch:** a free personal-team signature expires after 7 days —
+   5. **The catch:** a free personal-team signature expires after 7 days —
       re-run from Xcode to re-sign. Fine for active development, annoying
       for a build you want to leave installed; it's the free tier's only
       real limitation. No API keys are involved in this path — see

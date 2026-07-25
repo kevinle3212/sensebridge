@@ -11,6 +11,13 @@ public actor SpeechRenderTarget: RenderTarget {
 
     public init(language: AppLanguage = .system) {
         self.language = language
+        #if os(iOS)
+            // Default session category (.soloAmbient) is silenced by the
+            // hardware ring/silent switch — wrong for an app whose entire
+            // output is spoken word. .playback/.spokenAudio ignores that switch.
+            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
+            try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
     }
 
     /// Updates the spoken language for subsequent `render` calls.
@@ -19,6 +26,10 @@ public actor SpeechRenderTarget: RenderTarget {
     }
 
     public func render(_ message: String) async {
+        // speak() queues rather than replaces — without this, a second
+        // capture taken before the first finishes speaking just gets
+        // appended behind the stale result instead of superseding it.
+        synthesizer.stopSpeaking(at: .immediate)
         let utterance = AVSpeechUtterance(string: message)
         utterance.voice = Self.voice(for: language)
         synthesizer.speak(utterance)
