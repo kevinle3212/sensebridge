@@ -1,3 +1,4 @@
+import SenseBridgeCore
 import SwiftUI
 
 /// The safety-framing disclaimer here is load-bearing, not boilerplate —
@@ -21,16 +22,37 @@ struct ObstacleAwarenessView: View {
     replace a cane, a guide dog, or orientation-and-mobility training.
     """
 
+    // ponytail: no depth SensingSource yet — feeds alternating mock depth
+    // readings through the real AwarenessEngine + Phrasing + RenderTarget.
+    // Swap in real ARKit/LiDAR depth capture once that lands.
+    private let phrasing: Phrasing = .init()
+    private let renderTarget: SpeechRenderTarget = .init()
+    @State private var engine: AwarenessEngine = .init()
+    @State private var isNearReading = true
+    @State private var lastResult: String?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(disclaimer)
                 .font(.callout)
                 .accessibilityLabel(disclaimerAccessibilityLabel)
             Button("Start awareness") {
-                // Pipeline: SensingSource (depth) -> AwarenessEngine -> Phrasing -> RenderTarget.
+                let mockDepthMeters = isNearReading ? 1.0 : 3.0
+                isNearReading.toggle()
+                let isAlerting = engine.evaluate(depthMeters: mockDepthMeters)
+                let message = isAlerting
+                    ? phrasing.describe(subject: "something ahead", certainty: .medium)
+                    : "The way ahead seems clear for now."
+                lastResult = message
+                Task { await renderTarget.render(message) }
             }
             .accessibilityLabel("Start obstacle awareness")
             .accessibilityHint("Begins cautious alerts about what may be nearby. This is not a safety feature.")
+            if let lastResult {
+                Text(lastResult)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding()
         .navigationTitle("Awareness")
