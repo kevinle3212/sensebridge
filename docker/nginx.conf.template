@@ -15,6 +15,26 @@ server {
         try_files $uri $uri/ =404;
     }
 
+    # Cow-in-a-hole error pages (see website/src/pages/{404,400,500}.astro).
+    # Astro special-cases 404.astro AND 500.astro to also build a flat
+    # /404.html / /500.html (the static-host error-page convention);
+    # 400.astro has no such convention and builds as an ordinary
+    # directory-style route (/400/index.html) — verified against the actual
+    # `dist/` output, not assumed. Neither 400 nor 500 is locale-routed — a
+    # raw HTTP-level error has no request path to read a locale prefix from.
+    #
+    # The 4xx bucket below is scoped to codes this exact server block can
+    # actually emit for a pure static `try_files`, no-auth, no-rate-limit
+    # server: malformed/oversized requests (400, 413, 414, 431) and a
+    # disallowed method (405, e.g. POST to a static path). 401/402/406/429/451
+    # etc. are deliberately left out — nothing in this config path (no auth,
+    # no content negotiation, no rate limiting) can ever produce them, so
+    # mapping them would be dead config for a status this server structurally
+    # cannot return. Add them back the day any of that infrastructure exists.
+    error_page 404 /404.html;
+    error_page 400 403 405 413 414 431 /400/index.html;
+    error_page 500 502 503 504 /500.html;
+
     add_header X-Content-Type-Options nosniff always;
     add_header X-Frame-Options DENY always;
     add_header Referrer-Policy strict-origin-when-cross-origin always;

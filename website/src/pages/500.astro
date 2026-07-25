@@ -1,0 +1,9 @@
+---
+/**
+ * 500-series error page. Not locale-routed — see 400.astro's note; a raw
+ * HTTP-level 5xx has no request path to read a locale prefix from.
+ */
+import ErrorPage from "../components/ErrorPage.astro";
+---
+
+<ErrorPage kind="500" locale="en" />

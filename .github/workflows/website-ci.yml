@@ -34,6 +34,14 @@ jobs:
           cache-dependency-path: website/package-lock.json
       - name: Install dependencies
         run: npm ci
+      - name: Generate Astro types
+        # .astro/types.d.ts (gitignored, declares import.meta.env's shape via
+        # astro/client) doesn't exist on a fresh checkout until some Astro
+        # command runs — without it, typed ESLint rules see import.meta.env
+        # as unresolved and flag safe, well-typed code (e.g. import.meta.env.DEV
+        # in scripts/debug.ts) as unsafe. Run astro sync explicitly here so
+        # ESLint sees real types instead of failing on every fresh clone.
+        run: npx astro sync
       - name: Stylelint
         run: npm run lint:css
       - name: ESLint

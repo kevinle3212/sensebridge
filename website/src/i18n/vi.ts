@@ -80,6 +80,7 @@ export const vi: Translations = {
     body: "SenseBridge tồn tại để kết nối hai thứ: tín hiệu thô từ camera, và câu nói đơn giản mà một người đang cố nghe. Mọi thứ ở giữa — nhận thức, suy luận, hiển thị — là nhịp cầu đó, được lắp ráp hoàn toàn trên điện thoại của bạn.",
     supporting:
       "Không băng qua đám mây. Không có rào cản tài khoản. Chỉ là con đường ngắn nhất từ cảm nhận đến thấu hiểu.",
+    replay: "Phát lại hoạt ảnh cây cầu",
   },
   phone: {
     heading: "Toàn bộ hệ thống chính là chiếc điện thoại trong túi bạn",
@@ -122,9 +123,25 @@ export const vi: Translations = {
     githubLink: "SenseBridge trên GitHub",
     notAvailable:
       "Chưa có sẵn trên App Store — SenseBridge đang ở giai đoạn trước khi ra mắt và đang trong quá trình phát triển mở.",
+    makerPhotoAlt: "Kevin K. Le, hiện là nhà phát triển duy nhất của dự án",
   },
   disclaimer: {
     ariaLabel: "Cảnh báo an toàn",
     text: "SenseBridge giúp bạn nhận thức rõ hơn về môi trường xung quanh. Đây không phải là thiết bị an toàn hỗ trợ di chuyển hay định hướng, và các mô tả của nó có thể sai — hãy luôn sử dụng cùng với phán đoán của chính bạn, gậy dò đường, hoặc chó dẫn đường.",
+  },
+  errorPages: {
+    backHome: "Quay lại trang chủ",
+    notFound: {
+      heading: "Trang này đã rơi xuống một cái hố.",
+      body: "Đâu đó giữa đây và kia, trang này đã đi lạc và rơi xuống một cái hố. Chuyện này xảy ra với cả những trang tốt nhất — phần còn lại của trang web vẫn vững vàng.",
+    },
+    badRequest: {
+      heading: "Có gì đó trong yêu cầu này chưa ổn.",
+      body: "Lần này trang không rơi xuống hố — chính yêu cầu đã đi sai hướng trước khi đến đây.",
+    },
+    serverError: {
+      heading: "Có gì đó đã hỏng ở phía chúng tôi. Xin lỗi vì điều đó.",
+      body: "Ngay cả một chú bò khung dây cũng có ngày không suôn sẻ. Đây không phải lỗi của bạn — hãy thử lại sau một chút.",
+    },
   },
 };

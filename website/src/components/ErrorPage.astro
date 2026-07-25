@@ -1,0 +1,81 @@
+---
+/**
+ * Shared layout for the 404/400/500 pages: cow-in-a-hole illustration plus
+ * translated heading/body/back-home copy. The illustration is aria-hidden
+ * (CowHoleIllustration.astro) — the heading and body below carry the same
+ * information for anyone not seeing it, so nothing is lost without it.
+ */
+import { getRelativeLocaleUrl } from "astro:i18n";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CowHoleIllustration from "./CowHoleIllustration.astro";
+import { useTranslations, type Locale } from "../i18n";
+
+interface Props {
+  kind: "404" | "400" | "500";
+  locale?: Locale;
+}
+
+const { kind, locale = (Astro.currentLocale ?? "en") as Locale } = Astro.props;
+const t = useTranslations(locale);
+
+const copyByKind = {
+  "404": t.errorPages.notFound,
+  "400": t.errorPages.badRequest,
+  "500": t.errorPages.serverError,
+} as const;
+const copy = copyByKind[kind];
+---
+
+<BaseLayout title={copy.heading}>
+  <section class="error-page">
+    <div class="wrap">
+      <CowHoleIllustration variant={kind} />
+      <h1>{copy.heading}</h1>
+      <p>{copy.body}</p>
+      <a class="back-home" href={getRelativeLocaleUrl(locale, "/")}>{t.errorPages.backHome}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style lang="scss">
+  @use "@styles/abstracts" as *;
+
+  .error-page {
+    padding-block: space("6");
+  }
+
+  .error-page .wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 32rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .error-page h1 {
+    margin-top: space("3");
+
+    @include type-h2;
+  }
+
+  .error-page p {
+    margin-top: space("2");
+    color: color("text-secondary");
+  }
+
+  .back-home {
+    display: inline-block;
+    margin-top: space("3");
+    padding-block: space("1");
+    padding-inline: space("3");
+    border: 1px solid color("accent-primary");
+    border-radius: radius("md");
+
+    @include theme-transition;
+
+    &:hover {
+      background: color("surface");
+    }
+  }
+</style>

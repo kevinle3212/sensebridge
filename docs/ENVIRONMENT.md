@@ -34,7 +34,7 @@ committed file, an environment variable, or a log — see
 ## Local development
 
 1. Clone the repository.
-2. Open the Xcode project under `app/`.
+2. Open the Xcode project under `app/` (or run `scripts/open-xcode.sh`).
 3. Select your personal Apple ID as the signing team for local, on-device
    builds — free, no Apple Developer Program enrollment needed (App Store
    Connect / TestFlight distribution needs the paid program — see

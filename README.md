@@ -50,6 +50,7 @@ positioning.
 - [Knowledge Graph (Graphify)](#knowledge-graph-graphify)
 - [Documentation](#documentation)
 - [GitHub Platform](#github-platform)
+- [Maintainer](#maintainer)
 - [Contributing](#contributing)
 - [Testing](#testing)
 - [License](#license)
@@ -285,6 +286,15 @@ to `main`.
 | Claude Code review | [`.github/workflows/claude-code-review.yml`](.github/workflows/claude-code-review.yml), [`.github/workflows/claude.yml`](.github/workflows/claude.yml) |
 | Projects | [Project boards](https://github.com/kevinle3212/sensebridge/projects) |
 | Issue / PR templates | [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/), [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) |
+
+## Maintainer
+
+<img src="docs/assets/kevin-le.jpg" alt="Kevin K. Le, the current sole developer of the project" width="120">
+
+**Kevin K. Le** — sole maintainer, responsible for security-sensitive reviews,
+releases, and dependency risk. Contact details are in
+[`MAINTAINERS.md`](MAINTAINERS.md); acknowledgments and third-party credits are
+in [`CREDITS.md`](CREDITS.md).
 
 ## Contributing
 
