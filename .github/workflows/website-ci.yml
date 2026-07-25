@@ -81,6 +81,27 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: TEMP diagnostic — capture browser console/errors on this runner
+        run: |
+          npx astro preview --port 4321 --host 127.0.0.1 &
+          sleep 4
+          node -e "
+          const puppeteer = require('puppeteer');
+          (async () => {
+            const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-dev-shm-usage']});
+            const page = await browser.newPage();
+            page.on('console', m => console.log('CONSOLE:', m.type(), m.text()));
+            page.on('pageerror', e => console.log('PAGEERROR:', e.message));
+            page.on('requestfailed', r => console.log('REQFAILED:', r.url(), r.failure()?.errorText));
+            try {
+              await page.goto('http://127.0.0.1:4321/', {waitUntil: 'networkidle2', timeout: 15000});
+              console.log('NAV OK (networkidle2)');
+            } catch (e) {
+              console.log('NAV FAILED (networkidle2):', e.message);
+            }
+            await browser.close();
+          })();
+          "
       - name: Accessibility check (zero errors is the gate)
         # Serves the built dist/ and runs pa11y-ci (WCAG2AA) against it.
         # Automated checks are a floor — the manual VoiceOver/keyboard pass
