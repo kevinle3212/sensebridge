@@ -93,11 +93,18 @@ jobs:
             page.on('console', m => console.log('CONSOLE:', m.type(), m.text()));
             page.on('pageerror', e => console.log('PAGEERROR:', e.message));
             page.on('requestfailed', r => console.log('REQFAILED:', r.url(), r.failure()?.errorText));
+            const t0 = Date.now();
             try {
-              await page.goto('http://127.0.0.1:4321/', {waitUntil: 'networkidle2', timeout: 15000});
-              console.log('NAV OK (networkidle2)');
+              await page.goto('http://127.0.0.1:4321/', {waitUntil: 'networkidle2', timeout: 90000});
+              console.log('NAV OK (networkidle2) after', Date.now() - t0, 'ms');
             } catch (e) {
-              console.log('NAV FAILED (networkidle2):', e.message);
+              console.log('NAV FAILED (networkidle2) after', Date.now() - t0, 'ms:', e.message);
+            }
+            try {
+              await page.goto('http://127.0.0.1:4321/', {waitUntil: 'load', timeout: 10000});
+              console.log('SECOND NAV (load) OK');
+            } catch (e) {
+              console.log('SECOND NAV (load) FAILED:', e.message);
             }
             await browser.close();
           })();
