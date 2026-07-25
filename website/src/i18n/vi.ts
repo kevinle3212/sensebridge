@@ -141,7 +141,30 @@ export const vi: Translations = {
     },
     serverError: {
       heading: "Có gì đó đã hỏng ở phía chúng tôi. Xin lỗi vì điều đó.",
-      body: "Ngay cả một chú bò khung dây cũng có ngày không suôn sẻ. Đây không phải lỗi của bạn — hãy thử lại sau một chút.",
+      body: "Ngay cả một chú bò được vẽ kỹ cũng có ngày không suôn sẻ. Đây không phải lỗi của bạn — hãy thử lại sau một chút.",
+    },
+    statusLabel: "HTTP {code} · {phrase}",
+    classes: {
+      informational: {
+        heading: "Đây là lúc giao thức đang suy nghĩ thành tiếng.",
+        body: "Trạng thái 1xx là phản hồi tạm thời — máy chủ báo rằng nó vẫn đang xử lý phản hồi thật. Bạn hầu như không bao giờ thấy nó trong trình duyệt, nhưng nó vẫn có một trang ở đây.",
+      },
+      success: {
+        heading: "Ở đây không có gì sai cả.",
+        body: "Trạng thái 2xx nghĩa là yêu cầu đã thành công. Chú bò rơi xuống vì lý do riêng của nó — trang này chỉ tồn tại để mọi mã trong danh mục đều có một trang.",
+      },
+      redirect: {
+        heading: "Mã này trỏ tới một nơi khác.",
+        body: "Trạng thái 3xx nghĩa là thứ bạn yêu cầu nằm ở một địa chỉ khác. Thông thường trình duyệt sẽ tự đi theo mà không bao giờ hiện trang này.",
+      },
+      client: {
+        heading: "Yêu cầu đó chưa tới nơi đúng cách.",
+        body: "Trạng thái 4xx nghĩa là có gì đó trong chính yêu cầu chưa ổn — địa chỉ, phương thức, hoặc dữ liệu đi kèm. Phần còn lại của trang web vẫn vững vàng.",
+      },
+      server: {
+        heading: "Có gì đó đã hỏng ở phía chúng tôi.",
+        body: "Trạng thái 5xx nghĩa là yêu cầu vẫn ổn còn máy chủ thì không. Đây không phải lỗi của bạn — hãy thử lại sau một chút.",
+      },
     },
   },
 };

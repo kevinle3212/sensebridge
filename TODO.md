@@ -25,6 +25,92 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Website layout width, motion, and a cow on every HTTP status page (2026-07-24, night)
+
+Full session log: [`sessions/2026-07-24/2200-PST.md`](sessions/2026-07-24/2200-PST.md)
+(second section) and [`sessions/2026-07-24/2300-PST.md`](sessions/2026-07-24/2300-PST.md).
+Root-caused "the 404 doesn't animate and looks worse" to a CSP/build
+interaction, not the animation: `vercel.json`'s `style-src 'self'` (no
+`'unsafe-inline'`) blocked the single inline `<style>` block Astro's
+`inlineStylesheets: "auto"` was emitting for the error pages, which contained
+all their layout, fills, and keyframes — so production rendered an unstyled,
+black-filled, motionless SVG while `astro dev` (no CSP) looked fine. Fixed with
+`inlineStylesheets: "never"`. Also widened the content container from 60rem to
+72rem with an editorial two-column section layout (the reported dead
+right-hand space), replaced the wireframe cow with a colored Holstein that
+walks, falls, and waits 1.5s in the hole, and generated a page for all 63
+IANA-registered status codes across three locales (195 pages).
+
+- [ ] **[P1]** **[Needs owner]** Review, then commit/push/PR this session's
+      `website/` + `docker/nginx.conf.template` changes — owner asked to look
+      first, and `CLAUDE.md` § Branching and committing forbids running
+      `git`/`gh` autonomously. Nothing is committed.
+- [ ] **[P2]** `Disclaimer` now sits in the wider 72rem band with its text
+      still capped at 44rem, so it carries more empty right-hand space than
+      the sections that were restructured. Left alone on purpose:
+      `website/src/components/Disclaimer.module.scss` is marked untouchable
+      (see the `surface-raised` note in `website/src/styles/abstracts/_tokens.scss`)
+      and the Undecorated Disclaimer Rule wants it plain. Decide whether the
+      rule should also cover measure/alignment, then either widen its measure
+      or centre it.
+- [ ] **[P2]** pa11y cannot run locally — puppeteer's Chrome is not installed
+      in `~/.cache/puppeteer`, so `npm run test:a11y` dies before the first
+      URL. Worked around this session with
+      `PUPPETEER_EXECUTABLE_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`;
+      deliberately not hardcoded into `.pa11yci.json` because it would break
+      Linux CI. Either run `npx puppeteer browsers install chrome` once, or
+      document the env var in `website/README.md`.
+- [ ] **[P3]** `~/Library/Caches/ms-playwright` was deleted mid-session (disk
+      ~10GB free), almost certainly by the storage-maintenance job — the
+      headless browser survived only because its process was already running.
+      If browser-driven checks start failing cold, reinstall with
+      `npx playwright install chromium-headless-shell` before assuming a code
+      regression.
+
+### CI/CD security audit — CodeQL fix, dependency review, branch ruleset, Vercel alias gap (2026-07-24, late session)
+
+Full session log: [`sessions/2026-07-24/2200-PST.md`](sessions/2026-07-24/2200-PST.md).
+Fixed CodeQL's "1 configuration not found" (dead skip-conditional, now
+removed) and its 20+ minute PR wait (Swift analysis moved to push:main +
+weekly + manual dispatch only; JS/TS stays on every PR); confirmed OSV was
+never flaky, just correctly catching a since-patched `brace-expansion` CVE;
+added `actions/dependency-review-action`; created a `main-required-checks`
+branch ruleset (owner-approved); attempted the two secret-scanning
+sub-toggles (API silently refuses, personal-account plan gate). Also chased a
+Vercel auto-deploy question — auto-deploy already works, the real gap was a
+stale `sensebridge.vercel.app` alias.
+
+- [ ] **[P1]** **[Needs owner]** Commit, push, and open a PR for this
+      session's `.github/workflows/codeql.yml`, `.github/workflows/security.yml`,
+      `docs/TOOLING.md`, `security/CHECKLIST.md` changes — never run
+      autonomously per `CLAUDE.md` § Branching and committing. Commands
+      already handed to the owner in-session.
+- [ ] **[P1]** **[Needs owner]** Attach `sensebridge.vercel.app` to the
+      Vercel project's Production domains: `https://vercel.com/trustledger/sensebridge/settings/domains`
+      → add the domain → assign to Production. It currently resolves but is
+      stale (last built 2026-07-21, not in the current production
+      deployment's alias list) — a leftover manual assignment that
+      auto-alias-on-deploy no longer touches. One-time; after that it
+      updates automatically on every future push same as the project's other
+      three domains already do.
+- [ ] **[P2]** **[Needs owner]** Try `secret_scanning_non_provider_patterns`
+      and `secret_scanning_validity_checks` via the Settings UI directly
+      (`https://github.com/kevinle3212/sensebridge/settings/security_analysis`)
+      — `gh api PATCH repos/.../sensebridge` returns 200 with admin
+      permission confirmed present, but both fields silently stay `disabled`
+      in the response. Looks like a plan-level gate the API won't surface.
+- [ ] **[P2]** **[Needs owner]** Decide whether to close the gap between the
+      `main-required-checks` ruleset created this session (id `19721689`:
+      deletion + force-push protection + 7 required status checks) and the
+      fuller "Protect main" spec drafted 2026-07-17 (below, "Owner actions
+      pending" section) — that spec also wanted a `pull_request` rule
+      (require-PR-before-merge, squash-only merge methods, conversation
+      resolution), `required_linear_history`, and 3 more checks (`Docs link
+      check`, `Sensitive file scan`, `Semgrep`). Today's ruleset is narrower
+      by design (avoided checks that would deadlock PRs — `Actionlint` is
+      path-filtered, `CodeQL (Swift)` no longer runs on `pull_request`) but
+      wasn't reconciled against the older, more complete plan.
+
 ### Markdownlint wired into CI + pre-commit (2026-07-25)
 
 Config (`.markdownlint.jsonc`, `.markdownlint-cli2.jsonc`, `.markdownlintignore`)
@@ -487,10 +573,14 @@ strategies (merge commit, squash, rebase) with `delete_branch_on_merge:
 true`. All items below are `gh`/web-UI actions this session doesn't have
 standing permission to run.
 
-- [ ] **[P1]** **[Needs owner]** Create a branch ruleset for `main` — nothing
+- [x] **[P1]** **[Needs owner]** Create a branch ruleset for `main` — nothing
       currently stops a direct push or force-push to `main`, despite both
-      `CLAUDE.md` files saying "never commit to main." Settings → Rules →
-      Rulesets → New branch ruleset:
+      `CLAUDE.md` files saying "never commit to main." **Partially done
+      2026-07-25** — created `main-required-checks` (deletion + force-push
+      protection + 7 required status checks); does not yet include the
+      require-PR-before-merge / linear-history / squash-only pieces below.
+      See the "CI/CD security audit" To-Do entry above for the exact
+      remaining gap. Settings → Rules → Rulesets → New branch ruleset:
       - Name `main-protection`; Enforcement: Active; Target branches: `main`.
       - Restrict deletions; restrict force pushes.
       - Require a pull request before merging. Required approvals can stay
@@ -696,7 +786,7 @@ needed. Root Directory on the Vercel project was `.` (would have broken any
 Git-connected build against this monorepo) — fixed to `website` via the
 Vercel API.
 
-- [ ] **[P1]** **[Needs owner]** Grant the Vercel GitHub App access to
+- [x] **[P1]** **[Needs owner]** Grant the Vercel GitHub App access to
       `kevinle3212/sensebridge`: GitHub → Settings → Applications →
       Installed GitHub Apps → Vercel → Configure (or
       `https://github.com/settings/installations/133842179`) → add
@@ -705,12 +795,21 @@ Vercel API.
       `vercel git connect` fails ("make sure you have access to the
       repository"). Then re-run `vercel git connect` from `website/` to
       actually wire Production (`main`) + Preview (branches/PRs) auto-deploy
-      — nothing auto-deploys on the Vercel side yet.
-- [ ] **[P3]** **[Needs owner]** Once Git auto-deploy is connected and the
-      next production deploy lands, confirm `https://sensebridge.vercel.app`
-      resolves — `astro.config.mjs`'s new `site` value assumes the pending
-      alias-bind-on-next-deploy (see the P2 item below from the earlier
-      Vercel session).
+      — nothing auto-deploys on the Vercel side yet. **Confirmed done
+      2026-07-25** — verified via the Vercel MCP (`get_project`,
+      `list_deployments`): the latest production deployment matches this
+      session's `main` HEAD exactly, auto-triggered by the push; PR branches
+      get preview deploys too. No further action needed here.
+- [ ] **[P2]** **[Needs owner]** `https://sensebridge.vercel.app` resolves
+      but is stale (last built 2026-07-21) — **not** in the current
+      production deployment's alias list (`sensebridge-website.vercel.app`,
+      `sensebridge-trustledger.vercel.app`, and the `-git-main-` variant are;
+      the short name isn't). Attach it in
+      `https://vercel.com/trustledger/sensebridge/settings/domains` →
+      assign to Production. One-time; auto-updates on every future push
+      after that, same as the other three domains already do. (Re-scoped
+      2026-07-25 from the original "confirm it resolves" framing — it does
+      resolve, just not to the current build.)
 - [ ] **[P3]** **[Needs owner]** Generate and wire a real `og:image`/
       `twitter:image` (1200×630 PNG) once a social-preview asset exists —
       currently omitted rather than pointed at a nonexistent file.
@@ -1330,7 +1429,11 @@ remaining open items.
 - [ ] **[P1]** **[Needs owner]** Make the repo public, then create the
       GitHub ruleset protecting `main` — `GAPS.md` M5. GitHub Free can't use
       Rulesets on a private repo, which is why the 2026-07-17 attempt below
-      403'd. Steps, in order:
+      403'd. Repo is public now and a narrower ruleset exists
+      (`main-required-checks`, 2026-07-25) — this fuller spec (require-PR-
+      before-merge, linear history, squash-only, 3 more checks) is still the
+      gap to close if it turns out to matter; see the "CI/CD security audit"
+      To-Do entry above. Steps, in order:
       1. `gh repo edit kevinle3212/sensebridge --visibility public --accept-visibility-change-consequences`
       2. `gh api repos/kevinle3212/sensebridge/rulesets` — confirm it now
          returns `[]` instead of `403`.

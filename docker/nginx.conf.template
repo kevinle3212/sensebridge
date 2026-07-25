@@ -15,13 +15,16 @@ server {
         try_files $uri $uri/ =404;
     }
 
-    # Cow-in-a-hole error pages (see website/src/pages/{404,400,500}.astro).
-    # Astro special-cases 404.astro AND 500.astro to also build a flat
-    # /404.html / /500.html (the static-host error-page convention);
-    # 400.astro has no such convention and builds as an ordinary
-    # directory-style route (/400/index.html) — verified against the actual
-    # `dist/` output, not assumed. Neither 400 nor 500 is locale-routed — a
-    # raw HTTP-level error has no request path to read a locale prefix from.
+    # Cow-in-a-hole status pages. Every registered HTTP status code now has a
+    # page, generated from website/src/data/http-status.ts by
+    # website/src/pages/[status].astro; 404 and 500 keep dedicated page files
+    # (website/src/pages/{404,500}.astro) purely because Astro special-cases
+    # those two and also builds a flat /404.html / /500.html, which is the
+    # static-host error-page convention this block points at. Every other code,
+    # 400 included, builds as an ordinary directory-style route
+    # (/400/index.html) — verified against the actual `dist/` output, not
+    # assumed. Neither 400 nor 500 is locale-routed here: a raw HTTP-level
+    # error has no request path to read a locale prefix from.
     #
     # The 4xx bucket below is scoped to codes this exact server block can
     # actually emit for a pure static `try_files`, no-auth, no-rate-limit

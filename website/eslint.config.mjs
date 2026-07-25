@@ -146,5 +146,19 @@ export default defineConfig(
       "astro/jsx-a11y/media-has-caption": "off",
     },
   },
+  {
+    // `role="list"` on a <ul> is redundant per the HTML spec, which is what
+    // this rule enforces. It is not redundant in practice: Safari strips list
+    // semantics from any list styled `list-style: none`, so VoiceOver stops
+    // announcing "list, N items" — and this repo's zero-unlabeled-elements
+    // gate depends on that announcement. Restoring the role explicitly is the
+    // documented remedy, and the rule ships an options form for exactly this
+    // case, so allow `list` on `ul` rather than switching the rule off or
+    // scattering inline suppressions at each call site.
+    files: ["src/**/*.astro"],
+    rules: {
+      "astro/jsx-a11y/no-redundant-roles": ["error", { ul: ["list"] }],
+    },
+  },
   prettierConfig,
 );

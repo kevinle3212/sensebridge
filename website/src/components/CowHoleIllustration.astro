@@ -1,150 +1,341 @@
 ---
 /**
- * Decorative line-art illustration for the error pages (404/400/500): a
- * wireframe cow that walks to the edge of a hole, tips in, sinks out of sight,
- * and starts over — same stroke-only vocabulary as SignalBridge.astro's inline
- * SVG. Purely decorative (aria-hidden); the accessible information lives in
- * ErrorPage.astro's heading/body text, not here.
+ * Decorative illustration for the HTTP status pages: a colored Holstein cow
+ * that walks in from the left, tips over the lip of a hole, sinks out of
+ * sight, waits in the hole, and starts over.
+ *
+ * Purely decorative (`aria-hidden`) — the accessible information lives in
+ * ErrorPage.astro's heading and body text, never here.
  *
  * The disappearance is a clip, not a fade: everything is drawn inside a
  * clipPath that unions "above the ground line" with "the hole opening", so a
- * falling cow is visible exactly while it is above ground or inside the hole,
- * and is cut off the moment it passes the far side of the rim. Nothing has to
- * be painted over it and no fill has to match the page background, which is
- * what keeps it correct in both themes.
+ * falling cow stays visible exactly while it is above ground or inside the
+ * hole and is cut off the moment it passes below the rim. Nothing has to be
+ * painted over it and no fill has to match the page background, which is what
+ * keeps it correct in both themes.
  *
- * Motion is gated behind prefers-reduced-motion. The resting state — what
- * reduced-motion visitors see, and the state the loop returns to — is the cow
+ * Motion is gated behind `prefers-reduced-motion`. The resting state — what
+ * reduced-motion visitors see, and the frame the loop returns to — is the cow
  * standing at the lip of the hole, which reads correctly as a still drawing.
+ *
+ * The cow's own colors are deliberately literal (hide, markings, muzzle,
+ * hooves) rather than themed tokens: a Holstein is the same animal in dark and
+ * light mode. Only the ground, the hole, and its rim use theme tokens, since
+ * those belong to the page rather than to the cow.
  */
 interface Props {
-  /** "500" adds an inner ring inside the hole, reading as a deeper drop. */
-  variant?: "404" | "400" | "500";
+  /** HTTP status code this illustration accompanies. */
+  code: number;
 }
 
-const { variant = "404" } = Astro.props;
-const deep = variant === "500";
+const { code } = Astro.props;
 
-// One illustration per error page, so keying the clipPath id to the variant is
-// enough to keep it unique within the document.
-const clipId = `cow-hole-clip-${variant}`;
+// 5xx is the server's own failure rather than a wrong turn by the visitor, so
+// its hole gets an extra inner ring — the same drawing, read as a deeper drop.
+const deep = code >= 500;
+
+// One illustration per page, so keying the ids to the code is enough to keep
+// them unique within the document.
+const clipId = `cow-hole-clip-${code}`;
+const holeId = `cow-hole-depth-${code}`;
+const bodyId = `cow-body-${code}`;
 ---
 
-<svg class="cow-hole" viewBox="0 0 240 160" aria-hidden="true" focusable="false">
+<svg
+  class="cow-hole"
+  viewBox="0 0 320 180"
+  aria-hidden="true"
+  focusable="false"
+  role="presentation"
+>
   <defs>
     <!-- Union of the two shapes: everything down to the ground line, plus the
          hole opening itself. -->
     <clipPath id={clipId}>
-      <rect x="0" y="0" width="240" height="116"></rect>
-      <ellipse cx="120" cy="116" rx="38" ry="10"></ellipse>
+      <rect x="0" y="0" width="320" height="130"></rect>
+      <ellipse cx="210" cy="130" rx="46" ry="12"></ellipse>
+    </clipPath>
+    <!-- Depth gradient for the hole mouth: darker toward the bottom, so the
+         opening reads as a shaft rather than a flat disc. -->
+    <radialGradient id={holeId} cx="50%" cy="34%" r="72%">
+      <stop offset="0%" stop-color="#0a0d14"></stop>
+      <stop offset="62%" stop-color="#05070c"></stop>
+      <stop offset="100%" stop-color="#000"></stop>
+    </radialGradient>
+
+    <!-- Body, neck, and head as ONE closed silhouette rather than an ellipse
+         plus a neck plus a head. Separate shapes each carry their own outline,
+         and those outlines cross the animal's interior as seams — the earlier
+         version read as a barrel wearing a collar. A single path has one
+         continuous contour, which is what makes the shape read as an animal. -->
+    <path
+      id={bodyId}
+      d="M20 68
+         C22 52, 42 44, 64 46
+         C80 47, 92 50, 101 55
+         C105 47, 111 42, 119 41
+         C128 40, 136 45, 141 53
+         C146 60, 149 66, 148 72
+         C147 78, 139 80, 131 77
+         C124 75, 118 71, 113 67
+         C108 75, 105 83, 103 91
+         C99 105, 85 111, 66 111
+         C45 111, 26 107, 20 97
+         C16 89, 16 78, 20 68 Z"
+    ></path>
+    <!-- Markings are clipped to that same silhouette, so a patch can never
+         spill past the animal's edge. -->
+    <clipPath id={`${bodyId}-clip`}>
+      <use href={`#${bodyId}`}></use>
     </clipPath>
   </defs>
 
   <!-- Ground, broken where the hole opens -->
-  <path d="M4 116 H82"></path>
-  <path d="M158 116 H236"></path>
+  <path class="ground" d="M6 130 H164"></path>
+  <path class="ground" d="M256 130 H314"></path>
 
   <!-- Hole interior, painted before the cow so a cow inside the hole reads as
        being in it rather than in front of it -->
-  <ellipse class="hole-fill" cx="120" cy="116" rx="38" ry="10"></ellipse>
-  {deep && <ellipse class="hole-depth" cx="120" cy="118" rx="24" ry="6" />}
+  <ellipse class="hole-fill" cx="210" cy="130" rx="46" ry="12" fill={`url(#${holeId})`}></ellipse>
+  {deep && <ellipse class="hole-depth" cx="210" cy="132" rx="28" ry="7" />}
 
   <g clip-path={`url(#${clipId})`}>
-    <!-- Positioned so the resting state puts the front hooves right at the
-         lip (the hole opens at x=82) and the head out over it. -->
     <g class="cow">
-      <!-- Body, head, and markings -->
-      <ellipse cx="60" cy="84" rx="26" ry="15"></ellipse>
-      <circle cx="92" cy="74" r="11"></circle>
-      <path d="M85 65 l-5 -7 M99 65 l5 -7"></path>
-      <circle class="eye" cx="95" cy="71" r="1.5"></circle>
-      <circle class="spot" cx="52" cy="80" r="5"></circle>
-      <circle class="spot" cx="70" cy="88" r="3.5"></circle>
-      <path d="M34 78 q-10 6 -6 16"></path>
-
-      <!-- Legs, split into two pairs so they can swing in opposition -->
+      <!-- Back legs, drawn before the body so the barrel overlaps them and the
+           pair reads as the far side of the animal. Each leg is a filled,
+           outlined shape rather than a thick stroke: a stroke can only be one
+           color, so the earlier version's legs were solid dark and disappeared
+           against the dark page background. Every leg ends exactly on the
+           ground line (y=130) — nothing may hang below it. -->
       <g class="legs legs-back">
-        <path d="M42 97 V116 M50 97 V116"></path>
+        <g class="leg">
+          <rect class="hide leg-bone" x="28.5" y="92" width="7" height="30" rx="3.5"></rect>
+          <rect class="hoof" x="27.5" y="121" width="9" height="9" rx="2"></rect>
+        </g>
+        <g class="leg">
+          <rect class="hide leg-bone" x="42.5" y="92" width="7" height="30" rx="3.5"></rect>
+          <rect class="hoof" x="41.5" y="121" width="9" height="9" rx="2"></rect>
+        </g>
       </g>
+
+      <!-- Tail, behind the barrel -->
+      <g class="tail">
+        <path class="tail-line" d="M20 68 c-11 7 -15 24 -13 40"></path>
+        <ellipse class="tuft" cx="7" cy="110" rx="4.5" ry="6.5"></ellipse>
+      </g>
+
+      <!-- Udder, tucked under the rear before the body is drawn over it -->
+      <ellipse class="udder" cx="33" cy="106" rx="9" ry="6.5"></ellipse>
+
+      <!-- The one continuous body/neck/head silhouette -->
+      <use class="hide" href={`#${bodyId}`}></use>
+
+      <!-- Holstein markings, clipped to that silhouette -->
+      <g clip-path={`url(#${bodyId}-clip)`}>
+        <path class="patch" d="M26 60 c15 -7 28 1 26 14 c-2 13 -21 17 -31 8 c-9 -7 -7 -19 5 -22 Z"
+        ></path>
+        <path
+          class="patch"
+          d="M68 92 c15 -9 32 -2 34 11 c2 13 -15 21 -29 15 c-13 -6 -15 -20 -5 -26 Z"></path>
+        <path class="patch" d="M44 52 c10 -4 18 1 16 8 c-2 7 -14 9 -19 4 c-5 -5 -3 -10 3 -12 Z"
+        ></path>
+        <!-- Face patch over the poll, the usual Holstein marking -->
+        <path class="patch" d="M112 44 c9 -5 20 -3 26 5 c-9 4 -20 3 -26 -5 Z"></path>
+      </g>
+
+      <!-- Front legs, over the barrel -->
       <g class="legs legs-front">
-        <path d="M72 97 V116 M80 97 V116"></path>
+        <g class="leg">
+          <rect class="hide leg-bone" x="82.5" y="92" width="7" height="30" rx="3.5"></rect>
+          <rect class="hoof" x="81.5" y="121" width="9" height="9" rx="2"></rect>
+        </g>
+        <g class="leg">
+          <rect class="hide leg-bone" x="94.5" y="92" width="7" height="30" rx="3.5"></rect>
+          <rect class="hoof" x="93.5" y="121" width="9" height="9" rx="2"></rect>
+        </g>
+      </g>
+
+      <!-- Head details, drawn over the silhouette's face -->
+      <g class="head">
+        <!-- Horns: short outward-curving nubs sitting on the poll. Kept stubby
+             on purpose — long horns read as a bull or a cartoon, and this is a
+             dairy cow. -->
+        <path class="horn" d="M118 43 c-4 -2 -6 -5 -4 -8"></path>
+        <path class="horn" d="M131 44 c4 -2 5 -5 3 -8"></path>
+        <!-- Ear, swept back from behind the poll -->
+        <path class="ear" d="M114 49 c-8 -5 -16 -4 -18 0 c-2 4 5 8 13 6 Z"></path>
+        <!-- Muzzle -->
+        <ellipse class="muzzle" cx="138" cy="69" rx="9.5" ry="7"></ellipse>
+        <circle class="nostril" cx="141" cy="67" r="1.3"></circle>
+        <!-- Eye -->
+        <circle class="eye" cx="126" cy="55" r="2.3"></circle>
       </g>
     </g>
   </g>
 
   <!-- Rim drawn last so its edge stays crisp over a cow crossing it -->
-  <ellipse class="hole-rim" cx="120" cy="116" rx="38" ry="10"></ellipse>
+  <ellipse class="hole-rim" cx="210" cy="130" rx="46" ry="12"></ellipse>
 
   <!-- Surprise spark, timed to the moment the cow tips in -->
   <g class="spark">
-    <path d="M114 48 l2 -9 M124 52 l9 -3 M120 60 l7 6"></path>
+    <path d="M196 74 l-3 -10 M210 70 l0 -11 M224 74 l4 -10"></path>
   </g>
 </svg>
 
 <style lang="scss">
   @use "@styles/abstracts" as *;
 
+  // Hide (body) and marking colors are literal rather than themed: a Holstein
+  // is the same animal in both modes, and the drawing needs its own internal
+  // contrast to read as an animal instead of a silhouette.
+  $hide: #f4f1ea;
+  $hide-shade: #d9d4c8;
+  $marking: #23262f;
+  $muzzle: #e5a2a8;
+  $hoof: #2b2f3a;
+  $horn: #ddd2b8;
+
   .cow-hole {
     width: 100%;
-    max-width: 18rem;
+    max-width: 26rem;
     height: auto;
-    color: color("text-secondary");
-    stroke: currentColor;
+    overflow: visible;
+  }
+
+  .ground {
+    stroke: color("text-secondary");
     stroke-width: 1.5;
     stroke-linecap: round;
-    stroke-linejoin: round;
     fill: none;
   }
 
-  // hairline rather than surface: the dark palette has nothing darker than bg
-  // to dig a hole with, so the opening has to separate by contrast in whichever
-  // direction the theme allows. hairline is the one neutral that manages it
-  // both ways — clearly lighter than bg in dark mode, clearly darker in light —
-  // where surface (#eef1f7) sits so close to the light bg (#f7f8fb) that the
-  // hole all but vanished and only its rim read.
+  // `fill` is set as an attribute in the markup rather than here: it points at
+  // a gradient whose id is keyed to the status code, which scoped CSS cannot
+  // interpolate.
   .hole-fill {
-    fill: color("hairline");
     stroke: none;
   }
 
   .hole-depth {
     fill: none;
     stroke: color("text-secondary");
-    opacity: 0.5;
+    stroke-width: 1;
+    opacity: 0.4;
   }
 
   .hole-rim {
     fill: none;
     stroke: color("accent-primary");
+    stroke-width: 1.5;
   }
 
-  .eye,
-  .spot {
-    fill: currentColor;
+  // Body, head, and legs share one fill + outline treatment, so the pale hide
+  // separates from a light page background and the dark page background alike.
+  .hide {
+    fill: $hide;
+    stroke: $marking;
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+  }
+
+  .patch {
+    fill: $marking;
     stroke: none;
   }
 
-  .spot {
-    opacity: 0.45;
+  .leg-bone {
+    stroke-width: 1.1;
+  }
+
+  .hoof {
+    fill: $hoof;
+    stroke: $marking;
+    stroke-width: 1;
+  }
+
+  .tail-line {
+    fill: none;
+    stroke: $marking;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+  }
+
+  .ear {
+    fill: $hide-shade;
+    stroke: $marking;
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+  }
+
+  .udder {
+    fill: $muzzle;
+    stroke: $marking;
+    stroke-width: 1;
+  }
+
+  .muzzle {
+    fill: $muzzle;
+    stroke: $marking;
+    stroke-width: 1.2;
+  }
+
+  .nostril {
+    fill: $marking;
+    stroke: none;
+  }
+
+  .eye {
+    fill: $marking;
+    stroke: none;
+  }
+
+  .horn {
+    fill: none;
+    stroke: $horn;
+    stroke-width: 3.2;
+    stroke-linecap: round;
+  }
+
+  .tuft {
+    fill: $marking;
+    stroke: none;
   }
 
   .spark {
-    color: color("accent-warm");
+    stroke: color("accent-warm");
+    stroke-width: 2;
+    stroke-linecap: round;
+    fill: none;
     opacity: 0;
   }
 
+  // Resting position, and the only position a reduced-motion or no-CSS-animation
+  // visitor ever sees: standing at the lip of the hole, which is a coherent
+  // still drawing. The cow is authored mid-frame so the walk has somewhere to
+  // start from, so without this it would rest well short of the hole and the
+  // picture would not read. The keyframes below override this whenever motion
+  // is allowed — matching the 46% "arrived at the lip" keyframe exactly.
+  .cow {
+    transform: translateX(66px);
+  }
+
   @include motion-safe {
-    // One loop: walk in from just off-frame, tip over the lip, fall out of
-    // sight, then a short beat of empty hole before it happens again. The
-    // reset leg (85% -> 86%) travels back across the frame, so opacity holds
-    // it hidden through that jump — the clip alone would not cover the
-    // diagonal it takes. -110px is chosen to park the cow immediately outside
-    // the viewBox rather than far outside it, so almost none of the cycle is
-    // spent on an empty frame waiting for it to arrive.
+    // One 6s loop: walk in from just off-frame, tip over the lip, fall out of
+    // sight, then hold empty for exactly 1.5s before it happens again.
+    //
+    // The 1.5s pause is the 75% → 100% span (0.25 x 6s). Keeping the pause a
+    // fraction of the total is what lets a single `animation` shorthand express
+    // "walk, fall, wait 1.5s, repeat" without a second timeline to keep in
+    // sync — retune $loop and the pause scales with it, so update both together
+    // if the pause must stay fixed at 1.5s.
     .cow {
-      animation: cow-walk-and-fall 6.5s linear infinite;
       transform-box: fill-box;
-      transform-origin: 50% 50%;
+      // Pivot at the front hooves, so the tip-in rotates over the lip of the
+      // hole rather than about the middle of the animal. The percentage is
+      // relative to the drawing's bounding box (tail tip x≈2.5 to muzzle
+      // x≈148), which puts the front pair at ~62%.
+      transform-origin: 62% 100%;
+      animation: cow-walk-and-fall 6s linear infinite;
     }
 
     .legs {
@@ -153,92 +344,124 @@ const clipId = `cow-hole-clip-${variant}`;
     }
 
     .legs-front {
-      animation: leg-swing 0.5s ease("in-out") infinite alternate;
+      animation: leg-swing 0.42s ease("in-out") infinite alternate;
     }
 
     .legs-back {
-      animation: leg-swing 0.5s ease("in-out") infinite alternate-reverse;
+      animation: leg-swing 0.42s ease("in-out") infinite alternate-reverse;
+    }
+
+    .tail {
+      transform-box: fill-box;
+      transform-origin: 90% 10%;
+      animation: tail-swish 1.8s ease("in-out") infinite alternate;
+    }
+
+    .head {
+      transform-box: fill-box;
+      transform-origin: 20% 60%;
+      animation: head-bob 0.84s ease("in-out") infinite alternate;
     }
 
     .spark {
-      animation: spark-pop 6.5s linear infinite;
       transform-box: fill-box;
-      transform-origin: 50% 50%;
+      transform-origin: 50% 100%;
+      animation: spark-pop 6s linear infinite;
     }
 
     @keyframes cow-walk-and-fall {
+      // Walking: off-frame left to the lip of the hole.
       0% {
         opacity: 1;
-        transform: translate(-110px, 0) rotate(0deg);
+        transform: translate(-120px, 0) rotate(0deg);
         animation-timing-function: linear;
       }
 
-      52% {
+      46% {
         opacity: 1;
-        transform: translate(0, 0) rotate(0deg);
-        animation-timing-function: ease-out;
+        transform: translate(66px, 0) rotate(0deg);
+        animation-timing-function: ease-in;
+      }
+
+      // Tipping: weight goes over the edge, nose drops first.
+      54% {
+        opacity: 1;
+        transform: translate(80px, 4px) rotate(16deg);
+        animation-timing-function: ease-in;
       }
 
       60% {
         opacity: 1;
-        transform: translate(20px, 2px) rotate(10deg);
+        transform: translate(92px, 14px) rotate(34deg);
         animation-timing-function: ease-in;
       }
 
-      65% {
+      // Falling: accelerating out of sight through the hole's mouth.
+      75% {
         opacity: 1;
-        transform: translate(30px, 6px) rotate(18deg);
-        animation-timing-function: ease-in;
+        transform: translate(118px, 104px) rotate(72deg);
       }
 
-      84% {
-        opacity: 1;
-        transform: translate(60px, 70px) rotate(46deg);
-      }
-
-      85% {
+      // Hidden for the 1.5s beat. The jump back across the frame happens while
+      // invisible — the clip alone would not cover the diagonal it travels.
+      75.01% {
         opacity: 0;
-        transform: translate(60px, 70px) rotate(46deg);
+        transform: translate(118px, 104px) rotate(72deg);
       }
 
-      86%,
-      96% {
-        opacity: 0;
-        transform: translate(-110px, 0) rotate(0deg);
-      }
-
+      75.02%,
       100% {
-        opacity: 1;
-        transform: translate(-110px, 0) rotate(0deg);
+        opacity: 0;
+        transform: translate(-120px, 0) rotate(0deg);
       }
     }
 
     @keyframes leg-swing {
       from {
-        transform: rotate(-16deg);
+        transform: rotate(-18deg);
       }
 
       to {
-        transform: rotate(16deg);
+        transform: rotate(18deg);
+      }
+    }
+
+    @keyframes tail-swish {
+      from {
+        transform: rotate(-9deg);
+      }
+
+      to {
+        transform: rotate(9deg);
+      }
+    }
+
+    @keyframes head-bob {
+      from {
+        transform: translateY(-1.5px) rotate(-1.5deg);
+      }
+
+      to {
+        transform: translateY(1.5px) rotate(1.5deg);
       }
     }
 
     @keyframes spark-pop {
       0%,
-      58% {
+      52% {
         opacity: 0;
-        transform: scale(0.5);
+        transform: scale(0.4);
       }
 
-      64% {
-        opacity: 0.9;
+      58% {
+        opacity: 0.95;
         transform: scale(1);
       }
 
-      78%,
+      70%,
       100% {
         opacity: 0;
-        transform: scale(1.15);
+        transform: scale(1.2);
       }
     }
   }

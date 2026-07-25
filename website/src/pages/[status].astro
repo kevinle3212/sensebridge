@@ -1,0 +1,21 @@
+---
+/**
+ * One page per registered HTTP status code (English). 404 and 500 are excluded
+ * because Astro emits those two flat from their own page files — see
+ * FLAT_EMITTED_CODES in src/data/http-status.ts for why that matters.
+ */
+import ErrorPage from "../components/ErrorPage.astro";
+import { FLAT_EMITTED_CODES, statusPaths } from "../data/http-status";
+
+export function getStaticPaths() {
+  return statusPaths(FLAT_EMITTED_CODES);
+}
+
+interface Props {
+  code: number;
+}
+
+const { code } = Astro.props;
+---
+
+<ErrorPage code={code} locale="en" />

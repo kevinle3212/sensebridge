@@ -19,6 +19,13 @@ Run through this before a release or any change touching the areas below.
 - [ ] CI workflow permissions are least-privilege.
 - [ ] Release-signing secrets are scoped to the release workflow only.
 
+Known coverage gap: CodeQL (Swift) runs only on push to `main`, the weekly
+schedule, and manual dispatch — not on `pull_request` — because the full
+`xcodebuild` it requires duplicates `ci.yml`'s build cost (~20min). Semgrep's
+`p/swift` ruleset still runs on every PR as a shallower pre-merge SAST layer;
+CodeQL's deeper dataflow analysis becomes a post-merge alert instead of a
+merge-blocking gate. See `.github/workflows/codeql.yml`'s header comment.
+
 ---
 
 Need help? See [`SUPPORT.md`](../SUPPORT.md).

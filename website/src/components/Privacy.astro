@@ -14,9 +14,11 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
   <!-- Signal Spine's "stays on-device" stage marker (DESIGN.md "Signal
        Spine"). -->
   <SpineNode top="8rem" />
-  <div class="wrap">
-    <h2 id="privacy-heading">{t.privacy.heading}</h2>
-    <p class={styles.body} data-reveal-item>{t.privacy.body}</p>
-    <p class={styles.supporting} data-reveal-item>{t.privacy.supporting}</p>
+  <div class="wrap section-columns">
+    <h2 id="privacy-heading" class="section-heading">{t.privacy.heading}</h2>
+    <div>
+      <p class={styles.body} data-reveal-item>{t.privacy.body}</p>
+      <p class={styles.supporting} data-reveal-item>{t.privacy.supporting}</p>
+    </div>
   </div>
 </section>

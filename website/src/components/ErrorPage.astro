@@ -1,37 +1,53 @@
 ---
 /**
- * Shared layout for the 404/400/500 pages: cow-in-a-hole illustration plus
- * translated heading/body/back-home copy. The illustration is aria-hidden
- * (CowHoleIllustration.astro) — the heading and body below carry the same
- * information for anyone not seeing it, so nothing is lost without it.
+ * Shared layout for every HTTP status page: the cow-in-a-hole illustration
+ * plus a status label, heading, body, and a way back home.
+ *
+ * The illustration is `aria-hidden` (CowHoleIllustration.astro) — the label,
+ * heading, and body below carry the same information for anyone not seeing it,
+ * so nothing is lost without it.
+ *
+ * Copy resolution: the three codes a visitor can actually land on (400, 404,
+ * 500) have hand-written copy; every other registered code falls back to copy
+ * written for its status class. See src/data/http-status.ts.
  */
 import { getRelativeLocaleUrl } from "astro:i18n";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CowHoleIllustration from "./CowHoleIllustration.astro";
 import { useTranslations, type Locale } from "../i18n";
+import { findStatus, statusClass } from "../data/http-status";
 
 interface Props {
-  kind: "404" | "400" | "500";
+  /** The HTTP status code this page represents. */
+  code: number;
   locale?: Locale;
 }
 
-const { kind, locale = (Astro.currentLocale ?? "en") as Locale } = Astro.props;
+const { code, locale = (Astro.currentLocale ?? "en") as Locale } = Astro.props;
 const t = useTranslations(locale);
 
-const copyByKind = {
-  "404": t.errorPages.notFound,
-  "400": t.errorPages.badRequest,
-  "500": t.errorPages.serverError,
-} as const;
-const copy = copyByKind[kind];
+const phrase = findStatus(code)?.phrase ?? "";
+
+// Hand-written copy wins where it exists; otherwise the code falls back to its
+// class. Keyed by code rather than by a chain of conditionals so adding another
+// bespoke entry is a one-line change.
+const bespokeCopy: Partial<Record<number, { heading: string; body: string }>> = {
+  400: t.errorPages.badRequest,
+  404: t.errorPages.notFound,
+  500: t.errorPages.serverError,
+};
+const copy = bespokeCopy[code] ?? t.errorPages.classes[statusClass(code)];
+
+const label = t.errorPages.statusLabel.replace("{code}", String(code)).replace("{phrase}", phrase);
 ---
 
-<BaseLayout title={copy.heading}>
+<BaseLayout title={label} noindex>
   <section class="error-page">
     <div class="wrap">
-      <CowHoleIllustration variant={kind} />
+      <CowHoleIllustration code={code} />
+      <p class="status-label">{label}</p>
       <h1>{copy.heading}</h1>
-      <p>{copy.body}</p>
+      <p class="body">{copy.body}</p>
       <a class="back-home" href={getRelativeLocaleUrl(locale, "/")}>{t.errorPages.backHome}</a>
     </div>
   </section>
@@ -41,41 +57,67 @@ const copy = copyByKind[kind];
   @use "@styles/abstracts" as *;
 
   .error-page {
-    padding-block: space("6");
+    display: flex;
+    align-items: center;
+    min-height: 70vh;
+    padding-block: space("5");
   }
 
   .error-page .wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 32rem;
-    margin-inline: auto;
     text-align: center;
   }
 
-  .error-page h1 {
+  .status-label {
     margin-top: space("3");
+    color: color("text-secondary");
+
+    @include type-label;
+  }
+
+  .error-page h1 {
+    margin-top: space("1");
+    max-width: 20ch;
+    text-wrap: balance;
 
     @include type-h2;
   }
 
-  .error-page p {
+  .body {
     margin-top: space("2");
+    max-width: 46ch;
     color: color("text-secondary");
+    text-wrap: pretty;
   }
 
   .back-home {
     display: inline-block;
     margin-top: space("3");
-    padding-block: space("1");
-    padding-inline: space("3");
+    padding: 0.75rem space("3");
     border: 1px solid color("accent-primary");
     border-radius: radius("md");
+    color: color("text-primary");
+    text-decoration: none;
 
-    @include theme-transition;
+    // One transition declaration rather than @include theme-transition plus a
+    // second block: the later `transition` would replace the mixin's outright,
+    // silently dropping the color/border cross-fade it exists to provide.
+    @include motion-safe {
+      transition:
+        background-color duration("slow") ease("in-out"),
+        color duration("slow") ease("in-out"),
+        border-color duration("slow") ease("in-out"),
+        transform duration("base") ease("standard");
+    }
 
     &:hover {
       background: color("surface");
+
+      @include motion-safe {
+        transform: translateY(-2px);
+      }
     }
   }
 </style>

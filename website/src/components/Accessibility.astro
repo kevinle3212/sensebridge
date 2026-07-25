@@ -21,10 +21,12 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
   <!-- Signal Spine's "spoken output" stage marker (DESIGN.md "Signal
        Spine"). -->
   <SpineNode top="4rem" />
-  <div class="wrap">
-    <h2 id="accessibility-heading">{t.accessibility.heading}</h2>
-    <p class={styles.body} data-reveal-item>{t.accessibility.body}</p>
-    <p class={styles["lead-in"]} data-reveal-item>{t.accessibility.leadIn}</p>
-    <ReadAloud />
+  <div class="wrap section-columns">
+    <h2 id="accessibility-heading" class="section-heading">{t.accessibility.heading}</h2>
+    <div>
+      <p class={styles.body} data-reveal-item>{t.accessibility.body}</p>
+      <p class={styles["lead-in"]} data-reveal-item>{t.accessibility.leadIn}</p>
+      <ReadAloud />
+    </div>
   </div>
 </section>

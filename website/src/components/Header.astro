@@ -11,15 +11,25 @@ import { localeNames, translations, useTranslations, type Locale } from "../i18n
 const locale = (Astro.currentLocale ?? "en") as Locale;
 const t = useTranslations(locale);
 const locales = Object.keys(translations) as Locale[];
+
+// The three section links are rooted at this locale's home page rather than
+// written as bare `#features`-style fragments. The header is shared by every
+// page, but those sections only exist on the home page — from any of the ~195
+// HTTP status pages a bare fragment resolves to nothing, which strands
+// keyboard and screen-reader users on a link that silently does nothing (and
+// which pa11y flags as an error). Prefixing with the home URL makes the link
+// navigate home and scroll to the section from a status page, while staying an
+// ordinary same-document fragment jump when already on the home page.
+const home = getRelativeLocaleUrl(locale, "/");
 ---
 
 <header class="site-header">
   <div class="wrap">
     <p class="logo">SenseBridge</p>
     <nav aria-label="Primary">
-      <a href="#features">{t.header.nav.features}</a>
-      <a href="#privacy">{t.header.nav.privacy}</a>
-      <a href="#accessibility">{t.header.nav.accessibility}</a>
+      <a href={`${home}#features`}>{t.header.nav.features}</a>
+      <a href={`${home}#privacy`}>{t.header.nav.privacy}</a>
+      <a href={`${home}#accessibility`}>{t.header.nav.accessibility}</a>
       <a href="https://github.com/kevinle3212/sensebridge">{t.header.nav.github}</a>
     </nav>
     <!-- Language switcher: a native <details>/<summary> dropdown — no JS

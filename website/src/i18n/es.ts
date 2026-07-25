@@ -136,7 +136,30 @@ export const es: Translations = {
     },
     serverError: {
       heading: "Algo falló de nuestro lado. Lo sentimos.",
-      body: "Hasta una vaca de líneas tiene un mal día. Esto no fue algo que hiciste tú — intenta de nuevo en un momento.",
+      body: "Hasta una vaca bien dibujada tiene un mal día. Esto no fue algo que hiciste tú — intenta de nuevo en un momento.",
+    },
+    statusLabel: "HTTP {code} · {phrase}",
+    classes: {
+      informational: {
+        heading: "Este es el protocolo pensando en voz alta.",
+        body: "Un estado 1xx es una respuesta provisional: el servidor avisando que todavía trabaja en la definitiva. Casi nunca lo verás en un navegador, pero aun así tiene su página aquí.",
+      },
+      success: {
+        heading: "Aquí no salió nada mal.",
+        body: "Un estado 2xx significa que la solicitud funcionó. La vaca se cae por sus propios motivos — esta página existe para que cada código del registro tenga la suya.",
+      },
+      redirect: {
+        heading: "Este apunta a otro lugar.",
+        body: "Un estado 3xx significa que lo que pediste vive en otra dirección. Normalmente tu navegador la sigue sin mostrarte nunca esta página.",
+      },
+      client: {
+        heading: "Esa solicitud no llegó del todo bien.",
+        body: "Un estado 4xx significa que algo en la solicitud misma no encajaba: la dirección, el método o lo que venía con ella. El resto del sitio sigue en terreno firme.",
+      },
+      server: {
+        heading: "Algo falló de nuestro lado.",
+        body: "Un estado 5xx significa que la solicitud estaba bien y el servidor no. Esto no fue algo que hiciste tú — intenta de nuevo en un momento.",
+      },
     },
   },
 };

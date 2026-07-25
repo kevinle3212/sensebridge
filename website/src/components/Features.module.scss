@@ -10,36 +10,62 @@
   @include section-band;
 }
 
+// Right-hand column of the .section-columns grid. Wider than $measure because
+// it holds the card grid rather than a single running paragraph; the intro
+// below keeps the reading measure for itself.
+.content {
+  min-width: 0;
+}
+
 .intro {
-  margin-top: space("2");
+  max-width: $measure;
   color: color("text-secondary");
 }
 
-// Visually chunks the 5-item list as 3+2 (per the copy deck) without
-// splitting it into two semantic lists.
+// The capabilities read as cards rather than a bulleted column: at the
+// container's current width a single column of five short lines left most of
+// the row empty, which is the dead space this section was reported for. Two
+// columns from 48rem up, so each card carries its own share of the width.
 .list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: space("2");
   margin-top: space("3");
-  padding-left: space("3");
+  padding-left: 0;
+  list-style: none;
 
-  // Hover lift on each repeated capability item: transform-only (no layout
-  // shift) plus a card shadow that fades in from none, so it never "jumps".
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   li {
+    padding: space("2");
+    background: color("surface-glass");
+    border: 1px solid color("hairline");
+    border-radius: radius("md");
+
+    // The accent hairline that wipes in on hover. Painted as a background
+    // layer rather than a border so it cannot change the box's size, and
+    // sized 0 → 100% so the card never reflows its neighbours.
+    background-image: linear-gradient(color("accent-primary"), color("accent-primary"));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0 1.5px;
+
     @include motion-safe {
       transition:
         transform duration("base") ease("standard"),
-        box-shadow duration("base") ease("standard");
+        border-color duration("base") ease("standard"),
+        box-shadow duration("base") ease("standard"),
+        background-size duration("slow") ease("out-expo");
     }
 
+    // Transform-only lift (no layout shift) plus a card shadow fading in from
+    // none, so a hover never "jumps" the grid.
     &:hover {
-      transform: translateY(-2px) scale(1.02);
+      transform: translateY(-2px);
+      border-color: color("accent-primary");
       box-shadow: shadow("card");
+      background-size: 100% 1.5px;
     }
-  }
-
-  li:nth-child(4) {
-    margin-top: space("2");
   }
 }

@@ -1,0 +1,10 @@
+---
+/**
+ * Readable alias for /404, for linking to the not-found page directly without
+ * writing a bare status code into a URL. Renders the same page as 404.astro;
+ * the flat `dist/404.html` remains the file hosts serve for an unmatched path.
+ */
+import ErrorPage from "../components/ErrorPage.astro";
+---
+
+<ErrorPage code={404} locale="en" />
