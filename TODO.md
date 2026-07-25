@@ -25,6 +25,27 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Markdownlint wired into CI + pre-commit (2026-07-25)
+
+Config (`.markdownlint.jsonc`, `.markdownlint-cli2.jsonc`, `.markdownlintignore`)
+existed already but was never actually enforced anywhere.
+
+- [x] **[P1]** 11 pre-existing issues in 2 files on `main` (a broken table in
+      `docs/TOOLING.md` where a row's cell had literal newlines instead of
+      staying single-line, breaking every pipe/column-count check on it; a
+      `<details>`/`<summary>` collapsible section in `README.md` flagged by
+      `MD033`). **Fixed 2026-07-25** — joined the wrapped table row back
+      into one line; added an `MD033` `allowed_elements` allowlist
+      (`img`/`details`/`summary`) rather than rewriting intentional markup.
+      Wired `markdownlint-cli2` into `.githooks/pre-commit` (whole-repo,
+      advisory alongside the other node-gated checks) and
+      `.github/workflows/ci.yml`'s `docs-links` job (blocking). Verified:
+      `npx markdownlint-cli2 "**/*.md"` — 0 issues in 131 files.
+      Note: a separate 4 issues (headshot-image `<img>` tags in `CREDITS.md`/
+      `MAINTAINERS.md`/`docs/index.md`) only exist on the not-yet-merged
+      `chore/website-overnight-audit-batch` branch — the new `MD033`
+      allowlist here will cover them too once that branch rebases onto this.
+
 ### Website CI accessibility gate failing on Dependabot PR (2026-07-23)
 
 Found while regenerating the Obsidian vault's `Deployments.md` status report.

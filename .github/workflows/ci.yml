@@ -91,6 +91,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Markdown lint
+        # Deliberately unpinned (npx resolves fresh) — see
+        # .markdownlint-cli2.jsonc's own comment for why.
+        run: npx --yes markdownlint-cli2 "**/*.md"
       - name: Check mirrored skills match canonical
         run: node tools/sync-skills.mjs --check
       - name: Check relative Markdown links resolve
