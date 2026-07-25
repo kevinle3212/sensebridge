@@ -10,9 +10,18 @@
 // Keep this comment inside the frontmatter fence: Astro requires `---` to be
 // the first thing in the file, so a JSDoc block above it silently turns the
 // whole frontmatter into markup.
+import { existsSync } from "node:fs";
 import { useTranslations, type Locale } from "../i18n";
 
 const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+
+// public/audio/main.mp3 only exists once scripts/generate-audio.js has run
+// (see that file's header comment). Checked at build time, rather than
+// always rendering the src and letting src/scripts/read-aloud.ts discover a
+// 404 via the <audio> element's error event, so a real user's browser never
+// issues a guaranteed-to-fail request for a file that provably doesn't
+// exist yet — the control is simply omitted until the narration ships.
+const naturalVoiceAvailable = existsSync(new URL("../../public/audio/main.mp3", import.meta.url));
 ---
 
 <div class="read-aloud">
@@ -26,17 +35,23 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
     <span aria-hidden="true">🔊</span>
     <span class="read-aloud__label">{t.readAloud.deviceIdleLabel}</span>
   </button>
-  <button
-    id="read-aloud-natural-toggle"
-    class="read-aloud-toggle"
-    type="button"
-    hidden
-    aria-pressed="false"
-  >
-    <span aria-hidden="true">🎙️</span>
-    <span class="read-aloud-natural__label">{t.readAloud.naturalIdleLabel}</span>
-  </button>
-  <audio id="read-aloud-natural-audio" hidden preload="none" src="/audio/main.mp3"></audio>
+  {
+    naturalVoiceAvailable && (
+      <Fragment>
+        <button
+          id="read-aloud-natural-toggle"
+          class="read-aloud-toggle"
+          type="button"
+          hidden
+          aria-pressed="false"
+        >
+          <span aria-hidden="true">🎙️</span>
+          <span class="read-aloud-natural__label">{t.readAloud.naturalIdleLabel}</span>
+        </button>
+        <audio id="read-aloud-natural-audio" hidden preload="none" src="/audio/main.mp3" />
+      </Fragment>
+    )
+  }
   <p id="read-aloud-status" class="visually-hidden" role="status" aria-live="polite"></p>
 </div>
 

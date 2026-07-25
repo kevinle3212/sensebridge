@@ -81,33 +81,6 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
-      - name: TEMP diagnostic — capture browser console/errors on this runner
-        run: |
-          npx astro preview --port 4321 --host 127.0.0.1 &
-          sleep 4
-          node -e "
-          const puppeteer = require('puppeteer');
-          (async () => {
-            const browser = await puppeteer.launch({args: ['--no-sandbox', '--disable-dev-shm-usage', '--enable-unsafe-swiftshader']});
-            const page = await browser.newPage();
-            const pending = new Map();
-            page.on('request', r => pending.set(r.url(), Date.now()));
-            page.on('requestfinished', r => pending.delete(r.url()));
-            page.on('requestfailed', r => { console.log('REQFAILED:', r.url(), r.failure()?.errorText); pending.delete(r.url()); });
-            const t0 = Date.now();
-            const iv = setInterval(() => {
-              console.log('PENDING at', Date.now() - t0, 'ms:', JSON.stringify([...pending.keys()]));
-            }, 3000);
-            try {
-              await page.goto('http://127.0.0.1:4321/', {waitUntil: 'networkidle2', timeout: 20000});
-              console.log('NAV OK (networkidle2) after', Date.now() - t0, 'ms');
-            } catch (e) {
-              console.log('NAV FAILED (networkidle2) after', Date.now() - t0, 'ms:', e.message);
-            }
-            clearInterval(iv);
-            await browser.close();
-          })();
-          "
       - name: Accessibility check (zero errors is the gate)
         # Serves the built dist/ and runs pa11y-ci (WCAG2AA) against it.
         # Automated checks are a floor — the manual VoiceOver/keyboard pass
