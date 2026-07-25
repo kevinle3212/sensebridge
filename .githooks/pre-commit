@@ -5,12 +5,13 @@
 # Runs, in order: secret scan of staged changes (gitleaks + ggshield, each
 # advisory if not installed), the sensitive-file check
 # (tools/check-sensitive-files.mjs), the mirrored-skill drift check
-# (tools/sync-skills.mjs --check), Swift lint/format (scripts/lint.sh, which
-# no-ops until app/ exists), actionlint on staged workflow files (advisory if
-# not installed; also runs blocking in CI), and — only when staged changes
-# touch website/ — website/'s lint-staged (eslint/stylelint/prettier) and
-# React Doctor (--staged --blocking warning), both scoped to the staged
-# files only.
+# (tools/sync-skills.mjs --check), Markdown lint (markdownlint-cli2, whole
+# repo — all three node-dependent checks are skipped together, advisory, if
+# node isn't installed), Swift lint/format (scripts/lint.sh, which no-ops
+# until app/ exists), actionlint on staged workflow files (advisory if not
+# installed; also runs blocking in CI), and — only when staged changes touch
+# website/ — website/'s lint-staged (eslint/stylelint/prettier) and React
+# Doctor (--staged --blocking warning), both scoped to the staged files only.
 #
 # Enabled by `git config core.hooksPath .githooks` — scripts/setup.sh does
 # this. Bypass in an emergency with `git commit --no-verify` and say so in
@@ -35,8 +36,9 @@ fi
 if command -v node >/dev/null 2>&1; then
 	node tools/check-sensitive-files.mjs
 	node tools/sync-skills.mjs --check
+	npx --yes markdownlint-cli2 "**/*.md"
 else
-	echo "pre-commit: node not installed — skipping sensitive-file check and mirrored-skill drift check; CI still scans." >&2
+	echo "pre-commit: node not installed — skipping sensitive-file check, mirrored-skill drift check, and Markdown lint; CI still scans." >&2
 fi
 
 ./scripts/lint.sh
