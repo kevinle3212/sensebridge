@@ -210,10 +210,14 @@ activity.
       default), so it mounted the animated scene and ran into the
       GPU-starvation hang. Fixed by adding `--force-prefers-reduced-motion`
       to `website/.pa11yci.json`'s `chromeLaunchConfig.args` alone — zero
-      changes to `bridge.ts` needed. Shipped on
-      `chore/website-overnight-audit-batch`
-      ([PR #36](https://github.com/kevinle3212/sensebridge/pull/36));
-      verify green in CI before merge.
+      changes to `bridge.ts` needed. **Merged 2026-07-24** — all 24 checks
+      green including `pa11y-ci accessibility gate` and `CodeQL (Swift)`;
+      [PR #36](https://github.com/kevinle3212/sensebridge/pull/36)
+      squash-merged, branch deleted (local + remote). Also deleted the
+      stray untracked `website/public/images/kevinkle_headshot.jpeg` —
+      byte-identical to (and superseded by) this PR's properly-placed
+      `website/public/images/team/kevin-le.jpg`, confirmed unreferenced
+      anywhere in the codebase before removing.
 
 ### Run on physical device — Developer Mode disabled (2026-07-23)
 
