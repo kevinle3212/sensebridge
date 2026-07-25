@@ -3,8 +3,8 @@
     "standard": "WCAG2AA",
     "timeout": 30000,
     "chromeLaunchConfig": {
-      "args": ["--no-sandbox", "--disable-dev-shm-usage"]
+      "args": ["--no-sandbox", "--disable-dev-shm-usage", "--enable-unsafe-swiftshader"]
     }
   },
-  "urls": ["http://localhost:4321/", "http://localhost:4321/es/", "http://localhost:4321/vi/"]
+  "urls": ["http://127.0.0.1:4321/", "http://127.0.0.1:4321/es/", "http://127.0.0.1:4321/vi/"]
 }

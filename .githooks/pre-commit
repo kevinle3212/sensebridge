@@ -52,7 +52,18 @@ fi
 if git diff --cached --name-only | grep -q '^website/'; then
 	if [ -d website/node_modules ]; then
 		(cd website && npx lint-staged)
-		(cd website && npx react-doctor --staged --blocking warning --no-telemetry)
+		# `env -u GIT_DIR` is load-bearing. Git exports GIT_DIR to every hook,
+		# and React Doctor resolves its own git queries from website/ — so the
+		# inherited value wins over normal discovery. In a linked worktree
+		# (.claude/worktrees/*) that value is .git/worktrees/<name>, which makes
+		# its index-vs-worktree config precondition resolve against the wrong
+		# root and abort with "configuration differs between the index and
+		# worktree", listing every gitignored node_modules/**/package.json.
+		# Reproduced deterministically: setting GIT_DIR alone fails, unsetting it
+		# passes. GIT_INDEX_FILE stays exported (it's harmless here) so --staged
+		# still reads the exact index being committed, including the temporary
+		# one `git commit --only` builds.
+		(cd website && env -u GIT_DIR npx react-doctor --staged --blocking warning --no-telemetry)
 	else
 		echo "pre-commit: website/node_modules not installed (run 'npm install' in website/) — skipping website lint-staged and React Doctor; CI still lints/scans." >&2
 	fi
