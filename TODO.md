@@ -41,10 +41,16 @@ right-hand space), replaced the wireframe cow with a colored Holstein that
 walks, falls, and waits 1.5s in the hole, and generated a page for all 63
 IANA-registered status codes across three locales (195 pages).
 
-- [ ] **[P1]** **[Needs owner]** Review, then commit/push/PR this session's
+- [x] **[P1]** **[Needs owner]** Review, then commit/push/PR this session's
       `website/` + `docker/nginx.conf.template` changes — owner asked to look
       first, and `CLAUDE.md` § Branching and committing forbids running
       `git`/`gh` autonomously. Nothing is committed.
+      **Done 2026-07-24** — owner granted explicit permission to commit,
+      branch, watch CI, and merge. Landed as
+      [#40](https://github.com/kevinle3212/sensebridge/pull/40) (squashed to
+      `028ba64`) off `chore/website-status-pages-and-motion`. CI went green on
+      all 26 checks; `CodeQL` reports `NEUTRAL` because this PR deliberately
+      moves Swift analysis off the PR path.
 - [ ] **[P2]** `Disclaimer` now sits in the wider 72rem band with its text
       still capped at 44rem, so it carries more empty right-hand space than
       the sections that were restructured. Left alone on purpose:
@@ -53,19 +59,54 @@ IANA-registered status codes across three locales (195 pages).
       and the Undecorated Disclaimer Rule wants it plain. Decide whether the
       rule should also cover measure/alignment, then either widen its measure
       or centre it.
-- [ ] **[P2]** pa11y cannot run locally — puppeteer's Chrome is not installed
+- [x] **[P2]** pa11y cannot run locally — puppeteer's Chrome is not installed
       in `~/.cache/puppeteer`, so `npm run test:a11y` dies before the first
       URL. Worked around this session with
       `PUPPETEER_EXECUTABLE_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`;
       deliberately not hardcoded into `.pa11yci.json` because it would break
       Linux CI. Either run `npx puppeteer browsers install chrome` once, or
       document the env var in `website/README.md`.
-- [ ] **[P3]** `~/Library/Caches/ms-playwright` was deleted mid-session (disk
+      **Done 2026-07-24** — documented the env var in `website/README.md`'s
+      tooling list. `npx puppeteer browsers install chrome` was tried first and
+      is *not* a reliable fix on this machine: it repeatedly extracted a
+      truncated 448K tree (versus the expected ~500MB) whose
+      `Google Chrome for Testing Framework` binary was missing, so Chrome
+      failed to `dlopen`. Disk was not the cause (30GB free). Use the env var.
+- [x] **[P3]** `~/Library/Caches/ms-playwright` was deleted mid-session (disk
       ~10GB free), almost certainly by the storage-maintenance job — the
       headless browser survived only because its process was already running.
       If browser-driven checks start failing cold, reinstall with
       `npx playwright install chromium-headless-shell` before assuming a code
       regression.
+      **Confirmed and fixed 2026-07-24** — the cache was indeed gone. Restored
+      with `npx playwright@1.62.0 install webkit firefox chromium`; all three
+      engines then ran clean. Treat a cold "Executable doesn't exist" from
+      Playwright as this, not a code regression.
+
+### Cross-browser, reduced-motion, and screen-size audit (2026-07-24, night)
+
+Full session log: [`sessions/2026-07-24/2300-PST.md`](sessions/2026-07-24/2300-PST.md).
+Audited the built site for reduced-motion behavior, WCAG 2.2 AA conformance,
+cross-engine rendering, responsive reflow, and runtime memory. One real defect
+was found and fixed (the header's bare `#features`/`#privacy`/`#accessibility`
+fragments, which resolved to nothing on all ~195 status pages); everything else
+came back clean. Findings worth revisiting:
+
+- [ ] **[P2]** Every HTTP status page pulls the full motion + 3D bundle when
+      motion is allowed: `/404` transfers ~1.2MB, of which `core.*.js`
+      (three.js) is 698kB, because `BaseLayout.astro` puts the `ambient`
+      `[data-scene]` container on every page. It is lazy, gated by
+      `quality-gate.ts` (reduced-motion / `saveData` / `deviceMemory < 4`), and
+      never blocks content — under reduced motion the same page is 32kB of JS
+      and a 1.3MB heap. Still, an error page is by definition reached by
+      accident and often on a bad connection, so consider skipping the ambient
+      scene on `[status].astro`. Deferred rather than done because dropping it
+      is a design call, not a defect.
+- [ ] **[P3]** `npx puppeteer browsers install chrome` extracts a truncated
+      tree on this machine (see the completed pa11y item above). Worth a
+      root-cause pass — likely the storage-maintenance job racing the extract,
+      the same mechanism that removed `ms-playwright` — so local Chrome for
+      Puppeteer stops depending on the `PUPPETEER_EXECUTABLE_PATH` workaround.
 
 ### CI/CD security audit — CodeQL fix, dependency review, branch ruleset, Vercel alias gap (2026-07-24, late session)
 

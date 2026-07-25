@@ -163,6 +163,18 @@ visitor's console.
   the built `dist/` (zero errors required). Automated checks are a floor, not
   the gate: a manual VoiceOver + keyboard pass on changed UI is still
   required per the repo's quality gates.
+
+  pa11y drives Chrome through Puppeteer, which expects its own browser in
+  `~/.cache/puppeteer`. If that download is missing or incomplete, the run
+  dies before the first URL with "Could not find Chrome". Point it at a local
+  install instead — this stays out of `.pa11yci.json` on purpose, since a
+  hardcoded macOS path would break Linux CI, which supplies its own Chrome:
+
+  ```sh
+  PUPPETEER_EXECUTABLE_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+    npm run test:a11y
+  ```
+
 - `lint-staged` runs on staged `website/**` files via the repo's
   `.githooks/pre-commit` (the repo uses `core.hooksPath .githooks`, not
   Husky).
