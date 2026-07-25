@@ -47,7 +47,59 @@ preview` logged `ready` well within the job's `sleep 4`
       + `npm run test:a11y` → `✔ 3/3 URLs passed` (used
       `PUPPETEER_EXECUTABLE_PATH` pointed at system Chrome per the bundled-
       Chrome workaround documented below in this file — a separate,
-      unrelated local-macOS issue).
+      unrelated local-macOS issue). **Merged 2026-07-25** via
+      [PR #35](https://github.com/kevinle3212/sensebridge/pull/35), squash,
+      pa11y-ci gate confirmed green in CI.
+
+### Signal Bridge auto-play/idle-drift starves pa11y's CI gate (2026-07-25)
+
+Discovered while trying to ship the `chore/overnight-website-devex-audit`
+branch (now split — see `chore/website-overnight-audit-batch`): once that
+branch's Signal Bridge scene auto-plays on load and then idle-drifts
+forever (no longer gated on scroll), the `pa11y-ci accessibility gate`
+started failing again with the exact same symptom as the item above —
+`Navigation timeout of 30000 ms exceeded` on all 3 locale URLs — but this
+is a **different, new** root cause, confirmed via a temporary CI-only
+diagnostic (three iterations, each pushed and removed): the browser
+actually connects and starts rendering (`GL Driver Message ... GPU stall
+due to ReadPixels` warnings appear immediately), but pa11y's Puppeteer
+navigation (`waitUntil: 'networkidle2'`, pa11y's hardcoded default, not
+configurable) never resolves — confirmed via direct `request`/
+`requestfinished`/`requestfailed` tracking that **zero requests are ever
+actually pending** the entire time, up to a 90 s timeout tested manually.
+Ruled out the `/audio/main.mp3` 404 (the one irregular network event on
+the page) as the cause by fixing it independently (see PR #35) and
+re-testing — no change, same hang. Left unresolved: GitHub Actions'
+`ubuntu-latest` runners have no GPU, so Chrome falls back to a deprecated
+software-WebGL path (`--enable-unsafe-swiftshader` silences the
+deprecation warning, already applied in PR #35, but doesn't fix the hang);
+the leading theory is that the scene's continuous `requestAnimationFrame`
+render loop — now unconditional, where before this PR it only ran during
+active scrolling — starves the browser process badly enough under
+unaccelerated rendering that Puppeteer/CDP's own internal navigation
+bookkeeping never gets a chance to fire, independent of real network
+activity.
+
+- [ ] **[P0]** Add real `prefers-reduced-motion` support to
+      `website/src/scripts/scenes/bridge.ts` — it currently has zero
+      `matchMedia`/`prefers-reduced-motion` handling (confirmed via grep),
+      unlike the cow illustration elsewhere in this same batch, which
+      already gates every animation rule behind
+      `(prefers-reduced-motion: no-preference)`. Skip (or render a single
+      static built end-state frame for) the continuous idle-drift loop when
+      reduced motion is preferred — this is independently a real
+      accessibility gap (WCAG 2.3.3), not just a CI workaround. Once done,
+      force it in CI via Chrome's `--force-prefers-reduced-motion` launch
+      flag (confirmed working: `window.matchMedia(...).matches` → `true`
+      with this flag, tested locally) added to
+      `website/.pa11yci.json`'s `chromeLaunchConfig.args`. Declined for this
+      session (owner chose to split the branch instead of expanding scope
+      into an unreviewed 593-line scene file) — full write-up in
+      `sessions/2026-07-24/1700-PST.md` and later same-day logs.
+- [ ] **[P2]** Once the above ships, delete the temporary diagnostic
+      commits' reasoning from this entry if it turns out stale, or confirm
+      it and leave as-is — this analysis was CI-diagnostic-derived, not
+      independently proven against Chromium/Puppeteer source.
 
 ### Git/CI cleanup, history purge, impeccable CodeQL remediation (2026-07-23)
 
