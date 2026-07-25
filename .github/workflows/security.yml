@@ -86,3 +86,16 @@ jobs:
             p/secrets
             p/owasp-top-ten
             p/swift
+
+  dependency-review:
+    name: Dependency review (new/changed deps in this PR)
+    # PR-only: it diffs base vs head, which doesn't exist on a push event.
+    # Complements osv-scan (recursive, whole-tree) by flagging newly
+    # introduced vulnerable/copyleft dependencies inline on the PR diff,
+    # before they land in the lockfile osv-scan checks afterward.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0

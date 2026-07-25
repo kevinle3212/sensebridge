@@ -8,13 +8,20 @@ import "../styles/global/index.scss";
 interface Props {
   title?: string;
   description?: string;
+  /**
+   * Keeps the page out of search indexes. Set by the HTTP status pages: there
+   * are ~60 of them and none is a destination anyone should arrive at from a
+   * search result. They are also excluded from sitemap.xml (see
+   * astro.config.mjs).
+   */
+  noindex?: boolean;
 }
 
 const locale = (Astro.currentLocale ?? "en") as Locale;
 const t = useTranslations(locale);
 const locales = Object.keys(translations) as Locale[];
 
-const { title = t.meta.title, description = t.meta.description } = Astro.props;
+const { title = t.meta.title, description = t.meta.description, noindex = false } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -26,6 +33,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href={canonicalURL} />
     <meta property="og:type" content="website" />

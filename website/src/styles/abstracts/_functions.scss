@@ -42,10 +42,11 @@
 
 // Horizontal inset for the Signal Spine rail and its stage-node markers
 // (DESIGN.md "Signal Spine"): sits in the wrap's outer gutter on wide
-// viewports (60rem wrap + 1.5rem/space-3 padding, see global/_utilities.scss
-// ".wrap"), a thin 10px inset on narrow ones — verified clear of the text
-// column at 320/390/768/1024/1440px. Shared here so SignalSpine.module.scss's
-// rail/pulse and SpineNode.module.scss's markers can never drift apart.
+// viewports, a thin 10px inset on narrow ones — clear of the text column at
+// 320/390/768/1024/1440/1512px. Shared here so SignalSpine.module.scss's
+// rail/pulse and SpineNode.module.scss's markers can never drift apart, and
+// derived from tokens.$wrap-max so retuning the container moves the rail with
+// it instead of stranding it under the text.
 @function spine-x() {
-  @return clamp(0.625rem, calc((100vw - 60rem) / 2 - 2.5rem), 50vw);
+  @return clamp(0.625rem, calc((100vw - #{tokens.$wrap-max}) / 2 - 2.5rem), 50vw);
 }

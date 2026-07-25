@@ -11,11 +11,13 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
   class={styles["follow-progress"]}
   aria-labelledby="follow-progress-heading"
 >
-  <div class="wrap" data-reveal>
-    <h2 id="follow-progress-heading">{t.followProgress.heading}</h2>
-    <p class={styles.body}>{t.followProgress.body}</p>
-    <a class={styles.link} href="https://github.com/kevinle3212/sensebridge">
-      {t.followProgress.link}
-    </a>
+  <div class="wrap section-columns" data-reveal>
+    <h2 id="follow-progress-heading" class="section-heading">{t.followProgress.heading}</h2>
+    <div class="section-body">
+      <p class={styles.body}>{t.followProgress.body}</p>
+      <a class={styles.link} href="https://github.com/kevinle3212/sensebridge">
+        {t.followProgress.link}
+      </a>
+    </div>
   </div>
 </section>

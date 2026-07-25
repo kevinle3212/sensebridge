@@ -4,6 +4,12 @@ export type Locale = "en" | "es" | "vi";
 
 export type ThemeMode = "system" | "light" | "dark";
 
+/** Heading and body copy for one HTTP status page. */
+export interface ErrorCopy {
+  heading: string;
+  body: string;
+}
+
 // Every string currently hardcoded across the site's components, grouped by
 // the component that owns it. Each locale module (en.ts/es.ts/vi.ts) must
 // implement this in full — a missing key is a compile error, not a silent
@@ -105,17 +111,26 @@ export interface Translations {
   };
   errorPages: {
     backHome: string;
-    notFound: {
-      heading: string;
-      body: string;
-    };
-    badRequest: {
-      heading: string;
-      body: string;
-    };
-    serverError: {
-      heading: string;
-      body: string;
+    /**
+     * Rendered above the heading. `{code}` and `{phrase}` are substituted with
+     * the status code and its IANA reason phrase. Deliberately says "HTTP"
+     * rather than "Error": the same page template serves 1xx/2xx/3xx codes,
+     * which are not errors.
+     */
+    statusLabel: string;
+    notFound: ErrorCopy;
+    badRequest: ErrorCopy;
+    serverError: ErrorCopy;
+    /**
+     * Fallback copy for every registered code without hand-written copy, keyed
+     * by status class. `{phrase}` is substituted with the reason phrase.
+     */
+    classes: {
+      informational: ErrorCopy;
+      success: ErrorCopy;
+      redirect: ErrorCopy;
+      client: ErrorCopy;
+      server: ErrorCopy;
     };
   };
 }

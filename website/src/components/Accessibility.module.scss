@@ -12,6 +12,9 @@
 
 .body,
 .lead-in {
+  max-width: $measure;
+}
+
+.lead-in {
   margin-top: space("2");
-  max-width: 40rem;
 }

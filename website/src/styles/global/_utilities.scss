@@ -1,9 +1,50 @@
 @use "@styles/abstracts" as *;
 
-// Centered content container — used by every section, starting with the
-// header/footer shells in this phase.
+// Centered content container — used by every section, plus the header/footer
+// shells. Width comes from $wrap-max (abstracts/_tokens.scss), which spine-x()
+// also reads, so the Signal Spine rail stays in this container's outer gutter.
+// The gutter grows with the viewport instead of staying pinned at space-3:
+// on a large display a fixed 1.5rem gutter puts content hard against the
+// container edge while the page's real margins sit far outside it, which is
+// what made the composition read as a narrow strip floating in empty space.
 .wrap {
-  max-width: 60rem;
+  width: 100%;
+  max-width: $wrap-max;
   margin: 0 auto;
-  padding: 0 space("3");
+  padding-inline: clamp(#{space("3")}, 5vw, #{space("5")});
+}
+
+// Editorial two-column section layout: heading rail on the left, content on
+// the right. Below 64rem it collapses to a plain single column (heading simply
+// above its content), so the second column is added only where there is
+// genuinely width to spend — which is the whole point, since the dead
+// right-hand space this fixes only exists on wide viewports.
+// Global rather than a CSS-Module class because it is shared verbatim by
+// several sections, exactly like `.wrap` above.
+.section-columns {
+  display: grid;
+  gap: space("2");
+
+  @media (width >= 64rem) {
+    grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+    gap: space("5");
+    align-items: start;
+  }
+}
+
+// The heading holds position while its content scrolls past, which is what
+// gives the right-hand column something to be measured against. Only sticks
+// once the two-column layout exists; stacked, it just flows normally.
+.section-heading {
+  @media (width >= 64rem) {
+    position: sticky;
+    top: space("6");
+  }
+}
+
+// Body prose inside a section column, capped at $measure so a wider container
+// never stretches a line of text past a comfortable reading length. Children
+// keep their own margins — this only bounds the column.
+.section-body {
+  max-width: $measure;
 }

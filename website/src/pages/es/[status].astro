@@ -1,0 +1,21 @@
+---
+/**
+ * One page per registered HTTP status code (Spanish). Only 404 is excluded:
+ * es/404.astro owns it. 500 has no flat-emission special case under a locale
+ * prefix, so it is generated here like every other code.
+ */
+import ErrorPage from "../../components/ErrorPage.astro";
+import { statusPaths } from "../../data/http-status";
+
+export function getStaticPaths() {
+  return statusPaths([404]);
+}
+
+interface Props {
+  code: number;
+}
+
+const { code } = Astro.props;
+---
+
+<ErrorPage code={code} locale="es" />

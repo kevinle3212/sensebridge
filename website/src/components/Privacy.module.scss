@@ -11,8 +11,7 @@
 }
 
 .body {
-  margin-top: space("2");
-  max-width: 40rem;
+  max-width: $measure;
 }
 
 // The page's one deliberate full-breath moment: the closing line stands

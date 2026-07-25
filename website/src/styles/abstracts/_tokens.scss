@@ -50,6 +50,20 @@ $color-light: (
   @error "$color-dark and $color-light must declare the same keys.";
 }
 
+// Content container width, and the single source of truth for it: both
+// global/_utilities.scss's `.wrap` and _functions.scss's spine-x() derive from
+// this, so the Signal Spine rail can never drift out of the wrap's gutter when
+// the container is retuned. 72rem (1152px) rather than the original 60rem —
+// at 60rem a 1512px display spent ~276px of dead gutter per side while the
+// prose column inside was capped at 40rem, which read as a squeezed middle
+// with an empty right-hand side.
+$wrap-max: 72rem;
+
+// Reading measure for body prose. Independent of $wrap-max on purpose: the
+// container may grow for layout presence, but a line of text must not grow
+// with it past a comfortable measure.
+$measure: 38rem;
+
 // 8-based scale: 8/16/24/40/64/96/128px.
 $space: (
   "1": 0.5rem,

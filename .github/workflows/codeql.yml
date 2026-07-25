@@ -2,6 +2,13 @@
 # Complements security.yml's TruffleHog/GGShield/OSV/Semgrep with CodeQL,
 # which needs its own workflow (github/codeql-action) rather than a job in
 # security.yml, since compiled-language analysis (Swift) needs a real build.
+#
+# Swift analysis runs a full `xcodebuild build` on a macOS runner (~20min) —
+# ci.yml's build-test job already pays that same macOS/xcodebuild cost on
+# every PR, so re-running it a second time just for CodeQL added PR wait
+# with no extra PR-time signal. Swift CodeQL therefore only runs on push to
+# main, the weekly schedule, and manual dispatch — never on pull_request.
+# JS/TS CodeQL stays on every PR: it's ubuntu-only and finishes in ~90s.
 
 name: CodeQL
 
@@ -26,6 +33,7 @@ permissions:
 jobs:
   swift:
     name: CodeQL (Swift)
+    if: github.event_name != 'pull_request'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -39,17 +47,7 @@ jobs:
             sudo xcode-select -switch "$LATEST"
           fi
 
-      - name: Detect project layout
-        id: detect
-        run: |
-          if compgen -G "app/*.xcworkspace" >/dev/null || compgen -G "app/*.xcodeproj" >/dev/null; then
-            echo "kind=xcode" >> "$GITHUB_OUTPUT"
-          else
-            echo "kind=none" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Initialize CodeQL
-        if: steps.detect.outputs.kind == 'xcode'
         uses: github/codeql-action/init@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
         with:
           languages: swift
@@ -58,7 +56,6 @@ jobs:
           queries: security-extended
 
       - name: Build app
-        if: steps.detect.outputs.kind == 'xcode'
         run: |
           PROJ=$(find app -maxdepth 1 \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -quit)
           FLAG=$([[ "$PROJ" == *.xcworkspace ]] && echo -workspace || echo -project)
@@ -69,14 +66,9 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Perform CodeQL analysis
-        if: steps.detect.outputs.kind == 'xcode'
         uses: github/codeql-action/analyze@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
         with:
           category: "/language:swift"
-
-      - name: No app yet
-        if: steps.detect.outputs.kind == 'none'
-        run: echo "No Xcode project under app/ yet — skipping Swift code scanning."
 
   javascript:
     name: CodeQL (JavaScript/TypeScript)

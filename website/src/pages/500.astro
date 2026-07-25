@@ -1,9 +1,12 @@
 ---
 /**
- * 500-series error page. Not locale-routed — see 400.astro's note; a raw
- * HTTP-level 5xx has no request path to read a locale prefix from.
+ * Internal Server Error. Kept as a dedicated page file for the same reason as
+ * 404.astro: Astro emits it flat as `dist/500.html`, which is what
+ * docker/nginx.conf.template's `error_page 500 502 503 504` directive points at.
+ * Not locale-routed — a raw HTTP-level 5xx has no request path to read a locale
+ * prefix from.
  */
 import ErrorPage from "../components/ErrorPage.astro";
 ---
 
-<ErrorPage kind="500" locale="en" />
+<ErrorPage code={500} locale="en" />

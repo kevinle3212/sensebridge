@@ -1,0 +1,172 @@
+/**
+ * The registered HTTP status codes, and the helpers the status pages build
+ * from. Single source of truth: `src/pages/[status].astro` (and its per-locale
+ * twins) generate one page per entry here, so adding a code to this list is
+ * the only step needed to give it a route.
+ *
+ * Codes and reason phrases follow the IANA HTTP Status Code Registry
+ * (https://www.iana.org/assignments/http-status-codes), which is the set RFC
+ * 9110 and its extensions actually define. Unregistered vendor codes (Cloudflare's
+ * 5xx range, IIS's 4xx sub-codes) are deliberately absent — inventing pages for
+ * codes no standard defines would be inventing the standard.
+ */
+
+/** The class of a status code, keyed to its leading digit. */
+export type StatusClass = "informational" | "success" | "redirect" | "client" | "server";
+
+/** One registered HTTP status code. */
+export interface HttpStatus {
+  /** The three-digit code, e.g. `404`. */
+  code: number;
+  /** The official IANA reason phrase, e.g. `Not Found`. */
+  phrase: string;
+}
+
+/**
+ * Every status code in the IANA registry, ascending. 306 is included as
+ * "(Unused)" because the registry still reserves it — leaving a gap in the
+ * middle of the 3xx range would look like an oversight rather than a decision.
+ */
+export const HTTP_STATUSES: readonly HttpStatus[] = [
+  { code: 100, phrase: "Continue" },
+  { code: 101, phrase: "Switching Protocols" },
+  { code: 102, phrase: "Processing" },
+  { code: 103, phrase: "Early Hints" },
+
+  { code: 200, phrase: "OK" },
+  { code: 201, phrase: "Created" },
+  { code: 202, phrase: "Accepted" },
+  { code: 203, phrase: "Non-Authoritative Information" },
+  { code: 204, phrase: "No Content" },
+  { code: 205, phrase: "Reset Content" },
+  { code: 206, phrase: "Partial Content" },
+  { code: 207, phrase: "Multi-Status" },
+  { code: 208, phrase: "Already Reported" },
+  { code: 226, phrase: "IM Used" },
+
+  { code: 300, phrase: "Multiple Choices" },
+  { code: 301, phrase: "Moved Permanently" },
+  { code: 302, phrase: "Found" },
+  { code: 303, phrase: "See Other" },
+  { code: 304, phrase: "Not Modified" },
+  { code: 305, phrase: "Use Proxy" },
+  { code: 306, phrase: "(Unused)" },
+  { code: 307, phrase: "Temporary Redirect" },
+  { code: 308, phrase: "Permanent Redirect" },
+
+  { code: 400, phrase: "Bad Request" },
+  { code: 401, phrase: "Unauthorized" },
+  { code: 402, phrase: "Payment Required" },
+  { code: 403, phrase: "Forbidden" },
+  { code: 404, phrase: "Not Found" },
+  { code: 405, phrase: "Method Not Allowed" },
+  { code: 406, phrase: "Not Acceptable" },
+  { code: 407, phrase: "Proxy Authentication Required" },
+  { code: 408, phrase: "Request Timeout" },
+  { code: 409, phrase: "Conflict" },
+  { code: 410, phrase: "Gone" },
+  { code: 411, phrase: "Length Required" },
+  { code: 412, phrase: "Precondition Failed" },
+  { code: 413, phrase: "Content Too Large" },
+  { code: 414, phrase: "URI Too Long" },
+  { code: 415, phrase: "Unsupported Media Type" },
+  { code: 416, phrase: "Range Not Satisfiable" },
+  { code: 417, phrase: "Expectation Failed" },
+  { code: 418, phrase: "I'm a teapot" },
+  { code: 421, phrase: "Misdirected Request" },
+  { code: 422, phrase: "Unprocessable Content" },
+  { code: 423, phrase: "Locked" },
+  { code: 424, phrase: "Failed Dependency" },
+  { code: 425, phrase: "Too Early" },
+  { code: 426, phrase: "Upgrade Required" },
+  { code: 428, phrase: "Precondition Required" },
+  { code: 429, phrase: "Too Many Requests" },
+  { code: 431, phrase: "Request Header Fields Too Large" },
+  { code: 451, phrase: "Unavailable For Legal Reasons" },
+
+  { code: 500, phrase: "Internal Server Error" },
+  { code: 501, phrase: "Not Implemented" },
+  { code: 502, phrase: "Bad Gateway" },
+  { code: 503, phrase: "Service Unavailable" },
+  { code: 504, phrase: "Gateway Timeout" },
+  { code: 505, phrase: "HTTP Version Not Supported" },
+  { code: 506, phrase: "Variant Also Negotiates" },
+  { code: 507, phrase: "Insufficient Storage" },
+  { code: 508, phrase: "Loop Detected" },
+  { code: 510, phrase: "Not Extended" },
+  { code: 511, phrase: "Network Authentication Required" },
+];
+
+/**
+ * The status class a code belongs to.
+ *
+ * @param code - A three-digit HTTP status code.
+ * @returns The class keyed to the code's leading digit.
+ */
+export function statusClass(code: number): StatusClass {
+  if (code < 200) {
+    return "informational";
+  }
+  if (code < 300) {
+    return "success";
+  }
+  if (code < 400) {
+    return "redirect";
+  }
+  if (code < 500) {
+    return "client";
+  }
+  return "server";
+}
+
+/**
+ * Looks up a registered status code.
+ *
+ * @param code - A three-digit HTTP status code.
+ * @returns The matching entry, or `undefined` if the code is not registered.
+ */
+export function findStatus(code: number): HttpStatus | undefined {
+  return HTTP_STATUSES.find((status) => status.code === code);
+}
+
+/**
+ * Codes that must keep a dedicated `src/pages/<code>.astro` file rather than
+ * being generated by the `[status].astro` dynamic route.
+ *
+ * Astro special-cases 404 and 500 page files and emits them *flat*
+ * (`dist/404.html`, `dist/500.html`), which is the static-host error-page
+ * convention both Vercel and docker/nginx.conf.template's `error_page`
+ * directives point at. The dynamic route would emit `dist/404/index.html`
+ * instead and silently stop being the not-found page, so those two codes stay
+ * with their own files and the dynamic route skips them.
+ *
+ * 400 is not in this list on purpose: it has no such convention and builds as
+ * an ordinary directory route (`dist/400/index.html`) either way, so the
+ * dynamic route can own it without moving the file nginx already references.
+ */
+export const FLAT_EMITTED_CODES = [404, 500] as const;
+
+/** One entry in an Astro `getStaticPaths()` result for a status page. */
+interface StatusPath {
+  params: { status: string };
+  props: { code: number };
+}
+
+/**
+ * Builds the `getStaticPaths()` result for a `[status].astro` route.
+ *
+ * @param exclude - Codes owned by a dedicated page file, which would otherwise
+ *   collide with the generated route.
+ * @returns One path per registered status code that is not excluded.
+ */
+export function statusPaths(exclude: readonly number[] = []): StatusPath[] {
+  const excluded = new Set(exclude);
+  const paths: StatusPath[] = [];
+  for (const status of HTTP_STATUSES) {
+    if (excluded.has(status.code)) {
+      continue;
+    }
+    paths.push({ params: { status: String(status.code) }, props: { code: status.code } });
+  }
+  return paths;
+}

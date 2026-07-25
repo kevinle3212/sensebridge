@@ -136,7 +136,30 @@ export const en: Translations = {
     },
     serverError: {
       heading: "Something broke on our end. Sorry about that.",
-      body: "Even a wireframe cow has an off day. Nothing you did caused this — try again in a moment.",
+      body: "Even a well-drawn cow has an off day. Nothing you did caused this — try again in a moment.",
+    },
+    statusLabel: "HTTP {code} · {phrase}",
+    classes: {
+      informational: {
+        heading: "This one is the protocol thinking out loud.",
+        body: "A 1xx status is an interim reply — the server saying it is still working on the real one. You will almost never see it in a browser, but it has a page here anyway.",
+      },
+      success: {
+        heading: "Nothing went wrong here.",
+        body: "A 2xx status means the request worked. The cow is falling for its own reasons — this page is just here so every code in the registry has one.",
+      },
+      redirect: {
+        heading: "This one points somewhere else.",
+        body: "A 3xx status means what you asked for lives at a different address. Normally your browser follows it without ever showing you this.",
+      },
+      client: {
+        heading: "That request didn't quite land.",
+        body: "A 4xx status means something about the request itself was off — the address, the method, or what came with it. The rest of the site is still on solid ground.",
+      },
+      server: {
+        heading: "Something broke on our end.",
+        body: "A 5xx status means the request was fine and the server was not. Nothing you did caused this — try again in a moment.",
+      },
     },
   },
 };
