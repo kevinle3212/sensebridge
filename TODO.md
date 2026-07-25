@@ -25,6 +25,27 @@ verified, anything relevant left over>`.
 
 ## To-Do
 
+### Markdownlint wired into CI + pre-commit (2026-07-25)
+
+Config (`.markdownlint.jsonc`, `.markdownlint-cli2.jsonc`, `.markdownlintignore`)
+existed already but was never actually enforced anywhere.
+
+- [x] **[P1]** 11 pre-existing issues in 2 files on `main` (a broken table in
+      `docs/TOOLING.md` where a row's cell had literal newlines instead of
+      staying single-line, breaking every pipe/column-count check on it; a
+      `<details>`/`<summary>` collapsible section in `README.md` flagged by
+      `MD033`). **Fixed 2026-07-25** — joined the wrapped table row back
+      into one line; added an `MD033` `allowed_elements` allowlist
+      (`img`/`details`/`summary`) rather than rewriting intentional markup.
+      Wired `markdownlint-cli2` into `.githooks/pre-commit` (whole-repo,
+      advisory alongside the other node-gated checks) and
+      `.github/workflows/ci.yml`'s `docs-links` job (blocking). Verified:
+      `npx markdownlint-cli2 "**/*.md"` — 0 issues in 131 files.
+      Note: a separate 4 issues (headshot-image `<img>` tags in `CREDITS.md`/
+      `MAINTAINERS.md`/`docs/index.md`) only exist on the not-yet-merged
+      `chore/website-overnight-audit-batch` branch — the new `MD033`
+      allowlist here will cover them too once that branch rebases onto this.
+
 ### Website CI accessibility gate failing on Dependabot PR (2026-07-23)
 
 Found while regenerating the Obsidian vault's `Deployments.md` status report.
@@ -51,10 +72,99 @@ preview` logged `ready` well within the job's `sleep 4`
       [PR #35](https://github.com/kevinle3212/sensebridge/pull/35), squash,
       pa11y-ci gate confirmed green in CI.
 
+### Git/CI cleanup batch: worktree ship, hooks bug, dependency vuln (2026-07-24, afternoon)
+
+Requested: commit + ship the `chore/overnight-website-devex-audit` worktree
+and delete it, fix the Dependabot a11y-gate item below, wire markdownlint into
+CI/pre-commit and fix its 15 pre-existing issues, verify claude-mem/memory
+posture, confirm the react-doctor `GIT_DIR` fix. Three blockers surfaced
+mid-session that weren't part of the original ask but had to be fixed before
+anything could ship — full write-up in
+[`sessions/2026-07-24/1500-PST.md`](sessions/2026-07-24/1500-PST.md) and
+[`sessions/2026-07-24/1600-PST.md`](sessions/2026-07-24/1600-PST.md).
+
+- [x] **[P0]** `.claude/hooks/guard-main-commit.sh` (a `PreToolUse` hook)
+      resolves the current branch via `CLAUDE_PROJECT_DIR`, which stays
+      pinned to the main checkout even when the command's actual `cwd` is a
+      linked worktree on a different branch — falsely denied `git commit`
+      inside `.claude/worktrees/overnight-audit` with "HEAD is on main."
+      **Fixed 2026-07-24** — the fix already existed, fully committed and
+      unshipped, on local branch `fix/hooks-worktree-root-resolution`
+      (commit `8060040`, clean single commit on top of `main`): resolves via
+      `git -C <cwd> rev-parse --show-toplevel` instead, same fix applied to
+      `check-md-links.sh` and `session-log-reminder.sh`. Merged as
+      [PR #30](https://github.com/kevinle3212/sensebridge/pull/30) (squash),
+      branch deleted.
+- [x] **[P0]** `brace-expansion` at 1.1.16/5.0.7 in `website/package-lock.json`
+      — 2 High severity (`GHSA-mh99-v99m-4gvg`, ReDoS), caught by the
+      `pre-push` hook's `osv-scanner` (blocking, not advisory, since it's
+      installed locally). Pulled in transitively via
+      `eslint-plugin-jsx-a11y`/`eslint`/`pa11y-ci` → `minimatch`, no direct
+      dependency to bump; no patched 1.x release exists (5.0.8 is the only
+      fix, confirmed via `npm view brace-expansion versions`). Added an npm
+      `overrides` entry (`"brace-expansion": "^5.0.8"`) to
+      `website/package.json`, ran `npm install` to regenerate the lockfile —
+      confirmed all 3 transitive paths now resolve to 5.0.8 and
+      `osv-scanner` reports 0 vulnerabilities; `npm run lint:js`/`npm run
+      build` still clean (no breaking API change relevant here). **Done
+      2026-07-24** — merged as [PR #31](https://github.com/kevinle3212/sensebridge/pull/31)
+      (squash), branch deleted. Merged updated `main` back into PR #30's
+      branch so its own OSV check (previously failing on this same
+      pre-existing vuln) went green too.
+- [x] **[P0]** `.githooks/pre-push`'s `osv-scanner --recursive ./` silently
+      scanned almost nothing (`1 dirs visited, 1 inodes visited`, "No package
+      sources found") when run from inside a linked worktree
+      (`.claude/worktrees/overnight-audit`), instead of finding
+      `website/package-lock.json` and `package-lock.json` — found while
+      committing the accessibility-gate fix below. Root cause: `osv-scanner`
+      treats a directory's own `.git` as a nested-repo boundary and skips
+      descending into it by default; a linked worktree's `.git` is a file
+      (the gitdir pointer, not a directory) but still trips this. First fix
+      attempt (`--include-git-root`) turned out not to be deterministic —
+      re-running the identical command in the identical worktree
+      intermittently regressed back to the same failure. **Fixed
+      2026-07-24** — replaced the recursive walk entirely with explicit
+      `--lockfile ./package-lock.json --lockfile
+      ./website/package-lock.json` (this repo has exactly two lockfiles at
+      fixed paths, so no directory walk is needed at all); confirmed stable
+      across 3+ repeated runs in both the worktree and the main checkout.
+      Merged as [PR #32](https://github.com/kevinle3212/sensebridge/pull/32)
+      (the interim `--include-git-root` fix, still a real improvement) and
+      [PR #33](https://github.com/kevinle3212/sensebridge/pull/33) (the
+      final explicit-lockfile fix), both squash, branches deleted. Also
+      learned along the way: git resolves `core.hooksPath` scripts
+      per-worktree, not from `CLAUDE_PROJECT_DIR` like the `.claude/hooks/*`
+      Claude-harness hooks do — a worktree branch only picks up a
+      `.githooks/` fix once that fix's commit is actually in *that
+      worktree's own history*, not just on `main`, so shipping each of
+      these three hook fixes required merging updated `main` back into
+      `chore/overnight-website-devex-audit` before its own push would work.
+- [x] **[P1]** **[Needs owner]** `chore/overnight-website-devex-audit`
+      pushed once all three hook fixes above finally landed and were merged
+      into its own history. Opened
+      [PR #34](https://github.com/kevinle3212/sensebridge/pull/34) — checks
+      in flight as of this writing.
+      **Split 2026-07-25** — PR #34 bundled two unrelated things: the
+      a11y-gate/hooks/audio fixes (low-risk, directly answered the original
+      ask) and the overnight-audit feature batch (higher-risk, and it turned
+      out to have its own new CI regression — see below). Extracted the
+      former onto a clean branch, merged as
+      [PR #35](https://github.com/kevinle3212/sensebridge/pull/35); closed
+      PR #34 in favor of a fresh follow-up,
+      [PR #36](https://github.com/kevinle3212/sensebridge/pull/36), carrying
+      just the feature batch — see "Signal Bridge auto-play/idle-drift
+      starves pa11y's CI gate" below for why that one isn't merged yet.
+- [x] **[P2]** The main checkout's `TODO.md` (this file) and PR #34's own
+      committed `TODO.md` were two independent, divergent edits of the same
+      insertion point. **Resolved 2026-07-25** — reconciled by hand while
+      building the `feat/app-reading-ocr-capture` branch; this merged
+      version keeps both sides' unique content.
+
 ### Signal Bridge auto-play/idle-drift starves pa11y's CI gate (2026-07-25)
 
 Discovered while trying to ship the `chore/overnight-website-devex-audit`
-branch (now split — see `chore/website-overnight-audit-batch`): once that
+branch (now split — see `chore/website-overnight-audit-batch` /
+[PR #36](https://github.com/kevinle3212/sensebridge/pull/36)): once that
 branch's Signal Bridge scene auto-plays on load and then idle-drifts
 forever (no longer gated on scroll), the `pa11y-ci accessibility gate`
 started failing again with the exact same symptom as the item above —
@@ -104,6 +214,131 @@ activity.
       `chore/website-overnight-audit-batch`
       ([PR #36](https://github.com/kevinle3212/sensebridge/pull/36));
       verify green in CI before merge.
+
+### Run on physical device — Developer Mode disabled (2026-07-23)
+
+Owner connected their iPhone and asked to build/install SenseBridge on it.
+Device is paired and reachable (`xcrun devicectl list devices` →
+`available (paired)`), so `xcodebuild -destination "id=<device>"` reached the
+device and reported the real blocker before any code/signing issue: full
+write-up in `sessions/2026-07-23/2200-PST.md`.
+
+- [x] **[P1]** **[Needs owner]** Enable Developer Mode on Kevin Le's
+      iPhone 17 Pro (`Settings → Privacy & Security → Developer Mode` →
+      toggle on → restart → confirm "Turn On"), then ask to re-run the
+      build. Next likely blocker per `docs/ENVIRONMENT.md`: trusting the
+      developer certificate on first launch (`Settings → General → VPN &
+      Device Management`) and the free personal-team 7-day signing window.
+      **Done 2026-07-23** — owner enabled Developer Mode and trusted the
+      dev certificate on first launch; app built (personal team
+      `44RBHRF4H7` via `-allowProvisioningUpdates`), installed, and
+      launched successfully via `devicectl`.
+
+### Reading screen had no audio output (2026-07-23)
+
+Owner ran the app on-device (see session above), OCR parsed text but no
+speech played on Capture. Full write-up in the addendum to
+`sessions/2026-07-23/2200-PST.md`.
+
+- [x] **[P1]** Root cause: nothing configured `AVAudioSession`, so it
+      defaulted to `.soloAmbient` — silenced by the hardware ring/silent
+      switch and not tuned for spoken output. **Fixed 2026-07-23** — set
+      `.playback`/`.spokenAudio` and activated the session in
+      `SpeechRenderTarget.init`
+      (`app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Output/SpeechRenderTarget.swift`),
+      guarded `#if os(iOS)` since the package also targets macOS for
+      `swift test`. Verified: `swift build`/`swift test` clean (17/17
+      tests), `xcodebuild build` clean for device, reinstalled + relaunched
+      on-device.
+- [ ] **[P2]** Owner also flagged OCR recognition quality as "decent, could
+      be better" but hasn't given specifics yet — get concrete examples
+      (garbled words, reading order, missed lines) on next device test,
+      then look at
+      `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/OCRService.swift`
+      (currently a plain `VNRecognizeTextRequest`, no line/paragraph
+      grouping or confidence filtering).
+- [x] **[P2]** A new capture taken before the previous one finished speaking
+      just queued behind it (`AVSpeechSynthesizer.speak()` queues, doesn't
+      replace) instead of interrupting it. **Fixed 2026-07-23** —
+      `SpeechRenderTarget.render()` now calls
+      `synthesizer.stopSpeaking(at: .immediate)` before speaking each new
+      message; fixed once at the `RenderTarget` level so it covers every
+      screen, not just Reading. Verified: `swift test` clean (17/17),
+      `xcodebuild build` clean, reinstalled + relaunched on-device.
+
+### Basic screen functionality wired to mock data (2026-07-23)
+
+Owner couldn't open/simulate `app/` at all and asked for some basic
+functionality. Build/install/launch pipeline turned out to work fine via
+CLI (`xcodebuild build` → `simctl install` → `simctl launch`, confirmed with
+a screenshot) — the real gap found was all 5 feature screens' capture
+buttons being empty no-op closures. Wired `ReadingView`, `LabelingView`,
+`SceneDescriptionView`, `ObstacleAwarenessView`, and `SoundAlertsView` to
+the existing, unit-tested `SenseBridgeCore` Reasoning/Output layer
+(`Phrasing`, `LabelListSceneComposer`, `AwarenessEngine`,
+`SpeechRenderTarget`) using canned `PerceptionRecord` data in place of the
+not-yet-built camera/mic/depth capture layer. Full write-up in
+`sessions/2026-07-23/2100-PST.md`.
+
+- [ ] **[P1]** **[Needs owner]** If the simulator still won't open in the
+      Xcode GUI (CLI build/install/launch all succeeded cleanly this
+      session), check whether the last-selected run destination is the
+      physical device rather than a simulator — the free-account 7-day
+      sideload signing window may have expired (see
+      `sessions/2026-07-23/2100-PST.md` for the CLI evidence ruling out a
+      project-level break).
+- [ ] **[P2]** Confirm on an actual simulator tap-through that each of the 5
+      screens speaks/shows its canned sentence — this session verified via
+      `xcodebuild build`/`test` and `swift test` only; the live on-tap
+      behavior was never visually confirmed (computer-use hit an unrelated
+      macOS notification-layer click-blocking issue mid-session).
+- [x] **[P3]** Build the real capture layer for at least one mode (Vision
+      OCR for `ReadingView` is the simplest of the five) to replace its
+      canned mock data with real `SensingSource`/`PerceptionService`
+      implementations. **Done 2026-07-23** — added `CameraSource`
+      (`app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Sensing/CameraSource.swift`,
+      AVFoundation `AVCaptureSession`/`AVCapturePhotoOutput`) and `OCRService`
+      (`.../Perception/OCRService.swift`, Vision `VNRecognizeTextRequest`),
+      wired into `ReadingView` with a live `CameraPreviewView`. Verified via
+      `swift test`/`xcodebuild test -destination 'platform=macOS'` (OCR
+      unit-tested against synthetically rendered text images — real
+      recognition, not a fixture) and `xcodebuild build` for iOS Simulator.
+      Camera capture itself needs a physical device to exercise — no
+      simulator camera — which is the point of this change; see
+      `sessions/2026-07-23/` for the session write-up. Follow-ups below.
+
+### Read/OCR wiring follow-ups (2026-07-23)
+
+- [ ] **[P2]** **[Needs owner]** Confirm the Read flow on a physical device:
+      launch the app, grant camera permission, aim at real printed text, tap
+      Capture, and confirm the recognized text is spoken correctly. This is
+      the first real (non-simulator) exercise of `CameraSource`/`OCRService`.
+- [x] **[P2]** `scripts/lint.sh` (SwiftFormat + SwiftLint) currently fails on
+      four sibling files not touched by this change — `LabelingView.swift`,
+      `SceneDescriptionView.swift`, `ObstacleAwarenessView.swift`,
+      `SoundAlertsView.swift` all trip the `propertyTypes` SwiftFormat rule
+      (pre-existing from the mock-data wiring session above, not introduced
+      here). Needs a formatting pass on those four files before the
+      `ci-green-gate` lint job will pass.
+      **Done 2026-07-24** — `swiftformat app` auto-fixed the 4 `propertyTypes`
+      violations plus new `indent` violations in `SpeechRenderTarget.swift`;
+      SwiftLint strict then surfaced one more real issue, an
+      `unhandled_throwing_task` in `SceneDescriptionView.swift`'s capture
+      handler, fixed with `guard let message = try? await
+      composer.compose(...) else { return }` (the composer is documented as
+      never actually throwing, so no error-message plumbing needed).
+      `scripts/lint.sh` now 0 violations; `swift test` 17/17. Committed on
+      `feat/app-reading-ocr-capture` alongside the rest of this `app/`
+      Reading-OCR work.
+- [ ] **[P3]** Extend the same real-capture pattern to the remaining four
+      modes (`Identify`/`LabelingView`, `Describe`/`SceneDescriptionView`,
+      `Awareness`/`ObstacleAwarenessView`, `Sounds`/`SoundAlertsView`) —
+      Vision detect, ARKit depth, and Sound Analysis respectively, per
+      `docs/ARCHITECTURE.md`'s "Perception Layer".
+- [ ] **[P3]** `ReadingView`'s camera-permission-denied message is a plain
+      string with no deep link to Settings — consider
+      `UIApplication.openSettingsURLString` once a second permission-gated
+      feature makes the pattern worth extracting.
 
 ### Git/CI cleanup, history purge, impeccable CodeQL remediation (2026-07-23)
 

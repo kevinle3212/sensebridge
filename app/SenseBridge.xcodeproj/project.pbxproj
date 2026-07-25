@@ -17,6 +17,7 @@
 		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
 		97465151AB4FA48835E0174E /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */; };
 		9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03597A1D36C216848B88E81D /* ReadingView.swift */; };
+		4B7A1E902B7C4C2E9F1D6A31 /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */; };
 		A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */; };
 		A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */; };
 		A4130055EDBE13F4F595E785 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */; };
@@ -46,6 +47,7 @@
 
 /* Begin PBXFileReference section */
 		03597A1D36C216848B88E81D /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
+		7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
 		0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverAnnouncement.swift; sourceTree = "<group>"; };
 		1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeApp.swift; sourceTree = "<group>"; };
 		1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -220,6 +222,7 @@
 		F72FA9A23C21D154DC914D16 /* Reading */ = {
 			isa = PBXGroup;
 			children = (
+				7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */,
 				03597A1D36C216848B88E81D /* ReadingView.swift */,
 			);
 			path = Reading;
@@ -369,6 +372,7 @@
 				A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */,
 				774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */,
 				9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */,
+				4B7A1E902B7C4C2E9F1D6A31 /* CameraPreviewView.swift in Sources */,
 				A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */,
 				B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */,
 				B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */,
