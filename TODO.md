@@ -69,6 +69,25 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ## To-Do
 
+### Repo-sync commit backlog + CI-green fixups (2026-07-27, 13:00 PST)
+
+- [ ] **[P3]** **[Needs owner]** `website/src/components/PageLoader.astro`'s
+      countdown readout (`.count`, the big `clamp()`'d number + its `.mark`
+      label) uses only `$font-mono` for the whole component. Impeccable's
+      `single-font` detector flags this on every CI run for PR #42
+      ("Impeccable design detectors" job) — non-blocking (not in the
+      required-checks ruleset), so it does not hold up merging, but the
+      finding will keep reappearing on every subsequent PR touching this file
+      until resolved one way or the other. Two ways to close it: confirm it's
+      intentional (a minimal full-screen loader where size/weight carries the
+      hierarchy) and add a reviewable `.impeccable/config.json`
+      `detector.ignoreValues` entry mirroring the existing `overused-font`
+      precedent; or pair the readout with the site's display font (Fraunces)
+      for contrast. Asked via `AskUserQuestion` during the PR #42 CI-green
+      pass; owner deferred rather than deciding either way — check `git log
+      -- website/src/components/PageLoader.astro` for whether it's since
+      moved.
+
 ### Awareness camera preview + object highlights (2026-07-27, 00:30 PST)
 
 Live ARKit camera feed on the awareness screen with a yellow outline around
