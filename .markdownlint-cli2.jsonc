@@ -25,6 +25,7 @@
     "**/skills/upgrade-stripe/**",
     "**/skills/react-doctor/**",
     "**/.impeccable/critique/**",
+    ".claude/worktrees/**",
     "CLAUDE.template.md",
     "**/NOTES.local.md",
     "audits/*/[0-9]*.md",
