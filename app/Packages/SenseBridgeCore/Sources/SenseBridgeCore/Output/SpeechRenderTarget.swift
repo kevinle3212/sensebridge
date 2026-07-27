@@ -1,5 +1,26 @@
 import AVFoundation
 
+/// User-facing voice controls, normalized to `0...1` at the API boundary so
+/// callers never need to know `AVSpeechUtterance`'s underlying ranges — see
+/// `SpeechRenderTarget.mappedRate(from:)` and `mappedPitch(from:)` for the
+/// mapping into AVFoundation's actual units.
+public struct SpeechVoiceSettings: Sendable, Equatable {
+    /// Speaking rate, `0` slowest to `1` fastest.
+    public var rate: Double
+    /// Voice pitch, `0` lowest to `1` highest.
+    public var pitch: Double
+    /// Output volume, `0` silent to `1` loudest.
+    public var volume: Double
+
+    /// Creates voice settings, defaulting to `AVSpeechUtterance`'s own
+    /// defaults (mid rate, mid pitch, full volume).
+    public init(rate: Double = 0.5, pitch: Double = 0.5, volume: Double = 1.0) {
+        self.rate = rate
+        self.pitch = pitch
+        self.volume = volume
+    }
+}
+
 /// Speaks a message via `AVSpeechSynthesizer`. An actor so speech dispatch
 /// never runs on the main thread and calls serialize safely — see
 /// docs/ARCHITECTURE.md "Main thread stays free". `RenderTarget` itself
@@ -8,16 +29,79 @@ import AVFoundation
 public actor SpeechRenderTarget: RenderTarget {
     private let synthesizer: AVSpeechSynthesizer = .init()
     private var language: AppLanguage
+    /// Rate/pitch/volume applied to every subsequent `render` call.
+    private var voiceSettings: SpeechVoiceSettings
 
-    public init(language: AppLanguage = .system) {
+    #if os(iOS)
+        /// Kept as a reference so `AVSpeechSynthesizer`'s delegate isn't
+        /// deallocated (`delegate` is a weak reference).
+        private var sessionDeactivator: SpeechSessionDeactivator?
+        /// Whether `configureAudioSessionIfNeeded()` has run yet.
+        private var hasConfiguredAudioSession = false
+    #endif
+
+    public init(language: AppLanguage = .system, voiceSettings: SpeechVoiceSettings = .init()) {
         self.language = language
-        #if os(iOS)
+        self.voiceSettings = voiceSettings
+    }
+
+    #if os(iOS)
+        /// Configures the shared audio session and installs the delegate, once.
+        ///
+        /// Deliberately *not* done in `init`. A non-`async` actor initializer
+        /// runs on the **caller's** context, not the actor's executor — there
+        /// is no `await` to hop through — and this type is constructed by
+        /// `AppEnvironment` on `@MainActor` at app launch. Doing AVAudioSession
+        /// work there would block the main thread during startup, which is
+        /// what docs/ARCHITECTURE.md "Main thread stays free" exists to
+        /// prevent. Running it on first `render()` puts it on the actor.
+        private func configureAudioSessionIfNeeded() {
+            guard !hasConfiguredAudioSession else { return }
+            hasConfiguredAudioSession = true
+
             // Default session category (.soloAmbient) is silenced by the
             // hardware ring/silent switch — wrong for an app whose entire
             // output is spoken word. .playback/.spokenAudio ignores that switch.
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-            try? AVAudioSession.sharedInstance().setActive(true)
-        #endif
+            // .duckOthers lowers rather than silences other audio (e.g. music)
+            // while speaking, restored by `handleSpeechEnded()` below.
+            try? AVAudioSession.sharedInstance().setCategory(
+                .playback, mode: .spokenAudio, options: .duckOthers
+            )
+            let deactivator = SpeechSessionDeactivator { [weak self] in
+                Task { await self?.handleSpeechEnded() }
+            }
+            sessionDeactivator = deactivator
+            synthesizer.delegate = deactivator
+        }
+
+        /// Deactivates the ducking session once speech finishes or is
+        /// cancelled, so the user's music isn't left ducked forever.
+        ///
+        /// Runs **on the actor**, which is the whole point: the delegate
+        /// callback arrives on an arbitrary AVFoundation thread at an
+        /// arbitrary time, and previously raced `render()`'s own
+        /// `setActive(true)`. If the deactivation landed after the
+        /// reactivation, the next utterance could play un-ducked or
+        /// inaudible — a spoken announcement silently not reaching the user,
+        /// which for this app is a real failure, not a cosmetic one. Hopping
+        /// back here lets the actor serialize the two, and the `isSpeaking`
+        /// re-check covers a newer utterance having started in the meantime.
+        private func handleSpeechEnded() {
+            guard !synthesizer.isSpeaking else { return }
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
+    #endif
+
+    /// Whether an utterance is currently being spoken.
+    ///
+    /// Exists for continuous narration. `render` interrupts whatever is
+    /// speaking — correct for the single-capture screens, where a new result
+    /// supersedes a stale one, and wrong for hands-free awareness, which would
+    /// otherwise cut its own sentence in half every cycle. The caller checks
+    /// this to skip a routine update, and deliberately does *not* check it for
+    /// an awareness alert, where interrupting is the point.
+    public var isSpeaking: Bool {
+        synthesizer.isSpeaking
     }
 
     /// Updates the spoken language for subsequent `render` calls.
@@ -25,13 +109,31 @@ public actor SpeechRenderTarget: RenderTarget {
         self.language = language
     }
 
-    public func render(_ message: String) async {
+    /// Updates rate/pitch/volume for subsequent `render` calls.
+    public func setVoiceSettings(_ voiceSettings: SpeechVoiceSettings) {
+        self.voiceSettings = voiceSettings
+    }
+
+    public func render(_ message: OutputMessage) async {
+        #if os(iOS)
+            configureAudioSessionIfNeeded()
+        #endif
         // speak() queues rather than replaces — without this, a second
         // capture taken before the first finishes speaking just gets
         // appended behind the stale result instead of superseding it.
         synthesizer.stopSpeaking(at: .immediate)
-        let utterance = AVSpeechUtterance(string: message)
+        #if os(iOS)
+            // stopSpeaking(at:) above may fire didCancel, whose deactivation
+            // now hops back onto this actor (`handleSpeechEnded`) rather than
+            // racing this line, so activating here can't be undone underneath
+            // the utterance below.
+            try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
+        let utterance = AVSpeechUtterance(string: message.text)
         utterance.voice = Self.voice(for: language)
+        utterance.rate = Self.mappedRate(from: voiceSettings.rate)
+        utterance.pitchMultiplier = Self.mappedPitch(from: voiceSettings.pitch)
+        utterance.volume = Float(Self.clampedUnit(voiceSettings.volume))
         synthesizer.speak(utterance)
     }
 
@@ -60,4 +162,60 @@ public actor SpeechRenderTarget: RenderTarget {
             Locale.Language(identifier: $0).languageCode == requestedLanguageCode
         }
     }
+
+    /// Maps a normalized `0...1` rate onto `AVSpeechUtterance`'s own rate
+    /// range, factored out as a pure function so it is unit-testable without
+    /// a synthesizer — same reasoning as `selectVoiceLanguage(for:)` above.
+    /// Out-of-range input clamps rather than trapping.
+    static func mappedRate(from normalized: Double) -> Float {
+        let clamped = clampedUnit(normalized)
+        let minimum = Double(AVSpeechUtteranceMinimumSpeechRate)
+        let maximum = Double(AVSpeechUtteranceMaximumSpeechRate)
+        return Float(minimum + clamped * (maximum - minimum))
+    }
+
+    /// Maps a normalized `0...1` pitch onto `AVSpeechUtterance.pitchMultiplier`'s
+    /// valid range (`0.5...2.0`). Out-of-range input clamps rather than trapping.
+    static func mappedPitch(from normalized: Double) -> Float {
+        let clamped = clampedUnit(normalized)
+        return Float(0.5 + clamped * 1.5)
+    }
+
+    /// Clamps a normalized value to `0...1`, guarding every mapping above
+    /// against out-of-range settings rather than trapping or misbehaving.
+    private static func clampedUnit(_ value: Double) -> Double {
+        min(max(value, 0), 1)
+    }
 }
+
+#if os(iOS)
+    /// Bridges `AVSpeechSynthesizerDelegate`'s Objective-C callbacks into a
+    /// single closure, so the actor that owns the synthesizer can decide what
+    /// to do with them on its own executor. It deliberately performs no
+    /// audio-session work itself — doing that here is what previously raced
+    /// `SpeechRenderTarget.render()`. The delegate protocol requires an
+    /// `NSObject` subclass, matching the bridging pattern established by
+    /// `PhotoCaptureDelegate`.
+    ///
+    /// The `Sendable` conformance is sound only because the single stored
+    /// property is an immutable `let`. If you need mutable state here, remove
+    /// the state — don't reach for `@unchecked Sendable`.
+    private final class SpeechSessionDeactivator: NSObject, AVSpeechSynthesizerDelegate, Sendable {
+        private let onSpeechEnded: @Sendable () -> Void
+
+        /// Creates a delegate forwarding both finish and cancel to
+        /// `onSpeechEnded` — the caller cannot distinguish them, and doesn't
+        /// need to: both mean "nothing is speaking any more".
+        init(onSpeechEnded: @escaping @Sendable () -> Void) {
+            self.onSpeechEnded = onSpeechEnded
+        }
+
+        func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
+            onSpeechEnded()
+        }
+
+        func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
+            onSpeechEnded()
+        }
+    }
+#endif

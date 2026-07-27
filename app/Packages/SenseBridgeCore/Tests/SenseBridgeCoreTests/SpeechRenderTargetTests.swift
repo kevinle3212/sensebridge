@@ -1,3 +1,4 @@
+import AVFoundation
 import Testing
 @testable import SenseBridgeCore
 
@@ -37,5 +38,56 @@ struct SpeechRenderTargetTests {
     func returnsNilWhenNoVoicesAreInstalled() {
         let selected = SpeechRenderTarget.selectVoiceLanguage(for: "en-US", availableLanguages: [])
         #expect(selected == nil)
+    }
+
+    @Test
+    func mappedRateAtZeroIsTheMinimumRate() {
+        #expect(SpeechRenderTarget.mappedRate(from: 0) == AVSpeechUtteranceMinimumSpeechRate)
+    }
+
+    @Test
+    func mappedRateAtOneIsTheMaximumRate() {
+        #expect(SpeechRenderTarget.mappedRate(from: 1) == AVSpeechUtteranceMaximumSpeechRate)
+    }
+
+    @Test
+    func mappedRateAtHalfIsTheMidpoint() {
+        let expected = (AVSpeechUtteranceMinimumSpeechRate + AVSpeechUtteranceMaximumSpeechRate) / 2
+        #expect(SpeechRenderTarget.mappedRate(from: 0.5) == expected)
+    }
+
+    @Test
+    func mappedRateClampsBelowZeroToTheMinimumRate() {
+        #expect(SpeechRenderTarget.mappedRate(from: -1) == AVSpeechUtteranceMinimumSpeechRate)
+    }
+
+    @Test
+    func mappedRateClampsAboveOneToTheMaximumRate() {
+        #expect(SpeechRenderTarget.mappedRate(from: 2) == AVSpeechUtteranceMaximumSpeechRate)
+    }
+
+    @Test
+    func mappedPitchAtZeroIsPointFive() {
+        #expect(SpeechRenderTarget.mappedPitch(from: 0) == 0.5)
+    }
+
+    @Test
+    func mappedPitchAtOneIsTwo() {
+        #expect(SpeechRenderTarget.mappedPitch(from: 1) == 2.0)
+    }
+
+    @Test
+    func mappedPitchAtHalfIsTheMidpoint() {
+        #expect(SpeechRenderTarget.mappedPitch(from: 0.5) == 1.25)
+    }
+
+    @Test
+    func mappedPitchClampsBelowZeroToPointFive() {
+        #expect(SpeechRenderTarget.mappedPitch(from: -1) == 0.5)
+    }
+
+    @Test
+    func mappedPitchClampsAboveOneToTwo() {
+        #expect(SpeechRenderTarget.mappedPitch(from: 2) == 2.0)
     }
 }
