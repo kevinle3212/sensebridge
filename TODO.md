@@ -71,6 +71,22 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ### Repo-sync commit backlog + CI-green fixups (2026-07-27, 13:00 PST)
 
+- [ ] **[P3]** CodeQL's `js/file-access-to-http` ("File data in outbound
+      network request") still fires on `tools/docs-a11y.mjs`'s
+      `page.goto(url)` call after two fix attempts: filtering built HTML
+      filenames through an explicit allowlist regex before building the URL,
+      then an inline `// codeql[js/file-access-to-http]` suppression comment
+      above the flagged line — neither cleared it on PR #42's "CodeQL"
+      umbrella check (non-blocking; only "CodeQL (JavaScript/TypeScript)" is
+      in the required-checks ruleset, and that one passes). The URL is always
+      `http://127.0.0.1:PORT/...`; only the already-allowlisted path segment
+      comes from the local build directory listing, so this reads as a false
+      positive from a CI-only local crawler, not a real request-forgery risk.
+      Next step if revisited: confirm the exact rule id GitHub expects for
+      inline suppression (mine may be wrong), or dismiss the alert directly
+      via the code-scanning UI/API with a stated false-positive reason once
+      it posts as a numbered alert on `main`.
+
 - [ ] **[P3]** **[Needs owner]** `website/src/components/PageLoader.astro`'s
       countdown readout (`.count`, the big `clamp()`'d number + its `.mark`
       label) uses only `$font-mono` for the whole component. Impeccable's
