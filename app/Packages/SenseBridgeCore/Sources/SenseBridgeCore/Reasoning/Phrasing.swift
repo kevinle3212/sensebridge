@@ -39,6 +39,63 @@ public struct Phrasing: Sendable {
         return String(format: template, subject)
     }
 
+    /// What to say when perception ran and recognized nothing.
+    ///
+    /// Deliberately a statement about *this app's perception*, never about the
+    /// world: "nothing was recognized" is falsifiable and honest, whereas
+    /// "the way ahead is clear" — or any hedged variant of it — asserts an
+    /// absence the app cannot observe. `audits/AGENT-GUIDE.md` names that
+    /// second form as the Critical archetype, and hedging the verb does not
+    /// rescue it, because the *claim* is still absence.
+    ///
+    /// Lives here rather than at a call site so it inherits what every other
+    /// phrase here inherits: one reviewed es/vi translation from the String
+    /// Catalog, and one place to change if the doctrine changes.
+    public func nothingRecognized(locale: Locale = .current) -> String {
+        LocalizedCatalog.string("Nothing recognizable was found.", locale: locale)
+    }
+
+    /// The subject to use when depth sensing measured something but
+    /// perception could not name it — which is the normal case, since LiDAR
+    /// resolves distance and says nothing about identity.
+    ///
+    /// A subject, not a sentence: it is meant to be passed to
+    /// `describe(subject:certainty:)` so it inherits the hedge like any other.
+    /// Lives here rather than as a literal at the call site for the same
+    /// reason as `nothingRecognized(locale:)` — one reviewed es/vi translation
+    /// instead of an English string leaking into a translated sentence.
+    public func somethingAhead(locale: Locale = .current) -> String {
+        LocalizedCatalog.string("something ahead", locale: locale)
+    }
+
+    /// The same subject, carrying the measured distance.
+    ///
+    /// "about" is load-bearing and is not padding: LiDAR returns a
+    /// distribution, this app reports a percentile of it, and the mount angle
+    /// is uncalibrated. Stating a bare figure would claim a precision that
+    /// none of those three steps earned — see docs/SAFETY-FRAMING.md.
+    /// `distance` is formatted by the caller's `MeasurementFormatter` so the
+    /// unit follows the reader's locale rather than this file's.
+    public func somethingAhead(atDistance distance: String, locale: Locale = .current) -> String {
+        let template = LocalizedCatalog.string("something about %@ ahead", locale: locale)
+        return String(format: template, distance)
+    }
+
+    /// What to say when a previously reported near reading has moved away.
+    ///
+    /// Deliberately a statement about **the measurement**, not the world. The
+    /// tempting phrasing — "the way ahead is clear now" — asserts an absence
+    /// the app cannot observe, which `audits/AGENT-GUIDE.md` names as its
+    /// Critical archetype and which hedging the verb does not rescue. This
+    /// sentence is falsifiable: a number the app itself produced got larger.
+    ///
+    /// Unlike the phrases above, this is a whole sentence rather than a
+    /// subject: there is no hedge to apply, because it makes no claim about
+    /// what is or is not there.
+    public func nearestMeasurementMovedAway(locale: Locale = .current) -> String {
+        LocalizedCatalog.string("The nearest measured distance is further away now.", locale: locale)
+    }
+
     private static func hedgeTemplate(for certainty: Certainty, locale: Locale) -> String {
         let key = switch certainty {
         case .low: "there might be %@."

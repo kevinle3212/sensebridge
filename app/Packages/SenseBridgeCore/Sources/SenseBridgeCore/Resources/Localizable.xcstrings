@@ -1,94 +1,163 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "Nothing recognizable was found." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing recognizable was found."
+  "sourceLanguage": "en",
+  "strings": {
+    "Nothing recognizable was found.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing recognizable was found."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se reconoció nada."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se reconoció nada."
           }
         },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Không nhận ra được gì."
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không nhận ra được gì."
           }
         }
       }
     },
-    "it looks like there's %@." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "it looks like there's %@."
+    "The nearest measured distance is further away now.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The nearest measured distance is further away now."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "parece que hay %@."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La distancia medida más cercana ahora es mayor."
           }
         },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "hình như có %@."
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khoảng cách đo được gần nhất giờ đã xa hơn."
           }
         }
       }
     },
-    "it looks like there's likely %@." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "it looks like there's likely %@."
+    "it looks like there's %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it looks like there's %@."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "parece que probablemente hay %@."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece que hay %@."
           }
         },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "rất có thể có %@."
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hình như có %@."
           }
         }
       }
     },
-    "there might be %@." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "there might be %@."
+    "it looks like there's likely %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it looks like there's likely %@."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "puede que haya %@."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece que probablemente hay %@."
           }
         },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "có thể có %@."
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rất có thể có %@."
+          }
+        }
+      }
+    },
+    "something about %@ ahead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "something about %@ ahead"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "algo a unos %@ de distancia"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vật gì đó cách khoảng %@"
+          }
+        }
+      }
+    },
+    "something ahead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "something ahead"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "algo delante"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vật gì đó ở phía trước"
+          }
+        }
+      }
+    },
+    "there might be %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "there might be %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "puede que haya %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "có thể có %@."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

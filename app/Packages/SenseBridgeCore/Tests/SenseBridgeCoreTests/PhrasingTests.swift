@@ -29,6 +29,30 @@ struct PhrasingTests {
         #expect(phrase.contains("a chair"))
     }
 
+    @Test(arguments: [
+        (localeIdentifier: "en", expected: "Nothing recognizable was found."),
+        (localeIdentifier: "es", expected: "No se reconoció nada."),
+        (localeIdentifier: "vi", expected: "Không nhận ra được gì.")
+    ])
+    func nothingRecognizedIsTranslatedAndClaimsNoAbsence(localeIdentifier: String, expected: String) {
+        let phrase = Phrasing().nothingRecognized(locale: Locale(identifier: localeIdentifier))
+        #expect(phrase == expected)
+    }
+
+    /// Guards the C1 regression directly: the awareness screen used to say
+    /// "The way ahead seems clear for now." A hedged verb does not rescue a
+    /// claim about absence — see `audits/AGENT-GUIDE.md`. Every phrase this
+    /// type produces must describe what was *recognized*, never what is
+    /// *there*.
+    @Test
+    func nothingRecognizedNeverAssertsThatSomethingIsAbsent() {
+        let phrase = Phrasing().nothingRecognized(locale: Locale(identifier: "en")).lowercased()
+        let absenceClaims = ["clear", "empty", "safe", "no obstacle", "nothing is", "nothing ahead"]
+        for claim in absenceClaims {
+            #expect(!phrase.contains(claim))
+        }
+    }
+
     /// Pinned baseline from
     /// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md
     /// "Doctrine-pinned strings" — reviewers verify, native speakers validate

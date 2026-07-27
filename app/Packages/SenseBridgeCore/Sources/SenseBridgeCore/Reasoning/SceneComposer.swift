@@ -38,7 +38,7 @@ public struct LabelListSceneComposer: SceneComposer {
             }
         }
         guard !descriptions.isEmpty else {
-            return LocalizedCatalog.string("Nothing recognizable was found.", locale: locale)
+            return phrasing.nothingRecognized(locale: locale)
         }
         return descriptions.joined(separator: " ")
     }
