@@ -31,4 +31,22 @@ struct SettingsTests {
         #expect(decoded.speechRate == 0.5)
         #expect(decoded.cloudReasoningEnabled == false)
     }
+
+    @Test
+    func decodingSettingsPersistedByTheCurrentShippingBuildYieldsDocumentedDefaults() throws {
+        // The current shipping shape: outputProfile, speechRate,
+        // cloudReasoningEnabled, language — none of the fields added by this
+        // change exist yet.
+        let currentShippingJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"cloudReasoningEnabled":false,"language":"system"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(currentShippingJSON.utf8))
+
+        #expect(decoded.speechPitch == 0.5)
+        #expect(decoded.speechVolume == 1.0)
+        #expect(decoded.hapticsEnabled == true)
+        #expect(decoded.hapticIntensity == 1.0)
+        #expect(decoded.preferredLens == .wide)
+        #expect(decoded.torchDefaultOn == false)
+    }
 }

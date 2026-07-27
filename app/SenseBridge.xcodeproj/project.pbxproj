@@ -14,10 +14,17 @@
 		45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */; };
 		608A9FB837FD1E25D7527BD5 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */; };
 		76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */; };
+		A33D9E2E5F716C4DAE8F2033 /* AmbientPreviewImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33D9E2E5F716C4DAE8F2034 /* AmbientPreviewImageTests.swift */; };
+		A11B7E0C3D5F4A2B8C6D0E11 /* AmbientAwarenessSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B7E0C3D5F4A2B8C6D0E12 /* AmbientAwarenessSession.swift */; };
+		A22C8F1D4E605B3C9D7E1F22 /* AwarenessPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22C8F1D4E605B3C9D7E1F23 /* AwarenessPreviewView.swift */; };
+		A44E0F3F60827D5EBF9A3144 /* AwarenessPreviewFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44E0F3F60827D5EBF9A3145 /* AwarenessPreviewFeed.swift */; };
+		A11B7E0C3D5F4A2B8C6D0E21 /* FoundationModelsSceneComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B7E0C3D5F4A2B8C6D0E22 /* FoundationModelsSceneComposer.swift */; };
 		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
 		97465151AB4FA48835E0174E /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */; };
 		9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03597A1D36C216848B88E81D /* ReadingView.swift */; };
 		4B7A1E902B7C4C2E9F1D6A31 /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */; };
+		7C9E2A1D4F8B4D3E8A6C5B92 /* CameraControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E2A1D4F8B4D3E8A6C5B91 /* CameraControlsView.swift */; };
+		7C9E2A1D4F8B4D3E8A6C5B94 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E2A1D4F8B4D3E8A6C5B93 /* CameraController.swift */; };
 		A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */; };
 		A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */; };
 		A4130055EDBE13F4F595E785 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */; };
@@ -46,13 +53,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AA01C0FFEE1111111111111A /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		AA01C0FFEE2222222222222B /* Signing.local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.local.xcconfig; sourceTree = "<group>"; };
 		03597A1D36C216848B88E81D /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
 		7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
+		7C9E2A1D4F8B4D3E8A6C5B91 /* CameraControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControlsView.swift; sourceTree = "<group>"; };
+		7C9E2A1D4F8B4D3E8A6C5B93 /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverAnnouncement.swift; sourceTree = "<group>"; };
 		1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeApp.swift; sourceTree = "<group>"; };
 		1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentTests.swift; sourceTree = "<group>"; };
+		A33D9E2E5F716C4DAE8F2034 /* AmbientPreviewImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientPreviewImageTests.swift; sourceTree = "<group>"; };
 		509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeUITests.swift; sourceTree = "<group>"; };
 		50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionUITests.swift; sourceTree = "<group>"; };
 		53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
@@ -62,6 +74,10 @@
 		91ABE54B3D488D3FD6947263 /* SenseBridge.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SenseBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAlertsView.swift; sourceTree = "<group>"; };
 		B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A11B7E0C3D5F4A2B8C6D0E12 /* AmbientAwarenessSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAwarenessSession.swift; sourceTree = "<group>"; };
+		A22C8F1D4E605B3C9D7E1F23 /* AwarenessPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewView.swift; sourceTree = "<group>"; };
+		A44E0F3F60827D5EBF9A3145 /* AwarenessPreviewFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewFeed.swift; sourceTree = "<group>"; };
+		A11B7E0C3D5F4A2B8C6D0E22 /* FoundationModelsSceneComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsSceneComposer.swift; sourceTree = "<group>"; };
 		C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObstacleAwarenessView.swift; sourceTree = "<group>"; };
 		D73B9444B53F2DD88AD973EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionView.swift; sourceTree = "<group>"; };
@@ -93,6 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */,
+				7C9E2A1D4F8B4D3E8A6C5B93 /* CameraController.swift */,
 				D73B9444B53F2DD88AD973EA /* HomeView.swift */,
 				1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */,
 				212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */,
@@ -103,6 +120,7 @@
 		167BD6B707F5CD3F5FED1BF9 /* SceneDescription */ = {
 			isa = PBXGroup;
 			children = (
+				A11B7E0C3D5F4A2B8C6D0E22 /* FoundationModelsSceneComposer.swift */,
 				E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */,
 			);
 			path = SceneDescription;
@@ -111,6 +129,9 @@
 		17CFC050C0ED11ADC4123CC8 /* ObstacleAwareness */ = {
 			isa = PBXGroup;
 			children = (
+				A11B7E0C3D5F4A2B8C6D0E12 /* AmbientAwarenessSession.swift */,
+				A22C8F1D4E605B3C9D7E1F23 /* AwarenessPreviewView.swift */,
+				A44E0F3F60827D5EBF9A3145 /* AwarenessPreviewFeed.swift */,
 				C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */,
 			);
 			path = ObstacleAwareness;
@@ -164,9 +185,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7C9E2A1D4F8B4D3E8A6C5B95 /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				7C9E2A1D4F8B4D3E8A6C5B91 /* CameraControlsView.swift */,
+				7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */,
+			);
+			path = Camera;
+			sourceTree = "<group>";
+		};
 		A8D2ED2B5A7CCBD36D5B5CFF /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				7C9E2A1D4F8B4D3E8A6C5B95 /* Camera */,
 				BA5152B824E40A94F9DBC660 /* Labeling */,
 				17CFC050C0ED11ADC4123CC8 /* ObstacleAwareness */,
 				F72FA9A23C21D154DC914D16 /* Reading */,
@@ -188,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */,
+				A33D9E2E5F716C4DAE8F2034 /* AmbientPreviewImageTests.swift */,
 			);
 			path = SenseBridgeTests;
 			sourceTree = "<group>";
@@ -208,9 +240,19 @@
 			path = SoundAlerts;
 			sourceTree = "<group>";
 		};
+		AA01C0FFEE3333333333333C /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				AA01C0FFEE1111111111111A /* Signing.xcconfig */,
+				AA01C0FFEE2222222222222B /* Signing.local.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		EB885AD887785FC1F0AFBF21 = {
 			isa = PBXGroup;
 			children = (
+				AA01C0FFEE3333333333333C /* Config */,
 				7D27507FB965F45DAB7E0D83 /* Packages */,
 				59F08F74B9E6D8A4F9346606 /* SenseBridge */,
 				BC56C0FDC55E64F74C1BF52B /* SenseBridgeTests */,
@@ -222,7 +264,6 @@
 		F72FA9A23C21D154DC914D16 /* Reading */ = {
 			isa = PBXGroup;
 			children = (
-				7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */,
 				03597A1D36C216848B88E81D /* ReadingView.swift */,
 			);
 			path = Reading;
@@ -360,6 +401,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */,
+				A33D9E2E5F716C4DAE8F2033 /* AmbientPreviewImageTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,8 +410,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */,
+				7C9E2A1D4F8B4D3E8A6C5B94 /* CameraController.swift in Sources */,
+				7C9E2A1D4F8B4D3E8A6C5B92 /* CameraControlsView.swift in Sources */,
 				014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */,
 				A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */,
+				A11B7E0C3D5F4A2B8C6D0E11 /* AmbientAwarenessSession.swift in Sources */,
+				A22C8F1D4E605B3C9D7E1F22 /* AwarenessPreviewView.swift in Sources */,
+				A44E0F3F60827D5EBF9A3144 /* AwarenessPreviewFeed.swift in Sources */,
+				A11B7E0C3D5F4A2B8C6D0E21 /* FoundationModelsSceneComposer.swift in Sources */,
 				774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */,
 				9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */,
 				4B7A1E902B7C4C2E9F1D6A31 /* CameraPreviewView.swift in Sources */,
@@ -399,13 +447,16 @@
 /* Begin XCBuildConfiguration section */
 		2FF7325F917C4AE6DB2F4E1D /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
 			buildSettings = {
+				LM_FORCE_LINK_GENERATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -580,13 +631,16 @@
 		};
 		C19C11B259EAEA9C90D9E6A8 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
 			buildSettings = {
+				LM_FORCE_LINK_GENERATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

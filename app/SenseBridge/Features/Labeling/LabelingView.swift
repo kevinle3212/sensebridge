@@ -11,7 +11,9 @@ struct LabelingView: View {
     // canned detection through the real Phrasing + RenderTarget. Swap in
     // Vision object detection + camera capture once those land.
     private let phrasing: Phrasing = .init()
-    private let renderTarget: SpeechRenderTarget = .init()
+    /// Shared app state — renders through the same output targets every
+    /// other feature uses, rather than standing up its own synthesizer.
+    @Environment(AppEnvironment.self) private var environment
     @State private var lastResult: String?
 
     var body: some View {
@@ -21,7 +23,8 @@ struct LabelingView: View {
             Button("Capture") {
                 let message = phrasing.describe(subject: "a coffee mug", certainty: .medium)
                 lastResult = message
-                Task { await renderTarget.render(message) }
+                announceIfUnspoken(message, profile: environment.settings.outputProfile)
+                Task { await environment.output.render(OutputMessage(text: message, signal: .resultReady)) }
             }
             .accessibilityLabel("Capture object")
             .accessibilityHint("Takes a photo and describes what's in it.")
@@ -38,4 +41,5 @@ struct LabelingView: View {
 
 #Preview {
     LabelingView()
+        .environment(AppEnvironment())
 }
