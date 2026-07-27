@@ -50,9 +50,6 @@ enum LocalizedCatalog {
     /// did not produce one.
     private static func localizedBundle(for locale: Locale) -> Bundle? {
         for code in languageCandidates(for: locale) {
-            // Kept as two single-line conditions: SwiftFormat's
-            // `wrapMultilineStatementBraces` and SwiftLint's `opening_brace`
-            // disagree about where a multi-line condition's brace belongs.
             guard let path = Bundle.module.path(forResource: code, ofType: "lproj") else {
                 continue
             }

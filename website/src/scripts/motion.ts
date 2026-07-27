@@ -39,6 +39,11 @@ const EASE_REVEAL = "expo.out";
 // that same cubic-inOut shape.
 const EASE_SWEEP = "power2.inOut";
 
+// Scroll speed (px/sec) at which the Signal Spine pulse reaches its longest
+// streak. Roughly a hard flick on a trackpad; anything faster clamps, so the
+// effect saturates instead of degenerating into a full-height line.
+const SPINE_PEAK_VELOCITY = 3000;
+
 // How far each hero-visual depth layer travels (px) as the hero section
 // scrolls past, back to front: glow moves least, the sensing field most.
 const HERO_PARALLAX_DISTANCE: Record<string, number> = {
@@ -64,11 +69,29 @@ mm.add("(prefers-reduced-motion: no-preference)", () => {
   gsap.ticker.add(driveLenis);
   gsap.ticker.lagSmoothing(0);
 
+  // Restoring from bfcache — e.g. browser-back after following the "Follow
+  // progress" link out to GitHub — resumes this module's rAF loop after an
+  // arbitrarily long freeze. `lagSmoothing(0)` above means GSAP won't smooth
+  // that gap away, so velocity-driven code (initSignalSpine's getVelocity())
+  // spikes off it, and Lenis's virtual scroll position is stale against
+  // whatever the browser's native scroll restoration just set, desyncing
+  // every scrub-driven ScrollTrigger. Resyncing Lenis to the real scroll
+  // offset and asking ScrollTrigger to remeasure clears both.
+  const resyncOnBfcacheRestore = (event: PageTransitionEvent): void => {
+    if (!event.persisted) {
+      return;
+    }
+    lenis.scrollTo(window.scrollY, { immediate: true, force: true });
+    ScrollTrigger.refresh();
+  };
+  window.addEventListener("pageshow", resyncOnBfcacheRestore);
+
   initHeroReveal();
   initHeroParallax();
   initSignalBridge();
   initBridgeEasterEgg();
   initSignalSpine();
+  initHeadingScramble();
   initStageReveals();
   initSectionReveals();
   initPhoneExplodedReveal();
@@ -76,9 +99,12 @@ mm.add("(prefers-reduced-motion: no-preference)", () => {
   initScrollProgress();
   initMagneticCta();
   initHeroPointerGlow();
+  initFeatureSpotlight();
+  initStagePointerParallax();
   debugLog("motion", "motion layer initialized (Lenis + ScrollTrigger active)");
 
   return () => {
+    window.removeEventListener("pageshow", resyncOnBfcacheRestore);
     gsap.ticker.remove(driveLenis);
     lenis.destroy();
   };
@@ -288,11 +314,128 @@ function initSignalSpine(): void {
     return;
   }
 
+  // Velocity reaction, eased rather than applied raw: getVelocity() is noisy
+  // frame to frame, and a streak that flickers reads as a rendering fault
+  // instead of as speed. The eased value goes out as a custom property, which
+  // SignalSpine.module.scss turns into a scaleY stretch — CSS owns the look,
+  // this owns the number.
+  const speed = { value: 0 };
+  const easeSpeed = gsap.quickTo(speed, "value", {
+    duration: DURATION_SLOW,
+    ease: "power2.out",
+    onUpdate: () => {
+      pulse.style.setProperty("--spine-speed", speed.value.toFixed(3));
+    },
+  });
+
   gsap.set(pulse, { top: 0, opacity: 1 });
   gsap.to(pulse, {
     top: "100%",
     ease: "none",
-    scrollTrigger: { trigger: spine, start: "top top", end: "bottom bottom", scrub: true },
+    scrollTrigger: {
+      trigger: spine,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: true,
+      onUpdate: (self) => {
+        easeSpeed(gsap.utils.clamp(0, 1, Math.abs(self.getVelocity()) / SPINE_PEAK_VELOCITY));
+      },
+    },
+  });
+
+  // onUpdate stops firing the moment scrolling stops, so without this the
+  // streak would freeze at whatever length it had reached. ScrollTrigger's own
+  // scrollEnd event is the existing hook for "motion has settled".
+  ScrollTrigger.addEventListener("scrollEnd", () => {
+    easeSpeed(0);
+  });
+}
+
+// Glyphs the scramble cycles through before a character settles. Uppercase
+// latin, digits, and a few operators: the site's technical annotation register
+// (DESIGN.md §3, the Geist Mono `type-label` voice), not random unicode. All
+// are narrow enough that a heading never visibly changes width mid-run.
+const SCRAMBLE_GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/\\<>*";
+
+// Resolves `target` from scrambled glyphs to `text`, left to right.
+//
+// Character count never changes — spaces are held, and every substitute is one
+// character — so the heading cannot reflow mid-run and drag the section's
+// layout with it.
+function scrambleText(target: HTMLElement, text: string): void {
+  const characters = Array.from(text);
+  const progress = { value: 0 };
+
+  gsap.to(progress, {
+    value: 1,
+    duration: DURATION_SLOWER,
+    ease: "none",
+    onUpdate: () => {
+      target.textContent = characters
+        .map((character, index) => {
+          // Each character settles at its own point across the run, so the
+          // heading resolves as a sweep rather than snapping all at once.
+          const settleAt = (index + 1) / characters.length;
+          // Only plain ASCII letters and digits are ever substituted. Spaces
+          // and punctuation hold the heading's shape, and leaving accented
+          // characters alone keeps the Spanish and Vietnamese headings from
+          // having a base letter swapped out from under its diacritic.
+          if (!/[A-Za-z0-9]/.test(character) || progress.value >= settleAt) {
+            return character;
+          }
+          // `charAt` rather than an index expression: a computed index is an
+          // object-injection sink to eslint-plugin-security.
+          return SCRAMBLE_GLYPHS.charAt(Math.floor(Math.random() * SCRAMBLE_GLYPHS.length));
+        })
+        .join("");
+    },
+    onComplete: () => {
+      target.textContent = text;
+    },
+  });
+}
+
+// Text-scramble reveal on every section heading, fired as the heading comes
+// into view. Runs alongside the existing fade/rise reveals rather than inside
+// them: five different timelines own those, and a heading resolving while it
+// fades in reads as one gesture anyway.
+//
+// The accessibility problem this is built around: every stage section names
+// itself from its own heading via `aria-labelledby`, so scrambling the
+// heading's text would rename the entire section for as long as the animation
+// ran. A screen-reader user navigating by heading mid-run would hear glyph
+// soup. So the real text moves into a visually-hidden span and the animated
+// copy is hidden from the accessibility tree — the computed name is the real
+// text at every instant, including before this function has ever run and
+// while a scramble is in flight.
+//
+// Under `reduce` (or with JS off) this file never executes at all, so the
+// headings keep their original single-text-node markup untouched.
+function initHeadingScramble(): void {
+  document.querySelectorAll<HTMLElement>("main h2").forEach((heading) => {
+    const text = heading.textContent.trim();
+    if (text.length === 0) {
+      return;
+    }
+
+    const accessibleCopy = document.createElement("span");
+    accessibleCopy.className = "visually-hidden";
+    accessibleCopy.textContent = text;
+
+    const animatedCopy = document.createElement("span");
+    animatedCopy.setAttribute("aria-hidden", "true");
+    animatedCopy.textContent = text;
+
+    heading.replaceChildren(accessibleCopy, animatedCopy);
+
+    ScrollTrigger.create({
+      trigger: heading,
+      start: "top 85%",
+      once: true,
+      onEnter: () => {
+        scrambleText(animatedCopy, text);
+      },
+    });
   });
 }
 
@@ -516,4 +659,84 @@ function initHeroPointerGlow(): void {
     moveX(50);
     moveY(40);
   });
+}
+
+// Pointer-tracked glow on the capability cards (Features.astro →
+// [data-feature-list], Features.module.scss → li::before): the card's existing
+// hover treatment stays exactly as it was, and this only moves the light
+// inside it. Hover-capable + fine pointer only, like the two above — on touch
+// the cards keep their plain hover/active state.
+//
+// One delegated listener on the list rather than one per card, and it reads
+// `offsetX`/`offsetY` rather than measuring the card: those are already
+// relative to the target's padding box, which avoids a getBoundingClientRect()
+// on every pointer move. Each card holds only a text node, so the event target
+// is always the <li> itself.
+function initFeatureSpotlight(): void {
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    return;
+  }
+  const list = document.querySelector<HTMLElement>("[data-feature-list]");
+  if (!list) {
+    return;
+  }
+
+  list.addEventListener("pointermove", (event) => {
+    const card = (event.target as Element | null)?.closest("li");
+    if (!card) {
+      return;
+    }
+    card.style.setProperty("--card-x", `${event.offsetX}px`);
+    card.style.setProperty("--card-y", `${event.offsetY}px`);
+  });
+}
+
+// Cursor-reactive parallax on the phone (#device) and glasses (#future)
+// stages' static line-art, via --stage-pointer-x/y (-1 → 1 from the stage's
+// centre). PhoneExploded.module.scss and SpatialFuture.module.scss turn those
+// into the actual drift.
+//
+// This covers the gap the 3D layer leaves rather than duplicating it. Both
+// WebGL scenes already track the cursor through createPointerParallax() in
+// scripts/scenes/core.ts, but that only exists once a canvas has mounted —
+// and quality-gate.ts refuses to mount one on save-data, low memory, or no
+// WebGL2. Those visitors got a completely inert stage. The CSS is scoped to
+// `:not(.scene-active)` so on a machine that does run WebGL this yields to
+// the camera parallax instead of fighting it.
+//
+// Same amplitude discipline and the same hover-capable + fine-pointer gate as
+// the three pointer effects above; touch keeps a static diagram.
+function initStagePointerParallax(): void {
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    return;
+  }
+
+  document
+    .querySelectorAll<HTMLElement>('[data-scene="phone"], [data-scene="glasses"]')
+    .forEach((stage) => {
+      const pointer = { x: 0, y: 0 };
+      const applyPointer = (): void => {
+        stage.style.setProperty("--stage-pointer-x", pointer.x.toFixed(3));
+        stage.style.setProperty("--stage-pointer-y", pointer.y.toFixed(3));
+      };
+      // Eased rather than applied raw, matching createPointerParallax()'s lerp:
+      // the art should trail the cursor slightly, which is what reads as depth.
+      const moveX = gsap.quickTo(pointer, "x", {
+        duration: DURATION_SLOW,
+        ease: "power2.out",
+        onUpdate: applyPointer,
+      });
+      const moveY = gsap.quickTo(pointer, "y", { duration: DURATION_SLOW, ease: "power2.out" });
+
+      stage.addEventListener("pointermove", (event) => {
+        const rect = stage.getBoundingClientRect();
+        moveX(gsap.utils.clamp(-1, 1, ((event.clientX - rect.left) / rect.width) * 2 - 1));
+        moveY(gsap.utils.clamp(-1, 1, ((event.clientY - rect.top) / rect.height) * 2 - 1));
+      });
+
+      stage.addEventListener("pointerleave", () => {
+        moveX(0);
+        moveY(0);
+      });
+    });
 }

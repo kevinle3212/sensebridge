@@ -13,7 +13,7 @@ title: Distribution
   SenseBridge on your own iPhone with a personal Apple ID costs nothing.
 - **CI (GitHub Actions)** is free for a public repository: build, test, and
   lint run on every push and pull request. See
-  [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
+  [`.github/workflows/ci.yml`](https://github.com/kevinle3212/sensebridge/blob/main/.github/workflows/ci.yml).
 
 ## The one unavoidable cost: the Apple Developer Program
 
@@ -57,9 +57,12 @@ workflow yet — see [`docs/ROADMAP.md`](ROADMAP.md) for when that becomes
 relevant; adding one before there's a Developer Program account to use it
 with would be premature.
 
-When that changes: enroll in the Apple Developer Program, set the real
-bundle ID and `DEVELOPMENT_TEAM` in `app/project.yml`, and generate signing
-certificates/provisioning profiles for the team. Only then does an **App
+When that changes: enroll in the Apple Developer Program, set the real bundle
+ID in `app/project.yml`, and generate signing certificates/provisioning
+profiles for the team. The team ID itself belongs in
+`app/Config/Signing.local.xcconfig`, which is gitignored — on CI, write that
+file from a repository secret during the job rather than committing it. See
+[ENVIRONMENT.md](ENVIRONMENT.md). Only then does an **App
 Store Connect API key** (Users and Access → Integrations → App Store Connect
 API in App Store Connect) become relevant, for CI-driven TestFlight
 uploads — store it in GitHub Actions repository secrets, never in the repo.
@@ -67,4 +70,5 @@ No such CI workflow exists yet.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

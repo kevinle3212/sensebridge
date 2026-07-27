@@ -4,10 +4,8 @@ title: Product
 
 # Product
 
-Source research: [`planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md`](planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md)
-and [`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
-This document summarizes the product decisions; see those files for full
-reasoning and evidence.
+This document states the product decisions for SenseBridge and the reasoning
+behind them.
 
 ## Mission
 
@@ -40,6 +38,7 @@ competitor occupies is the combination of:
 | Unified multi-sense output (eventually) | No product unifies blind, deaf, and deaf-blind support |
 | Consent-based, on-device-only face enrollment | "Who is that" without surveillance |
 | Cautious LiDAR obstacle awareness | A heads-up without a false sense of safety |
+| Hands-free worn awareness | Phone on the body, headphones in, hands and cane free — continuous hedged narration instead of a device you have to hold and aim. Foreground and screen-on only, which iOS enforces, and stated in the UI rather than discovered |
 | Free, with no subscription | Cost is a real barrier — only about a third of working-age blind/low-vision US adults are employed (AFB/Cornell) |
 
 Lead with "open, on-device, private accessibility," not the feature list —
@@ -48,13 +47,33 @@ the feature list is what every competitor also has.
 ## Who the MVP is for
 
 **Blind and low-vision people, on iPhone, using on-device processing.** Not
-"everyone." Five other personas (deaf user, deaf-blind user, caregiver,
-family member enrolled by consent, accessibility advocate) inform the
-architecture and are documented in full in
-[`planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md`](planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md#3-user-personas)
-so deferred work has a real home — see
-[`ARCHITECTURE.md`](ARCHITECTURE.md) for the `SensingSource`/`RenderTarget`
+"everyone." Five other personas inform the architecture so deferred work has
+a real home:
+
+- **Deaf user** — needs live captions of in-person conversation and
+  awareness of sounds they cannot hear (an alarm, a knock, their name).
+- **Deaf-blind user** — needs a designed haptic vocabulary, not arbitrary
+  buzzes; must be designed *with* this community, not for it in isolation.
+- **Caregiver** — needs to help set the app up, then get out of the way; the
+  product must never require a caregiver to function.
+- **Family member enrolled by consent** — needs the consent-based face
+  enrollment design to treat their participation as opt-in, on-device, and
+  revocable.
+- **Accessibility advocate** — needs a credible, honestly-scoped project to
+  test, endorse, and route other testers toward.
+
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the `SensingSource`/`RenderTarget`
 abstractions that keep that door open without building through it now.
+
+"Deferred" is a statement about what is built, never about who is allowed to
+try it. Where a channel exists and works — however limited — it is offered,
+and its limits are stated at the point of choice rather than used as grounds
+to withhold it. Deciding on a user's behalf that a working option is not good
+enough for them is the failure mode this project exists to avoid; see
+[`AGENTS.md`](https://github.com/kevinle3212/sensebridge/blob/main/AGENTS.md)
+doctrine 4. The deaf-blind haptic profile is
+the live example: short cues only, never the recognized text, said plainly in
+Settings and offered anyway.
 
 ## Success metrics
 
@@ -105,9 +124,29 @@ is estimated at moderate-to-good (60–70%) *if and only if* the scope cut
 holds and real testers are involved; probability of the full original
 multi-group, multi-device vision shipping solo in that window is near zero.
 The single biggest determinant of success is what gets refused, not what
-gets built — see the "things not to build" list in
-[`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
+gets built. Things deliberately not built, and why:
+
+- **A backend with authentication and analytics.** Contradicts the
+  privacy-first, on-device stance and adds cost for no MVP benefit.
+- **Kubernetes, Docker Compose, cloud orchestration.** There is nothing to
+  orchestrate — infrastructure for a problem this project doesn't have.
+- **Million-user scalability engineering.** An on-device app imposes
+  near-zero server load regardless of user count; the real constraint is
+  the maintainer's time, not compute.
+- **Real-time navigation guidance.** The most dangerous feature shape
+  available — reframed permanently as awareness, never guidance. See
+  [`SAFETY-FRAMING.md`](SAFETY-FRAMING.md).
+- **Facial recognition in the MVP.** Deferred behind a careful consent flow
+  because of biometric legal exposure. See [`PRIVACY.md`](PRIVACY.md).
+- **Deaf and deaf-blind modes in the MVP.** Different sensing/rendering
+  problems that would dilute a six-month blind-user build; belong in later
+  roadmap phases.
+- **Wearables and AR glasses in early phases.** Each is a separate
+  integration project; architecture-only for now.
+- **React Native.** The wrong tool for an iPhone-only, on-device-ML MVP —
+  see [`ARCHITECTURE.md`](ARCHITECTURE.md) for the framework decision.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

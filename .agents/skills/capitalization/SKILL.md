@@ -134,7 +134,7 @@ proper nouns are never re-cased.
 
 ### Worked examples
 
-- `## The three doctrines (non-negotiable)` — only "The" capitalized; a `##`
+- `## The four doctrines (non-negotiable)` — only "The" capitalized; a `##`
   heading, not the H1 title.
 - `### Phase 3: the deaf-user dimension (post-MVP)` — "the" stays lowercase
   even right after the colon — sentence case does not re-capitalize after

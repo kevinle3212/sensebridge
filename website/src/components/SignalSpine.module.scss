@@ -26,6 +26,13 @@
 // "finished" resting frame under reduced-motion/no-JS, so it never appears
 // without JS driving its position.
 .pulse {
+  // 0 at rest, 1 at the fastest scroll the stretch below is tuned for.
+  // src/scripts/motion.ts (initSignalSpine) eases this toward the current
+  // scroll velocity through `style.setProperty`, which is the CSSOM and so
+  // unaffected by the production CSP's `style-src 'self'` — unlike an inline
+  // `style` attribute, which it discards (see scripts/check-csp.js).
+  --spine-speed: 0;
+
   position: absolute;
   top: 0;
   left: calc(#{spine-x()} - 2.5px);
@@ -35,4 +42,17 @@
   border-radius: 50%;
   opacity: 0;
   pointer-events: none;
+
+  // Scroll-velocity reaction: the dot draws out into a vertical streak the
+  // faster the page moves, the way a light source smears across a long
+  // exposure. Scaling a border-radius: 50% dot yields an ellipse, which is
+  // the streak shape for free — no second element and no width change, so
+  // the rail's 1.5px alignment is untouched.
+  // Inside `motion-safe` per DESIGN.md §5's Two-Layer Reduced-Motion Rule:
+  // the no-query default above is the resting state (an unstretched dot at
+  // opacity 0, which never appears without JS at all).
+  @include motion-safe {
+    transform: scaleY(calc(1 + var(--spine-speed) * 5));
+    transform-origin: center;
+  }
 }

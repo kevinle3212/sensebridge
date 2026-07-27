@@ -1,0 +1,900 @@
+/* SenseBridge docs — "technical instrument panel" register.
+   Tokens mirror .agents/context/DESIGN.md. Dark is the default theme;
+   [data-theme="light"] and the prefers-color-scheme fallback both apply the
+   light set so "System" works with zero JS. */
+
+/* ---------------------------------------------------------------------
+   Fonts — self-hosted, zero third-party requests.
+   --------------------------------------------------------------------- */
+@font-face {
+  font-family: "Fraunces Variable";
+  src: url("../fonts/fraunces-variable-latin.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Variable";
+  src: url("../fonts/geist-variable-latin.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono Variable";
+  src: url("../fonts/geist-mono-variable-latin.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------------
+   Tokens
+   --------------------------------------------------------------------- */
+:root {
+  --color-bg: #080a10;
+  --color-bg-elevated: #0f131c;
+  --color-surface: #161b28;
+  --color-glass: rgba(15, 19, 28, 0.6);
+  --color-text: #e8ebf2;
+  --color-text-muted: #a7afc2;
+  --color-signal: #5eb1ff;
+  --color-perception: #ffb37a;
+  --color-hairline: #2a3145;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 64px;
+  --space-6: 96px;
+  --space-7: 128px;
+
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --font-body: "Geist Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --measure: 72ch;
+  --sidebar-width: 260px;
+  --toc-width: 240px;
+
+  color-scheme: dark;
+}
+
+/* "System" fallback: only applies when no explicit dark/light choice was
+   persisted (data-theme absent or JS never ran). */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-bg: #f7f8fb;
+    --color-bg-elevated: #ffffff;
+    --color-surface: #eef1f7;
+    --color-glass: rgba(255, 255, 255, 0.6);
+    --color-text: #101422;
+    --color-text-muted: #4d5468;
+    --color-signal: #145fc4;
+    --color-perception: #a8480d;
+    --color-hairline: #d4d9e4;
+    color-scheme: light;
+  }
+}
+
+:root[data-theme="light"] {
+  --color-bg: #f7f8fb;
+  --color-bg-elevated: #ffffff;
+  --color-surface: #eef1f7;
+  --color-glass: rgba(255, 255, 255, 0.6);
+  --color-text: #101422;
+  --color-text-muted: #4d5468;
+  --color-signal: #145fc4;
+  --color-perception: #a8480d;
+  --color-hairline: #d4d9e4;
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------------------
+   Reset & base
+   --------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--color-signal);
+}
+
+/* Visually hidden but still available to screen readers. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------------
+   Focus — never suppressed, always ≥3:1 against adjacent colors.
+   --------------------------------------------------------------------- */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------------------------------------------------------------------
+   Skip link
+   --------------------------------------------------------------------- */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-2);
+  z-index: 100;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-signal);
+  color: var(--color-bg-elevated);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.skip-link:focus {
+  top: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Header
+   --------------------------------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-glass);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.site-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  text-decoration: none;
+  min-height: 44px;
+}
+
+.site-header__mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-signal);
+}
+
+.site-header__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.search-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-signal);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.search-trigger__kbd {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}
+
+.theme-switch {
+  display: flex;
+  gap: 2px;
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  margin: 0;
+}
+
+.theme-switch__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.theme-switch__option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.theme-switch__option:has(input:checked) {
+  background: var(--color-signal);
+  color: var(--color-bg-elevated);
+}
+
+.theme-switch__option:has(input:focus-visible) {
+  outline: 3px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   Layout grid
+   --------------------------------------------------------------------- */
+.layout {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-2);
+}
+
+main {
+  min-width: 0;
+  padding-block: var(--space-3);
+}
+
+main:focus-visible {
+  outline: none;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--toc-width);
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  main {
+    padding-block: var(--space-4);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Sidebar — native <details>/<summary>, forced open at desktop widths so
+   the nav is never trapped behind JS.
+   --------------------------------------------------------------------- */
+.sidebar {
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+.sidebar__toggle {
+  display: block;
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.sidebar__content {
+  padding-bottom: var(--space-3);
+}
+
+.sidebar__group + .sidebar__group {
+  margin-top: var(--space-3);
+}
+
+.sidebar__heading {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-1);
+}
+
+.sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar__list a {
+  position: relative;
+  display: block;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-1);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+}
+
+.sidebar__list a:hover {
+  color: var(--color-text);
+}
+
+.sidebar__list a[aria-current="page"] {
+  color: var(--color-signal);
+  border-left-color: var(--color-signal);
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .sidebar {
+    border-bottom: none;
+    position: sticky;
+    top: calc(var(--space-2) + 60px);
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+
+  .sidebar__toggle {
+    display: none;
+  }
+
+  /* Force the drawer's content visible regardless of the [open] attribute
+     so desktop never depends on JS to show the nav. */
+  .sidebar__drawer:not([open]) > .sidebar__content {
+    display: block !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Table of contents
+   --------------------------------------------------------------------- */
+.toc {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .toc:not([hidden]) {
+    display: block;
+    position: sticky;
+    top: calc(var(--space-2) + 60px);
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+}
+
+.toc__heading {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-1);
+}
+
+.toc__list-wrap {
+  position: relative;
+}
+
+.toc__indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 20px;
+  background: var(--color-signal);
+  opacity: 0;
+  transform: translateY(0);
+}
+
+.toc__indicator.is-active {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toc__indicator {
+    transition: transform 200ms ease;
+  }
+}
+
+.toc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--color-hairline);
+}
+
+.toc__list ul {
+  list-style: none;
+  margin: 0;
+  padding-left: var(--space-2);
+}
+
+.toc__list a {
+  display: block;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.toc__list a:hover {
+  color: var(--color-text);
+}
+
+.toc__list a[aria-current="true"] {
+  color: var(--color-signal);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------
+   Reading progress
+   --------------------------------------------------------------------- */
+.reading-progress {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 2px;
+  width: 0%;
+  background: var(--color-signal);
+  margin-bottom: var(--space-2);
+}
+
+/* ---------------------------------------------------------------------
+   Content typography
+   --------------------------------------------------------------------- */
+main > h1,
+main > h2,
+main > h3,
+main > h4,
+main > p,
+main > ul,
+main > ol,
+main > table,
+main > blockquote,
+main > pre,
+main > .table-wrapper {
+  max-width: var(--measure);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  scroll-margin-top: 80px;
+}
+
+h1 {
+  font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem);
+  margin-top: 0;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  margin-top: var(--space-4);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  margin-top: var(--space-3);
+}
+
+p,
+li {
+  font-size: 1rem;
+}
+
+.heading-anchor {
+  margin-left: var(--space-1);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  opacity: 0;
+  font-size: 0.85em;
+}
+
+h1:hover .heading-anchor,
+h2:hover .heading-anchor,
+h3:hover .heading-anchor,
+h4:hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------
+   Code
+   --------------------------------------------------------------------- */
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--color-surface);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+.code-block {
+  position: relative;
+}
+
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  overflow-x: auto;
+  white-space: pre;
+  max-width: var(--measure);
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+.copy-code {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  min-height: 32px;
+  padding: 0 var(--space-1);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+  /* currentColor, not --color-hairline: this is a real control, and the
+     hairline token sits at ~1.4:1. Matching the label colour keeps the
+     border at the label's own ratio (8.45:1 dark / 7.54:1 light) and makes
+     it brighten with the text on hover. */
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.copy-code:hover {
+  color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------------
+   Tables
+   --------------------------------------------------------------------- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  text-align: left;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--color-hairline);
+}
+
+th {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  max-width: var(--measure);
+}
+
+.table-wrapper.is-scrollable {
+  /* Flat-by-default: DESIGN.md builds depth from a surface step and a 1px
+     border, never a blur radius, so the "more to scroll" affordance is a
+     hairline right edge rather than the inset shadow this used to carry.
+     Screen-reader users get the same cue from the wrapper's "Scrollable
+     table" label, set in docs.js. */
+  border-right: 1px solid var(--color-hairline);
+}
+
+.table-wrapper.is-scrollable thead th {
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-elevated);
+}
+
+/* ---------------------------------------------------------------------
+   Callouts — blockquotes whose first run of text is Note/Warning/
+   Important/Doctrine, classed by JS (docs.js) since markdown carries no
+   HTML for this.
+   --------------------------------------------------------------------- */
+blockquote {
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  /* A full hairline, not a thick left rule. DESIGN.md builds depth from a
+     surface step plus a 1px border and nothing else, and a heavy one-sided
+     accent is the "side-tab" pattern its detector flags. Callout variants
+     differentiate by border colour rather than border width. */
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-sm);
+  max-width: var(--measure);
+}
+
+blockquote p:first-child {
+  margin-top: 0;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.callout {
+  border-color: var(--color-signal);
+}
+
+.callout-warning,
+.callout-important {
+  border-color: var(--color-perception);
+}
+
+.callout-doctrine {
+  border-color: var(--color-text);
+}
+
+/* ---------------------------------------------------------------------
+   Footer
+   --------------------------------------------------------------------- */
+.site-footer {
+  border-top: 1px solid var(--color-hairline);
+  padding: var(--space-3) var(--space-2);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.site-footer a {
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Search palette
+   --------------------------------------------------------------------- */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  /* The scrim is the documented ink at partial alpha, not pure black, so the
+     dimmed page stays on-palette in both themes. */
+  background: rgba(8, 10, 16, 0.72);
+}
+
+.search-overlay[hidden] {
+  display: none;
+}
+
+.search-panel {
+  width: min(600px, 90vw);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-panel__input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-signal);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.search-panel__list {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.search-panel__list li {
+  border-radius: var(--radius-sm);
+}
+
+.search-panel__option {
+  display: block;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+
+.search-panel__option-title {
+  font-weight: 600;
+}
+
+.search-panel__option-snippet {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.search-panel__list li[aria-selected="true"] .search-panel__option {
+  background: var(--color-surface);
+  outline: 2px solid var(--color-signal);
+}
+
+/* ---------------------------------------------------------------------
+   Signal Path hero (home page only)
+   --------------------------------------------------------------------- */
+.signal-hero {
+  margin-bottom: var(--space-4);
+}
+
+.signal-hero__svg {
+  width: 100%;
+  height: auto;
+  max-width: 880px;
+}
+
+.signal-hero__track {
+  fill: none;
+  stroke: var(--color-hairline);
+  stroke-width: 2;
+}
+
+.signal-hero__node circle {
+  fill: var(--color-bg-elevated);
+  stroke: var(--color-signal);
+  stroke-width: 2;
+}
+
+.signal-hero__node--glow circle {
+  stroke: var(--color-perception);
+}
+
+.signal-hero__node text {
+  fill: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-anchor: middle;
+}
+
+.signal-hero__pulse {
+  fill: var(--color-signal);
+  offset-path: path("M40,70 L220,70 L400,70 L580,70 L760,70");
+  offset-distance: 0%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .signal-hero__pulse {
+    animation: signal-travel 4s ease-in-out infinite;
+  }
+}
+
+@keyframes signal-travel {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Section reveal — resting state is fully visible by default; the
+   animated (hidden-then-revealed) state only exists under
+   prefers-reduced-motion: no-preference, and JS never applies it to
+   content already in the first viewport.
+   --------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 400ms ease-out, transform 400ms ease-out;
+  }
+
+  .reveal.in-view {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Print
+   --------------------------------------------------------------------- */
+@media print {
+  .site-header,
+  .sidebar,
+  .toc,
+  .site-footer,
+  .skip-link,
+  .reading-progress,
+  .signal-hero,
+  .copy-code,
+  .heading-anchor {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .layout {
+    display: block;
+  }
+
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+}

@@ -21,11 +21,27 @@ const locales = Object.keys(translations) as Locale[];
 // navigate home and scroll to the section from a status page, while staying an
 // ordinary same-document fragment jump when already on the home page.
 const home = getRelativeLocaleUrl(locale, "/");
+
+// Whether this page *is* the home page, so the wordmark link below can say so
+// with aria-current. Compared with trailing slashes stripped from both sides:
+// `getRelativeLocaleUrl` returns "/" and "/es/", and the request path may or
+// may not carry the trailing slash depending on how the URL was reached, so a
+// bare `===` would silently never match for some locales.
+const isHome = Astro.url.pathname.replace(/\/$/, "") === home.replace(/\/$/, "");
 ---
 
 <header class="site-header">
   <div class="wrap">
-    <p class="logo">SenseBridge</p>
+    <!-- Wordmark doubles as the home link, the convention every visitor
+         already expects from a site header. Points at this locale's home
+         (not a bare "/") so a Spanish or Vietnamese visitor stays in their
+         language instead of being dropped onto the English page. On the home
+         page itself it stays a link (removing it would move focus order
+         between pages) but is marked aria-current="page", so a screen-reader
+         user is told it leads nowhere new instead of having to follow it to
+         find out. No matching visual state: unlike the language switcher's
+         options, this link has no siblings it must be distinguished from. -->
+    <a class="logo" href={home} aria-current={isHome ? "page" : undefined}>SenseBridge</a>
     <nav aria-label="Primary">
       <a href={`${home}#features`}>{t.header.nav.features}</a>
       <a href={`${home}#privacy`}>{t.header.nav.privacy}</a>
@@ -394,9 +410,15 @@ const home = getRelativeLocaleUrl(locale, "/");
     }
   }
 
+  // The wordmark is a link, but it should still read as a wordmark: inherit the
+  // body color and drop the underline rather than rendering as a stray blue
+  // link. It carries a class, so the drawn-in hover underline that global
+  // `a:not([class])` applies to plain links never matches it.
   .logo {
     margin-inline-end: auto;
     font-weight: 700;
+    color: color("text-primary");
+    text-decoration: none;
   }
 
   .theme-toggle {

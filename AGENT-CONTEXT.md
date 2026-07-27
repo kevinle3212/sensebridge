@@ -10,8 +10,10 @@ SenseBridge is a free, open-source, on-device iOS app (Swift / SwiftUI,
 VoiceOver-first, serverless) that gives blind and low-vision users spoken
 awareness of their surroundings. The chain of trust is: perception runs
 on-device, reasoning hedges every claim, and nothing is positioned as a safety
-device. Those three doctrines — awareness-not-safety, on-device-by-default,
-accessibility-is-the-product — constrain every change.
+device, and users choose their own output rather than having it chosen for
+them. Those four doctrines — awareness-not-safety, on-device-by-default,
+accessibility-is-the-product, user-agency-over-gatekeeping — constrain every
+change.
 
 ## Current repo state (read before assuming code exists)
 

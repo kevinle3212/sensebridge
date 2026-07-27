@@ -72,8 +72,9 @@ maintain beats one that looks good in a report.
 
 NFB or ACB local chapters, accessibility Discord/forum communities, and
 GitHub's accessibility open-source initiatives (see
-[`COMMUNITY_GUIDELINES.md`](../COMMUNITY_GUIDELINES.md)) are the likely
-channels. This is on the critical path, not a nicety — resolve it early.
+[`COMMUNITY_GUIDELINES.md`](https://github.com/kevinle3212/sensebridge/blob/main/COMMUNITY_GUIDELINES.md))
+are the likely channels. This is on the critical path, not a nicety — resolve
+it early.
 
 ## The one sentence that matters most
 
@@ -82,4 +83,5 @@ not validated — no amount of green CI substitutes for that.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

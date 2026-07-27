@@ -59,8 +59,23 @@ final class LanguageSelectionUITests: XCTestCase {
     /// language menu.
     private func selectLanguage(_ option: String, in app: XCUIApplication) {
         element(app, labeled: "Settings").tap()
-        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Language")).firstMatch.tap()
+        let languageRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Language")).firstMatch
+        // The Language section is now the last of several in the Settings
+        // form, so it can start below the fold — scroll it into view before
+        // tapping, since SwiftUI's Form doesn't materialize off-screen rows.
+        scrollUntilExists(languageRow, in: app)
+        languageRow.tap()
         app.buttons[option].tap()
+    }
+
+    /// Swipes up on `app` until `element` exists, bounded so a genuinely
+    /// missing element still fails fast rather than looping forever.
+    private func scrollUntilExists(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 5) {
+        var remaining = maxSwipes
+        while !element.exists, remaining > 0 {
+            app.swipeUp()
+            remaining -= 1
+        }
     }
 
     private func element(_ app: XCUIApplication, labeled label: String) -> XCUIElement {

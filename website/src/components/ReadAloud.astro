@@ -10,18 +10,19 @@
 // Keep this comment inside the frontmatter fence: Astro requires `---` to be
 // the first thing in the file, so a JSDoc block above it silently turns the
 // whole frontmatter into markup.
-import { existsSync } from "node:fs";
+import { hasNaturalVoice } from "../data/natural-voice";
 import { useTranslations, type Locale } from "../i18n";
 
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+const locale = (Astro.currentLocale ?? "en") as Locale;
+const t = useTranslations(locale);
 
-// public/audio/main.mp3 only exists once scripts/generate-audio.js has run
-// (see that file's header comment). Checked at build time, rather than
-// always rendering the src and letting src/scripts/read-aloud.ts discover a
-// 404 via the <audio> element's error event, so a real user's browser never
-// issues a guaranteed-to-fail request for a file that provably doesn't
-// exist yet — the control is simply omitted until the narration ships.
-const naturalVoiceAvailable = existsSync(new URL("../../public/audio/main.mp3", import.meta.url));
+// Checked at build time, rather than always rendering the src and letting
+// src/scripts/read-aloud.ts discover a 404 via the <audio> element's error
+// event, so a real user's browser never issues a guaranteed-to-fail request
+// for a file that provably doesn't exist yet — the control is simply omitted
+// until the narration ships. Footer.astro gates the required ElevenLabs
+// attribution on the same helper, so the credit and the audio always agree.
+const naturalVoiceAvailable = hasNaturalVoice(locale);
 ---
 
 <div class="read-aloud">
@@ -79,5 +80,29 @@ const naturalVoiceAvailable = existsSync(new URL("../../public/audio/main.mp3", 
     border-radius: radius("sm");
     color: color("text-primary");
     cursor: pointer;
+
+    // These were the only interactive controls on the site with no hover
+    // treatment at all — the theme toggle, the language trigger, the hero CTA,
+    // and the error pages' back-home link all have one. That gap mattered most
+    // here: this is the read-aloud control, so the people most likely to reach
+    // for it are the people least well served by a button that acknowledges
+    // nothing on hover.
+    // One transition declaration rather than a second block, for the reason
+    // ErrorPage.astro's `.back-home` documents: a later `transition` replaces
+    // an earlier one outright instead of adding to it.
+    @include motion-safe {
+      transition:
+        background-color duration("slow") ease("in-out"),
+        border-color duration("slow") ease("in-out");
+    }
+
+    // Border and surface only, deliberately no lift. src/scripts/motion.ts
+    // explains why a per-item translate is wrong in a row of siblings: the
+    // hovered one reads as falling out of alignment with its neighbour. These
+    // two toggles sit side by side, so the same reasoning applies.
+    &:hover {
+      background: color("surface");
+      border-color: color("accent-primary");
+    }
   }
 </style>

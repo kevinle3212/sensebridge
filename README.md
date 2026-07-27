@@ -257,6 +257,7 @@ blocks a merge.
 | [`docs/PRIVACY.md`](docs/PRIVACY.md) | On-device data handling guarantees |
 | [`docs/TESTING.md`](docs/TESTING.md) | Test strategy, including field testing with blind users |
 | [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) | Dev environment setup |
+| [`docs/SECRETS.md`](docs/SECRETS.md) | Every CI, deployment, and local credential |
 | [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md) | TestFlight / App Store distribution |
 | [`docs/FAQ.md`](docs/FAQ.md) | Common questions |
 | [`docs/TOOLING.md`](docs/TOOLING.md) | Tooling decisions (global vs. project) |

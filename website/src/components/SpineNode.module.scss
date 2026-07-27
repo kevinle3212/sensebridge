@@ -4,11 +4,29 @@
 // both call the same spine-x() function, and every section this renders
 // inside starts flush with the viewport's left edge, so they resolve to the
 // same on-screen x position regardless of which section hosts the node.
+// `top` is matched off `data-spine-top` rather than set inline, because the
+// production CSP (`style-src 'self'`) drops inline style attributes outright —
+// see the comment in SpineNode.astro. The list is enumerated rather than
+// computed because `attr()` with a <length> type is still Chromium-only; an
+// enumeration works in every browser and the prop's union type keeps the two
+// lists in lockstep.
 .node {
   position: absolute;
   left: calc(#{spine-x()} - 5px);
   overflow: visible;
   pointer-events: none;
+
+  &[data-spine-top="4rem"] {
+    top: 4rem;
+  }
+
+  &[data-spine-top="6rem"] {
+    top: 6rem;
+  }
+
+  &[data-spine-top="8rem"] {
+    top: 8rem;
+  }
 }
 
 .ring {

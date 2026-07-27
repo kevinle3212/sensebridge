@@ -5,7 +5,8 @@ title: Privacy (Engineering Doctrine)
 # Privacy (Engineering Doctrine)
 
 This is the engineering-facing description of SenseBridge's data handling. For
-the legal-facing version, see [`legal/PRIVACY_POLICY.md`](../legal/PRIVACY_POLICY.md)
+the legal-facing version, see
+[`legal/PRIVACY_POLICY.md`](https://github.com/kevinle3212/sensebridge/blob/main/legal/PRIVACY_POLICY.md)
 (informational, requires attorney review before public launch).
 
 ## The core guarantee: no server, nothing to breach
@@ -27,6 +28,16 @@ exist on.
 - **Optional settings sync** (iCloud) carries only preferences — never
   content — and rides on Apple's iCloud security model rather than a
   project-run service.
+- **Hands-free awareness holds the camera open continuously** for as long as
+  the user leaves it running, which is a longer exposure than the one-shot
+  screens — but the same guarantee applies unchanged: frames are classified
+  on-device by Vision, reduced to labels and a distance, and discarded. No
+  frame is written to disk, and none reaches the network. Scene composition
+  runs on Apple's on-device model; no prompt or label leaves the device.
+- **The app declares the `audio` background mode.** It exists solely so the
+  announcement that hands-free awareness *stopped* is audible after the app
+  leaves the screen. iOS revokes camera access on backgrounding regardless, so
+  this grants no ability to observe surroundings in the background.
 
 ## Biometric data (facial enrollment — deferred, designed now)
 
@@ -44,9 +55,9 @@ expensive, the storage model is designed now:
 This design is deliberately both the ethical choice and the legally safest
 one — biometric law (Illinois BIPA, Texas CUBI, GDPR Article 9, CCPA/CPRA
 among others) is a real, fast-moving exposure. See
-[`legal/PRIVACY_POLICY.md`](../legal/PRIVACY_POLICY.md) for the full legal
-notes. **None of this is legal advice — get counsel before shipping any
-facial-enrollment feature.**
+[`legal/PRIVACY_POLICY.md`](https://github.com/kevinle3212/sensebridge/blob/main/legal/PRIVACY_POLICY.md)
+for the full legal notes. **None of this is legal advice — get counsel before
+shipping any facial-enrollment feature.**
 
 ## The optional cloud adapter (not built, opt-in when it exists)
 
@@ -63,4 +74,5 @@ committed to the repository.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

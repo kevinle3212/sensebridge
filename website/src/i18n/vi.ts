@@ -123,6 +123,8 @@ export const vi: Translations = {
     githubLink: "SenseBridge trên GitHub",
     notAvailable:
       "Chưa có sẵn trên App Store — SenseBridge đang ở giai đoạn trước khi ra mắt và đang trong quá trình phát triển mở.",
+    voiceCredit: "Bản đọc giọng tự nhiên được tạo bằng elevenlabs.io.",
+    poweredBy: "Được xây dựng bằng",
     makerPhotoAlt: "Kevin K. Le, hiện là nhà phát triển duy nhất của dự án",
   },
   disclaimer: {

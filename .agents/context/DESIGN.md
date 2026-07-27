@@ -227,8 +227,10 @@ Scroll-scrubbed construction (bridge builds, phone explodes, as you scroll);
 one-shot ignitions (hero "first light" arc); traveling signals (blue point →
 warm arrival pulse, the shared story beat across hero/bridge/glasses);
 magnetic micro-pulls (CTA ±6px, nav links ≤3px — fine-pointer hover only);
+pointer-tracked light (hero glow and capability cards follow the cursor);
 section reveals (fade/rise staggers, each gated visible-by-default);
-scroll-progress bar (2px Signal Blue under the header); Lenis smoothing.
+scroll-progress bar (2px Signal Blue under the header); page-load construction
+and its inverse on exit (see "Page-load sequence"); Lenis smoothing.
 
 ## 6. The 3D layer
 
@@ -287,6 +289,34 @@ layered CSS/SVG art as the resting design. Ghost CTA "Follow progress on
 GitHub" (bordered, magnetic on fine pointers). Visually-hidden
 narrated-illustration paragraph for screen-reader parity.
 
+### Page-load sequence ("Span the gap")
+
+The full-viewport overlay every page load opens with: a suspension bridge
+builds across the whole screen (pylons rise, cable sweeps, suspenders drop,
+deck lays in left to right, joints lock) beside a 0–100% readout, then a
+Signal Blue pulse crosses the finished deck, the Perception Glow blooms at the
+far pylon, and the screen splits along the deck line to reveal the page. An
+internal link click plays the inverse first, so the next page's build reads as
+one continuous gesture.
+
+Three files: `public/page-load.js` (blocking in `<head>`, decides whether to
+run and owns a fail-open watchdog), `PageLoader.astro` (markup plus the whole
+visual state machine), `src/scripts/page-loader.ts` (the driver). Every build
+state is a pure function of one custom property, `--page-build`, so the driver
+writes a single number per frame.
+
+Honest by construction: the number tracks real load milestones
+(`DOMContentLoaded` → `document.fonts.ready` → `load`), eases toward each
+without overshooting it, and only reaches 100% once `load` has fired. The one
+concession is a ~900ms floor that can slow the bar but never speed it up.
+
+Costs a visitor nothing outside the sequence: no canvas, no WebGL, no
+animation library on the critical path, and the overlay returns to
+`display: none` when it ends. `aria-hidden` with no focusable children, over
+content that is already in the DOM and already readable, so a screen-reader
+user never waits for it; any click or keypress dismisses it; it never renders
+at all under `reduce`.
+
 ### Signal Bridge
 
 The signature motif section (`#bridge`): copy states the real pipeline
@@ -332,10 +362,14 @@ Skip link appears top-left on focus (Signal Blue fill, bg-elevated text —
    lint:js && npm run format` — all exit 0.
 2. `npm run test:a11y` (pa11y, WCAG2AA) — 0 errors. The site is multi-locale
    since 2026-07-20 (`/`, `/es/`, `/vi/` via Astro's built-in i18n routing —
-   see `docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`), but
-   `website/.pa11yci.json` currently only lists `http://localhost:4321/` —
-   this gate does not yet cover the `/es/`/`/vi/` routes (tracked in
-   `TODO.md`).
+   see `docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`), and
+   `website/.pa11yci.json` now lists 8 URLs covering all three locales plus
+   the error/status pages (`/404`, `/500`, `/418`, `/not-found`, `/es/451`).
+2b. `npm run check:csp` — 0 failures. Serves the built site with
+   `vercel.json`'s real Content-Security-Policy and asserts nothing the pages
+   need was discarded by it. Neither `astro dev` nor `astro preview` sends
+   that header, so this class of breakage is invisible to every other gate;
+   see `website/README.md` for the two bugs that shipped that way.
 3. Visual matrix when layout/theme/motion changes: 1440/768/390 × dark/light
    × motion/reduced-motion. Reduced motion must show the complete design,
    download zero three.js bytes, and mount zero canvases; no horizontal

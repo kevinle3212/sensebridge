@@ -8,6 +8,12 @@
 --importgrouping testable-last
 --commas inline
 
+# Disabled: fights SwiftLint's `opening_brace` over where a multi-line
+# condition's brace belongs (SwiftFormat wants it wrapped to its own line,
+# SwiftLint wants it on the last condition line). SwiftLint's placement
+# matches the rest of the codebase, so SwiftFormat yields.
+--disable wrapMultilineStatementBraces
+
 # Correctness / dead-code cleanup beyond the defaults
 --enable emptyExtensions
 --enable isEmpty

@@ -16,7 +16,15 @@ FROM node:26-alpine@sha256:e88a35be04478413b7c71c455cd9865de9b9360e1f43456be5951
 WORKDIR /app
 
 COPY website/.npmrc website/package.json website/package-lock.json ./
-RUN npm ci
+# --omit=dev, not a plain `npm ci`: every package in website/'s
+# devDependencies is lint/format/test/audit tooling that `astro build` never
+# touches, so none of it belongs in this stage. This is the load-bearing half
+# of the rule documented in docker/README.md's "Build-time dependencies" — the
+# two packages Astro's build genuinely needs (@astrojs/react, react-scan) sit
+# in `dependencies` precisely so this flag is safe. With the flag in place, a
+# future devDependency import on a build path fails here instead of silently
+# working and then breaking only in the deployed image.
+RUN npm ci --omit=dev
 
 COPY website/ .
 RUN npm run build

@@ -122,11 +122,16 @@ same way.
 
 Railway CLI is available two ways: install it globally
 (`npm install -g @railway/cli` or `brew install railway`) for use anywhere on
-the machine, or use the project-local devDependency (already in
-`website/package.json`, installed via `npm install` inside `website/`) so
-`npm run railway:*` scripts work without a global install. Both resolve to
-the same CLI; the global one is what a fresh contributor is more likely to
-already have, the local one pins an exact version for this repo.
+the machine, or just run the `npm run railway:*` scripts, which invoke
+`npx --yes @railway/cli` and fetch it on demand.
+
+`@railway/cli` is deliberately **not** a dependency of `website/` — it appears
+in neither `package.json` nor `package-lock.json`. Keeping it out is what holds
+`npm audit` at zero for this project (see the accepted-risk note below); the
+tradeoff is that `npx --yes` resolves whatever version is current at run time
+rather than a pinned one, so a `railway:*` script is not reproducible the way
+the rest of the toolchain is. Install the CLI globally and pin it there if you
+need a fixed version.
 
 ```sh
 npm run railway:status        # linked project/service/environment + latest deployment status
@@ -144,11 +149,26 @@ the linked service's full config (builder, `rootDirectory`, restart policy)
 as Railway currently sees it — the fastest way to confirm `railway.toml` is
 actually being read rather than silently falling back to Railpack.
 
-**Known accepted risk:** `@railway/cli`'s `tar` dependency (`tar@6.2.1`) has
-a high/critical `npm audit` finding (path traversal / symlink CVEs, fixed
-only in `tar@7`, which breaks `@railway/cli`'s postinstall via an ESM
-default-export mismatch — no patched `6.x` release exists). Accepted because
-it's dev-only: the Dockerfile's `--omit=dev` means it's never installed in
-the image Railway actually builds and serves, and it's not a `dependencies`
-entry a consumer of this repo would inherit. Re-evaluate if `@railway/cli`
-ships a fix.
+**Known accepted risk (revised 2026-07-25):** `@railway/cli` depends on
+`tar@6.2.1`, which carries a high/critical `npm audit` finding (path traversal
+/ symlink CVEs, fixed only in `tar@7`, which breaks `@railway/cli`'s
+postinstall via an ESM default-export mismatch — no patched `6.x` release
+exists).
+
+This is **no longer in the dependency tree at all**: `@railway/cli` was moved
+to on-demand `npx --yes` invocation, so it appears in neither
+`website/package.json` nor `website/package-lock.json`, there is no
+`node_modules/tar` entry in the lockfile, and `npm ci` reports
+`found 0 vulnerabilities`. Nothing about the built image depends on this.
+
+Where the risk actually lives now: `npx --yes @railway/cli` downloads the
+package — and `tar@6.2.1` with it — onto a developer's machine at the moment a
+`railway:*` script runs. It is transient and local, never in CI and never in
+the image, but it is not "gone". Re-evaluate if `@railway/cli` ships a fix.
+
+> The earlier version of this note justified accepting the risk on the grounds
+> that the Dockerfile's `--omit=dev` excluded it. That reasoning did not hold:
+> the Dockerfile ran a plain `npm ci` until 2026-07-25, and `@railway/cli` had
+> already stopped being a declared dependency by then. Both halves are now
+> true — the flag is in place and the package is out of the tree — but the
+> conclusion was right for the wrong reasons, so it is restated above.

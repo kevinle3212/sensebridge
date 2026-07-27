@@ -4,10 +4,10 @@ title: Quick Start
 
 # Quick Start
 
-> Status: pre-launch. There is no App Store or TestFlight build yet — "getting
-> the app on your device" today means building it from source with a free
-> Apple ID. See [`docs/DISTRIBUTION.md`](DISTRIBUTION.md) for why, and when
-> that changes.
+> **Important:** this project is pre-launch. There is no App Store or
+> TestFlight build yet — "getting the app on your device" today means building
+> it from source with a free Apple ID. See
+> [`docs/DISTRIBUTION.md`](DISTRIBUTION.md) for why, and when that changes.
 
 This page is the fast path: a few minutes from clone to a running app on your
 own iPhone. For the full toolchain reference, troubleshooting, and the
@@ -61,7 +61,7 @@ VoiceOver-first. Keep reading below for what each screen actually does.
 
 ---
 
-# Usage Guide
+## Usage Guide
 
 This section tracks **what the app actually does right now**, not the
 long-term vision — see [`docs/ROADMAP.md`](ROADMAP.md) for where features are
@@ -69,14 +69,14 @@ headed. It changes as the project progresses; if you're implementing a
 feature described here as "scaffold only," update its row in the table below
 in the same change (see [Keeping this guide current](#keeping-this-guide-current)).
 
-## First launch
+### First launch
 
 SenseBridge opens straight to its one main screen — no onboarding, no
 sign-in (there are no accounts; see [`docs/PRIVACY.md`](PRIVACY.md)). The
 camera and microphone permission prompts appear the first time a feature
 that needs them actually runs, not on launch.
 
-## Navigating the app
+### Navigating the app
 
 The home screen is a flat, single-level list — not a grid or a tab bar — so
 a VoiceOver user reaches every mode with simple up/down swipes instead of
@@ -96,7 +96,7 @@ that's a hard project gate (zero unlabeled elements), independent of whether
 the feature behind it is fully wired yet. See
 [`docs/ACCESSIBILITY.md`](ACCESSIBILITY.md).
 
-## Feature status
+### Feature status
 
 Each capture-based feature (Read, Identify, Describe, Awareness, Sounds) has
 a real screen, a real button, and a real accessibility label today — what's
@@ -118,7 +118,7 @@ Camera and microphone permission strings are already configured
 pipeline starts actually requesting the sensor — you won't see it yet on a
 fresh install.
 
-## Obstacle Awareness — read this before using it
+### Obstacle Awareness — read this before using it
 
 The Awareness screen states this before the button, and VoiceOver announces
 it before anything else on that screen: obstacle awareness is **not** a
@@ -128,19 +128,22 @@ probabilistic alerts only — see
 [`docs/SAFETY-FRAMING.md`](SAFETY-FRAMING.md) for the full doctrine behind
 this, which governs every spoken/caption/haptic string in the app.
 
-## Keeping this guide current
+### Keeping this guide current
 
 The Feature status table above is the living source of truth for "what does
 the app do today" — update it in the same change that wires a feature's
-pipeline (per [`AGENTS.md`](../AGENTS.md#docs-sync-per-change)), not as a
-follow-up. If a feature moves from "UI scaffold" to functional, flip its
-"Today" cell and, if the interaction changes (new settings, new permission
-prompt, multi-step flow instead of one capture button), update the relevant
-row's description too. Don't let this page describe a feature as working
-when it isn't — that's the one thing this project treats as a hard rule, see
-[`docs/SAFETY-FRAMING.md`](SAFETY-FRAMING.md) and the honesty framing in
-[`README.md`](../README.md).
+pipeline (per
+[`AGENTS.md`](https://github.com/kevinle3212/sensebridge/blob/main/AGENTS.md#docs-sync-per-change)),
+not as a follow-up. If a feature moves from "UI scaffold" to functional, flip
+its "Today" cell and, if the interaction changes (new settings, new
+permission prompt, multi-step flow instead of one capture button), update
+the relevant row's description too. Don't let this page describe a feature
+as working when it isn't — that's the one thing this project treats as a
+hard rule, see [`docs/SAFETY-FRAMING.md`](SAFETY-FRAMING.md) and the honesty
+framing in
+[`README.md`](https://github.com/kevinle3212/sensebridge/blob/main/README.md).
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

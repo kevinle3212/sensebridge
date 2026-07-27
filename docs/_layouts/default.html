@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if page.title and page.url != "/" %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+<meta name="description" content="{{ site.description }}">
+{% seo title=false %}
+<link rel="stylesheet" href="{{ '/assets/css/docs.css' | relative_url }}">
+<script>
+// Pre-paint theme: read the persisted choice and set data-theme before first
+// paint so there is no flash of the wrong theme. "system" (or nothing
+// stored) intentionally leaves the attribute unset — CSS falls back to
+// prefers-color-scheme for that case.
+(function () {
+  try {
+    var stored = localStorage.getItem("sb-theme");
+    if (stored === "dark" || stored === "light") {
+      document.documentElement.setAttribute("data-theme", stored);
+    }
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+{% include header.html %}
+<div class="layout">
+  {% include sidebar.html %}
+  <main id="main" tabindex="-1">
+    <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
+    {% if page.url == "/" %}{% include hero.html %}{% endif %}
+    {{ content }}
+  </main>
+  {% include toc.html %}
+</div>
+{% include footer.html %}
+<script src="{{ '/assets/js/docs.js' | relative_url }}" defer></script>
+</body>
+</html>

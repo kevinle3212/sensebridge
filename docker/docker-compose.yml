@@ -8,6 +8,16 @@ services:
   dev:
     image: node:22-alpine@sha256:16e22a550f3863206a3f701448c45f7912c6896a62de43add43bb9c86130c3e2
     working_dir: /app
+    # An *unclean* stop (e.g. `up --force-recreate` mid-run) can leave a stale
+    # dev-server lock at website/.astro/dev.json — on the bind mount, so it
+    # survives recreation — and the next `up` aborts with "Another astro dev
+    # server is already running." A normal `docker compose down` stops Astro
+    # gracefully and it removes its own lock, so this is only an unclean-kill
+    # edge; clear it with `rm website/.astro/dev.json` (or `npx astro dev stop`)
+    # if you hit it. `--force` is deliberately NOT used: inside the container
+    # the stale lock's recorded PID collides with a live PID in the new
+    # namespace, so `astro dev --force` SIGTERMs the wrong process and the
+    # container exits.
     command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
     volumes:
       - ../website:/app
@@ -16,6 +26,12 @@ services:
       - "4321:4321"
     environment:
       NODE_ENV: development
+      # Docker Desktop's virtualized bind mount (VirtioFS/gRPC-FUSE) on macOS
+      # and Windows does not deliver inotify/fsevents events into the
+      # container, so Vite's file watcher never sees host edits and hot reload
+      # silently no-ops. Chokidar honors this env var to fall back to polling.
+      # Native Linux (real inotify) ignores it, so it is safe everywhere.
+      CHOKIDAR_USEPOLLING: "true"
 
   # Production image, as deployed to Railway — build + nginx runtime.
   web:

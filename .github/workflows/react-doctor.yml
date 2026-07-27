@@ -43,4 +43,13 @@ jobs:
       - uses: millionco/react-doctor@938008119a288f2fb47c66a69cd9279a21f31784
         with:
           directory: website # this repo's npm/React root; the git root is the repo root, one level up
-          blocking: error # fail the check on new error-severity findings; warnings still report but don't block
+          # `warning`, not `error`: the scan is at zero findings as of
+          # 2026-07-25, and every deslop finding this repo has ever seen was
+          # warning-severity — at `error` the gate would have stayed green
+          # through all six. Blocking on warnings is what actually holds the
+          # clean state, and is equivalent to demanding a perfect score
+          # without calling React Doctor's remote score API (`--no-telemetry`
+          # is an alias for `--no-score`, so a numeric score would mean
+          # sending diagnostics off-device — see docs/PRIVACY.md).
+          # Known-false-positive suppressions live in website/doctor.config.jsonc.
+          blocking: warning

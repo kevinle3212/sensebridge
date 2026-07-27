@@ -1,0 +1,21 @@
+// Code-signing configuration for the SenseBridge app target.
+//
+// This file is committed and deliberately sets no team of its own. The Apple
+// Developer team ID is an account identifier tied to one person's membership;
+// baking it into `project.pbxproj` publishes it with the repository and makes
+// every contributor's first build try to sign against an account they are not
+// in.
+//
+// Put your own team ID in `Signing.local.xcconfig`, which is gitignored:
+//
+//     DEVELOPMENT_TEAM = YOURTEAMID
+//
+// Find it with `security find-identity -v -p codesigning`, or in Xcode under
+// Settings → Accounts → Manage Certificates. Note it is *not* the identifier in
+// parentheses after the certificate name — that is the certificate's ID, not
+// the team's. See docs/ENVIRONMENT.md.
+//
+// `#include?` is the optional form: a clone without the local file still
+// configures and builds, and fails only at the signing step, with Xcode's own
+// "requires a development team" message pointing at the real problem.
+#include? "Signing.local.xcconfig"

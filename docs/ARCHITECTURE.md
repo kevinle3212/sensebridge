@@ -71,21 +71,48 @@ never sees the image, only the labels and text Vision extracted. That's a
 hard constraint of the framework, not a design choice (see
 [AI-MODELS.md](AI-MODELS.md)).
 
+**Data flow — "hands-free awareness":**
+`ARKit (camera + LiDAR) → Perception (depth reduction; objectness saliency →
+per-region classification) → Reasoning (AwarenessEngine thresholds, Foundation
+Models composes) → Output (Speech/Haptic RenderTarget) → User`, with the same
+detections branching to the on-screen preview as yellow outlines. One
+detection pass feeds both channels deliberately: an outline drawn from one
+source and a sentence spoken from another would eventually disagree, and a box
+around something the app never names is a claim it cannot back (see
+[SAFETY-FRAMING.md](SAFETY-FRAMING.md)).
+
 ### Component responsibilities
 
 - **Sensing Layer** — owns hardware (camera, ARKit depth, microphone). Each
   concrete source conforms to `SensingSource`; a future glasses camera is
-  just a new `SensingSource`.
+  just a new `SensingSource`. One exception, documented on the type itself:
+  `AmbientSensingSource` (ARKit `sceneDepth`) is **pull-based** and does not
+  conform, because `SensingSource` pushes a stream of everything captured and
+  ARKit produces 60 frames a second for a consumer that wants fewer than two.
+  ARKit and `CameraSource` are mutually exclusive — iOS grants the rear camera
+  to one session — so hands-free awareness stops the shared camera before it
+  starts.
 - **Perception Layer** — turns raw sensor data into structured facts (text,
   labels, sound events, depth readings). Pure transformation, no UI.
 - **Reasoning Layer** — device-agnostic. Hedging rules, language composition,
   awareness thresholds, output-profile selection (blind = speech, deaf =
   captions, deaf-blind = haptics). Protected from device specifics so it
   survives expansion into future senses/devices.
-- **Output Layer** — delivers via `RenderTarget`. Speech + VoiceOver for the
-  MVP; captions and haptics later; watch and glasses later. `RenderTarget` is
-  the extensibility stub that absorbs future-sense ideas without building
-  them now — write the stub, note the idea, move on.
+- **Output Layer** — delivers via `RenderTarget`, which carries an
+  `OutputMessage` (hedged prose plus an `OutputSignal`) so a haptic-only
+  channel has something to react to when there is no prose to speak. Speech +
+  VoiceOver and haptics are built; captions are not, so the deaf output
+  profile is not offered yet — `MultiRenderTarget.unsupportedChannels`
+  reports that gap rather than rendering a silent no-op. Watch and glasses
+  later. `RenderTarget` is the extensibility stub that absorbs future-sense
+  ideas without building them now — write the stub, note the idea, move on.
+  **The signal is not a decoration on the prose — on a haptic-only channel it
+  is the entire message**, because `HapticRenderTarget` renders
+  `OutputMessage.signal` and discards `text`. Pick the signal from the branch
+  the code is in, never from which screen it is on: a "nothing was
+  recognized" branch that ships `.awarenessAlert` buzzes rising attention at
+  a deaf-blind user while the prose says the opposite, and there is no hedge
+  in a vibration to soften it.
 - **Local Storage** — settings in UserDefaults, optional iCloud/CloudKit sync
   (free, preferences only), and later an encrypted on-device enrollment
   store. No server.
@@ -108,33 +135,134 @@ honest on-device quality gap versus cloud competitors. The answer is hedged
 language plus an optional opt-in cloud path, never a default cloud
 dependency. Full model choice and license ledger: [AI-MODELS.md](AI-MODELS.md).
 
+### The model never writes the sentence
+
+`FoundationModelsSceneComposer` constrains the model to return a **noun
+phrase** ("a chair and a doorway") via `@Generable`, and
+`Phrasing.describe(subject:certainty:)` supplies the hedge afterwards. The
+obvious alternative — let the model write "There's a chair and a doorway ahead
+of you" — would make the hedge a property of a prompt, and therefore something
+a model update can quietly drop. Routing generation through `Phrasing` keeps
+one enforcement point for every spoken string in the app, and keeps the hedge
+strength tied to the *detector's* confidence rather than the model's fluency:
+the lowest confidence in the frame picks the `Certainty`, because a composed
+phrase naming several objects is only as good as its weakest member. A model
+regression can make the wording clumsy; it cannot make the app sound certain.
+
+### Hands-free awareness — the one continuous pipeline
+
+`AmbientAwarenessSession` (App layer) is the only loop in the app; every other
+feature is one capture per tap. It runs two cadences from one loop: depth every
+750 ms, so something stepping in front of the user does not wait on a narration
+interval chosen for comfort; classification and composition only every
+`Settings.narrationIntervalSeconds`, because those are far more expensive.
+`NarrationThrottle` then suppresses unchanged narration — a channel that
+repeats regardless of whether anything changed teaches the user to stop
+listening — while letting a real `AwarenessTransition` through immediately.
+
+This is also where `OutputSignal.awarenessClear` finally has an honest emitter.
+It is truthful only on an alerting → not-alerting *transition*, which is a
+change the app observed, rather than an absence inferred from one sample.
+
+**The floor is rejected by measurement, not by rectangle.** A phone on a chest
+strap tilts down by whatever angle the strap happens to hold that morning, so
+the floor — always the nearest large surface in view — would otherwise drive a
+continuous alert everywhere, forever. Excluding a fixed region of the frame
+would only work for one strap position. Instead `DepthGeometry` projects each
+sample onto gravity using `ARCamera.transform`, and `DepthStatistics` discards
+whatever lies within `floorClearanceMeters` of the lowest surface in view. The
+ground plane is therefore found per frame, at any mount angle, and it follows
+the user onto ramps and stairs. Objects *resting* on the floor stand proud of
+that plane and survive, which is the point: a box in the walkway is exactly what
+must not be filtered out along with the floor under it. When every sample in
+view is ground, the reduction returns `nil` — "could not measure", never "the
+way is clear".
+
+**iOS does not permit camera capture while an app is backgrounded or the screen
+is locked.** Hands-free awareness therefore requires SenseBridge foregrounded
+with the display on, and holds `isIdleTimerDisabled` while running. When the app
+is backgrounded anyway the session stops and *says so* — the target carries the
+`audio` background mode for that one announcement and nothing else — because
+silence on this channel is indistinguishable from "nothing to report" to someone
+who cannot see the screen.
+
 Foundation Models requires Apple Intelligence (iPhone 15 Pro+); implement
 availability checks and a graceful fallback (label lists instead of composed
 sentences) for unsupported devices.
 
 ## Mobile project shape
 
+The reasoning core lives in a separate SwiftPM package, not inside the app
+target — that seam is what makes it testable off-device, with no app target
+or simulator required (`swift test` or `xcodebuild test -scheme
+SenseBridgeCore`). 51 Swift files total across the repo as of this writing.
+
 ```text
-SenseBridge/
-  App/            SenseBridgeApp.swift, AppEnvironment.swift (DI container)
-  Core/
-    Sensing/       SensingSource protocol, Camera/Depth/AudioSource
-    Perception/    OCRService, DetectionService, SoundService, DepthService,
-                    PerceptionRecord (structured output type)
-    Reasoning/      SceneComposer (Foundation Models, 2-stage), AwarenessEngine
-                    (thresholds/hysteresis), Phrasing (hedging, awareness-not-
-                    safety), OutputProfile (blind/deaf/deaf-blind selection)
-    Output/         RenderTarget protocol, SpeechTarget (AVSpeech + VoiceOver),
-                    CaptionTarget (later), HapticTarget (later)
-    Storage/        Settings (UserDefaults), CloudSyncService (optional
-                    CloudKit), EnrollmentStore (later, encrypted, on-device)
-    CloudOptional/  CloudReasoningAdapter (opt-in only, disabled by default)
-  Features/         Reading/ Labeling/ SceneDescription/ ObstacleAwareness/
-                    SoundAlerts/
-  Accessibility/    VoiceOver+Helpers, DynamicType+Helpers, HapticPatterns
-  Resources/        Localizable.xcstrings, InfoPlist.xcstrings,
-                    SoundModels/ (Create ML, permissive)
-  Tests/            mirrors structure — see docs/TESTING.md
+app/
+  Packages/SenseBridgeCore/       SwiftPM package — the device-agnostic core
+    Sources/SenseBridgeCore/
+      Sensing/      SensingSource protocol, CameraSource (concrete camera
+                     implementation), CameraLens + CameraConfiguration (pure
+                     lens/zoom math, testable without hardware),
+                     CameraDeviceResolution, PhotoCaptureDelegate (bridges
+                     AVCapturePhotoCaptureDelegate's callback API to Swift
+                     concurrency). Depth and audio sensing sources are not
+                     built yet
+      Perception/    PerceptionService protocol ("some perception service"
+                     seam so Reasoning never depends on a specific Apple
+                     framework), OCRService (concrete Vision OCR
+                     implementation), ObjectClassificationService (whole-frame
+                     classify, plus region-based detect: objectness saliency
+                     proposes regions, each is classified on its own),
+                     PerceptionRecord (structured output type), DetectedObject
+                     (a label with a bounding box, for the awareness preview's
+                     outlines), DepthStatistics + DepthGeometry (pure depth
+                     reduction). Sound perception is not built yet
+      Reasoning/     SceneComposer (Foundation Models, 2-stage),
+                     AwarenessEngine (thresholds/hysteresis), Phrasing
+                     (hedging, awareness-not-safety), OutputProfile (blind/
+                     deaf/deaf-blind selection), AppLanguage (supported UI
+                     languages), LocalizedCatalog (String Catalog loader)
+      Output/        RenderTarget protocol (OutputMessage + OutputSignal),
+                     SpeechRenderTarget (AVSpeech + VoiceOver),
+                     HapticRenderTarget (Core Haptics, UIFeedbackGenerator
+                     fallback) + HapticPattern (pure, engine-free),
+                     MultiRenderTarget (fan-out per OutputProfile).
+                     CaptionRenderTarget is not built yet
+      Storage/       Settings + SettingsStore protocol +
+                     UserDefaultsSettingsStore. CloudSyncService (optional
+                     CloudKit sync) and EnrollmentStore (encrypted,
+                     on-device) are planned, not built yet
+      CloudOptional/ CloudReasoningAdapter (opt-in only, disabled by default)
+      Resources/     Localizable.xcstrings
+    Tests/SenseBridgeCoreTests/   mirrors Sources/ — see docs/TESTING.md
+  SenseBridge/                    the app target
+    App/            SenseBridgeApp.swift, AppEnvironment.swift (DI
+                     container), CameraController.swift (@Observable bridge
+                     over the one shared CameraSource), HomeView.swift,
+                     SettingsView.swift
+    Accessibility/   VoiceOverAnnouncement.swift — the
+                     announceIfUnspoken(_:profile:) entry point (see
+                     docs/ACCESSIBILITY.md). HapticPattern lives in
+                     Packages/SenseBridgeCore/Sources/.../Output/, not here:
+                     it is an output-channel concern, and keeping it beside
+                     HapticRenderTarget is what lets it stay engine-free and
+                     unit-testable off-device
+    Features/        Camera/ (preview + lens/zoom/torch controls, shared by
+                     every capture feature), Reading/, Labeling/,
+                     SceneDescription/, ObstacleAwareness/ (the continuous
+                     session, plus AwarenessPreviewFeed + AwarenessPreviewView —
+                     ARKit camera frames converted and drawn directly, with
+                     yellow outlines. Camera/CameraPreviewView cannot serve it
+                     (that one renders an AVCaptureSession) and neither does
+                     ARSCNView: nothing here draws 3D content, so SceneKit would
+                     add implicit requirements for no gain), SoundAlerts/
+    Resources/       Localizable.xcstrings, InfoPlist.xcstrings,
+                     Assets.xcassets/ (AppIcon, AccentColor)
+  SenseBridgeTests/                app-level unit tests (AppEnvironmentTests)
+  SenseBridgeUITests/              XCUITest target (LanguageSelectionUITests,
+                                    SenseBridgeUITests)
+  SenseBridge.xcodeproj/           the Xcode project
 ```
 
 **State management** — boring and native: the Observation framework
@@ -212,4 +340,5 @@ Do not build infrastructure for problems you do not have.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

@@ -1,0 +1,30 @@
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="{{ '/' | relative_url }}">
+      <span class="site-header__mark" aria-hidden="true"></span>
+      SenseBridge Docs
+    </a>
+    <div class="site-header__controls">
+      <button type="button" id="search-trigger" class="search-trigger" data-search-src="{{ '/search.json' | relative_url }}">
+        <span class="search-trigger__label">Search</span>
+        <kbd class="search-trigger__kbd" aria-hidden="true">&#8984;K</kbd>
+      </button>
+      <fieldset class="theme-switch" id="theme-switch">
+        <legend class="visually-hidden">Theme</legend>
+        <label class="theme-switch__option">
+          <input type="radio" name="theme" value="system" checked>
+          <span>System</span>
+        </label>
+        <label class="theme-switch__option">
+          <input type="radio" name="theme" value="dark">
+          <span>Dark</span>
+        </label>
+        <label class="theme-switch__option">
+          <input type="radio" name="theme" value="light">
+          <span>Light</span>
+        </label>
+      </fieldset>
+      <span id="theme-status" class="visually-hidden" role="status" aria-live="polite"></span>
+    </div>
+  </div>
+</header>

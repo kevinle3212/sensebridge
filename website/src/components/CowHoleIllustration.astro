@@ -53,7 +53,7 @@ const bodyId = `cow-body-${code}`;
          hole opening itself. -->
     <clipPath id={clipId}>
       <rect x="0" y="0" width="320" height="130"></rect>
-      <ellipse cx="210" cy="130" rx="46" ry="12"></ellipse>
+      <ellipse cx="210" cy="130" rx="66" ry="17"></ellipse>
     </clipPath>
     <!-- Depth gradient for the hole mouth: darker toward the bottom, so the
          opening reads as a shaft rather than a flat disc. -->
@@ -90,14 +90,15 @@ const bodyId = `cow-body-${code}`;
     </clipPath>
   </defs>
 
-  <!-- Ground, broken where the hole opens -->
-  <path class="ground" d="M6 130 H164"></path>
-  <path class="ground" d="M256 130 H314"></path>
+  <!-- Ground, broken where the hole opens. The two ends stop exactly on the
+       hole's rim (210 ± 66), so widening the hole means moving these too. -->
+  <path class="ground" d="M6 130 H144"></path>
+  <path class="ground" d="M276 130 H314"></path>
 
   <!-- Hole interior, painted before the cow so a cow inside the hole reads as
        being in it rather than in front of it -->
-  <ellipse class="hole-fill" cx="210" cy="130" rx="46" ry="12" fill={`url(#${holeId})`}></ellipse>
-  {deep && <ellipse class="hole-depth" cx="210" cy="132" rx="28" ry="7" />}
+  <ellipse class="hole-fill" cx="210" cy="130" rx="66" ry="17" fill={`url(#${holeId})`}></ellipse>
+  {deep && <ellipse class="hole-depth" cx="210" cy="134" rx="42" ry="10" />}
 
   <g clip-path={`url(#${clipId})`}>
     <g class="cow">
@@ -174,7 +175,7 @@ const bodyId = `cow-body-${code}`;
   </g>
 
   <!-- Rim drawn last so its edge stays crisp over a cow crossing it -->
-  <ellipse class="hole-rim" cx="210" cy="130" rx="46" ry="12"></ellipse>
+  <ellipse class="hole-rim" cx="210" cy="130" rx="66" ry="17"></ellipse>
 
   <!-- Surprise spark, timed to the moment the cow tips in -->
   <g class="spark">
@@ -315,8 +316,12 @@ const bodyId = `cow-body-${code}`;
   // start from, so without this it would rest well short of the hole and the
   // picture would not read. The keyframes below override this whenever motion
   // is allowed — matching the 46% "arrived at the lip" keyframe exactly.
+  //
+  // 36px, not the hole's own offset: the cow's front hooves end at x≈103.5, so
+  // this parks them at ≈139.5, four units short of the near rim at x=144, with
+  // the head already out over the opening. Retune it with the hole's rx.
   .cow {
-    transform: translateX(66px);
+    transform: translateX(36px);
   }
 
   @include motion-safe {
@@ -369,6 +374,19 @@ const bodyId = `cow-body-${code}`;
       animation: spark-pop 6s linear infinite;
     }
 
+    // Every offset below is chosen against the hole's actual geometry
+    // (cx 210, rx 66, ry 17) and the pivot at the front hooves — (92.7, 130)
+    // in the drawing's own coordinates. What makes the fall read as *into the
+    // hole* rather than *through the floor* is that the animal's whole rotated
+    // silhouette has to stay between the rims for the entire descent: at
+    // rx 46 the muzzle used to swing out to x≈266 against a rim at 256, so the
+    // head was cut off by the ground instead of swallowed by the opening,
+    // which is exactly what it looked like. At the final frame the rotated
+    // silhouette spans x≈168–252, comfortably inside 144–276.
+    //
+    // If the hole is ever resized again, re-derive these rather than nudging
+    // them: rotate a point p about (92.7, 130) by the frame's angle, then add
+    // the frame's translation, and check the muzzle and the tail tuft.
     @keyframes cow-walk-and-fall {
       // Walking: off-frame left to the lip of the hole.
       0% {
@@ -379,34 +397,37 @@ const bodyId = `cow-body-${code}`;
 
       46% {
         opacity: 1;
-        transform: translate(66px, 0) rotate(0deg);
+        transform: translate(36px, 0) rotate(0deg);
         animation-timing-function: ease-in;
       }
 
-      // Tipping: weight goes over the edge, nose drops first.
+      // Tipping: weight goes over the edge, nose drops first. The muzzle
+      // crosses the rim at x≈206, near the middle of the opening.
       54% {
         opacity: 1;
-        transform: translate(80px, 4px) rotate(16deg);
+        transform: translate(44px, 3px) rotate(15deg);
         animation-timing-function: ease-in;
       }
 
       60% {
         opacity: 1;
-        transform: translate(92px, 14px) rotate(34deg);
+        transform: translate(54px, 14px) rotate(34deg);
         animation-timing-function: ease-in;
       }
 
-      // Falling: accelerating out of sight through the hole's mouth.
+      // Falling: accelerating out of sight through the hole's mouth. By this
+      // frame every part of the animal is past the rim's lower edge (y=147),
+      // so the clip has hidden all of it.
       75% {
         opacity: 1;
-        transform: translate(118px, 104px) rotate(72deg);
+        transform: translate(84px, 110px) rotate(72deg);
       }
 
       // Hidden for the 1.5s beat. The jump back across the frame happens while
       // invisible — the clip alone would not cover the diagonal it travels.
       75.01% {
         opacity: 0;
-        transform: translate(118px, 104px) rotate(72deg);
+        transform: translate(84px, 110px) rotate(72deg);
       }
 
       75.02%,

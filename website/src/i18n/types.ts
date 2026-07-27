@@ -103,6 +103,8 @@ export interface Translations {
     tagline: string;
     githubLink: string;
     notAvailable: string;
+    voiceCredit: string;
+    poweredBy: string;
     makerPhotoAlt: string;
   };
   disclaimer: {

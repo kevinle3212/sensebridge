@@ -8,7 +8,7 @@ SenseBridge work.
 
 ## Orientation (read before exploring)
 
-- What the product is, and the three doctrines that constrain every change:
+- What the product is, and the four doctrines that constrain every change:
   [`AGENTS.md`](AGENTS.md). Read it first.
 - Product and scope: [`docs/PRODUCT.md`](docs/PRODUCT.md). Architecture:
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -67,6 +67,48 @@ CI cannot prove on-device latency/battery/thermal or blind-tester validation.
 State plainly which gates a machine verified and which still need device and
 human validation; never let a green pipeline imply the app was validated by the
 people it is for.
+
+## Hand it back testable
+
+A change the owner cannot try is not finished. Green gates prove the code
+compiles; they prove nothing about the thing they actually asked for.
+
+- **After any change to `app/` code, rebuild for the device and install it**,
+  then say so. Do this unprompted, as the last step before reporting — not only
+  when asked. Doc-only and comment-only changes are exempt.
+- **A simulator build does not count as testable.** ARKit, LiDAR depth, Apple
+  Intelligence, haptics, and the camera all produce nothing in a simulator, so
+  most of this app cannot run there. Build for the device even when the
+  simulator build already passed — signing and arm64 are only exercised on the
+  device destination.
+- Resolve the device at run time rather than hardcoding a UDID; personal Apple
+  identifiers stay out of tracked files, which is the same reason the team ID
+  lives in the gitignored `Config/Signing.local.xcconfig`:
+
+  ```bash
+  # Match the UDID by shape, not by column: device names contain spaces, so
+  # positional awk fields silently return the wrong token.
+  DEVICE=$(xcrun devicectl list devices | awk '/iPhone/ && \
+    match($0, /[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/) \
+    {print substr($0, RSTART, RLENGTH); exit}')
+  xcodebuild -project app/SenseBridge.xcodeproj -scheme SenseBridge \
+    -destination "platform=iOS,id=$DEVICE" build
+  xcrun devicectl device install app --device "$DEVICE" \
+    "$(xcodebuild -project app/SenseBridge.xcodeproj -scheme SenseBridge \
+       -destination "platform=iOS,id=$DEVICE" -showBuildSettings \
+       | awk -F' = ' '/ BUILT_PRODUCTS_DIR/ {print $2; exit}')/SenseBridge.app"
+  ```
+
+- The phone must be unlocked or the developer disk image will not mount; say
+  that rather than reporting a bare failure.
+- Installing to the owner's own device is **not** owner-gated — unlike every
+  `git`/`gh` command, which still is.
+- **Never start a long-running local server unless explicitly asked.** That
+  covers `npm run dev`, `astro preview`, and anything else that holds a port —
+  in `website/` and everywhere else. Build (`npm run build`) to verify, then
+  hand over the command to run rather than running it. A server started
+  unasked outlives the turn, holds a port, and is invisible to someone who
+  never asked for it.
 
 ## Skills and agents (use, don't reinvent)
 

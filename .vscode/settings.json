@@ -15,7 +15,8 @@
     ".gitnexusrc": "json",
     ".graphifyignore": "ignore",
     "post-checkout": "shellscript",
-    "post-commit": "shellscript"
+    "post-commit": "shellscript",
+    "*.jsonc": "jsonc"
   },
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -53,6 +54,11 @@
       "url": "https://json.schemastore.org/tsconfig"
     }
   ],
+  "json.schemaDownload.trustedDomains": {
+    "https://react.doctor/": true,
+    "http://json.schemastore.org/": true,
+    "https://raw.githubusercontent.com/DavidAnson/markdownlint-cli2/": true
+  },
   "search.exclude": {
     "**/node_modules": true,
     "**/.build": true,

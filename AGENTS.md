@@ -12,7 +12,7 @@ VoiceOver-first, serverless — no backend, no accounts, no telemetry by default
 Product and scope live in [`docs/PRODUCT.md`](docs/PRODUCT.md); architecture in
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## The three doctrines (non-negotiable)
+## The four doctrines (non-negotiable)
 
 1. **Awareness, not safety.** The app raises awareness of the environment; it is
    never positioned or worded as a mobility- or navigation-safety device.
@@ -29,6 +29,29 @@ Product and scope live in [`docs/PRODUCT.md`](docs/PRODUCT.md); architecture in
 3. **Accessibility is the product, not a feature.** Every screen is fully
    VoiceOver-navigable with zero unlabeled elements before it merges. See
    [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md).
+4. **User agency over protective gatekeeping.** Offer every option the app can
+   actually deliver, and let the user decide what serves them. **Never withhold
+   a working choice on someone's behalf because it was judged insufficient for
+   them** — that is this project's own failure mode, an accessibility app
+   deciding what a disabled user is allowed to try. A limited channel that
+   works is the user's call, not ours.
+   This doctrine is only safe because of its two binding corollaries, and it is
+   void without them:
+   - **Never offer a choice that delivers nothing.** A control that silently
+     does nothing is worse than an absent one for a screen-reader user, who
+     gets no cue that it is inert. Derive availability from the real
+     implementation (see `MultiRenderTarget.unsupportedChannels`), never from a
+     hardcoded list that rots.
+   - **Never let a limitation go unstated.** Where an option delivers less than
+     it appears to, say so at the point of choice — not in a footer, not in
+     onboarding. Where a capability is planned but not built, name it in the UI
+     as not yet available rather than hiding it, so the user learns the option
+     exists and why it is absent.
+
+   Disclosure is what makes the wide door honest. Without it this doctrine
+   collapses straight into doctrine 1's failure mode — implying more than is
+   delivered. The two are not in tension: doctrine 1 forbids *implying* more
+   than is delivered; an explicit statement of a limitation implies nothing.
 
 ## Operating discipline
 
@@ -58,6 +81,11 @@ once, here.
 6. **Implement strictly and minimally.** Match the documented conventions
    exactly — no lenient shortcuts — touch only what the task requires, and
    keep every changed line traceable to the request.
+7. **Scratch and log files stay in the project.** Write agent scratch state,
+   plans, and logs to this repo's `tmp/` and `logs/` (both gitignored) —
+   never to a machine-local path like `/tmp` or `~/.claude/...` — so the work
+   is visible to `git status`-aware tooling and cleans up with the repo. See
+   [`docs/TOOLING.md`](docs/TOOLING.md)'s "Agent/CI scratch space" row.
 
 ## Coding conventions
 

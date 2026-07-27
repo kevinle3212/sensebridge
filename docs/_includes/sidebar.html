@@ -1,0 +1,26 @@
+<nav aria-label="Documentation" class="sidebar">
+  <details class="sidebar__drawer" id="sidebar-drawer" open>
+    <summary class="sidebar__toggle">Browse documentation</summary>
+    <div class="sidebar__content">
+      {% for group in site.data.nav %}
+      {% assign group_id = group.group | slugify | prepend: "nav-group-" %}
+      <div class="sidebar__group">
+        {%- comment -%}
+          Deliberately a div, not a heading: these labels sit before the page's
+          own <h1> in DOM order, so as headings they would derail rotor-style
+          heading navigation. `aria-labelledby` keeps the group named for
+          screen readers without entering the document heading outline.
+        {%- endcomment -%}
+        <div class="sidebar__heading" id="{{ group_id }}">{{ group.group }}</div>
+        <ul class="sidebar__list" aria-labelledby="{{ group_id }}">
+          {% for item in group.items %}
+          <li>
+            <a href="{{ item.url | relative_url }}"{% if item.url == page.url %} aria-current="page"{% endif %}>{{ item.title }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </details>
+</nav>

@@ -11,7 +11,9 @@ struct SceneDescriptionView: View {
     // canned detection records through the real SceneComposer + RenderTarget.
     // Swap in real Vision + camera capture once those land.
     private let composer: LabelListSceneComposer = .init()
-    private let renderTarget: SpeechRenderTarget = .init()
+    /// Shared app state — renders through the same output targets every
+    /// other feature uses, rather than standing up its own synthesizer.
+    @Environment(AppEnvironment.self) private var environment
     @State private var lastResult: String?
 
     var body: some View {
@@ -26,7 +28,8 @@ struct SceneDescriptionView: View {
                     ]
                     guard let message = try? await composer.compose(from: records) else { return }
                     lastResult = message
-                    await renderTarget.render(message)
+                    announceIfUnspoken(message, profile: environment.settings.outputProfile)
+                    await environment.output.render(OutputMessage(text: message, signal: .resultReady))
                 }
             }
             .accessibilityLabel("Describe scene")
@@ -44,4 +47,5 @@ struct SceneDescriptionView: View {
 
 #Preview {
     SceneDescriptionView()
+        .environment(AppEnvironment())
 }

@@ -10,7 +10,10 @@
       "Bash(swift test:*)",
       "Bash(node tools/check-sensitive-files.mjs:*)",
       "Bash(gitleaks:*)",
-      "Bash(gh pr merge:*)"
+      "Bash(gh pr merge:*)",
+      "Bash(docker compose build:*)",
+      "Bash(docker compose up:*)",
+      "Bash(docker build:*)"
     ],
     "deny": [
       "Edit(legal/**)",

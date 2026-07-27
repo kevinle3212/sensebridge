@@ -123,6 +123,40 @@ a:not([class]) {
   }
 }
 
+// Signal trail: the drawn underline is brightest at its leading edge and
+// falls away behind it, so hovering reads as a signal running the length of
+// the link and leaving a wake — DESIGN.md §5's "traveling signals" vocabulary
+// (a point crossing a span) at the scale of a nav item, the same story the
+// hero, the bridge, and the page loader all tell.
+// It is one gradient on the layer that already exists, not a second travelling
+// layer. A travelling layer was built first and rejected: a small radial
+// gradient reads as a smudge at 1px scale rather than as a point, and it has
+// to park somewhere when it arrives, which leaves a blob sitting past the end
+// of the line for as long as the pointer rests there. Scaling the gradient
+// with the line keeps the bright tip exactly at the growing edge for free,
+// with no second position to animate and nothing left over at the end.
+// Paint-only by construction, which matters here: src/scripts/motion.ts
+// explains at length why the header's four nav links carry no magnetic pull —
+// in a row of siblings, any per-link offset reads as the hovered item falling
+// out of alignment. A background gradient cannot move a box.
+// Re-declared inside `motion-safe` rather than edited into the rule above, per
+// DESIGN.md §5's Two-Layer Reduced-Motion Rule: under `reduce` the block above
+// is what applies, byte for byte what shipped before this existed — a flat
+// line, no gradient, no travel.
+@include motion-safe {
+  a:not([class]) {
+    // `color-mix` rather than the newer relative-colour `rgb(from …)`: same
+    // result, and it is the form with the wider baseline. The tail stays at
+    // 60% so the underline reads as one continuous line at every width, not
+    // as a line that trails off into nothing.
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, currentcolor 60%, transparent),
+      currentcolor
+    );
+  }
+}
+
 // Sanctioned second use of the display face (DESIGN.md "The One Display Face
 // Rule": Fraunces Variable in the hero heading "and at most a future h2
 // treatment"). Global so every section h2 picks it up without per-module

@@ -6,7 +6,12 @@ interface Props {
   // top padding so the node lands at heading level (see each caller for its
   // value). Kept as a prop instead of a lookup table so each section stays
   // the single source of truth for its own spacing.
-  top: string;
+  //
+  // Narrowed from `string` to the three values actually passed so the prop and
+  // SpineNode.module.scss's `[data-spine-top]` rules stay provably exhaustive:
+  // a fourth value has to be added in both places, and `astro check` fails at
+  // the call site if it isn't.
+  top: "4rem" | "6rem" | "8rem";
 }
 
 const { top } = Astro.props;
@@ -16,10 +21,18 @@ const { top } = Astro.props;
      filled center dot, purely decorative. Resting state is "locked" (ring at
      full opacity, dot at full size) — src/scripts/motion.ts only ever hides
      that finished picture first, then reveals it once this section scrolls
-     into view, same hide-then-reveal pattern as the Signal Bridge. -->
+     into view, same hide-then-reveal pattern as the Signal Bridge.
+
+     `top` rides a data attribute rather than `style={...}`: vercel.json's CSP
+     is `style-src 'self'` with no 'unsafe-inline' and no style-src-attr, so a
+     browser discards an inline style attribute whole, which left every marker
+     at `top: auto` — at its section's top edge instead of at heading level.
+     Data attributes are not subject to style-src. Invisible in `astro dev` and
+     `astro preview`, since neither sends the header; scripts/check-csp.js is
+     the check that does. -->
 <svg
   class={styles.node}
-  style={`top: ${top}`}
+  data-spine-top={top}
   viewBox="0 0 10 10"
   width="10"
   height="10"

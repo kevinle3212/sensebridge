@@ -24,9 +24,24 @@ const AUDIO_DIR = path.join(WEBSITE_ROOT, "public", "audio");
 const AUDIO_PATH = path.join(AUDIO_DIR, "main.mp3");
 const MANIFEST_PATH = path.join(AUDIO_DIR, "manifest.json");
 
-const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"; // ElevenLabs' standard "Rachel" voice
+// "Janet" — a professional voice from ElevenLabs' Voice Library, copied into
+// this account. Owner listened to the generated narration on 2026-07-25 and
+// approved this voice as the site's canonical narration voice; do not change
+// it without a fresh listen-through.
+//
+// Pinned to the real voice ID, not the legacy `21m00Tcm4TlvDq8ikWAM` alias
+// this file used to carry. That alias is documented everywhere as "Rachel",
+// but `GET /v1/voices/21m00Tcm4TlvDq8ikWAM` on this account resolves to
+// `eLDc7xhWxG2FElT3kUTj` / "Janet" — so every narration generated through it
+// was already Janet, and the alias could silently remap again and change the
+// site's voice on the next regeneration.
+const DEFAULT_VOICE_ID = "eLDc7xhWxG2FElT3kUTj";
 const DEFAULT_MODEL_ID = "eleven_turbo_v2_5";
-const MAX_CHARACTERS = 5000; // guards against runaway cost if the built page grows unexpectedly
+// Guards against runaway cost if the built page grows unexpectedly. Deliberately
+// far below the model's own 40,000-character ceiling: the binding limit here is
+// the account's monthly quota (10,000 credits on the free plan), not the request
+// size. See website/README.md → "Cost, quota, and licensing".
+const MAX_CHARACTERS = 5000;
 
 // Mirrors the extraction in src/scripts/read-aloud.ts (`main.textContent`
 // collapsed) so the natural-voice narration always says exactly what the

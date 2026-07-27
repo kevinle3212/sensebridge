@@ -51,6 +51,21 @@
   height: 100%;
 }
 
+// Cursor-reactive drift on the static glasses diagram — same mechanism, gate,
+// and rationale as PhoneExploded.module.scss's block of the same name; see
+// there for why this is scoped to `:not(.scene-active)` and why the values go
+// through the CSSOM rather than an inline `style` attribute.
+.stage:not(:global(.scene-active)) .fallback-art {
+  @include motion-safe {
+    transform: translate3d(
+        calc(var(--stage-pointer-x, 0) * 8px),
+        calc(var(--stage-pointer-y, 0) * 8px),
+        0
+      )
+      rotate(calc(var(--stage-pointer-x, 0) * 1.2deg));
+  }
+}
+
 // `.scene-active` is added at runtime by scripts/scenes/core.ts's
 // mountScene() once glasses.ts's WebGL scene is live — same fade-the-
 // static-art pattern as PhoneExploded.module.scss's `.stage:global(.scene-active)`.
