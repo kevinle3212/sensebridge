@@ -74,11 +74,11 @@ public actor HapticRenderTarget: RenderTarget {
             // CHHapticEngine dies on audio-session interruption and otherwise
             // stops working silently — both handlers restart it so haptics
             // keep working after e.g. a phone call.
-            created.resetHandler = { [weak self] in
-                Task { await self?.restartEngine() }
+            created.resetHandler = {
+                Task { [weak self] in await self?.restartEngine() }
             }
-            created.stoppedHandler = { [weak self] _ in
-                Task { await self?.restartEngine() }
+            created.stoppedHandler = { _ in
+                Task { [weak self] in await self?.restartEngine() }
             }
             try? created.start()
         }
