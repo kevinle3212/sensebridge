@@ -18,21 +18,52 @@ Every doc, one line each. Start at `PROJECT_OVERVIEW.md` if you're new.
 
 ## docs/
 
+Every page below is published at
+[GitHub Pages](https://kevinle3212.github.io/sensebridge); `docs/index.md` is
+that site's landing page and carries the same list grouped for readers.
+
+### Product and roadmap
+
 | File | Purpose |
 | --- | --- |
-| `docs/PRODUCT.md` | Product positioning and scope |
+| `docs/PRODUCT.md` | Product positioning, personas, differentiators, funding |
+| `docs/ROADMAP.md` | Five phases, MVP definition, deferred scope and sequencing |
+| `docs/FAQ.md` | Common questions |
+
+### Architecture and engineering
+
+| File | Purpose |
+| --- | --- |
 | `docs/ARCHITECTURE.md` | Module seams: `SensingSource` → perception → Reasoning → `RenderTarget` |
-| `docs/SAFETY-FRAMING.md` | Awareness-not-safety doctrine (highest-severity surface) |
-| `docs/PRIVACY.md` | On-device guarantee, consent rules |
-| `docs/ACCESSIBILITY.md` | VoiceOver bar: zero unlabeled elements |
-| `docs/TESTING.md` | Unit / integration / e2e / AI-eval strategy |
+| `docs/CODE-MAP.md` | Where every directory lives, "I want to change X" table, how to contribute |
 | `docs/AI-MODELS.md` | Model selection and licensing approach |
+| `docs/TESTING.md` | Unit / integration / e2e / AI-eval strategy |
+| `docs/CI-CD.md` | Every workflow, the blocking gates, and what CI cannot prove |
+
+### The doctrines
+
+| File | Purpose |
+| --- | --- |
+| `docs/SAFETY-FRAMING.md` | Awareness-not-safety doctrine (highest-severity surface) |
+| `docs/ACCESSIBILITY.md` | VoiceOver bar: zero unlabeled elements |
+| `docs/PRIVACY.md` | On-device guarantee, consent rules |
+| `docs/SECURITY-MODEL.md` | Trust boundaries, threat model, supply chain, permission surface |
+
+### Setup, distribution, reference
+
+| File | Purpose |
+| --- | --- |
 | `docs/QUICK-START.md` | Fast path to a running app on your own device, plus the living usage guide |
 | `docs/ENVIRONMENT.md` | Toolchain setup (see also `scripts/setup.sh`) |
-| `docs/TOOLING.md` | Global-vs-project tooling decision matrix, MCP inventory |
+| `docs/SECRETS.md` | Every CI, deployment, and local credential — and what breaks without it |
 | `docs/DISTRIBUTION.md` | TestFlight / App Store path |
-| `docs/ROADMAP.md` | Deferred scope and sequencing |
-| `docs/FAQ.md` | Common questions |
+| `docs/TOOLING.md` | Global-vs-project tooling decision matrix, MCP inventory |
+| `docs/OLLAMA.md` | Local LLM experiments (not an app dependency) |
+| `docs/NOTEBOOKLM.md` | Manual NotebookLM setup for project research |
+| `docs/GLOSSARY.md` | Project vocabulary, plus reading paths per audience |
+
+`docs/planning/` is gitignored working research, deliberately unpublished — it
+is neither in this index nor on the docs site.
 
 ## Governance, community, legal
 
@@ -51,7 +82,8 @@ This page's rendered form is also published live at
 
 | File | Purpose |
 | --- | --- |
-| `docs/index.md`, `docs/_config.yml` | GitHub Pages site (Jekyll, zero-config theme) built from `docs/` |
+| `docs/index.md`, `docs/_config.yml` | GitHub Pages site built from `docs/` with `source: docs` |
+| `docs/_layouts/`, `docs/_includes/`, `docs/_data/nav.yml`, `docs/assets/` | The site's custom layout, navigation data, vendored fonts, CSS and JS. Markdown stays canonical — this layer only presents it |
 | `tools/generate-wiki-home.mjs` | Generates the Wiki's `Home.md` from this file |
 | `.github/workflows/codeql.yml` | Code scanning (Swift + JavaScript/TypeScript) |
 | `.github/workflows/pages.yml` | Docs site build and deploy |

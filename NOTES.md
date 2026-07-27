@@ -6,7 +6,7 @@ split:
 | File | Visibility | Contents |
 | --- | --- | --- |
 | **`NOTES.md`** (this file) | **Public** — committed, linted, secret-scanned | A curated digest: durable, contributor-facing findings, each pointing at the canonical doc |
-| **`NOTES.local.md`** | **Private** — gitignored, never committed | The full session-handoff trail, personal setup, and machine-specific notes |
+| **`NOTES.local.md`** | **Private** — gitignored, never committed | The user's own personal setup and machine-specific notes (not written by `/handoff` — see `tmp/handoff.md` below) |
 
 Anything committed here is public the moment the repo is pushed, and stays in
 git history even if deleted later. When in doubt, put it in `NOTES.local.md` —
@@ -44,9 +44,9 @@ It scans staged and tracked files only, so it never sees — and never protects 
 
 Gitignored via [`.gitignore`](.gitignore), excluded from markdownlint via
 [`.markdownlintignore`](.markdownlintignore), and never committed. It holds the
-full session-handoff trail written by [`/handoff`](.claude/commands/handoff.md),
-plus personal setup and machine-specific configuration. Its transient twin
-`tmp/handoff.md` is likewise gitignored and auto-loads on the next `/clear`.
+user's own personal setup and machine-specific configuration — **not** written
+to by [`/handoff`](.claude/commands/handoff.md), which writes only to
+`tmp/handoff.md` (also gitignored, auto-loads on the next `/clear`).
 
 Full handoffs go there, never here: they routinely carry absolute job paths and
 machine state. This file gets only the curated digest distilled from them.
@@ -80,6 +80,46 @@ machine state. This file gets only the curated digest distilled from them.
   files are named `PRODUCT.md` on purpose, with different scopes. Do not "tidy"
   the context back next to the site it describes. See
   [`docs/TOOLING.md`](docs/TOOLING.md) → "Impeccable design context".
+
+### 2026-07-26 — Building the docs site locally needs the `github-pages` gem
+
+- **Do not verify `docs/` with the `jekyll/jekyll` Docker image.** That is
+  plain Jekyll, and it does *not* carry `jekyll-relative-links` — the plugin
+  that rewrites in-docs markdown links to their built `.html` paths. GitHub
+  Pages runs the `github-pages` gem bundle, which enables that plugin
+  automatically and pins Jekyll to 3.10. Building in the wrong image shows
+  every in-docs link unrewritten, which looks like a bug in the docs and
+  invites a "fix" that breaks the real build. Use a Gemfile containing
+  `gem "github-pages", group: :jekyll_plugins` under a Ruby image instead —
+  and install `build-essential` first, or the native extensions for `nokogiri`
+  and `eventmachine` fail to compile. Two further consequences of the 3.10 pin:
+  Jekyll-4-only Liquid (such as `where_exp` with certain expressions) raises a
+  syntax error, and `jekyll-last-modified-at` is not on the Pages plugin
+  allowlist. See [`docs/CI-CD.md`](docs/CI-CD.md).
+
+### 2026-07-26 — A green build says the site compiled, not that it works
+
+- **`docs/assets/js/docs.js` shipped completely unparseable and nothing caught
+  it.** A block comment began
+  `/* Callouts — blockquotes starting with **Note**/**Warning**/...`, where the
+  `**` immediately before `/` forms a `*/` that closes the comment early; the
+  rest of the line became code and the whole file failed to parse. Every
+  interactive feature on all 21 pages was dead — theme switch, search, table of
+  contents, copy buttons, heading anchors, reading progress. The file ships
+  unbundled and unminified, so no build step ever parses it and Jekyll copies
+  it as a static asset; a green Jekyll build and a passing byte budget both
+  say nothing about it. `ci.yml`'s `docs-links` job now runs
+  `node --check docs/assets/js/docs.js`. **Beware `**bold**/` in any block
+  comment** — the markdown habit of bolding words produces `*/` by accident.
+- **Loading one built page in a browser is worth more than every static check
+  combined.** Build exit codes, byte counts, and greps had all passed. Opening
+  a page in Puppeteer and reading the `pageerror` event found a total feature
+  outage in seconds. Do that before calling a static site verified.
+- **A bundled Jekyll plugin stays inert until it is named in `plugins:`.** The
+  `github-pages` gem *ships* `jekyll-seo-tag`, but the layout's `{% seo %}`
+  still failed with `Liquid syntax error: Unknown tag 'seo'` until
+  `docs/_config.yml` declared it. See [`docs/CI-CD.md`](docs/CI-CD.md) →
+  "Docs publishing".
 
 ---
 
