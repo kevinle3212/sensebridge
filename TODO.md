@@ -266,8 +266,9 @@ are. Plan and verified findings: `tmp/PLAN-docs-site.md`. Session log:
 - [x] **[P1]** Verify the four new pages land and re-run the link scan.
       **Done 2026-07-26 06:00 PST.** All four exist (`CI-CD.md` 135 lines,
       `SECURITY-MODEL.md` 146, `GLOSSARY.md` 241, `CODE-MAP.md` 184).
-      `grep -rn "planning/" docs/*.md` and `grep -rn "](\.\./" docs/*.md` both
-      empty; `markdownlint-cli2 docs/*.md` reports 0 issues in 137 files; a
+      `grep -rn "planning/" docs/*.md` came back empty, as did a search for
+      literal `../`-style relative links in `docs/*.md`;
+      `markdownlint-cli2 docs/*.md` reports 0 issues in 137 files; a
       scripted resolver over every relative link in `docs/*.md` returns
       all-resolve, closing the four broken `index.md` links.
 

@@ -301,6 +301,7 @@
       if (index) return Promise.resolve(index);
       return fetch(searchSrc)
         .then(function (response) {
+          if (!response.ok) throw new Error("search index fetch failed: " + response.status);
           return response.json();
         })
         .then(function (data) {

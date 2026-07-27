@@ -219,7 +219,14 @@ const { default: puppeteer } = await import("puppeteer");
 
 const basePath = readBaseUrl();
 const server = await serve(siteDir, basePath);
-const pages = fs.readdirSync(siteDir).filter((f) => f.endsWith(".html")).sort();
+// Filenames come from the local build output this script just produced, but
+// are constrained to a strict allowlist anyway so no path can smuggle a host
+// or scheme change into the 127.0.0.1-only URLs below.
+const SAFE_HTML_FILENAME = /^[A-Za-z0-9][A-Za-z0-9._-]*\.html$/;
+const pages = fs
+  .readdirSync(siteDir)
+  .filter((f) => SAFE_HTML_FILENAME.test(f))
+  .sort();
 const urls = pages.map(
   (f) => `http://127.0.0.1:${PORT}${basePath}/${f === "index.html" ? "" : f}`
 );
