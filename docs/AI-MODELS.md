@@ -8,7 +8,8 @@ title: AI Models
 highest-liability area in this repository — two of the most technically
 attractive models available are legally unusable here, and getting this wrong
 poisons the whole codebase's license. Enforcement ledger (provenance/date per
-bundled model): [`models/README.md`](../models/README.md).
+bundled model):
+[`models/README.md`](https://github.com/kevinle3212/sensebridge/blob/main/models/README.md).
 
 ## The standing rule
 
@@ -26,6 +27,16 @@ and license-clean.
 
 1. **Perception** — Apple Vision (OCR, object/scene detection, no model to
    bundle, no license risk) + Apple Sound Analysis for sound events.
+   Object naming runs two Vision passes rather than one, because a single
+   whole-frame `ClassifyImageRequest` averages a cluttered room into one label
+   and tends to answer with the wall:
+   `GenerateObjectnessBasedSaliencyImageRequest` proposes the regions that look
+   like discrete things, then each region is classified on its own via
+   `ClassifyImageRequest.regionOfInterest`. Regions no identifier describes
+   precisely enough are dropped rather than reported as a weak guess. The
+   bounding boxes fall out of the same pass, which is what lets the awareness
+   screen outline exactly what it is talking about. Whole-frame classification
+   stays as the fallback for scenes with no discrete object in them.
 2. **Reasoning** — Apple Foundation Models composes a hedged natural-language
    sentence from Vision's structured output via guided generation
    (`@Generable`). Text-only, on-device, Apple SDK license.
@@ -58,8 +69,9 @@ don't reach for it by default. See [ARCHITECTURE.md](ARCHITECTURE.md).
 1. Find the license tag directly on the model's own repository — not a blog
    post, not a secondary source.
 2. If MIT or Apache 2.0 (or an equivalent permissive license): safe to add.
-   Record it in [`models/README.md`](../models/README.md) with source and
-   verification date.
+   Record it in
+   [`models/README.md`](https://github.com/kevinle3212/sensebridge/blob/main/models/README.md)
+   with source and verification date.
 3. If AGPL, GPL, or a "research/non-commercial" tag (including `apple-amlr`):
    do not bundle it in anything shipped. Quarantine for local experimentation
    only, and say so explicitly in code comments and in `models/README.md`.
@@ -83,4 +95,5 @@ don't reach for it by default. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

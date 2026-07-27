@@ -4,9 +4,8 @@ title: FAQ
 
 # FAQ
 
-For the full reasoning behind these answers, see
-[`PRODUCT.md`](PRODUCT.md), [`ROADMAP.md`](ROADMAP.md), and
-[`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
+For the full reasoning behind these answers, see [`PRODUCT.md`](PRODUCT.md)
+and [`ROADMAP.md`](ROADMAP.md).
 
 **Why "SenseBridge"?**
 It says what the project does (bridges senses) without overclaiming safety,
@@ -56,4 +55,5 @@ reachable only after the iPhone MVP and later phases land.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

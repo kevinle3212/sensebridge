@@ -5,39 +5,77 @@ title: SenseBridge Documentation
 # SenseBridge Documentation
 
 Open-source, on-device, private accessibility for blind and low-vision iPhone
-users. This site publishes the project's engineering documentation; the
-canonical source lives in [`docs/`](https://github.com/kevinle3212/sensebridge/tree/main/docs)
-on GitHub, alongside the [Wiki](https://github.com/kevinle3212/sensebridge/wiki)
-and the [README](https://github.com/kevinle3212/sensebridge#readme).
+users. SenseBridge translates a person's surroundings into clear spoken
+information, and processes all of it on the phone by default — the camera feed
+and what it sees never have to leave the device.
 
-## Product and Roadmap
+The app is **pre-launch**: there is no download yet, and nothing here should be
+read as a claim that there is. What follows is the complete public engineering
+record. The canonical source is
+[`docs/`](https://github.com/kevinle3212/sensebridge/tree/main/docs) on GitHub,
+mirrored to the [Wiki](https://github.com/kevinle3212/sensebridge/wiki) and
+summarized in the
+[README](https://github.com/kevinle3212/sensebridge#readme).
 
-- [Product](PRODUCT.md) — vision, personas, funding, differentiators
-- [Roadmap](ROADMAP.md) — five-phase roadmap, MVP definition, open questions
-- [FAQ](FAQ.md) — common questions
+New here? [Glossary and reading paths](GLOSSARY.md) routes you through these
+pages in the right order for who you are — curious user, contributor, reviewer,
+or accessibility specialist.
 
-## Architecture and Engineering
+## Product and roadmap
 
-- [Architecture](ARCHITECTURE.md) — system design, protocols, data flow
-- [AI Models](AI-MODELS.md) — on-device model choices and licenses
-- [Testing Strategy](TESTING.md) — unit / integration / e2e / AI-eval strategy
+- [Product](PRODUCT.md) — mission, the wedge, who the MVP is for, success
+  metrics, funding and sustainability
+- [Roadmap](ROADMAP.md) — five phases, what the MVP includes, and what is
+  deliberately deferred
+- [FAQ](FAQ.md) — the questions people actually ask
 
-## The Doctrines
+## Architecture and engineering
 
-- [Safety Framing](SAFETY-FRAMING.md) — the awareness-not-safety doctrine
-  (the single most important document in this repository)
-- [Accessibility Standards](ACCESSIBILITY.md) — VoiceOver testing and
-  labeling standards; zero unlabeled elements is a hard gate
-- [Privacy](PRIVACY.md) — on-device data handling guarantees
+- [Architecture](ARCHITECTURE.md) — the `SensingSource` → perception →
+  Reasoning → `RenderTarget` pipeline, the two-stage on-device AI path, and why
+  there is no backend
+- [Code map](CODE-MAP.md) — what lives in which directory, an "I want to change
+  X, where do I look" table, and how to contribute
+- [AI models](AI-MODELS.md) — model choices and the license ledger; AGPL and
+  Apple's `apple-amlr` are hard blockers
+- [Testing strategy](TESTING.md) — unit, integration, e2e, and AI-eval layers,
+  and the three-test-per-feature e2e floor
+- [CI/CD and release engineering](CI-CD.md) — every workflow, the blocking
+  quality gates, and an honest account of what CI cannot prove
 
-## Setup and Distribution
+## The doctrines
 
-- [Quick Start](QUICK-START.md) — fastest path from clone to a running app on
-  your own device, plus the living usage guide (what each feature does today)
-- [Environment](ENVIRONMENT.md) — dev environment setup
-- [Distribution](DISTRIBUTION.md) — TestFlight / App Store distribution
-- [Tooling](TOOLING.md) — global-vs-project tooling decision matrix
-- [Local AI (Ollama)](OLLAMA.md) — local LLM experiments (not an app dependency)
+These four constrain every change. The first is the most important document in
+the repository.
+
+- [Safety framing](SAFETY-FRAMING.md) — **awareness, not safety.** Every spoken,
+  captioned, and haptic string hedges and never asserts certainty it has not
+  earned
+- [Accessibility standards](ACCESSIBILITY.md) — VoiceOver testing and labeling
+  standards; zero unlabeled elements is a hard gate, not a percentage
+- [Privacy](PRIVACY.md) — the on-device guarantee and the consent rules for
+  anything that would ever leave the phone
+- [Security model](SECURITY-MODEL.md) — trust boundaries, threat model, supply
+  chain, and the permission surface
+
+## Setup and distribution
+
+- [Quick start](QUICK-START.md) — the fastest path from clone to a running app
+  on your own device, plus the living usage guide for what each feature does
+  today
+- [Environment](ENVIRONMENT.md) — toolchain and development environment setup
+- [Secrets and tokens](SECRETS.md) — every CI, deployment, and local credential,
+  and what breaks without it. The shipped app holds no keys at all
+- [Distribution](DISTRIBUTION.md) — the TestFlight and App Store path, and the
+  one real cost involved
+
+## Reference
+
+- [Glossary and reading paths](GLOSSARY.md) — project vocabulary, and a starting
+  route through these docs for each kind of reader
+- [Tooling](TOOLING.md) — the global-vs-project tooling decision matrix and MCP
+  inventory
+- [Local AI (Ollama)](OLLAMA.md) — local LLM experiments; not an app dependency
 - [NotebookLM](NOTEBOOKLM.md) — manual setup for project research
 
 ## Maintainer
@@ -47,7 +85,9 @@ and the [README](https://github.com/kevinle3212/sensebridge#readme).
 **Kevin K. Le** — sole maintainer. Contact details are in
 [`MAINTAINERS.md`](https://github.com/kevinle3212/sensebridge/blob/main/MAINTAINERS.md);
 acknowledgments and third-party credits are in
-[`CREDITS.md`](https://github.com/kevinle3212/sensebridge/blob/main/CREDITS.md).
+[`CREDITS.md`](https://github.com/kevinle3212/sensebridge/blob/main/CREDITS.md);
+governance and how decisions get made are in
+[`GOVERNANCE.md`](https://github.com/kevinle3212/sensebridge/blob/main/GOVERNANCE.md).
 
 ---
 

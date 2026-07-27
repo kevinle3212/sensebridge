@@ -158,4 +158,5 @@ a small model's judgment on safety-framing, privacy, or accessibility calls.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

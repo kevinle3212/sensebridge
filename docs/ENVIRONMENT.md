@@ -38,15 +38,22 @@ committed file, an environment variable, or a log — see
 3. Select your personal Apple ID as the signing team for local, on-device
    builds — free, no Apple Developer Program enrollment needed (App Store
    Connect / TestFlight distribution needs the paid program — see
-   [DISTRIBUTION.md](DISTRIBUTION.md)). `app/project.yml` already sets
-   `CODE_SIGN_STYLE: Automatic` with no `DEVELOPMENT_TEAM`, so this is purely
-   an Xcode-side step:
+   [DISTRIBUTION.md](DISTRIBUTION.md)). `app/project.yml` sets
+   `CODE_SIGN_STYLE: Automatic` and points both configurations at
+   `app/Config/Signing.xcconfig`, which is committed and deliberately names no
+   team — a team ID identifies one person's Apple Developer account, so it
+   stays out of tracked files:
    1. Xcode → Settings → Accounts → add your personal Apple ID (free — not
       the paid Developer Program).
-   2. Open `app/SenseBridge.xcodeproj`, select the `SenseBridge` target →
-      Signing & Capabilities → pick your personal team from the dropdown.
-      Xcode fills in `DEVELOPMENT_TEAM` for you; no manual bundle ID change
-      needed unless you want one different from `com.sensebridge.app`.
+   2. Create `app/Config/Signing.local.xcconfig` (gitignored) containing
+      `DEVELOPMENT_TEAM = YOURTEAMID`. Find the ID with
+      `security find-identity -v -p codesigning`, or in Xcode under Settings →
+      Accounts → Manage Certificates — it is **not** the identifier printed in
+      parentheses after the certificate name, which belongs to the certificate
+      rather than the team. Picking your team in the target's Signing &
+      Capabilities tab works too, but writes the ID into `project.pbxproj`;
+      move it to the local file rather than committing it. No bundle ID change
+      is needed unless you want one different from `com.sensebridge.app`.
    3. Enable Developer Mode on the device: Settings → Privacy & Security →
       Developer Mode → toggle on → restart → confirm "Turn On" in the
       lock-screen prompt. Required since iOS 16 for any developer-signed
@@ -83,13 +90,17 @@ committed file, an environment variable, or a log — see
 
 ## Secret handling
 
-There are no project secrets to handle for the MVP. If that changes (a
-future opt-in cloud adapter, CI signing credentials for TestFlight), keep
-them in the Keychain (on-device) or GitHub Actions repository secrets (CI) —
-never in the repository, a log, or a committed `.env` file. Run
-`tools/check-sensitive-files.mjs` before publishing changes that touch
-signing or credentials.
+The app itself needs no secrets — it is serverless and on-device, so nothing
+ships with a key. CI, deployment, and some local tooling do need credentials:
+every one of them is inventoried in [`SECRETS.md`](SECRETS.md), along with
+where it is configured and what breaks when it is missing.
+
+Keep secrets in the Keychain (on-device), GitHub Actions repository secrets
+(CI), or an untracked `.env` (local tooling) — never in the repository, a log,
+or a committed `.env` file. Run `tools/check-sensitive-files.mjs` before
+publishing changes that touch signing or credentials.
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

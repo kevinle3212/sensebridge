@@ -4,9 +4,6 @@ title: Roadmap
 
 # Roadmap
 
-Source research: [`planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md`](planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md)
-and [`planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md`](planning/SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md).
-
 Five phases. The first two are the MVP, funded by the maintainer's own time.
 The rest are a credible direction, each gated on the previous phase actually
 landing and on real-user validation — not on a calendar. Treat any pressure
@@ -108,7 +105,8 @@ planning:
    [`DISTRIBUTION.md`](DISTRIBUTION.md). Decide before month four.
 4. **Apache 2.0 vs. AGPL for SenseBridge's own code?** Apache 2.0 is
    recommended (see [`AI-MODELS.md`](AI-MODELS.md) and
-   [`../GOVERNANCE.md`](../GOVERNANCE.md)), but if preventing closed forks
+   [`GOVERNANCE.md`](https://github.com/kevinle3212/sensebridge/blob/main/GOVERNANCE.md)),
+   but if preventing closed forks
    matters more than flexibility, AGPL is a defensible, values-driven
    alternative choice.
 5. **How much verbosity do blind users actually want from spoken output?**
@@ -117,4 +115,5 @@ planning:
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Need help? See
+[`SUPPORT.md`](https://github.com/kevinle3212/sensebridge/blob/main/SUPPORT.md).

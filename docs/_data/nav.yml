@@ -1,0 +1,55 @@
+# Sidebar navigation groups, mirroring docs/index.md's structure. `url` is
+# each page's default Jekyll output path (source filename, `.md` -> `.html`).
+# When docs/index.md gains new pages, add matching entries here too — the
+# grouping must stay identical in both, or the sidebar and the landing page
+# tell a reader two different stories about how the docs are organized.
+- group: Product & Roadmap
+  items:
+    - title: Product
+      url: /PRODUCT.html
+    - title: Roadmap
+      url: /ROADMAP.html
+    - title: FAQ
+      url: /FAQ.html
+- group: Architecture & Engineering
+  items:
+    - title: Architecture
+      url: /ARCHITECTURE.html
+    - title: Code Map
+      url: /CODE-MAP.html
+    - title: AI Models
+      url: /AI-MODELS.html
+    - title: Testing Strategy
+      url: /TESTING.html
+    - title: CI/CD & Release Engineering
+      url: /CI-CD.html
+- group: The Doctrines
+  items:
+    - title: Safety Framing
+      url: /SAFETY-FRAMING.html
+    - title: Accessibility Standards
+      url: /ACCESSIBILITY.html
+    - title: Privacy
+      url: /PRIVACY.html
+    - title: Security Model
+      url: /SECURITY-MODEL.html
+- group: Setup & Distribution
+  items:
+    - title: Quick Start
+      url: /QUICK-START.html
+    - title: Environment
+      url: /ENVIRONMENT.html
+    - title: Secrets and Tokens
+      url: /SECRETS.html
+    - title: Distribution
+      url: /DISTRIBUTION.html
+- group: Reference
+  items:
+    - title: Glossary & Reading Paths
+      url: /GLOSSARY.html
+    - title: Tooling
+      url: /TOOLING.html
+    - title: Local AI (Ollama)
+      url: /OLLAMA.html
+    - title: NotebookLM
+      url: /NOTEBOOKLM.html
