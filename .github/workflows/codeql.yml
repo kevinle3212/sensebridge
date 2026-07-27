@@ -9,6 +9,16 @@
 # with no extra PR-time signal. Swift CodeQL therefore only runs on push to
 # main, the weekly schedule, and manual dispatch — never on pull_request.
 # JS/TS CodeQL stays on every PR: it's ubuntu-only and finishes in ~90s.
+#
+# Three more cuts on top of that, since most `main` pushes touch docs/website
+# and never need a Swift rebuild at all:
+# - `changes` skips the `swift` job entirely on a push that never touched
+#   app/ — the weekly schedule and manual dispatch always run it regardless.
+# - DerivedData is cached across runs, so most Swift builds are incremental
+#   rather than clean.
+# - `security-extended`'s slower query set only runs on the weekly schedule;
+#   push/dispatch use the faster default suite. The Security tab keeps
+#   showing the last full scan's results between runs either way.
 
 name: CodeQL
 
@@ -31,9 +41,34 @@ permissions:
   security-events: write
 
 jobs:
+  changes:
+    name: Detect changed paths
+    # Only a push needs the check — schedule/dispatch are already deliberate
+    # full-scan triggers, so those always let the swift job run.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Check for app/ changes
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" != "push" ]; then
+            echo "app=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- app/; then
+            echo "app=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "app=true" >> "$GITHUB_OUTPUT"
+          fi
+
   swift:
     name: CodeQL (Swift)
-    if: github.event_name != 'pull_request'
+    needs: changes
+    if: github.event_name != 'pull_request' && needs.changes.outputs.app == 'true'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -47,13 +82,23 @@ jobs:
             sudo xcode-select -switch "$LATEST"
           fi
 
+      - name: Cache DerivedData
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: derived-data-swift-${{ hashFiles('app/**/*.swift', 'app/**/project.pbxproj') }}
+          restore-keys: |
+            derived-data-swift-
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4
         with:
           languages: swift
           build-mode: manual
-          # security-extended adds higher-precision queries beyond the defaults.
-          queries: security-extended
+          # security-extended's higher-precision queries are slower; reserve
+          # them for the weekly full scan and use the faster default suite
+          # on push/dispatch, where turnaround matters more.
+          queries: ${{ github.event_name == 'schedule' && 'security-extended' || '' }}
 
       - name: Build app
         run: |
@@ -81,6 +126,14 @@ jobs:
         with:
           languages: javascript-typescript
           queries: security-extended
+          # Skip vendored third-party skill scripts (e.g. impeccable's bundled
+          # live-preview server). They run locally on dev machines, ship in
+          # nothing, and get overwritten on skill re-vendor — scanning them is
+          # noise, not first-party signal. paths-ignore applies to interpreted
+          # languages like JS/TS, which is exactly this analysis.
+          config: |
+            paths-ignore:
+              - '.github/skills/**'
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4

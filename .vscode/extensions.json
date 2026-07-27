@@ -8,7 +8,8 @@
     "editorconfig.editorconfig",
     "github.vscode-github-actions",
     "eamodio.gitlens",
-    "continue.continue"
+    "continue.continue",
+    "wakatime.vscode-wakatime"
   ],
   "unwantedRecommendations": [
     "hookyqr.beautify",

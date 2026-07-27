@@ -1,12 +1,14 @@
 ---
-description: Groom NOTES.local.md — collapse resolved handoff entries, consolidate duplicated reference material, and surface still-open items — with a backup in tmp/ and a before/after report. Never touches NOTES.md or git.
+description: Groom NOTES.local.md — collapse resolved legacy handoff entries, consolidate duplicated reference material, and surface still-open items — with a backup in tmp/ and a before/after report. Never touches NOTES.md or git.
 ---
 
 # cleanup-notes
 
-Groom `NOTES.local.md` (repo root). It accumulates `/handoff` entries and
-personal reference material until the signal drowns; this command compacts it
-without losing anything that is still live.
+Groom `NOTES.local.md` (repo root) — the user's own personal and
+machine-specific notes file; `/handoff` no longer writes to it (see
+[`handoff.md`](handoff.md)), but it may still hold legacy handoff entries from
+before that change, plus personal reference material, until the signal
+drowns. This command compacts it without losing anything that is still live.
 
 **This file is private and gitignored.** Nothing here is ever committed,
 staged, or copied into the public `NOTES.md` — promoting a finding to the

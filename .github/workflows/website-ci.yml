@@ -57,6 +57,12 @@ jobs:
         # Asserts the pinned disclaimer reaches dist/ verbatim for every locale,
         # so a copy edit can never silently weaken the framing.
         run: npm run check:disclaimer
+      - name: Zero-JS posture (no hydrated islands)
+        # A single `client:*` directive pulls its framework runtime (~187kB for
+        # React) into every page that renders the component — the build, types,
+        # and lint all still pass, so nothing else here would catch it. Budget
+        # lives in website/scripts/check-zero-js.js.
+        run: npm run check:zero-js
       - name: Natural-voice narration freshness
         # No network I/O, no secret needed — see website/README.md's
         # "Read-aloud controls" section. Skips gracefully (exit 0) until the

@@ -47,6 +47,11 @@ graphify-out/
 .env.*
 !.env.example
 
+# Local code-signing identity. `app/Config/Signing.xcconfig` is committed and
+# sets no team; the team ID is an account identifier and stays on the machine
+# that owns it. See app/Config/Signing.xcconfig and docs/ENVIRONMENT.md.
+app/Config/Signing.local.xcconfig
+
 # Private notes: NOTES.md is public/committed; NOTES.local.md is personal and
 # machine-specific and must never be committed. See NOTES.md.
 NOTES.local.md
