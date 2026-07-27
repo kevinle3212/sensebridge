@@ -1,0 +1,658 @@
+---
+/**
+ * "Span the gap" — the full-viewport page-load sequence.
+ *
+ * A bridge builds itself across the whole screen while the page loads: the two
+ * pylons rise, the cable sweeps between them, the suspenders drop, the deck
+ * lays in left to right, and the joints lock. At 100% a Signal Blue pulse
+ * crosses the finished deck, the Perception Glow blooms at the far pylon, and
+ * the screen splits along the deck line to reveal the page — the site's own
+ * sensing → reasoning → output story, told once per page load.
+ *
+ * Three files, one feature, and the split is not arbitrary:
+ *
+ *   public/page-load.js  decides whether the sequence runs and sets
+ *     `data-page-load` on <html>. Blocking, in <head>, because the overlay has
+ *     to be covering the page on the very first frame.
+ *   this file            the markup and the whole visual state machine. Every
+ *     build state is a pure function of one custom property, `--page-build`
+ *     (0 → 1), so the driver writes a single number per frame and touches
+ *     nothing else.
+ *   scripts/page-loader.ts  turns real load milestones into that number, and
+ *     owns the unlock, the skip control, and the exit transition.
+ *
+ * Accessibility: this is decoration over content that is already in the DOM
+ * and already readable, so it is `aria-hidden` and announces nothing. A screen
+ * reader user is never made to wait for it — they are reading the page while
+ * it plays. It is never rendered at all under `prefers-reduced-motion: reduce`
+ * (gated in page-load.js), and any click or keypress dismisses it instantly.
+ * It contains no focusable element, so it cannot become a keyboard trap.
+ *
+ * Cost: no canvas, no WebGL, no animation library, no per-frame layout. The
+ * bridge is one inline SVG whose parts are driven by CSS `transform`,
+ * `clip-path`, `opacity`, and `stroke-width` off that single custom property,
+ * which is set on this element rather than on <html> so a frame's style
+ * invalidation stays inside this subtree (reinforced by `contain`). When the
+ * sequence ends the overlay returns to `display: none` and costs nothing —
+ * the node is kept so the exit transition can reuse it.
+ */
+
+// Suspender/joint positions along the span, and the single source of truth for
+// both: each suspender hangs from the cable at its own x down to the deck, and
+// a joint locks at its foot. `cableY` is the cable's quadratic
+// (M150,70 Q500,210 850,70), whose x is linear in t because the control point
+// sits at the midspan — so t = (x - 150) / 700 and y = 70 + 280·t·(1 - t).
+const SPAN_START = 150;
+const SPAN_END = 850;
+const DECK_Y = 250;
+const cableY = (x: number): number => {
+  const t = (x - SPAN_START) / (SPAN_END - SPAN_START);
+  return Math.round((70 + 280 * t * (1 - t)) * 10) / 10;
+};
+const joints = [240, 330, 420, 500, 580, 670, 760].map((x) => ({ x, y: cableY(x) }));
+---
+
+<!-- `aria-hidden` and free of focusable children: see the file comment. The
+     resting state is `display: none`; only the `data-page-load` attribute that
+     public/page-load.js sets on <html> ever shows it. -->
+<div class="loader" data-page-loader aria-hidden="true">
+  <!-- The two opaque halves that cover the page. They part along the deck line
+       at the end, which is what makes the reveal read as the span opening
+       rather than as a panel fading out. -->
+  <div class="panel panel-top"></div>
+  <div class="panel panel-bottom"></div>
+
+  <div class="stage">
+    <!-- Sensing rings at the near pylon: where the signal enters the span. The
+         same stroke-only LiDAR vocabulary as the hero. -->
+    <div class="rings">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+    <!-- `preserveAspectRatio="none"` stretches the span to fill any viewport,
+         which is the whole point — this is a full-page structure, not an
+         artifact sitting in the middle of one. `vector-effect:
+         non-scaling-stroke` (in the stylesheet) then renders every stroke in
+         device space, so the stretch never thins a vertical line relative to a
+         horizontal one, and a zero-length round-capped line stays a perfect
+         circle instead of an ellipse. That last property is why the joints and
+         the travelling pulse are drawn as lines rather than circles.
+
+         For the same reason nothing here uses `stroke-dasharray` to draw
+         itself on: dash geometry under a non-scaling stroke is device-space in
+         some engines and user-space in others. The cable and the deck reveal
+         with `clip-path` wipes instead, which behave identically everywhere
+         and degrade to "already built" if clipping is unsupported. -->
+    <svg class="span" viewBox="0 0 1000 400" preserveAspectRatio="none" focusable="false">
+      <!-- Piers below the deck line — depth, so the deck reads as carried
+           rather than floating. -->
+      <g class="piers">
+        <line x1="300" y1={DECK_Y} x2="300" y2="400"></line>
+        <line x1="500" y1={DECK_Y} x2="500" y2="400"></line>
+        <line x1="700" y1={DECK_Y} x2="700" y2="400"></line>
+      </g>
+
+      <!-- Each pylon is two segments sharing an x: the mast grows up from the
+           deck line, the pier grows down from it. One tower drawn as a single
+           line could only grow from one end. -->
+      <line class="mast" x1={SPAN_START} y1="40" x2={SPAN_START} y2={DECK_Y}></line>
+      <line class="mast" x1={SPAN_END} y1="40" x2={SPAN_END} y2={DECK_Y}></line>
+      <line class="pier" x1={SPAN_START} y1={DECK_Y} x2={SPAN_START} y2="400"></line>
+      <line class="pier" x1={SPAN_END} y1={DECK_Y} x2={SPAN_END} y2="400"></line>
+
+      <g class="cable-wipe">
+        <path class="cable" d="M150,70 Q500,210 850,70"></path>
+      </g>
+
+      <g class="suspenders">
+        {joints.map((joint) => <line x1={joint.x} y1={joint.y} x2={joint.x} y2={DECK_Y} />)}
+      </g>
+
+      <g class="deck-wipe">
+        <line class="deck" x1={SPAN_START} y1={DECK_Y} x2={SPAN_END} y2={DECK_Y}></line>
+        <line class="deck-rail" x1={SPAN_START} y1="259" x2={SPAN_END} y2="259"></line>
+      </g>
+
+      <!-- Zero-length round-capped lines: perfect circles under a non-scaling
+           stroke, and they lock in by growing their stroke width from 0. -->
+      <g class="joints">
+        {joints.map((joint) => <line x1={joint.x} y1={DECK_Y} x2={joint.x} y2={DECK_Y} />)}
+      </g>
+
+      <!-- Signal Blue pulse. Parked at the near pylon for the whole build and
+           only ever crosses once, on unlock. -->
+      <line class="pulse" x1={SPAN_START} y1={DECK_Y} x2={SPAN_START} y2={DECK_Y}></line>
+    </svg>
+
+    <!-- Perception Glow arriving at the far pylon as the pulse lands. -->
+    <div class="bloom"></div>
+
+    <div class="readout">
+      <p class="mark">SenseBridge</p>
+      <!-- Written by scripts/page-loader.ts. The "0%" here is the honest
+           starting value, not a placeholder: it is what the sequence shows
+           before the first milestone resolves. -->
+      <p class="count" data-page-load-count>0%</p>
+      <div class="rail"><span class="rail-fill"></span></div>
+    </div>
+  </div>
+</div>
+
+<style lang="scss">
+  @use "sass:string";
+  @use "@styles/abstracts" as *;
+
+  // Fraction of the viewport height the deck line sits at: the SVG's 1000x400
+  // viewBox puts the deck at y=250, i.e. 0.625. Everything that has to line up
+  // with the deck derives from this one number, in whichever unit it needs.
+  // Retune it with the viewBox or the seam stops landing on the deck.
+  $deck-ratio: 0.625;
+  $deck: $deck-ratio * 100%;
+  $deck-offset: $deck-ratio * 100vh;
+
+  // Where the two pylons stand, as a fraction of viewport width — the SVG's
+  // x=150 and x=850 of 1000. Used to place the DOM-side rings and bloom on top
+  // of their SVG counterparts.
+  $near-pylon: 15%;
+  $far-pylon: 85%;
+
+  // How long the unlock takes, end to end. Mirrored by REVEAL_MS in
+  // scripts/page-loader.ts, which hides the overlay when it is over — keep the
+  // two in step.
+  $pulse-duration: 360ms;
+  $reveal-duration: 880ms;
+  // Mirrored by CLOSE_MS in scripts/page-loader.ts.
+  $close-duration: 420ms;
+
+  // Maps the global 0 → 1 build progress onto one part's own 0 → 1 window, so
+  // every part of the bridge is a pure function of `--page-build` and the
+  // driver never has to know the choreography. Returns a bare `<number>`,
+  // which is what `scaleY()`, `opacity`, and the `calc()`s below want.
+  //
+  // Built as a string rather than as Sass arithmetic because the expression
+  // has to survive into the stylesheet unevaluated — `var(--page-build)` has
+  // no value at build time.
+  @function build-phase($from, $to) {
+    @return string.unquote("clamp(0, (var(--page-build) - #{$from}) / #{$to - $from}, 1)");
+  }
+
+  .loader {
+    // The driver's only per-frame write. Declared here (rather than left to
+    // `var()`'s fallback) so that on the first frame — before the driver has
+    // ever run — every phase below resolves to 0 and the bridge starts unbuilt
+    // instead of flashing fully built.
+    --page-build: 0;
+
+    position: fixed;
+    inset: 0;
+
+    // Above the sticky header (z-index 10 in Header.astro) and the skip link,
+    // below nothing else — this covers the whole page or it covers nothing.
+    z-index: 100;
+    display: none;
+
+    // A frame of this sequence must never cost the rest of the document a
+    // layout or a repaint. Size containment is deliberately left out: the box
+    // is sized by its own insets, and `contain: strict` would additionally
+    // suppress that.
+    contain: layout paint style;
+    overscroll-behavior: contain;
+
+    // Stops a touch drag from scrolling the page underneath while it is hidden
+    // from view. A wheel scroll still reaches the document — a non-passive
+    // wheel listener costs more scroll performance for the rest of the
+    // session than it saves in this ~1s window.
+    touch-action: none;
+    cursor: progress;
+  }
+
+  // The one state selector that reveals the overlay: `data-page-load` is set on
+  // <html> by public/page-load.js before first paint and cleared by
+  // scripts/page-loader.ts when the sequence ends. No attribute — no JS,
+  // reduced motion, or a finished sequence — means `display: none` above, so
+  // this costs a visitor nothing outside the sequence itself.
+  :global(html[data-page-load]) .loader {
+    display: block;
+  }
+
+  .panel {
+    position: absolute;
+    right: 0;
+    left: 0;
+    background-color: color("bg");
+
+    // A page-scale flat fill reads as a dead rectangle; this is the same
+    // Signal Blue bloom the hero uses, at a fraction of the alpha, rising at
+    // the near pylon where the sensing rings sit.
+    //
+    // Sized to the viewport rather than to the panel, and offset per panel
+    // below, so the two halves sample one continuous gradient. Left to default
+    // sizing they each paint their own copy of it, which draws a hard seam
+    // straight across the screen at the split — visible for the whole build,
+    // long before the split is supposed to mean anything.
+    background-image: radial-gradient(
+      110% 70% at #{$near-pylon} #{$deck},
+      color-mix(in srgb, color("accent-primary") 10%, transparent),
+      transparent 72%
+    );
+    background-repeat: no-repeat;
+    background-size: 100vw 100vh;
+  }
+
+  .panel-top {
+    top: 0;
+    height: $deck;
+    background-position: 0 0;
+  }
+
+  .panel-bottom {
+    top: $deck;
+    bottom: 0;
+
+    // Pulls the shared gradient up by exactly the panel's own offset, which is
+    // what keeps it continuous across the seam.
+    background-position: 0 (-$deck-offset);
+  }
+
+  .stage {
+    position: absolute;
+    inset: 0;
+  }
+
+  // Light spilling down from under the deck, so the lower third is lit by the
+  // structure above it instead of reading as leftover space. `::before` rather
+  // than `::after`: both sit in the positioned-elements paint layer alongside
+  // the readout, and only `::before` is ordered beneath it.
+  //
+  // Its opacity is the build progress itself, so the span visibly comes alive
+  // as it is finished rather than switching on at the end.
+  .stage::before {
+    position: absolute;
+    inset: $deck 0 0;
+    content: "";
+    // Elliptical rather than a full-width linear fade: a band running edge to
+    // edge reads as a floor the bridge is standing on, which is the opposite
+    // of a span. Anchored under midspan so it falls off sideways as well as
+    // downward, and stays visibly light cast by the structure.
+    background: radial-gradient(
+      70% 100% at 50% 0%,
+      color-mix(in srgb, color("accent-primary") 11%, transparent),
+      transparent 66%
+    );
+    opacity: var(--page-build);
+  }
+
+  .span {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+
+    // Inherited, unlike vector-effect below.
+    stroke-linecap: round;
+  }
+
+  // See the markup comment: device-space strokes are what make the stretch
+  // survivable and what turn a zero-length round-capped line into a circle.
+  //
+  // Declared on every shape rather than once on the <svg>: `vector-effect` is
+  // not an inherited property, so setting it on the root does nothing at all
+  // to the children. Without this the viewBox's two very different scale
+  // factors (1.44x across, 2.25x down at 1440x900) reach the strokes, and the
+  // deck renders at roughly twice the weight of the pylons it rests on.
+  .span :is(line, path) {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .mast,
+  .pier {
+    stroke: color("text-secondary");
+    stroke-width: 2;
+    transform-box: fill-box;
+  }
+
+  // The towers arrive first, growing out of the deck line in both directions.
+  .mast {
+    transform-origin: 50% 100%;
+    transform: scaleY(#{build-phase(0, 0.2)});
+  }
+
+  .pier {
+    transform-origin: 50% 0%;
+    transform: scaleY(#{build-phase(0.04, 0.24)});
+  }
+
+  .piers line {
+    stroke: color("hairline");
+    stroke-width: 1;
+    transform-box: fill-box;
+    transform-origin: 50% 0%;
+    transform: scaleY(#{build-phase(0.5, 0.78)});
+  }
+
+  .cable {
+    stroke: color("accent-primary");
+    stroke-width: 2;
+    opacity: 0.85;
+  }
+
+  // Left-to-right reveal wipes. The inset is a percentage of the group's own
+  // bounding box, so both wipes track the span itself rather than the viewport
+  // and stay correct at any aspect ratio.
+  .cable-wipe {
+    clip-path: inset(0 calc(100% - #{build-phase(0.16, 0.56)} * 100%) 0 0);
+  }
+
+  .deck-wipe {
+    clip-path: inset(0 calc(100% - #{build-phase(0.44, 0.86)} * 100%) 0 0);
+  }
+
+  .suspenders line {
+    stroke: color("hairline");
+    stroke-width: 1.5;
+    transform-box: fill-box;
+    transform-origin: 50% 0%;
+  }
+
+  .joints line {
+    stroke: color("accent-primary");
+  }
+
+  // Per-part stagger. Driven by `:nth-child()` rather than a `--i` set with a
+  // `style` attribute in the markup: vercel.json's CSP is `style-src 'self'`
+  // with no `'unsafe-inline'`, which blocks inline style attributes outright.
+  // The joints lock last, and the seventh finishes exactly on 1: its window is
+  // 0.72 + 6 × 0.025 → + 0.13, which lands on 1.000. Widening the step or the
+  // duration pushes that past 1, where it can never be reached — the bridge
+  // would then finish with its far joints permanently missing.
+  @for $index from 1 through 7 {
+    $suspender-offset: ($index - 1) * 0.028;
+    $joint-offset: ($index - 1) * 0.025;
+
+    .suspenders line:nth-child(#{$index}) {
+      transform: scaleY(#{build-phase(0.3 + $suspender-offset, 0.44 + $suspender-offset)});
+    }
+
+    .joints line:nth-child(#{$index}) {
+      // Grown from 0 rather than faded in: a stroke width is what gives these
+      // their size at all, so this is the joint appearing, not brightening.
+      // Each one lights only after the deck wipe has passed its x.
+      stroke-width: calc(7px * #{build-phase(0.72 + $joint-offset, 0.85 + $joint-offset)});
+    }
+  }
+
+  .deck {
+    stroke: color("text-primary");
+    stroke-width: 2.5;
+  }
+
+  .deck-rail {
+    stroke: color("hairline");
+    stroke-width: 1;
+  }
+
+  .pulse {
+    stroke: color("accent-primary");
+    stroke-width: 11;
+    opacity: 0;
+  }
+
+  .rings {
+    position: absolute;
+    top: $deck;
+    left: $near-pylon;
+    display: grid;
+    place-items: center;
+    translate: -50% -50%;
+
+    span {
+      grid-area: 1 / 1;
+      width: 6rem;
+      height: 6rem;
+      border: 1px solid color("accent-primary");
+      border-radius: 50%;
+      opacity: 0;
+    }
+  }
+
+  .bloom {
+    position: absolute;
+    top: $deck;
+    left: $far-pylon;
+    width: 34vmax;
+    height: 34vmax;
+    // Themed rather than the dark palette's literal Perception Glow: on the
+    // light background that value is nearly invisible, so the arrival the
+    // whole sequence builds toward would land on nothing.
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, color("accent-warm") 34%, transparent),
+      transparent 62%
+    );
+    border-radius: 50%;
+    opacity: 0;
+    translate: -50% -50%;
+  }
+
+  // Below the deck line, so the reveal carries it down with the bottom panel
+  // rather than splitting it in half.
+  .readout {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    width: min(28rem, 76vw);
+    text-align: center;
+    translate: -50% -50%;
+  }
+
+  .mark {
+    margin: 0;
+    color: color("text-secondary");
+
+    @include type-label;
+  }
+
+  .count {
+    margin: space("1") 0 space("2");
+    // The design system's own mono face, via the shared stack rather than a
+    // second copy of it — the same family `type-label` puts on the wordmark
+    // above, so the two lines of the readout read as one instrument.
+    font-family: $font-mono;
+    font-size: clamp(2.5rem, 9vw, 4.5rem);
+    font-weight: 500;
+    line-height: 1;
+    color: color("text-primary");
+
+    // Without this the number's width jitters as digits change, which drags
+    // the whole readout left and right for the entire sequence.
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  // Square ends, no radius: the same 2px hairline treatment as the header's
+  // scroll-progress bar, and a rounded cap on a 2px bar would only read as a
+  // blur anyway.
+  .rail {
+    height: 2px;
+    overflow: hidden;
+    background: color("hairline");
+  }
+
+  .rail-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, color("accent-primary"), color("accent-warm"));
+    transform-origin: 0 50%;
+
+    // The progress bar proper: the same single custom property everything else
+    // on this screen is derived from, so the number, the bar, and the bridge
+    // can never disagree.
+    transform: scaleX(var(--page-build));
+  }
+
+  // Idle motion during the build. Kept to three composited properties on six
+  // elements — this runs while the browser is still parsing and fetching, so
+  // it must never be the reason a load feels slow.
+  .rings span {
+    animation: ring-pulse 2.8s ease("out-expo") infinite;
+  }
+
+  .rings span:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+
+  .rings span:nth-child(3) {
+    animation-delay: 0.8s;
+  }
+
+  @keyframes ring-pulse {
+    0% {
+      opacity: 0.55;
+      scale: 0.35;
+    }
+
+    70%,
+    100% {
+      opacity: 0;
+      scale: 1.6;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Unlock. Everything below is one-shot `animation` rather than
+  // `transition`: the overlay is coming out of `display: none` in the closing
+  // case, and a transition has no start frame to run from when an element is
+  // first displayed.
+  // ---------------------------------------------------------------------
+
+  :global(html[data-page-load="open"]) {
+    .pulse {
+      animation: pulse-cross $pulse-duration ease("in-out") forwards;
+    }
+
+    .bloom {
+      animation: bloom-arrive 520ms ease("out-expo") $pulse-duration forwards;
+    }
+
+    // The art dissolves before the panels part, so the page is revealed by an
+    // opening span rather than from behind a still-drawn one.
+    .stage {
+      animation: stage-dissolve 400ms ease("in-out") 300ms forwards;
+    }
+
+    .panel-top {
+      animation: panel-open-up 560ms ease("out-expo") 320ms forwards;
+    }
+
+    .panel-bottom {
+      animation: panel-open-down 560ms ease("out-expo") 320ms forwards;
+    }
+  }
+
+  @keyframes pulse-cross {
+    0% {
+      opacity: 1;
+      // User units, not viewport units: 700 is exactly the span between the
+      // two pylons in the viewBox, so the pulse lands on the far one at every
+      // aspect ratio.
+      transform: translateX(0);
+    }
+
+    88% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateX(700px);
+    }
+  }
+
+  @keyframes bloom-arrive {
+    0% {
+      opacity: 0;
+      scale: 0.6;
+    }
+
+    45% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+      scale: 1.35;
+    }
+  }
+
+  @keyframes stage-dissolve {
+    to {
+      opacity: 0;
+      scale: 1.06;
+    }
+  }
+
+  @keyframes panel-open-up {
+    to {
+      transform: translateY(-100%);
+    }
+  }
+
+  @keyframes panel-open-down {
+    to {
+      transform: translateY(100%);
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Exit. The span closes back over the page before an internal navigation,
+  // so the next page's build reads as a continuation rather than as a second
+  // unrelated animation.
+  // ---------------------------------------------------------------------
+
+  :global(html[data-page-load="closing"]) {
+    .stage {
+      animation: stage-arrive $close-duration ease("out-expo") forwards;
+    }
+
+    .panel-top {
+      animation: panel-close-down $close-duration ease("in-out") forwards;
+    }
+
+    .panel-bottom {
+      animation: panel-close-up $close-duration ease("in-out") forwards;
+    }
+  }
+
+  @keyframes stage-arrive {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes panel-close-down {
+    from {
+      transform: translateY(-100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes panel-close-up {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+</style>

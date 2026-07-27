@@ -38,7 +38,9 @@
   }
 
   li {
+    position: relative;
     padding: space("2");
+    overflow: hidden;
     background: color("surface-glass");
     border: 1px solid color("hairline");
     border-radius: radius("md");
@@ -66,6 +68,39 @@
       border-color: color("accent-primary");
       box-shadow: shadow("card");
       background-size: 100% 1.5px;
+    }
+
+    // Pointer-tracked Perception Glow, following the cursor across the card —
+    // the same "a light finds what you point at" idea as the hero's glow, at
+    // card scale. Position comes from --card-x/--card-y, written by
+    // scripts/motion.ts; the fallback centres it, so a card that is hovered
+    // without ever receiving a pointermove still lights sensibly.
+    // A pseudo-element rather than another background layer on the li itself:
+    // the card already spends its own background on the accent hairline that
+    // wipes in above, and layering the two would couple their transitions.
+    &::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background: radial-gradient(
+        14rem 14rem at var(--card-x, 50%) var(--card-y, 50%),
+        color-mix(in srgb, color("accent-primary") 16%, transparent),
+        transparent 68%
+      );
+      opacity: 0;
+
+      // Never a hit target: without this the gradient layer would sit between
+      // the cursor and the li, and the pointermove listener that positions it
+      // would stop seeing the card it belongs to.
+      pointer-events: none;
+
+      @include motion-safe {
+        transition: opacity duration("slow") ease("standard");
+      }
+    }
+
+    &:hover::before {
+      opacity: 1;
     }
   }
 }

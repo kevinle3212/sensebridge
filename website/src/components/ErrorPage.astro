@@ -41,7 +41,7 @@ const copy = bespokeCopy[code] ?? t.errorPages.classes[statusClass(code)];
 const label = t.errorPages.statusLabel.replace("{code}", String(code)).replace("{phrase}", phrase);
 ---
 
-<BaseLayout title={label} noindex>
+<BaseLayout title={label} noindex ambient={false} pageLoader={false}>
   <section class="error-page">
     <div class="wrap">
       <CowHoleIllustration code={code} />

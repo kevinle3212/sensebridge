@@ -2,6 +2,8 @@
 import { getRelativeLocaleUrl } from "astro:i18n";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import PageLoader from "../components/PageLoader.astro";
+import StructuredData from "../components/StructuredData.tsx";
 import { translations, useTranslations, type Locale } from "../i18n";
 import "../styles/global/index.scss";
 
@@ -15,13 +17,43 @@ interface Props {
    * astro.config.mjs).
    */
   noindex?: boolean;
+  /**
+   * Mounts the decorative "First Light" ambient 3D scene behind the page.
+   * Defaults to `true`. The HTTP status/error pages set it `false`: an error
+   * page is reached by accident, often on a bad connection, and the ambient
+   * scene pulls the ~698kB three.js bundle when motion is allowed — not worth
+   * it for a page nobody chose to visit. (It is already lazy and gated by
+   * quality-gate.ts, so this only trims the motion-enabled-good-device case.)
+   */
+  ambient?: boolean;
+  /**
+   * Plays the "Span the gap" page-load sequence (PageLoader.astro). Defaults
+   * to `true`. The HTTP status/error pages set it `false`: the sequence covers
+   * the page for up to ~2s to make an *arrival* feel composed, and nobody
+   * arrives at a status page on purpose. Someone who just hit a dead link
+   * wants the explanation and the way back immediately, not a bridge building
+   * itself over the message first — and an error is disproportionately likely
+   * to be reached on a bad connection, where the sequence costs the most.
+   *
+   * Gated here rather than inside page-load.js so a status page ships neither
+   * the bootstrap nor the overlay markup at all: `output: "static"` resolves
+   * this at build time, so the opt-out costs a visitor zero bytes rather than
+   * one early return.
+   */
+  pageLoader?: boolean;
 }
 
 const locale = (Astro.currentLocale ?? "en") as Locale;
 const t = useTranslations(locale);
 const locales = Object.keys(translations) as Locale[];
 
-const { title = t.meta.title, description = t.meta.description, noindex = false } = Astro.props;
+const {
+  title = t.meta.title,
+  description = t.meta.description,
+  noindex = false,
+  ambient = true,
+  pageLoader = true,
+} = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
@@ -50,6 +82,16 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       ))
     }
     <link rel="alternate" hreflang="x-default" href={getRelativeLocaleUrl("en", "/")} />
+    {/* schema.org JSON-LD. A React component with no `client:*` directive, so
+        Astro renders it to static HTML at build time and ships zero JS. */}
+    <StructuredData
+      siteUrl={canonicalURL.origin}
+      pageUrl={canonicalURL.href}
+      name="SenseBridge"
+      description={description}
+      locale={locale}
+      repositoryUrl="https://github.com/kevinle3212/sensebridge"
+    />
     <link
       rel="preload"
       href="/fonts/fraunces-variable-latin.woff2"
@@ -65,6 +107,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       crossorigin
     />
     <script is:inline src="/theme-init.js"></script>
+    {/* Bootstrap for the "Span the gap" page-load sequence (PageLoader.astro).
+        Blocking, in <head>, and before the body exists, because the overlay
+        must be covering the page on the first painted frame — a deferred
+        script would show the finished page and then cover it. Sets one
+        attribute; the driver (scripts/page-loader.ts) does the rest.
+        Omitted entirely when `pageLoader` is false; see the prop's doc. */}
+    {pageLoader && <script is:inline src="/page-load.js" />}
     {
       // react-scan (React render profiler) — gated on the frontmatter-level
       // import.meta.env.DEV check, not inside the script body: since
@@ -86,13 +135,32 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
          only, and only ever mounted once webglAllowed() (quality-gate.ts)
          passes — the site's complete design with this absent is the static
          CSS/SVG background it already has. -->
-    <div class="ambient-scene" data-scene="ambient" aria-hidden="true"></div>
+    {ambient && <div class="ambient-scene" data-scene="ambient" aria-hidden="true"></div>}
     <a class="skip-link" href="#main">{t.layout.skipLink}</a>
     <Header />
     <main id="main">
       <slot />
     </main>
     <Footer />
+    {/* Last in the body on purpose. It is decorative and aria-hidden, so it
+        must not sit ahead of the skip link, the header, or the main content in
+        reading order; it paints over them via z-index instead. */}
+    {pageLoader && <PageLoader />}
+    <script>
+      // Driver for the page-load sequence. Deliberately not deferred to idle
+      // like the two loaders below: those decorate a page the visitor can
+      // already use, whereas this one is currently covering it, so every ms it
+      // waits is a ms the page stays hidden. It is dependency-free and small
+      // for exactly that reason.
+      //
+      // Left unconditional while the overlay above is gated: Astro hoists and
+      // bundles a non-inline <script> per page whether or not the expression
+      // wrapping it renders, so gating it here would be a lie in the source
+      // that the build ignores. The module is a no-op without an overlay
+      // anyway, since it returns early unless it finds both
+      // `[data-page-loader]` and `data-page-load="building"`.
+      import "../scripts/page-loader";
+    </script>
     <script>
       // Motion is decoration, so its bundle (GSAP + ScrollTrigger + Lenis)
       // stays out of the critical path: load after `load`, at idle, and only

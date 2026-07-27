@@ -21,7 +21,7 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
            Safari strips list semantics from a styled list, so VoiceOver would
            otherwise stop announcing "list, 5 items". See eslint.config.mjs for
            why the redundant-roles rule permits this. -->
-      <ul class={styles.list} role="list">
+      <ul class={styles.list} role="list" data-feature-list>
         {t.features.items.map((item) => <li data-reveal-item>{item}</li>)}
       </ul>
     </div>

@@ -118,6 +118,8 @@ export const en: Translations = {
     githubLink: "SenseBridge on GitHub",
     notAvailable:
       "Not yet available on the App Store — SenseBridge is pre-launch and in open development.",
+    voiceCredit: "Natural voice narration generated with elevenlabs.io.",
+    poweredBy: "Powered by",
     makerPhotoAlt: "Kevin K. Le, the current sole developer of the project",
   },
   disclaimer: {

@@ -40,6 +40,31 @@
   height: 100%;
 }
 
+// Cursor-reactive drift on the static diagram, driven by
+// --stage-pointer-x/y (-1 → 1) which src/scripts/motion.ts's
+// initStagePointerParallax() writes onto `.stage` through the CSSOM — not an
+// inline `style` attribute, which the production CSP discards (see
+// scripts/check-csp.js). Same treatment in SpatialFuture.module.scss.
+// Scoped to `:not(.scene-active)`: once a WebGL canvas mounts, that scene's
+// own createPointerParallax() (scripts/scenes/core.ts) already moves the
+// camera with the cursor, and this would be a second, conflicting answer to
+// the same gesture. The unmounted case is the one with no cursor reactivity
+// at all — save-data, low memory, or no WebGL2.
+// Inside `motion-safe` per DESIGN.md §5: the resting state, and the whole
+// reduced-motion experience, is the untransformed diagram. The 8px/1.2deg
+// ceiling keeps this in the same register as the 3D layer's 0.04 amplitude —
+// a suggestion of depth, not a swing.
+.stage:not(:global(.scene-active)) .fallback-art {
+  @include motion-safe {
+    transform: translate3d(
+        calc(var(--stage-pointer-x, 0) * 8px),
+        calc(var(--stage-pointer-y, 0) * 8px),
+        0
+      )
+      rotate(calc(var(--stage-pointer-x, 0) * 1.2deg));
+  }
+}
+
 // `.scene-active` is added at runtime by scripts/scenes/core.ts's
 // mountScene() once phone.ts's WebGL scene is live — same fade-the-static-
 // art pattern as Hero.module.scss's `.hero-visual:global(.scene-active)`.

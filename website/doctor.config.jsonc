@@ -1,0 +1,64 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  // Only suppressions live here. No lint rule is weakened: every security,
+  // bug, performance, and accessibility rule runs at its default severity,
+  // and CI blocks on warnings (see .github/workflows/react-doctor.yml).
+  "ignore": {
+    // React Doctor's dead-code pass (deslop) does not follow imports out of
+    // `src/layouts/**`. Anything reachable only through BaseLayout.astro
+    // therefore looks orphaned, even though Astro builds and ships it.
+    //
+    // Verified 2026-07-25 rather than assumed: temporarily adding
+    // `import Header from "../components/Header.astro"` to src/pages/index.astro
+    // cleared Header's `unused-file` finding immediately, while the existing
+    // BaseLayout.astro import (lines 3-4) never did. Components imported from
+    // `src/pages/**` and `src/components/**` resolve correctly — only the hop
+    // through `src/layouts/**` is invisible.
+    //
+    // These entries mark analyzer blind spots, NOT dead code. Do not delete
+    // the files. Re-test on each react-doctor upgrade and drop any entry that
+    // upstream has fixed.
+    //
+    // Last re-tested 2026-07-25 against 0.8.1 (installed) and 0.9.1 (latest on
+    // npm): with this file moved aside, both versions report all four findings,
+    // so nothing here is stale. With it in place both report zero, so the
+    // config is forward-compatible and the eventual 0.9.x bump needs no change
+    // here. Nothing to drop yet.
+    "overrides": [
+      {
+        // All four are imported by src/layouts/BaseLayout.astro and rendered
+        // there: <Header /> and <Footer /> in the body, <StructuredData /> in
+        // the head, <PageLoader /> behind the `pageLoader` prop (line 148).
+        // Same single cause — the analyzer never reads BaseLayout's import
+        // list — so they share one entry.
+        //
+        // PageLoader.astro added 2026-07-25: it is not merely reachable but
+        // demonstrably shipping — `npm run check:csp` asserts "the page-load
+        // sequence still runs" against the built `/`, which would fail if the
+        // component were absent.
+        "files": [
+          "src/components/Header.astro",
+          "src/components/Footer.astro",
+          "src/components/StructuredData.tsx",
+          "src/components/PageLoader.astro"
+        ],
+        "rules": [
+          "deslop/unused-file"
+        ]
+      },
+      {
+        // `localeNames` is imported by src/components/Header.astro (line 9)
+        // and used at lines 47, 48, and 72. It only reads as unused because
+        // Header itself is unreachable to the analyzer, per the note above.
+        // Scoped to this one file and one rule, so a genuinely unused export
+        // elsewhere still fails CI.
+        "files": [
+          "src/i18n/index.ts"
+        ],
+        "rules": [
+          "deslop/unused-export"
+        ]
+      }
+    ]
+  }
+}

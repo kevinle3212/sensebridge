@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "astro preview --host 127.0.0.1",
     "typecheck": "astro check",
     "lint:css": "stylelint \"src/**/*.scss\"",
     "lint:js": "eslint .",
@@ -31,14 +31,20 @@
     "generate:audio": "node --env-file-if-exists=.env scripts/generate-audio.js",
     "check:audio": "node scripts/generate-audio.js --check",
     "check:disclaimer": "node scripts/check-disclaimer.js",
+    "check:zero-js": "node scripts/check-zero-js.js",
+    "check:csp": "node scripts/check-csp.js",
     "test:a11y": "pa11y-ci --config .pa11yci.json",
-    "scan": "react-scan http://localhost:4321",
     "audit:react": "react-doctor --no-telemetry",
     "doctor": "react-doctor --no-telemetry",
     "railway:status": "npx --yes @railway/cli status",
     "railway:logs": "npx --yes @railway/cli logs -n 100",
     "railway:logs:build": "npx --yes @railway/cli logs --build --latest",
-    "railway:redeploy": "npx --yes @railway/cli redeploy --from-source"
+    "railway:redeploy": "npx --yes @railway/cli redeploy --from-source",
+    "vercel:deploy": "npx --yes vercel --prod",
+    "vercel:preview": "npx --yes vercel",
+    "vercel:logs": "npx --yes vercel logs",
+    "vercel:ls": "npx --yes vercel list",
+    "vercel:inspect": "npx --yes vercel inspect --logs"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.1",
@@ -55,9 +61,6 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@eslint/js": "^10.0.1",
-    "@fontsource-variable/fraunces": "5.2.9",
-    "@fontsource-variable/geist": "5.2.9",
-    "@fontsource-variable/geist-mono": "5.2.8",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

@@ -1,8 +1,27 @@
 ---
-/** Renders the site footer: tagline, GitHub link, and "not yet available" notice. */
+/**
+ * Renders the site footer: tagline, GitHub link, "not yet available" notice,
+ * and — only on routes that actually ship the pre-rendered narration — the
+ * ElevenLabs attribution that audio requires.
+ */
+import { hasNaturalVoice } from "../data/natural-voice";
+import { POWERED_BY } from "../data/powered-by";
 import { useTranslations, type Locale } from "../i18n";
 
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+const locale = (Astro.currentLocale ?? "en") as Locale;
+const t = useTranslations(locale);
+
+// `public/audio/main.mp3` is generated on ElevenLabs' free plan, which grants
+// no commercial licence and requires published content to credit
+// `elevenlabs.io`. That obligation attaches to the audio itself and survives a
+// later upgrade, so this credit stays as long as free-plan audio ships. It
+// lives in the footer rather than beside the player deliberately: the player
+// sits inside `<main id="main">`, which is the exact text
+// `scripts/generate-audio.js` hashes, so putting the credit there would
+// invalidate the narration and force a regeneration (~4,400 of the free
+// plan's 10,000 monthly credits) every time this line changed.
+// See `website/README.md` → "Cost, quota, and licensing".
+const showVoiceCredit = hasNaturalVoice(locale);
 ---
 
 <footer class="site-footer">
@@ -22,6 +41,54 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
         <a href="https://github.com/kevinle3212/sensebridge">{t.footer.githubLink}</a>
       </p>
       <p>{t.footer.notAvailable}</p>
+      {
+        showVoiceCredit && (
+          <p class="voice-credit">
+            {/* ElevenLabs' own mark (the two bars from their icon.svg), drawn
+                in `currentColor` inside our badge rather than shipping their
+                white rounded-square lockup, so it sits in the site's palette
+                and works in both themes. Decorative: the sentence beside it
+                already names elevenlabs.io, which is what the licence
+                requires, so announcing the logo too would just be noise. */}
+            <span class="voice-credit-badge" aria-hidden="true">
+              {/* viewBox cropped to the bars' own bounding box (their
+                  icon.svg pads them inside a 500×500 square). At badge size
+                  the untrimmed padding rendered each 43-unit bar under a
+                  pixel wide, so the mark read as a smudge. */}
+              <svg viewBox="186 145 128 210" focusable="false">
+                <path d="M314 355H271V145H314V355Z" />
+                <path d="M229 355H186V145H229V355Z" />
+              </svg>
+            </span>
+            {t.footer.voiceCredit}
+          </p>
+        )
+      }
+      {
+        /* Flat glyphs, not circled badges: the circle is reserved for the
+          ElevenLabs credit so the one attribution the licence actually
+          compels stays visually distinct from these voluntary ones. */
+      }
+      <p class="powered-by">
+        <span class="powered-by-label">{t.footer.poweredBy}</span>
+        {
+          POWERED_BY.map((entry) => (
+            <span class="powered-by-item">
+              {entry.mark && (
+                <svg
+                  class="powered-by-mark"
+                  viewBox={entry.mark.viewBox}
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d={entry.mark.d} />
+                </svg>
+              )}
+              {entry.name}
+            </span>
+          ))
+        }
+      </p>
     </div>
   </div>
 </footer>
@@ -56,6 +123,64 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 
   .footer-copy p + p {
     margin-top: space("1");
+  }
+
+  .voice-credit {
+    display: flex;
+    align-items: center;
+    gap: space("1");
+  }
+
+  // Wraps rather than scrolls: six names plus a label overflow a phone width,
+  // and the row is a credit nobody needs to read in one line.
+  .powered-by {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: space("1");
+    margin-top: space("2");
+  }
+
+  .powered-by-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  // Monochrome in `currentColor` so both themes work from one asset — see
+  // src/data/powered-by.ts for why colour was not an option here.
+  .powered-by-mark {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+    fill: currentcolor;
+  }
+
+  // Same circular-badge vocabulary as SignalBridge's replay control (44px
+  // circle, hairline border, mark in `currentColor`) at roughly half scale,
+  // because this one is a passive credit rather than a 44px touch target —
+  // the pointer-target minimum does not apply to something you cannot press.
+  .voice-credit-badge {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.375rem;
+    height: 1.375rem;
+    background: color("surface");
+    border: 1px solid color("hairline");
+    border-radius: 50%;
+  }
+
+  // Sized by height only, with width following the cropped viewBox's 128:210
+  // aspect — forcing a square here would stretch the bars. Roughly 45% of the
+  // circle, a little more generous than the replay icon's 36%, because two
+  // thin bars need the extra size to still read as a mark.
+  .voice-credit-badge svg {
+    height: 0.625rem;
+    width: auto;
+    fill: currentcolor;
   }
 
   // Below this width the photo-beside-text row gets cramped against the
