@@ -69,6 +69,64 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ## To-Do
 
+### Logo system — "First Light" mark, generated to `tmp/logo/` (2026-07-27)
+
+A full logo system was generated into `tmp/logo/` for review: 56 SVG masters
+and 281 rasters covering icon-only, stacked and horizontal lockups, app icon,
+GitHub avatar, navbar, favicon/browser-tab, and PNG + JPEG in full colour,
+monochrome, and 1-bit black/white. Nothing is wired into the app or the site
+yet — `tmp/` is gitignored, so this is a proposal, not a shipped asset.
+
+The mark keeps the DNA of the existing `website/public/favicon.svg` (ink field,
+Signal Blue sensing ring, solid core) and adds one element: the ring is broken
+at the lower right and a Perception Glow chord bridges the break. Ring = the
+sensing horizon; the break = the gap between the sensed world and
+understanding; the warm chord = the bridge across it.
+
+Regenerate with, from the repo root, in order:
+
+- `python3 -m venv /tmp/logo-venv && /tmp/logo-venv/bin/pip install fonttools brotli`
+- `/tmp/logo-venv/bin/python tmp/logo/build-wordmark.py` — Fraunces to vector paths
+- `node tmp/logo/build-svg.js` — geometry, colourways, lockups
+- `node tmp/logo/build-raster.js` — PNG / JPEG / ICO / app icon
+- `node tmp/logo/build-sheet.js && node tmp/logo/build-preview.js` — contact
+  sheet + screenshots
+
+`build-raster.js` and `build-preview.js` borrow `sharp` and `puppeteer` from
+`website/node_modules` by absolute path, so `npm install` must have run in
+`website/` first. Open `tmp/logo/index.html` to review everything at once.
+
+The prompt that produced it, kept verbatim so the system can be regenerated or
+re-briefed from scratch:
+
+> Generate a project logo for SenseBridge, derived from the existing brand.
+> I want multiple versions: one with full colour, monochrome, black/white,
+> stacked logo, horizontal, icon only, app icon, GitHub avatar preview,
+> navbar, favicon, PNG and JPEG, browser tab icon. Store into `./tmp/` for me
+> to view.
+
+- [ ] **[P2]** **[Needs owner]** Approve or reject the "First Light" mark in
+      `tmp/logo/index.html`. It is a proposal; the current favicon still ships.
+      If rejected, say what to change (the bridging chord is the only new
+      element and is the easiest thing to drop or redraw).
+- [ ] **[P2]** If approved, wire the assets in: replace
+      `website/public/favicon.svg` with `tmp/logo/svg/favicon-adaptive.svg`,
+      add `favicon.ico` + `apple-touch-icon-180.png` + `icon-192/512`, and
+      populate the empty
+      `app/SenseBridge/Resources/Assets.xcassets/AppIcon.appiconset/` (it
+      currently holds only `Contents.json` — the app has no icon at all).
+      Move the masters out of `tmp/` to a tracked home first; `tmp/*` is
+      gitignored, so nothing there survives a clean.
+- [ ] **[P3]** If approved, decide where the masters live long-term
+      (`website/public/brand/` vs a top-level `assets/brand/`) and whether the
+      three build scripts ship with them. They depend on `website/node_modules`
+      and on the self-hosted Fraunces woff2 — both already in-repo, but the
+      `sharp`/`puppeteer` paths are hard-coded absolute and need relativizing
+      before the scripts are tracked.
+- [ ] **[P3]** Add the mark to `CREDITS.md` / brand docs if it ships, and note
+      that the wordmark is Fraunces (SIL OFL 1.1, already vendored under
+      `website/public/fonts/` with its licence).
+
 ### Repo-sync commit backlog + CI-green fixups (2026-07-27, 13:00 PST)
 
 - [ ] **[P3]** CodeQL's `js/file-access-to-http` ("File data in outbound
