@@ -10,6 +10,7 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import {
   approachColor,
   approachScalar,
+  createNeuralPathways,
   createPointerParallax,
   type SceneContext,
   type SceneInstance,
@@ -36,9 +37,16 @@ const CHIP_SIZE = 0.4;
 const CHIP_DEPTH = 0.08;
 const CHIP_CORE_SIZE = 0.18;
 const CHIP_CORE_DEPTH = 0.09;
-const CHIP_ACTIVITY_COUNT = 200;
-const CHIP_ACTIVITY_RADIUS_MIN = 0.15;
-const CHIP_ACTIVITY_RADIUS_MAX = 0.4;
+// Neural pathways fanning out from the chip across the board — see core.ts's
+// createNeuralPathways(). Flattened hard in z so they read as traces on the
+// board rather than a cloud floating around it.
+const NEURAL_BRANCH_COUNT = 12;
+const NEURAL_JOINTS_PER_BRANCH = 3;
+const NEURAL_SAMPLES_PER_BRANCH = 14;
+const NEURAL_REACH_X = 0.6;
+const NEURAL_REACH_Y = 1.25;
+const NEURAL_REACH_Z = 0.1;
+const NEURAL_PULSE_SPEED = 0.32;
 
 const SPEAKER_WIDTH = 0.5;
 const SPEAKER_HEIGHT = 0.06;
@@ -129,31 +137,20 @@ export default function createPhoneScene(ctx: SceneContext): SceneInstance {
   const chipCoreMaterial = new THREE.MeshBasicMaterial({ transparent: true });
   groupB.add(new THREE.Mesh(chipCoreGeometry, chipCoreMaterial));
 
-  // Neural activity: a jittered point cloud hugging the chip, flattened in
-  // z so it reads as activity on the board rather than a loose sphere.
-  const chipActivityPositions = new Float32Array(CHIP_ACTIVITY_COUNT * 3);
-  for (let i = 0; i < CHIP_ACTIVITY_COUNT; i += 1) {
-    const radius =
-      CHIP_ACTIVITY_RADIUS_MIN +
-      Math.random() * (CHIP_ACTIVITY_RADIUS_MAX - CHIP_ACTIVITY_RADIUS_MIN);
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(Math.random() * 2 - 1);
-    chipActivityPositions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-    chipActivityPositions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-    chipActivityPositions[i * 3 + 2] = radius * Math.cos(phi) * 0.3;
-  }
-  const chipActivityGeometry = new THREE.BufferGeometry();
-  chipActivityGeometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(chipActivityPositions, 3),
-  );
-  const chipActivityMaterial = new THREE.PointsMaterial({
-    size: POINT_BASE_SIZE,
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
+  // Neural activity: branching traces out of the chip with a warm pulse
+  // travelling each one, so the reasoning layer visibly *does* something
+  // instead of sitting still. Same network the glasses' temples carry.
+  const neuralPathways = createNeuralPathways({
+    branchCount: NEURAL_BRANCH_COUNT,
+    origin: new THREE.Vector3(0, 0, 0),
+    reach: new THREE.Vector3(NEURAL_REACH_X, NEURAL_REACH_Y, NEURAL_REACH_Z),
+    jointsPerBranch: NEURAL_JOINTS_PER_BRANCH,
+    samplesPerBranch: NEURAL_SAMPLES_PER_BRANCH,
+    nodeSize: POINT_BASE_SIZE,
+    pulseSize: POINT_BASE_SIZE * 1.6,
+    pulseSpeed: NEURAL_PULSE_SPEED,
   });
-  groupB.add(new THREE.Points(chipActivityGeometry, chipActivityMaterial));
+  groupB.add(neuralPathways.object);
 
   // --- Group C: front face + speaker + haptic grid (rendering) ------------
   const groupC = new THREE.Group();
@@ -228,12 +225,13 @@ export default function createPhoneScene(ctx: SceneContext): SceneInstance {
       lineMaterialC.color.copy(currentLineColor);
 
       approachColor(currentPointColor, palette.particleColor, deltaSeconds);
-      chipActivityMaterial.color.copy(currentPointColor);
+      neuralPathways.setTraceColor(currentPointColor);
       hapticMaterial.color.copy(currentPointColor);
 
       approachColor(currentAccentColor, palette.warmColor, deltaSeconds);
       lidarMaterial.color.copy(currentAccentColor);
       chipCoreMaterial.color.copy(currentAccentColor);
+      neuralPathways.setPulseColor(currentAccentColor);
       currentAccentOpacity = approachScalar(
         currentAccentOpacity,
         palette.emissiveIntensity,
@@ -288,7 +286,8 @@ export default function createPhoneScene(ctx: SceneContext): SceneInstance {
         targetOpacityB,
         deltaSeconds,
       );
-      chipActivityMaterial.opacity = currentChipPointsOpacity;
+      neuralPathways.setOpacity(currentChipPointsOpacity);
+      neuralPathways.update(deltaSeconds);
       currentHapticPointsOpacity = approachScalar(
         currentHapticPointsOpacity,
         targetOpacityC,
@@ -330,10 +329,9 @@ export default function createPhoneScene(ctx: SceneContext): SceneInstance {
       chipGeometry.dispose();
       chipEdges.dispose();
       chipCoreGeometry.dispose();
-      chipActivityGeometry.dispose();
       lineMaterialB.dispose();
       chipCoreMaterial.dispose();
-      chipActivityMaterial.dispose();
+      neuralPathways.dispose();
 
       frontPlateGeometry.dispose();
       frontPlateEdges.dispose();

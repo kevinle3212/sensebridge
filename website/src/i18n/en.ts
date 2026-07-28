@@ -106,7 +106,7 @@ export const en: Translations = {
     lede: "SenseBridge is being built for the phone first. But the same on-device pipeline — sense, reason, render — could one day ride on lighter hardware, closer to the senses it serves.",
     body: "Wearables like camera glasses could let the same hedged, private descriptions arrive hands-free. Nothing about that future is promised; the protocol seams are simply being designed so it stays possible.",
     illustrationDescription:
-      "Illustration: a pair of glasses drawn as a translucent wireframe rotates slowly. Every few seconds, a small point of blue light travels the frame — down one temple, around its lens, across the bridge, around the other lens, and down the far temple — warming to amber as it arrives.",
+      "Illustration: a pair of glasses drawn as a translucent wireframe rotates slowly. The frame shows its parts — rimmed lenses, nose pads, a small camera ring and depth emitter above one lens, hinges, and temples that bend down behind the ear, each carrying an electronics block and a bone-conduction grille. Faint traces branch out inside those blocks, with warm pulses running along them. Every few seconds, a small point of blue light travels the frame — down one temple, around its lens, across the bridge, around the other lens, and down the far temple — warming to amber as it arrives.",
   },
   followProgress: {
     heading: "Developed in the open",

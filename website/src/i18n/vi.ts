@@ -111,7 +111,7 @@ export const vi: Translations = {
     lede: "SenseBridge đang được xây dựng cho điện thoại trước tiên. Nhưng cùng một quy trình trên thiết bị — cảm nhận, suy luận, hiển thị — một ngày nào đó có thể chạy trên phần cứng nhẹ hơn, gần hơn với các giác quan mà nó phục vụ.",
     body: "Các thiết bị đeo như kính có camera có thể giúp những mô tả có rào chắn, riêng tư tương tự đến mà không cần dùng tay. Không có gì về tương lai đó được hứa hẹn; các ranh giới giao thức chỉ đơn giản là đang được thiết kế để điều đó vẫn khả thi.",
     illustrationDescription:
-      "Minh họa: một cặp kính được vẽ dưới dạng khung dây trong mờ xoay chậm. Cứ vài giây, một chấm sáng xanh nhỏ di chuyển dọc khung — xuống một càng kính, quanh tròng kính đó, qua cầu kính, quanh tròng kính còn lại, rồi xuống càng kính xa — ấm dần sang màu hổ phách khi đến nơi.",
+      "Minh họa: một cặp kính được vẽ dưới dạng khung dây trong mờ xoay chậm. Khung kính hiện rõ từng bộ phận — tròng kính có viền, đệm mũi, một vòng camera nhỏ và bộ phát chiều sâu phía trên một tròng kính, bản lề, và càng kính gập xuống sau tai, mỗi càng mang một khối điện tử cùng lưới loa truyền âm qua xương. Bên trong các khối đó, những đường mảnh phân nhánh với các xung ấm chạy dọc theo. Cứ vài giây, một chấm sáng xanh nhỏ di chuyển dọc khung — xuống một càng kính, quanh tròng kính đó, qua cầu kính, quanh tròng kính còn lại, rồi xuống càng kính xa — ấm dần sang màu hổ phách khi đến nơi.",
   },
   followProgress: {
     heading: "Được phát triển công khai",

@@ -252,9 +252,19 @@ Five scenes, one engine (`src/scripts/scenes/`):
 - **Scenes** — `hero` (4000-pt drifting field, wireframe icosahedron, warm
   core ignition + breathing), `ambient` (600-pt fixed page-depth field),
   `phone` (three wireframe plates — sensing/reasoning/rendering — exploded by
-  scroll), `glasses` (wireframe frames, 5s blue→warm signal traveler along
-  the frame path), `bridge` (wireframe suspension bridge constructing on
-  scroll, traveler crossing on completion, lateral camera dolly).
+  scroll; branching neural pathways firing out of the Neural Engine),
+  `glasses` (wireframe frames the visitor can drag to any angle — rimmed
+  lenses, nose pads, brow camera ring + depth emitter, hinges, bent temples
+  carrying electronics blocks, bone-conduction grilles and their own neural
+  pathways — plus the 5s blue→warm signal traveler along the frame path),
+  `bridge` (wireframe suspension bridge constructing on scroll, traveler
+  crossing on completion, lateral camera dolly).
+- **Shared scene helpers** (`core.ts`) — `createNeuralPathways()` builds the
+  branching traces + junction nodes + travelling warm pulses that `phone` and
+  `glasses` share; `createDragOrbit()` gives one object drag-to-orbit with
+  flick momentum that eases back into its idle spin. A scene using drag must
+  pass no tilt targets to `createPointerParallax()`, or the two fight over
+  the same rotation channels.
 
 Palette per theme (in `core.ts`): dark = additive/emissive + UnrealBloomPass
 (0.8/0.4/0.85); light = ink line-art (`#145fc4`/`#a8480d`), bloom off,
@@ -342,8 +352,12 @@ ordered sequence.
 Epilogue band (bg-elevated) after the pipeline: wireframe-glasses 3D scene
 (SVG fallback) beside copy that is explicitly hedged — kicker "A future
 direction — not a product," body all conditional ("could one day," "Nothing
-about that future is promised"). This section's copy register is the model
-for any future speculative content.
+about that future is promised"). The stage is drag-to-orbit once the WebGL
+scene mounts (`grab`/`grabbing` cursor, `touch-action: pan-y` so a vertical
+swipe still scrolls). Pointer-only by design: the stage is decorative and
+`aria-hidden`, the idle spin already brings every side into view, so nothing
+is lost without a pointer. This section's copy register is the model for any
+future speculative content.
 
 ### Callout (disclaimer)
 
