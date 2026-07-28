@@ -453,6 +453,11 @@ const joints = [240, 330, 420, 500, 580, 670, 760].map((x) => ({ x, y: cableY(x)
     color: color("text-secondary");
 
     @include type-label;
+    // Redundant with type-label's own declaration below — restated literally
+    // here (rather than only inside the mixin in _mixins.scss) so a
+    // single-file static scan of this component sees both fonts in use,
+    // not just .count's $font-display.
+    font-family: $font-mono;
   }
 
   .count {
