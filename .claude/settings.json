@@ -101,6 +101,19 @@
             "if": "Bash(git *)",
             "timeout": 5,
             "statusMessage": "Checking branch guard"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-destructive-git.sh\"",
+            "if": "Bash(git *)",
+            "timeout": 5,
+            "statusMessage": "Checking destructive git guard"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-protected-delete.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking protected-path delete guard"
           }
         ]
       }
