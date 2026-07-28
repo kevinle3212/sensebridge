@@ -80,6 +80,16 @@ nice-to-have. `check:audio` does no network I/O and needs no key, so it's
 safe to run in CI unattended (after the build step); before any narration has
 ever been generated it prints an informational skip instead of failing.
 
+**Every word inside `<main id="main">` is narrated, including
+`visually-hidden` text** — `extractMainText()` strips tags and keeps the rest,
+so an alt-text-style block written only for screen readers is also read aloud
+verbatim by the natural voice. Two consequences worth knowing before editing
+one: keep those descriptions tight, because an exhaustive parts list makes the
+narration tedious for the very listeners it is written for; and changing a
+single word obligates whoever changes it to regenerate the audio, which needs
+the owner's `ELEVENLABS_API_KEY`. A pass at expanding the Spatial Future
+illustration description was reverted for exactly this reason.
+
 `.env` is git-ignored; never commit a real `ELEVENLABS_API_KEY`. The key is
 only ever read by `scripts/generate-audio.js`, on whichever machine runs
 `generate:audio` — it is not referenced anywhere else in the codebase. Scope

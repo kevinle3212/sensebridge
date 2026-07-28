@@ -106,7 +106,7 @@ export const es: Translations = {
     lede: "SenseBridge se está construyendo primero para el teléfono. Pero el mismo flujo en el dispositivo — sentir, razonar, renderizar — podría algún día funcionar en hardware más ligero, más cerca de los sentidos a los que sirve.",
     body: "Dispositivos vestibles como gafas con cámara podrían permitir que las mismas descripciones cautelosas y privadas lleguen sin usar las manos. Nada de ese futuro está prometido; las costuras del protocolo simplemente se están diseñando para que siga siendo posible.",
     illustrationDescription:
-      "Ilustración: un par de gafas dibujadas como una estructura de alambre translúcida gira lentamente. El armazón muestra sus piezas — lentes con aro, plaquetas nasales, un pequeño anillo de cámara y un emisor de profundidad sobre una lente, bisagras y patillas que se doblan detrás de la oreja, cada una con un bloque de electrónica y una rejilla de conducción ósea. Dentro de esos bloques se ramifican trazos tenues, con pulsos cálidos que los recorren. Cada pocos segundos, un pequeño punto de luz azul recorre el armazón — baja por una patilla, rodea su lente, cruza el puente, rodea la otra lente y baja por la patilla lejana — calentándose a ámbar al llegar.",
+      "Ilustración: un par de gafas dibujadas como una estructura de alambre translúcida gira lentamente. Cada pocos segundos, un pequeño punto de luz azul recorre el armazón — baja por una patilla, rodea su lente, cruza el puente, rodea la otra lente y baja por la patilla lejana — calentándose a ámbar al llegar.",
   },
   followProgress: {
     heading: "Desarrollado abiertamente",
