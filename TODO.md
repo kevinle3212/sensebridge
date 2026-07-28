@@ -39,8 +39,10 @@ Everything still open falls into buckets a machine cannot close for you:
   keyboard-only passes; Lighthouse mobile; simulator/device Read-flow +
   tap-through. No CI substitute exists for any of these.
 - **Secrets & security (owner)** — rotate the exposed Stripe test key (P1);
-  add the `GITGUARDIAN_API_KEY` repo secret (P1 — local `ggshield auth` was
-  already done, verified 2026-07-26); Stripe dashboard 2FA/Radar (P2).
+  rotate the `GITGUARDIAN_API_KEY` repo secret — it exists but its value is
+  invalid, confirmed 2026-07-28 (`Error: Invalid GitGuardian API key` on
+  every dependabot PR's CI run; local `ggshield auth` is fine, verified
+  2026-07-26); Stripe dashboard 2FA/Radar (P2).
 - **GitHub / hosting settings (owner web-UI)** — make repo public + full
   "Protect main" ruleset (P1); attach `sensebridge.vercel.app` to Production
   (P1); squash-only merges, Actions allowlist, first-time-contributor approval,
@@ -2275,10 +2277,16 @@ the global `~/.claude/CLAUDE.md` (personal config, not repo-tracked).
       key sourced from the system keyring with `scan`/`honeytokens:check`
       scopes, and `ggshield quota` returns real numbers (9560/10000
       available). No login step was actually needed this session.
-- [ ] **[P1]** **[Needs owner]** Add the `GITGUARDIAN_API_KEY` repository
-      secret (Settings → Secrets and variables → Actions), sourced from the
-      GitGuardian dashboard (Personal access tokens → `scan` scope) — the new
-      `ggshield` CI job fails closed on every push/PR until this exists.
+- [ ] **[P1]** **[Needs owner]** ~~Add~~ **Rotate** the `GITGUARDIAN_API_KEY`
+      repository secret (Settings → Secrets and variables → Actions) — it
+      already exists (`gh secret list` confirms it), but its stored value is
+      invalid: every dependabot PR's `Secret scan (GitGuardian)` check fails
+      with `Error: Invalid GitGuardian API key`, confirmed via
+      `gh run view <run-id> --log-failed` on 2026-07-28. Generate a fresh key
+      in the GitGuardian dashboard (Personal access tokens → `scan` scope) and
+      run `gh secret set GITGUARDIAN_API_KEY --repo kevinle3212/sensebridge`.
+      This blocks merging **every** open PR via the required-checks ruleset,
+      not just dependabot's.
 - [x] **[P3]** Commit and ship this session's repo-side changes
       (`.gitguardian.yaml`, `.githooks/pre-commit`,
       `.github/workflows/security.yml`, `scripts/setup.sh`,
