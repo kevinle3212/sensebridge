@@ -74,6 +74,23 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ## To-Do
 
+### Docs GH Pages header/content gap (2026-07-28, 12:00 PST)
+
+Owner reported no visible gap between the sticky nav header and the page
+content on `https://kevinle3212.github.io/sensebridge/`. A static read of
+`docs/assets/css/docs.css` found no bug: `main` already has
+`padding-block: 24px` (`40px` at ≥900px, lines 300-320) and `.signal-hero`
+carries no negative margin. The live site was serving `main`'s last deploy
+the whole time this was checked, which predated the PR fixing the adjacent
+hero-SVG "Camera" clip (merged 2026-07-28 as `5e26b01`) — so this needs a
+fresh look now that the fix is live, not more static reading.
+
+- [ ] **[P3]** Load `https://kevinle3212.github.io/sensebridge/` after the
+      next Pages deploy and check the header/content boundary directly
+      (screenshot or a headless-browser pass). If a gap is genuinely
+      missing, it's most likely something JS-driven or page-specific, not
+      the shared `main`/`.signal-hero` rules already read.
+
 ### Contributor-configurable deployment (`SITE_URL`) (2026-07-27, 23:50 PST)
 
 The site's deployment origin now comes from `SITE_URL` (untracked

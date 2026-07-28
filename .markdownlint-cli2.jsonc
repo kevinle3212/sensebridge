@@ -24,6 +24,7 @@
     "**/skills/stripe-projects/**",
     "**/skills/upgrade-stripe/**",
     "**/skills/react-doctor/**",
+    "**/skills/gitnexus/**",
     "**/.impeccable/critique/**",
     ".claude/worktrees/**",
     "CLAUDE.template.md",
