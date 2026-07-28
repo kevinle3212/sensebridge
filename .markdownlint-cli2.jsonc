@@ -13,7 +13,7 @@
   // (see docs/TOOLING.md). If CLI output ever drifts between runs, pin a
   // version with `npx markdownlint-cli2@<version>` and update this comment.
   "config": { "extends": ".markdownlint.jsonc" },
-  "globs": ["**/*.md"],
+  "globs": ["**/*.md", "COMPLETED.todo"],
   "ignores": [
     "**/node_modules/**",
     "**/skills/impeccable/**",

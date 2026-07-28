@@ -36,10 +36,26 @@ jobs:
     name: Secret scan (GitGuardian)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - name: Check for a GitGuardian credential
+        id: credential
+        # `secrets` is not available in a job-level `if`, so the gate lives
+        # here. A fork has no GITGUARDIAN_API_KEY and would otherwise fail this
+        # job on every PR for lacking a credential it was never meant to have.
+        # TruffleHog (the job above) needs no key and still covers every fork.
+        env:
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+        run: |
+          if [ -z "$GITGUARDIAN_API_KEY" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No GITGUARDIAN_API_KEY secret — skipping ggshield. Expected on forks; TruffleHog still ran." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: ggshield
+        if: steps.credential.outputs.present == 'true'
         # Pinned to the commit behind the v1.52.2 tag, not the mutable v1
         # ref — same rationale as the other pinned actions in this workflow.
         uses: GitGuardian/ggshield-action@da20be06cafe5e8633dc24744efe1efe8d30f06b
@@ -75,7 +91,7 @@ jobs:
     name: Semgrep (scripts, workflows, website, Swift)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Semgrep
         # Pinned to the commit behind the v1 tag, not the mutable ref itself —
         # same rationale as the other two scanners above. Bump deliberately.
