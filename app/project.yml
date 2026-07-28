@@ -27,7 +27,11 @@ targets:
       Release: Config/Signing.xcconfig
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.sensebridge.app
+        # Overridable prefix, mirroring project.pbxproj — `com.sensebridge` is
+        # registered to this project's Apple Developer team, so a contributor
+        # signing with their own free Apple ID sets BUNDLE_ID_PREFIX in the
+        # gitignored Config/Signing.local.xcconfig. See Config/Signing.xcconfig.
+        PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID_PREFIX:default=com.sensebridge).app
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSCameraUsageDescription: "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device."
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device."

@@ -15,6 +15,21 @@
 // parentheses after the certificate name — that is the certificate's ID, not
 // the team's. See docs/ENVIRONMENT.md.
 //
+// The bundle identifier prefix works the same way, and for the same reason:
+// `com.sensebridge.app` is registered to this project's Apple Developer team,
+// so a contributor building on their own free Apple ID gets "the app
+// identifier cannot be registered to your development team" until they pick a
+// prefix of their own. Add one alongside your team ID:
+//
+//     BUNDLE_ID_PREFIX = com.yourname
+//
+// Every target derives from it (`<prefix>.app`, `<prefix>.SenseBridgeTests`,
+// `<prefix>.SenseBridgeUITests`), so one line changes all three. The default
+// lives in `project.pbxproj` as `$(BUNDLE_ID_PREFIX:default=com.sensebridge)`,
+// which means an unconfigured clone still builds with the original IDs — you
+// only need this when signing against your own team. It can also be set for a
+// single command: `xcodebuild BUNDLE_ID_PREFIX=com.yourname ...`.
+//
 // `#include?` is the optional form: a clone without the local file still
 // configures and builds, and fails only at the signing step, with Xcode's own
 // "requires a development team" message pointing at the real problem.
