@@ -39,10 +39,13 @@ Everything still open falls into buckets a machine cannot close for you:
   keyboard-only passes; Lighthouse mobile; simulator/device Read-flow +
   tap-through. No CI substitute exists for any of these.
 - **Secrets & security (owner)** — rotate the exposed Stripe test key (P1);
-  rotate the `GITGUARDIAN_API_KEY` repo secret — it exists but its value is
-  invalid, confirmed 2026-07-28 (`Error: Invalid GitGuardian API key` on
-  every dependabot PR's CI run; local `ggshield auth` is fine, verified
-  2026-07-26); Stripe dashboard 2FA/Radar (P2).
+  add `GITGUARDIAN_API_KEY` to **Dependabot** secrets too (Settings → Secrets
+  and variables → Dependabot), not just Actions — confirmed 2026-07-28 the
+  Actions secret is valid (PR #53, pushed directly, passes both GitGuardian
+  checks with it), but GitHub withholds Actions secrets from
+  Dependabot-triggered `pull_request` runs by design, so every dependabot PR
+  saw `Error: Invalid GitGuardian API key` from an empty value, not a bad
+  one; Stripe dashboard 2FA/Radar (P2).
 - **GitHub / hosting settings (owner web-UI)** — make repo public + full
   "Protect main" ruleset (P1); attach `sensebridge.vercel.app` to Production
   (P1); squash-only merges, Actions allowlist, first-time-contributor approval,
@@ -2277,16 +2280,20 @@ the global `~/.claude/CLAUDE.md` (personal config, not repo-tracked).
       key sourced from the system keyring with `scan`/`honeytokens:check`
       scopes, and `ggshield quota` returns real numbers (9560/10000
       available). No login step was actually needed this session.
-- [ ] **[P1]** **[Needs owner]** ~~Add~~ **Rotate** the `GITGUARDIAN_API_KEY`
-      repository secret (Settings → Secrets and variables → Actions) — it
-      already exists (`gh secret list` confirms it), but its stored value is
-      invalid: every dependabot PR's `Secret scan (GitGuardian)` check fails
-      with `Error: Invalid GitGuardian API key`, confirmed via
-      `gh run view <run-id> --log-failed` on 2026-07-28. Generate a fresh key
-      in the GitGuardian dashboard (Personal access tokens → `scan` scope) and
-      run `gh secret set GITGUARDIAN_API_KEY --repo kevinle3212/sensebridge`.
-      This blocks merging **every** open PR via the required-checks ruleset,
-      not just dependabot's.
+- [ ] **[P2]** **[Needs owner]** Add `GITGUARDIAN_API_KEY` to the repo's
+      **Dependabot** secrets too (Settings → Secrets and variables →
+      Dependabot → New repository secret), not just Actions. Every
+      dependabot PR's `Secret scan (GitGuardian)` check failed with `Error:
+      Invalid GitGuardian API key`, which first looked like a bad key value —
+      but PR #53 (a direct, non-dependabot push, 2026-07-28) passed both
+      GitGuardian checks with the *same* Actions secret, proving the key
+      itself is fine. GitHub withholds repository Actions secrets from
+      workflows triggered by Dependabot's `pull_request` events by design
+      (so a malicious dependency bump can't exfiltrate them), so the value
+      resolved empty in those runs — not invalid. No key rotation needed;
+      reuse the existing value in the separate Dependabot secret store. Not
+      P1: it only affects the optional GitGuardian check on dependabot's own
+      PRs, which are otherwise fine to verify and merge manually.
 - [x] **[P3]** Commit and ship this session's repo-side changes
       (`.gitguardian.yaml`, `.githooks/pre-commit`,
       `.github/workflows/security.yml`, `scripts/setup.sh`,
