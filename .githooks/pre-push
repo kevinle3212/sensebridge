@@ -17,6 +17,11 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
+# Load .env so hook-tuning variables (GRAPHIFY_*, lint toggles) come from the
+# repo's own config instead of your shell profile. See scripts/env.sh.
+# shellcheck source=scripts/env.sh
+. "$REPO_ROOT/scripts/env.sh"
+
 protected_ref='refs/heads/main'
 # shellcheck disable=SC2034 # names the pushed-refs stdin format for readability; only remote_ref is used
 while read -r local_ref local_sha remote_ref remote_sha; do

@@ -12,6 +12,48 @@ requirements) lives in [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) — read it
 before opening the Xcode project in [`app/`](app). Testing strategy and how to
 run each test layer is in [`docs/TESTING.md`](docs/TESTING.md).
 
+## Running and deploying your own copy
+
+You never need access to this project's hosting to build, run, or test
+anything here — and you cannot accidentally deploy to it.
+
+- **The app** (`app/`) is serverless and on-device: no backend, no accounts,
+  no API keys. Signing uses your own free personal Apple ID; both the team ID
+  (`DEVELOPMENT_TEAM`) and the bundle-identifier prefix (`BUNDLE_ID_PREFIX`,
+  defaulting to `com.sensebridge`) live in an untracked
+  `app/Config/Signing.local.xcconfig`. Set the prefix if signing reports *"the
+  app identifier cannot be registered to your development team"* — the
+  original IDs belong to this project's team.
+- **The site** (`website/`) builds with zero configuration. Every value that
+  belongs to a specific deployment is an environment variable with a local
+  fallback — `SITE_URL` defaults to `http://localhost:4321`, so a fresh clone
+  builds green and never points at anyone else's domain. `cp .env.example
+  .env` and edit only what you need; `.env` is git-ignored.
+- **`.env` is read automatically, everywhere.** No flag to pass and no
+  `FOO=bar npm run ...`: `scripts/env.sh` covers the shell scripts and git
+  hooks, `website/scripts/load-env.js` covers everything in `website/` that
+  runs on Node. The repo root's `.env` holds shared values, `website/.env` the
+  site's, and anything already exported (a CI secret, a one-off override) wins
+  over both. See [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md#env-is-loaded-automatically).
+- **Deploy the fork wherever you like.** `railway.toml`, `website/vercel.json`,
+  and `docker/` carry no account identifiers, and the `railway:*` / `vercel:*`
+  npm scripts act on whichever project *you* are logged into. Building the
+  container takes the origin as a build arg:
+  `docker build -f docker/Dockerfile --build-arg SITE_URL=https://you.example .`
+- **A fork's CI is never red for a credential it doesn't have.** The Railway
+  preview-deploy job and `security.yml`'s GitGuardian scan each report and
+  exit green when their secret is absent; TruffleHog, the build, the
+  accessibility gate, and every `check:*` need no secrets and still run.
+
+The official SenseBridge site is <https://sensebridge.vercel.app>. It is
+deliberately not the built-in default for `SITE_URL`, so a fork never
+advertises the official site as its own.
+
+Full detail: [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md#configuration) and
+[`website/README.md`](website/README.md#deployment). If you find a hardcoded
+deployment target anywhere in tracked source, that is a bug worth filing —
+`npm run check:site-url` exists to catch the site half of it.
+
 ## Branches, commits, and hooks
 
 Never commit to `main`. Branch as `feat/...`, `fix/...`, or `chore/...`, use

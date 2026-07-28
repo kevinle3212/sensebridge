@@ -16,7 +16,8 @@
     ".graphifyignore": "ignore",
     "post-checkout": "shellscript",
     "post-commit": "shellscript",
-    "*.jsonc": "jsonc"
+    "*.jsonc": "jsonc",
+    "*.todo": "markdown",
   },
   "[css]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -32,6 +33,16 @@
   },
   "stylelint.validate": [
     "css"
+  ],
+  // The ESLint extension otherwise runs from the workspace root, which has a
+  // package.json but no eslint and no @types/node — so type-aware rules see
+  // `error`-typed imports and report phantom no-unsafe-*/no-undef errors that
+  // the CLI (run from website/) does not. "auto" pins each file to the nearest
+  // package.json, i.e. website/.
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
   ],
   "markdownlint.config": {
     "extends": ".markdownlint.jsonc"

@@ -23,13 +23,57 @@ title: Environment
 
 ## Configuration
 
-**None required for the MVP.** There is no backend, no API keys, and no
-`.env` file: no server, no accounts, no analytics — see
+**None required for the MVP.** The app has no backend and no API keys: no
+server, no accounts, no analytics — see
 [ARCHITECTURE.md](ARCHITECTURE.md#backend-architecture-there-is-none-and-that-is-correct).
 If the optional, opt-in cloud reasoning adapter is ever enabled by a user,
 their own provider credential is stored in the Keychain, never in a
 committed file, an environment variable, or a log — see
 [PRIVACY.md](PRIVACY.md).
+
+**The marketing site (`website/`) is also zero-config to build**, but it does
+take optional environment variables, documented in
+[`website/.env.example`](../website/.env.example) and read from an untracked
+`website/.env`. Every one has a local fallback, so `npm run build` and every
+`npm run check:*` pass on a fresh clone with no `.env` at all:
+
+| Variable | Fallback | What it controls |
+| --- | --- | --- |
+| `SITE_URL` | `http://localhost:4321` | Absolute origin of *your* deployment — canonical links, sitemap, `robots.txt`, OG/Twitter meta. Set it in your own host's project settings rather than in a file. |
+| `ELEVENLABS_API_KEY` | none (script exits) | Local-only, generation-time key for `npm run generate:audio`. Never deployed. |
+| `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL_ID` | the script's defaults | Narration voice and model. |
+
+No deployment target is hardcoded in tracked source; `npm run check:site-url`
+is the gate that keeps it that way. See
+[`website/README.md`](../website/README.md#deployment).
+
+### `.env` is loaded automatically
+
+There is nothing to remember at a call site — no `--env-file` flag, no
+`FOO=bar npm run ...`. Two small loaders read `.env` for you:
+
+| Loader | Covers |
+| --- | --- |
+| [`scripts/env.sh`](../scripts/env.sh) | Shell scripts (`scripts/*.sh`) and every git hook in `.githooks/`. Sourced, not run. |
+| [`website/scripts/load-env.js`](../website/scripts/load-env.js) | `astro.config.mjs` and every script under `website/scripts/`, so all of `npm run build` / `dev` / `preview` / `check:*` / `generate:audio`. |
+
+Both read the repo root's `.env` first (see
+[`.env.example`](../.env.example) — shared values and git-hook tuning), then
+`website/.env` (see [`website/.env.example`](../website/.env.example) — site
+values), so site-specific settings win. Both leave an **already-exported
+variable alone**, so a CI secret, a hosting provider's project setting, or a
+one-off `SITE_URL=... npm run build` always beats the file. Both files are
+git-ignored and both are optional.
+
+The external-CLI npm scripts (`railway:*`, `vercel:*`) go through
+[`website/scripts/with-env.js`](../website/scripts/with-env.js), which loads
+`.env` and then execs the CLI unchanged — those tools read `RAILWAY_TOKEN` /
+`VERCEL_TOKEN` from the environment and have no `.env` support of their own.
+
+`env.sh` **parses** `.env` rather than sourcing it: sourcing would execute the
+file's contents inside your git hooks. Only `KEY=value` lines with a valid
+shell identifier are honored. `scripts/check-env-loader.sh` is the regression
+test for that property and runs in CI.
 
 ## Local development
 
@@ -52,9 +96,16 @@ committed file, an environment variable, or a log — see
       parentheses after the certificate name, which belongs to the certificate
       rather than the team. Picking your team in the target's Signing &
       Capabilities tab works too, but writes the ID into `project.pbxproj`;
-      move it to the local file rather than committing it. No bundle ID change
-      is needed unless you want one different from `com.sensebridge.app`.
-   3. Enable Developer Mode on the device: Settings → Privacy & Security →
+      move it to the local file rather than committing it.
+   3. Add `BUNDLE_ID_PREFIX = com.yourname` to that same local file if signing
+      fails with *"the app identifier cannot be registered to your development
+      team"*. `com.sensebridge` is registered to this project's team, so it
+      cannot be re-registered to yours; one line re-prefixes the app and both
+      test bundles. An unconfigured clone keeps the original IDs — the default
+      lives in `project.pbxproj` as `$(BUNDLE_ID_PREFIX:default=com.sensebridge)`
+      — so this is only needed when you sign against your own team. Per
+      command: `xcodebuild BUNDLE_ID_PREFIX=com.yourname ...`.
+   4. Enable Developer Mode on the device: Settings → Privacy & Security →
       Developer Mode → toggle on → restart → confirm "Turn On" in the
       lock-screen prompt. Required since iOS 16 for any developer-signed
       build (Xcode Run, `xcodebuild`, an ad-hoc IPA via AltStore/Sideloadly,
@@ -64,10 +115,10 @@ committed file, an environment variable, or a log — see
       the device but times out waiting for the destination instead of
       building. One-time per device — it stays on until manually disabled,
       independent of the 7-day signing expiry below.
-   4. Plug in your device, select it as the run destination, hit Run. First
+   5. Plug in your device, select it as the run destination, hit Run. First
       launch: on-device Settings → General → VPN & Device Management →
       trust your developer certificate.
-   5. **The catch:** a free personal-team signature expires after 7 days —
+   6. **The catch:** a free personal-team signature expires after 7 days —
       re-run from Xcode to re-sign. Fine for active development, annoying
       for a build you want to leave installed; it's the free tier's only
       real limitation. No API keys are involved in this path — see

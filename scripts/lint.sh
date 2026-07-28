@@ -10,6 +10,9 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# shellcheck source=scripts/env.sh
+. "$REPO_ROOT/scripts/env.sh"
+
 if compgen -G "Package.swift" >/dev/null || compgen -G "app/Package.swift" >/dev/null; then
 	KIND=spm
 elif compgen -G "app/*.xcodeproj" >/dev/null || compgen -G "app/*.xcworkspace" >/dev/null; then
