@@ -38,6 +38,12 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      args:
+        # Build-time, not runtime: the site is prerendered inside the image.
+        # Defaults to empty, which lets website/astro.config.mjs apply its
+        # http://localhost:4321 fallback. Override per run:
+        #   SITE_URL=https://example.com docker compose -f docker/docker-compose.yml up web --build
+        SITE_URL: "${SITE_URL:-}"
     ports:
       - "8080:8080"
     environment:

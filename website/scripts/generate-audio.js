@@ -13,6 +13,7 @@
 //   npm run check:audio      # no network, no key — verifies public/audio/main.mp3
 //                             # still matches the current page text (CI-safe;
 //                             # run `npm run build` first, same as generate:audio)
+import "./load-env.js";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";

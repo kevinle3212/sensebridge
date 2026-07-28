@@ -3,19 +3,34 @@
 // output: "static" is Astro's default (no SSR adapter, no backend — see the
 // repo's serverless/on-device architecture invariant in ../CLAUDE.md) but is
 // spelled out explicitly so that invariant can't silently drift.
+// Must come first: populates process.env from .env, which Astro does not do
+// for this file (it runs before Vite's env handling). See scripts/load-env.js.
+import "./scripts/load-env.js";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 
+// Deployment origin. Astro needs an absolute one to emit canonical URLs,
+// sitemap entries, robots.txt, and OG/Twitter meta — but which origin is a
+// property of *your* deployment, not of this repository, so it is never
+// hardcoded here. Set SITE_URL in an untracked .env locally, or as an
+// environment variable in your own host's project settings. The fallback is
+// the dev server's origin, so a fresh clone builds and tests green with no
+// configuration at all; it just emits localhost URLs, which is correct for
+// anything that is not a real deployment. See .env.example.
+const DEFAULT_SITE_URL = "http://localhost:4321";
+// Truthiness, not `??`: an unset variable and the empty `SITE_URL=` that
+// .env.example ships both have to reach the fallback. `??` only catches the
+// unset case and would hand Astro an empty origin. Do not "simplify" this —
+// scripts/check-site-url.js is the regression test.
+const configuredSiteUrl = process.env.SITE_URL?.trim();
+// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- see above
+const site = configuredSiteUrl ? configuredSiteUrl : DEFAULT_SITE_URL;
+
 export default defineConfig({
   output: "static",
-  // Vercel's assigned production domain (see vercel.json / the Vercel
-  // project "sensebridge") — required for Astro to emit absolute canonical
-  // URLs, sitemap.xml entries, and OG/Twitter meta. This is the renamed
-  // project's alias (TODO.md: binds on the next production deploy); update
-  // again if a custom domain is attached later.
-  site: "https://sensebridge.vercel.app",
+  site,
   // React only powers islands opted in via a client:* directive (see
   // https://docs.astro.build/en/guides/client-side-scripts/#client-directives).
   // A .tsx file with no client directive still renders to static HTML with

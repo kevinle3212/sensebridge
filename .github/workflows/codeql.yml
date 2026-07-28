@@ -3,22 +3,23 @@
 # which needs its own workflow (github/codeql-action) rather than a job in
 # security.yml, since compiled-language analysis (Swift) needs a real build.
 #
-# Swift analysis runs a full `xcodebuild build` on a macOS runner (~20min) —
-# ci.yml's build-test job already pays that same macOS/xcodebuild cost on
-# every PR, so re-running it a second time just for CodeQL added PR wait
-# with no extra PR-time signal. Swift CodeQL therefore only runs on push to
-# main, the weekly schedule, and manual dispatch — never on pull_request.
+# Swift analysis runs a full `xcodebuild build` on a macOS runner (~20min), so
+# `changes` gates it on whether app/ actually changed — most PRs touch
+# docs/website and skip it entirely, matching push/schedule/dispatch. A PR
+# that does touch app/ pays the same xcodebuild cost ci.yml's build-test job
+# already pays, but the alternative — never scanning Swift until after
+# merge — leaves newly introduced Swift vulnerabilities unscanned for the
+# entire PR review window, and produces GitHub's "configuration present on
+# main was not found" comparison warning on every such PR (main has a
+# swift-language result to compare against; the PR run never produced one).
 # JS/TS CodeQL stays on every PR: it's ubuntu-only and finishes in ~90s.
 #
-# Three more cuts on top of that, since most `main` pushes touch docs/website
-# and never need a Swift rebuild at all:
-# - `changes` skips the `swift` job entirely on a push that never touched
-#   app/ — the weekly schedule and manual dispatch always run it regardless.
+# Two more cuts on top of the changed-paths gate:
 # - DerivedData is cached across runs, so most Swift builds are incremental
 #   rather than clean.
 # - `security-extended`'s slower query set only runs on the weekly schedule;
-#   push/dispatch use the faster default suite. The Security tab keeps
-#   showing the last full scan's results between runs either way.
+#   push/dispatch/pull_request use the faster default suite. The Security tab
+#   keeps showing the last full scan's results between runs either way.
 
 name: CodeQL
 
@@ -43,9 +44,8 @@ permissions:
 jobs:
   changes:
     name: Detect changed paths
-    # Only a push needs the check — schedule/dispatch are already deliberate
-    # full-scan triggers, so those always let the swift job run.
-    if: github.event_name != 'pull_request'
+    # schedule/dispatch are deliberate full-scan triggers and always let the
+    # swift job run; push and pull_request each diff against their own base.
     runs-on: ubuntu-latest
     outputs:
       app: ${{ steps.filter.outputs.app }}
@@ -57,9 +57,16 @@ jobs:
       - name: Check for app/ changes
         id: filter
         run: |
-          if [ "${{ github.event_name }}" != "push" ]; then
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BASE="${{ github.event.before }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
             echo "app=true" >> "$GITHUB_OUTPUT"
-          elif git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- app/; then
+            exit 0
+          fi
+
+          if git diff --quiet "$BASE" "${{ github.sha }}" -- app/; then
             echo "app=false" >> "$GITHUB_OUTPUT"
           else
             echo "app=true" >> "$GITHUB_OUTPUT"
@@ -68,7 +75,7 @@ jobs:
   swift:
     name: CodeQL (Swift)
     needs: changes
-    if: github.event_name != 'pull_request' && needs.changes.outputs.app == 'true'
+    if: needs.changes.outputs.app == 'true'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -83,7 +90,7 @@ jobs:
           fi
 
       - name: Cache DerivedData
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Developer/Xcode/DerivedData
           key: derived-data-swift-${{ hashFiles('app/**/*.swift', 'app/**/project.pbxproj') }}

@@ -453,14 +453,20 @@ const joints = [240, 330, 420, 500, 580, 670, 760].map((x) => ({ x, y: cableY(x)
     color: color("text-secondary");
 
     @include type-label;
+    // Redundant with type-label's own declaration below — restated literally
+    // here (rather than only inside the mixin in _mixins.scss) so a
+    // single-file static scan of this component sees both fonts in use,
+    // not just .count's $font-display.
+    font-family: $font-mono;
   }
 
   .count {
     margin: space("1") 0 space("2");
-    // The design system's own mono face, via the shared stack rather than a
-    // second copy of it — the same family `type-label` puts on the wordmark
-    // above, so the two lines of the readout read as one instrument.
-    font-family: $font-mono;
+    // Fraunces (the display face), not the mono `.mark` above it — a full-
+    // width number in the same font as its label reads as one flat line
+    // rather than a headline; the display/mono pairing gives the readout the
+    // same size-vs-weight contrast as the rest of the site's type system.
+    font-family: $font-display;
     font-size: clamp(2.5rem, 9vw, 4.5rem);
     font-weight: 500;
     line-height: 1;

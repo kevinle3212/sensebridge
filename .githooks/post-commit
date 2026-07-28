@@ -1,4 +1,12 @@
 #!/bin/sh
+
+# Load .env first, so the GRAPHIFY_* defaults below honor it. Parsed, not
+# sourced — see scripts/env.sh.
+_SENSEBRIDGE_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
+if [ -n "$_SENSEBRIDGE_ROOT" ] && [ -f "$_SENSEBRIDGE_ROOT/scripts/env.sh" ]; then
+    . "$_SENSEBRIDGE_ROOT/scripts/env.sh"
+fi
+unset _SENSEBRIDGE_ROOT
 # gitnexus-staleness-notice-start
 # Hand-maintained — not installed by any `gitnexus hook install` (no such
 # command exists; unlike graphify below). Advisory only: never blocks, never

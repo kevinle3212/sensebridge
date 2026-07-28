@@ -12,6 +12,15 @@ name: Railway preview deploy
 # (Railway dashboard -> Project -> Settings -> Tokens -> Create Token, scope
 # it to the `preview` environment if the dashboard offers that option) -- not
 # a personal account token. See TODO.md for the full setup walkthrough.
+#
+# Nothing here is specific to one Railway account. Without RAILWAY_TOKEN the
+# job reports why and exits green, so a fork's CI is never red for lacking a
+# credential it was never meant to have -- and can never deploy to anyone
+# else's Railway project. To deploy to your own, set RAILWAY_TOKEN in your
+# fork and, if your service or environment is named differently, the
+# RAILWAY_SERVICE / RAILWAY_ENVIRONMENT repository *variables* (Settings ->
+# Secrets and variables -> Actions -> Variables). Both fall back to this
+# repository's names.
 
 on:
   push:
@@ -36,10 +45,32 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: Check for a Railway credential
+        id: credential
+        # `secrets` is not available in a job-level `if`, so the gate lives
+        # here and every later step keys off its output.
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No RAILWAY_TOKEN secret — skipping the preview deploy." >> "$GITHUB_STEP_SUMMARY"
+            echo "This is expected on forks. To deploy to your own Railway project, see the header of this workflow file." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Railway CLI
+        if: steps.credential.outputs.present == 'true'
         run: npm install -g @railway/cli
 
       - name: Deploy to preview environment
+        if: steps.credential.outputs.present == 'true'
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway up --service sensebridge --environment preview --ci
+          # Deliberately not named RAILWAY_SERVICE / RAILWAY_ENVIRONMENT: the
+          # Railway CLI reads variables under that prefix itself, and these are
+          # already passed explicitly as flags.
+          SERVICE_NAME: ${{ vars.RAILWAY_SERVICE || 'sensebridge' }}
+          ENVIRONMENT_NAME: ${{ vars.RAILWAY_ENVIRONMENT || 'preview' }}
+        run: railway up --service "$SERVICE_NAME" --environment "$ENVIRONMENT_NAME" --ci

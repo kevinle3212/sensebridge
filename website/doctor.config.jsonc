@@ -40,9 +40,9 @@
           "src/components/Header.astro",
           "src/components/Footer.astro",
           "src/components/StructuredData.tsx",
-          "src/components/PageLoader.astro",
+          "src/components/PageLoader.astro"
         ],
-        "rules": ["deslop/unused-file"],
+        "rules": ["deslop/unused-file"]
       },
       {
         // `localeNames` is imported by src/components/Header.astro (line 9)
@@ -51,8 +51,8 @@
         // Scoped to this one file and one rule, so a genuinely unused export
         // elsewhere still fails CI.
         "files": ["src/i18n/index.ts"],
-        "rules": ["deslop/unused-export"],
-      },
-    ],
-  },
+        "rules": ["deslop/unused-export"]
+      }
+    ]
+  }
 }

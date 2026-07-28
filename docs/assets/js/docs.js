@@ -314,6 +314,19 @@
         });
     }
 
+    var SNIPPET_RADIUS = 40;
+
+    // A window of plain text around the first match, so a content-only hit
+    // shows why it matched instead of just a bare title.
+    function buildSnippet(content, matchIndex) {
+      var start = Math.max(0, matchIndex - SNIPPET_RADIUS);
+      var end = Math.min(content.length, matchIndex + SNIPPET_RADIUS);
+      var snippet = content.slice(start, end).trim();
+      if (start > 0) snippet = "…" + snippet;
+      if (end < content.length) snippet += "…";
+      return snippet;
+    }
+
     function renderResults(query) {
       listbox.innerHTML = "";
       activeIndex = -1;
@@ -324,13 +337,25 @@
         return;
       }
       var q = query.trim().toLowerCase();
-      var results = index
-        .filter(function (item) {
-          return item.title.toLowerCase().indexOf(q) !== -1 || item.content.toLowerCase().indexOf(q) !== -1;
+      var matches = [];
+      for (var m = 0; m < index.length; m++) {
+        var item = index[m];
+        var titleIndex = item.title.toLowerCase().indexOf(q);
+        var contentIndex = item.content.toLowerCase().indexOf(q);
+        if (titleIndex !== -1 || contentIndex !== -1) {
+          matches.push({ item: item, titleIndex: titleIndex, contentIndex: contentIndex });
+        }
+      }
+      // Title matches rank above content-only matches, so a query that names
+      // a page lands it first instead of wherever it falls in site.pages order.
+      var results = matches
+        .sort(function (a, b) {
+          return (a.titleIndex !== -1 ? 0 : 1) - (b.titleIndex !== -1 ? 0 : 1);
         })
         .slice(0, 10);
 
-      results.forEach(function (item, i) {
+      results.forEach(function (match, i) {
+        var item = match.item;
         var option = document.createElement("li");
         option.id = "search-option-" + i;
         option.setAttribute("role", "option");
@@ -341,6 +366,12 @@
         title.className = "search-panel__option-title";
         title.textContent = item.title;
         link.appendChild(title);
+        if (match.titleIndex === -1 && match.contentIndex !== -1) {
+          var snippet = document.createElement("span");
+          snippet.className = "search-panel__option-snippet";
+          snippet.textContent = buildSnippet(item.content, match.contentIndex);
+          link.appendChild(snippet);
+        }
         option.appendChild(link);
         option.addEventListener("mouseenter", function () {
           setActive(i);

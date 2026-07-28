@@ -10,6 +10,9 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FAIL=0
 
+# shellcheck source=scripts/env.sh
+. "$REPO_ROOT/scripts/env.sh"
+
 check_required() {
 	local name="$1" cmd="$2"
 	if command -v "$cmd" >/dev/null 2>&1; then

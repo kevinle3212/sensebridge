@@ -27,6 +27,23 @@ COPY website/.npmrc website/package.json website/package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY website/ .
+
+# Absolute origin of this deployment (canonical links, sitemap, robots.txt,
+# OG/Twitter meta). A static site is built once and served as files, so this is
+# a *build*-time value, not a runtime one — changing it needs a rebuild, not a
+# restart, which is why it is an ARG here and not an ENV on the runtime stage.
+#
+# Railway passes a service's variables to the Dockerfile build as build args,
+# so setting SITE_URL under Service -> Variables is enough; the ARG below is
+# what makes it visible to `npm run build`. Without it the build silently falls
+# back to http://localhost:4321 and ships a deployment whose canonical URLs all
+# point at localhost. Locally: `docker build --build-arg SITE_URL=... .`
+#
+# Left empty by default so an unconfigured build still succeeds — website/
+# astro.config.mjs owns the fallback, and this stays the single source of it.
+ARG SITE_URL=""
+ENV SITE_URL=$SITE_URL
+
 RUN npm run build
 
 # nginx-unprivileged, not plain nginx: runs as uid 101 (nginx) on port 8080

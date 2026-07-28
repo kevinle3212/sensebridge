@@ -21,6 +21,11 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
+# Load .env so hook-tuning variables (GRAPHIFY_*, lint toggles) come from the
+# repo's own config instead of your shell profile. See scripts/env.sh.
+# shellcheck source=scripts/env.sh
+. "$REPO_ROOT/scripts/env.sh"
+
 if command -v gitleaks >/dev/null 2>&1; then
 	gitleaks protect --staged --redact --config .gitleaks.toml
 else
@@ -36,7 +41,7 @@ fi
 if command -v node >/dev/null 2>&1; then
 	node tools/check-sensitive-files.mjs
 	node tools/sync-skills.mjs --check
-	npx --yes markdownlint-cli2 "**/*.md"
+	npx --yes markdownlint-cli2 "**/*.md" "COMPLETED.todo"
 else
 	echo "pre-commit: node not installed — skipping sensitive-file check, mirrored-skill drift check, and Markdown lint; CI still scans." >&2
 fi

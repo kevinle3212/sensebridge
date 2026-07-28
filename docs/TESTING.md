@@ -60,6 +60,24 @@ string (e.g. `SenseBridgeCoreTests/PhrasingTests`,
 `swift test` — CI's package-test loop (`.github/workflows/ci.yml`) uses
 `xcodebuild test` for this reason.
 
+**On-device UI tests need `-allowProvisioningUpdates`.** The UI-test runner
+gets its own bundle identifier (`<prefix>.SenseBridgeUITests.xctrunner`) that
+no profile covers until Xcode generates one, and `xcodebuild` will not create
+it unattended without that flag:
+
+```sh
+xcodebuild -project app/SenseBridge.xcodeproj -scheme SenseBridge \
+  -destination "platform=iOS,id=$DEVICE" -allowProvisioningUpdates \
+  build-for-testing
+```
+
+Without it the build fails with *"No profiles for
+'…UITests.xctrunner' were found … Automatic signing is disabled"*, which reads
+like a project misconfiguration but is not — signing style is already
+automatic. Contributors signing with their own team should also set
+`BUNDLE_ID_PREFIX` first; see
+[ENVIRONMENT.md](ENVIRONMENT.md#configuration).
+
 ## Coverage philosophy
 
 All code ships with tests — nothing merges untested. Depth scales with risk:

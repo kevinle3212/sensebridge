@@ -79,7 +79,11 @@ function escapeJsonForScript(json: string): string {
 
 /** Props for {@link StructuredData}. */
 export interface StructuredDataProps {
-  /** Absolute origin of the deployed site, e.g. `https://sensebridge.vercel.app`. */
+  /**
+   * Absolute origin of the deployed site, derived from `SITE_URL` via
+   * `Astro.site` — e.g. `https://example.com`, or `http://localhost:4321`
+   * when unconfigured. See `astro.config.mjs`.
+   */
   siteUrl: string;
   /** Absolute canonical URL of the page being rendered. */
   pageUrl: string;

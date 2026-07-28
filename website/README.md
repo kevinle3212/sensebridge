@@ -336,6 +336,13 @@ Two things do not reproduce locally, so check them deliberately:
   this check fails. Adding an island later is fine; raise `EXPECTED_ISLANDS`
   in `scripts/check-zero-js.js` in the same change so the budget stays
   explicit.
+- `npm run check:site-url` — asserts every absolute URL in the built `dist/`
+  (canonical link, sitemap, `robots.txt`) comes from the configured `SITE_URL`
+  rather than a domain baked into tracked source. Requires `npm run build`
+  first, with the same `SITE_URL`; no network, no key. This exists because the
+  failure it catches is silent: a hardcoded origin builds, lints, and type-
+  checks perfectly, and only shows up as a fork advertising somebody else's
+  deployment as its canonical home. See [Deployment](#deployment).
 - `npm run check:csp` — serves the built `dist/` **with the real production
   Content-Security-Policy header** and asserts the pages still work under it.
   Requires `npm run build` first; no network beyond localhost.
@@ -413,6 +420,39 @@ Two things do not reproduce locally, so check them deliberately:
 
 ## Deployment
 
+The **official SenseBridge site is <https://sensebridge.vercel.app>**. That is
+the canonical, published deployment; anything else built from this repository
+is a fork or a preview and should say so via its own `SITE_URL`.
+
+**Nothing in this repository points at a particular hosting account.** The one
+value that is specific to a deployment — its absolute origin — is read from
+`SITE_URL` and falls back to `http://localhost:4321`, so a fresh clone builds
+and passes every check with no configuration and never advertises somebody
+else's domain as its canonical home. Set `SITE_URL` in an untracked `.env`
+(copy `.env.example`) or, better, as an environment variable in your own
+host's project settings, so the value never lands in the repository:
+
+```sh
+SITE_URL=https://your-site.example.com npm run build
+npm run check:site-url   # asserts the build agrees with the configured origin
+```
+
+Every npm script here reads `.env` on its own — `build`, `dev`, `preview`, the
+`check:*` gates, `generate:audio`, and the `railway:*` / `vercel:*` wrappers —
+so once a value is in the file there is nothing to pass on the command line.
+The repo root's `.env` is read first for values shared with the shell scripts
+and git hooks, then this directory's, and anything already exported in your
+shell or in CI beats both. Mechanism:
+[`scripts/load-env.js`](scripts/load-env.js) and
+[`../docs/ENVIRONMENT.md`](../docs/ENVIRONMENT.md#env-is-loaded-automatically).
+
+`railway.toml`, `vercel.json`, and `docker/` carry no account identifiers, and
+`.vercel/` (which holds the Vercel CLI's `projectId`/`orgId`) is git-ignored —
+so `npm run railway:*` and `npm run vercel:*` below act on whatever project
+_you_ are logged into, never on this project's. Deploy the fork anywhere; the
+sections below describe how the upstream repository happens to be hosted, not
+a requirement.
+
 Deploys to [Railway](https://railway.app) via `docker/Dockerfile` +
 `railway.toml` at the repo root — see [`docker/README.md`](../docker/README.md)
 for the container setup itself. The image is multi-stage: stage 1 runs
@@ -450,14 +490,21 @@ npm run vercel:inspect   # inspect the latest deployment, including its logs
    `railway.toml`/`docker/Dockerfile` are only discovered from the root.
 3. Build/run is already specified by `railway.toml` (`dockerfilePath =
 "docker/Dockerfile"`) — no manual build command needed.
-4. No environment variables are required **on Railway**. This is a static
-   site with no backend, accounts, or telemetry (see the repo's architecture
-   invariants in `../CLAUDE.md`). `ELEVENLABS_API_KEY` (see
-   [Read-aloud controls](#read-aloud-controls)) is a local-only,
-   generation-time secret — it is never set on Railway and never deployed;
-   only the `audio/main.mp3` it produces gets shipped. If a real runtime env
-   var is ever needed, document it here and set it under Service →
-   Variables — never commit it.
+4. Set `SITE_URL` under Service → Variables to the origin the service will
+   actually serve from (no trailing slash). It is read at **build** time, not
+   run time — a static site has no runtime environment — so changing it needs
+   a redeploy, not a restart. Leaving it unset is safe but wrong for a real
+   deployment: canonical links, the sitemap, `robots.txt`, and the OG/Twitter
+   meta will all point at `localhost`.
+
+   Nothing else is required. This is a static site with no backend, accounts,
+   or telemetry (see the repo's architecture invariants in `../CLAUDE.md`).
+   `ELEVENLABS_API_KEY` (see [Read-aloud controls](#read-aloud-controls)) is a
+   local-only, generation-time secret — it is never set on Railway and never
+   deployed; only the `audio/main.mp3` it produces gets shipped. If another
+   real build- or runtime env var is ever needed, document it here and in
+   `.env.example`, and set it under Service → Variables — never commit it.
+
 5. Deploy: push to `main` (Railway auto-redeploys on every push once the
    GitHub connection is live) or trigger a manual deploy from the Railway
    dashboard. Watch the build logs for the first deploy to confirm nginx

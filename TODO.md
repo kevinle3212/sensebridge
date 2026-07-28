@@ -39,8 +39,13 @@ Everything still open falls into buckets a machine cannot close for you:
   keyboard-only passes; Lighthouse mobile; simulator/device Read-flow +
   tap-through. No CI substitute exists for any of these.
 - **Secrets & security (owner)** — rotate the exposed Stripe test key (P1);
-  add the `GITGUARDIAN_API_KEY` repo secret (P1 — local `ggshield auth` was
-  already done, verified 2026-07-26); Stripe dashboard 2FA/Radar (P2).
+  add `GITGUARDIAN_API_KEY` to **Dependabot** secrets too (Settings → Secrets
+  and variables → Dependabot), not just Actions — confirmed 2026-07-28 the
+  Actions secret is valid (PR #53, pushed directly, passes both GitGuardian
+  checks with it), but GitHub withholds Actions secrets from
+  Dependabot-triggered `pull_request` runs by design, so every dependabot PR
+  saw `Error: Invalid GitGuardian API key` from an empty value, not a bad
+  one; Stripe dashboard 2FA/Radar (P2).
 - **GitHub / hosting settings (owner web-UI)** — make repo public + full
   "Protect main" ruleset (P1); attach `sensebridge.vercel.app` to Production
   (P1); squash-only merges, Actions allowlist, first-time-contributor approval,
@@ -68,6 +73,63 @@ Everything still open falls into buckets a machine cannot close for you:
   notes. Revisit opportunistically.
 
 ## To-Do
+
+### Contributor-configurable deployment (`SITE_URL`) (2026-07-27, 23:50 PST)
+
+The site's deployment origin now comes from `SITE_URL` (untracked
+`website/.env`, the Dockerfile's `SITE_URL` build arg, or the host's project
+settings) with a `http://localhost:4321` fallback, so a fork builds green and
+can never point at this project's Vercel or Railway. `npm run check:site-url`
+is the gate. The app side uses the same seam: `BUNDLE_ID_PREFIX` in the
+gitignored `app/Config/Signing.local.xcconfig`, defaulting to
+`com.sensebridge`.
+
+- [ ] **[P3]** Optional: set the `RAILWAY_SERVICE` / `RAILWAY_ENVIRONMENT`
+      repository *variables* if those names ever diverge from `sensebridge` /
+      `preview`; the workflow falls back to today's names.
+
+### `.env` auto-loading (2026-07-28, 00:00 PST)
+
+`.env` is now read automatically by every entry point — `scripts/env.sh` for
+shell scripts and git hooks, `website/scripts/load-env.js` for everything in
+`website/` that runs on Node, `website/scripts/with-env.js` for the
+`railway:*` / `vercel:*` CLI wrappers. Root `.env` first, then `website/.env`;
+an already-exported variable always wins. `scripts/check-env-loader.sh` guards
+the parse-don't-source property and runs in CI. Details in
+`sessions/2026-07-28/0000-PST.md`.
+
+- [ ] **[P2]** **[Needs owner — decision]** A GitGuardian outage blocks every
+      local commit. `.githooks/pre-commit` runs `ggshield secret scan
+      pre-commit` under `set -euo pipefail`, so when the API returns 503 (hit
+      on 2026-07-28) the hook aborts and nothing can be committed — even
+      though gitleaks passed and CI scans independently. Options: leave it
+      (fail-closed on a security gate, which is defensible), or treat a
+      *transport/API* failure as advisory while keeping a real finding
+      blocking. Not fixed unilaterally — it weakens a security gate, so it is
+      your call.
+
+### Admin dashboard setup — Next.js + WakaTime (2026-07-27)
+
+**Decision (2026-07-27):** Next.js, not Astro, for the admin dashboard.
+`website/` is deliberately static/zero-JS/content-first (see
+[`docs/TOOLING.md`](docs/TOOLING.md)); an admin dashboard is the opposite
+profile — dynamic, behind auth, all interactive widgets, no SEO/zero-JS
+constraint — so it should be a **separate app**, not bolted onto `website/`.
+Next.js API routes/middleware handle auth and keep the WakaTime API key
+server-side.
+
+- [ ] **[P3]** Scaffold a new Next.js app (outside `website/`, e.g.
+      `admin/`) for the dashboard — decide hosting (Vercel, same as
+      `website/`?) and auth approach (single-owner login) before scaffolding.
+- [ ] **[P3]** Wire in WakaTime: start with the public embed/share widgets
+      (`wakatime.com/share/@user/...` — SVG badges/charts, no API key
+      needed) before building a custom API-route + chart integration. The
+      WakaTime API key already lives at `~/.wakatime.cfg`
+      ([`docs/TOOLING.md`](docs/TOOLING.md)) — if a custom integration is
+      built later, read it server-side only, never in a client bundle.
+- [ ] **[P3]** Decide dashboard scope (WakaTime stats only vs. TODO/session-log
+      surfacing, CI status, etc.) before scaffolding — affects whether a
+      backend/DB is needed at all or if this stays a thin read-only view.
 
 ### Logo system — "First Light" mark, generated to `tmp/logo/` (2026-07-27)
 
@@ -144,23 +206,6 @@ re-briefed from scratch:
       inline suppression (mine may be wrong), or dismiss the alert directly
       via the code-scanning UI/API with a stated false-positive reason once
       it posts as a numbered alert on `main`.
-
-- [ ] **[P3]** **[Needs owner]** `website/src/components/PageLoader.astro`'s
-      countdown readout (`.count`, the big `clamp()`'d number + its `.mark`
-      label) uses only `$font-mono` for the whole component. Impeccable's
-      `single-font` detector flags this on every CI run for PR #42
-      ("Impeccable design detectors" job) — non-blocking (not in the
-      required-checks ruleset), so it does not hold up merging, but the
-      finding will keep reappearing on every subsequent PR touching this file
-      until resolved one way or the other. Two ways to close it: confirm it's
-      intentional (a minimal full-screen loader where size/weight carries the
-      hierarchy) and add a reviewable `.impeccable/config.json`
-      `detector.ignoreValues` entry mirroring the existing `overused-font`
-      precedent; or pair the readout with the site's display font (Fraunces)
-      for contrast. Asked via `AskUserQuestion` during the PR #42 CI-green
-      pass; owner deferred rather than deciding either way — check `git log
-      -- website/src/components/PageLoader.astro` for whether it's since
-      moved.
 
 ### Awareness camera preview + object highlights (2026-07-27, 00:30 PST)
 
@@ -2235,10 +2280,20 @@ the global `~/.claude/CLAUDE.md` (personal config, not repo-tracked).
       key sourced from the system keyring with `scan`/`honeytokens:check`
       scopes, and `ggshield quota` returns real numbers (9560/10000
       available). No login step was actually needed this session.
-- [ ] **[P1]** **[Needs owner]** Add the `GITGUARDIAN_API_KEY` repository
-      secret (Settings → Secrets and variables → Actions), sourced from the
-      GitGuardian dashboard (Personal access tokens → `scan` scope) — the new
-      `ggshield` CI job fails closed on every push/PR until this exists.
+- [ ] **[P2]** **[Needs owner]** Add `GITGUARDIAN_API_KEY` to the repo's
+      **Dependabot** secrets too (Settings → Secrets and variables →
+      Dependabot → New repository secret), not just Actions. Every
+      dependabot PR's `Secret scan (GitGuardian)` check failed with `Error:
+      Invalid GitGuardian API key`, which first looked like a bad key value —
+      but PR #53 (a direct, non-dependabot push, 2026-07-28) passed both
+      GitGuardian checks with the *same* Actions secret, proving the key
+      itself is fine. GitHub withholds repository Actions secrets from
+      workflows triggered by Dependabot's `pull_request` events by design
+      (so a malicious dependency bump can't exfiltrate them), so the value
+      resolved empty in those runs — not invalid. No key rotation needed;
+      reuse the existing value in the separate Dependabot secret store. Not
+      P1: it only affects the optional GitGuardian check on dependabot's own
+      PRs, which are otherwise fine to verify and merge manually.
 - [x] **[P3]** Commit and ship this session's repo-side changes
       (`.gitguardian.yaml`, `.githooks/pre-commit`,
       `.github/workflows/security.yml`, `scripts/setup.sh`,
@@ -3132,639 +3187,63 @@ throwaway island (typecheck/lint/build/hydration), then removed it. Synced
       `website/package.json` on `main` and the react-doctor CI workflow is
       tracked.
 
+### CI/security automation audit (2026-07-27)
+
+- [ ] **[P1]** The `dependabot-automerge.yml` fix (repo settings: enabled
+      `allow_auto_merge` + "Allow GitHub Actions to create and approve pull
+      requests") is confirmed working — PRs #46/#47/#49 now show
+      `autoMergeRequest` enabled and approved. But merge is still blocked by
+      **separate, unrelated CI failures**: `Secret scan (GitGuardian)` fails
+      on all three; `Deploy to Railway preview` fails on all three;
+      `Build + smoke-test docker/Dockerfile` and
+      `Stylelint + ESLint + Prettier + typecheck + build` fail on #47/#49;
+      `Impeccable design detectors` fails on #46. Not investigated further
+      this session — out of scope for the auto-merge-permission fix. Needs
+      its own look: whether these are flaky/transient, a shared root cause
+      (all three failing GitGuardian is suspicious), or genuinely broken on
+      these dependency-bump branches specifically.
+- [ ] **[P2]** `dependabot.yml`'s grouped PRs (`dev-dependencies` group, e.g.
+      #44 "dev-dependencies group with 2 updates", #45 "...in /website with 4
+      updates") never auto-merge even when every member update is
+      patch/minor. Root cause: `dependabot/fetch-metadata` can't report a
+      single `update-type` for a grouped PR (known upstream limitation), so
+      `dependabot-automerge.yml`'s
+      `steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+      ...-minor'` condition never matches a grouped PR. Fix needs a design
+      decision, not a quick patch: either stop grouping dev-dependencies (loses
+      the batching benefit) or switch the workflow's gate to something that
+      inspects each dependency in the group (e.g.
+      `steps.meta.outputs.dependency-names` + per-dep version comparison, or
+      GitHub's newer `dependency-group` output plus a stricter allowlist).
+- [ ] **[P3]** CodeQL alert #93 (`js/file-access-to-http`,
+      `tools/docs-a11y.mjs:155`) has a well-reasoned inline suppression
+      comment (lines 151-154, added in `339cec6`) explaining the flow is safe
+      (URL host is always `http://127.0.0.1:PORT`, only the path segment is
+      filesystem-derived and already passed through `SAFE_HTML_FILENAME`).
+      The commit containing that comment was included in the most recent
+      CodeQL scan (`39791fd`, 2026-07-28T05:53Z) but the alert is still
+      `open` — GitHub's inline-suppression parsing likely requires the
+      `codeql[rule-id]` directive on the line immediately above the flagged
+      line, not 4 lines above with continuation comments in between. Either
+      reformat the comment so the directive is adjacent to line 155, or
+      manually dismiss alert #93 as a false positive with the same
+      justification already written in the code.
+
 ## In Progress
 
 *Nothing currently in progress.*
 
 ## Completed
 
-- [x] `/impeccable critique website` — scored UX review of the marketing
-      site (dual-assessment: design review + detector/browser evidence).
-      Scored 30/40 (Good); follow-ups tracked above. Snapshot:
-      `.impeccable/critique/2026-07-11T22-30-54Z__website-index-html.md`.
-- [x] `/impeccable audit website` — a11y/perf/responsive technical checks
-      on the marketing site. Scored 17/20 (Good); follow-ups tracked above.
-- [x] **Done 2026-07-17 (late evening)** — Owner explicitly overrode the
-      remaining skip decisions: installed hyperframes (8-skill core set,
-      PostHog telemetry disabled pre-first-run), notebooklm-skill
-      (files-only; bootstrap left to the owner), all 17 social-media-skills
-      (markdown-only, verified), agent-browser CLI (Chrome fetch pending —
-      permission-gated), the `privacy-legal` plugin from claude-for-legal
-      (no hooks; Slack/GDrive connectors unauthenticated), and registered
-      the Granola + Higgsfield hosted MCPs user-scope (both pending owner
-      OAuth). Also removed the stale "Adam Framework" row from
-      `docs/TOOLING.md`. Docs synced (`docs/TOOLING.md` second-wave section,
-      plugin + MCP tables, `docs/NOTEBOOKLM.md` status update). gstack
-      `/browse` remains the browsing default per the global standard.
-- [x] **Done 2026-07-17 (evening)** — Canonical-source skill sync:
-      `tools/sync-skills.mjs` (stdlib Node; regenerate + `--check` modes;
-      data-driven per-harness substitution rules) now enforces that the
-      hand-mirrored skills (`council`, `website-design`, `seo-schema`,
-      `seo-technical`) cannot drift from their `.claude/skills/` canonicals —
-      wired into `.githooks/pre-commit` and CI's docs-links job. Verified by
-      injected-drift test (caught, repaired byte-identical). Impeccable stays
-      vendor-managed and excluded.
-- [x] **Done 2026-07-17 (evening)** — Re-evaluated all 16 previously skipped
-      AI tools under the owner's new prefer-integration policy. Installed 7
-      (stop-slop; 6-of-47 marketingskills subset; codex-plugin-cc plugin;
-      claude-seo offline slice vendored as `seo-schema`/`seo-technical`;
-      Perplexity documented per-dev; find-skills formalized), 9 remain out,
-      each with a re-verified current blocker. Full outcomes in
-      `docs/TOOLING.md`; attribution in `CREDITS.md`. Also added the
-      `council`/`security-review`/`code-review` gate step to
-      `website-design`'s flow (frontend-design routing now complete) and
-      verified the GitNexus integration closed (CLI 1.6.9 + MCP + advisory
-      hooks all live; VS Code "Nexus" extension confirmed unrelated).
-- [x] **Done 2026-07-17** — Mirrored `council` and `website-design` skills
-      (previously `.claude/skills/` only) to `.agents/skills/`, `.cursor/skills/`,
-      `.gemini/skills/`, and `.github/skills/`, matching the impeccable
-      multi-harness pattern, so Cursor/Gemini CLI/Copilot can invoke them
-      too. Fixed the `audit-refresh` sibling link in each new `council` copy
-      (only exists under `.claude/skills/`, so it now points there via
-      `../../../.claude/skills/audit-refresh/SKILL.md`) and the impeccable
-      cross-reference display text in each new `website-design` copy.
-      Updated `AGENTS.md` and `docs/TOOLING.md` to reflect the new
-      locations. Not adapted per-tool the way impeccable's `npx impeccable
-      install` build differs by provider (invocation prefix, CLAUDE.md vs.
-      AGENTS.md, etc.) — these are plain copies since neither skill had any
-      other tool-specific content; `docs/TOOLING.md`'s `frontend-design`
-      install command (`--agent claude-code`) is still Claude-Code-specific
-      and left as-is rather than guessed for other tools.
-- [x] **[P2]** Add `scroll-margin-top: space("7");` to `.bridge` in
-      `website/src/components/SignalBridge.module.scss` — the new `#bridge`
-      section is a valid headed anchor (unlike its three sibling stage
-      sections, it never got this) and would land under the sticky header on
-      any future nav link or external deep link to it.
-      **Done 2026-07-18** — applied in-session; gate + pa11y re-run green.
-- [x] **[P3]** Add `pointer-events: none;` to `.scroll-progress` in
-      `website/src/components/Header.astro` — defensive hardening to match
-      every other decorative overlay in this batch; no live click-
-      interception found at current header spacing.
-      **Done 2026-07-18** — applied in-session; gate + pa11y re-run green.
-- [x] **[P0]** Finalize the actual git rename for the 6 `docs/` files this
-      branch renamed to uppercase on disk. This checkout is on a
-      case-insensitive APFS volume with `core.ignorecase=true`, so the
-      plain renames done so far never registered as a git rename: `git
-      status` still shows each file as **content-modified at its original
-      lowercase path** (e.g. `docs/accessibility.md`, a 6-line diff), even
-      though the file on disk is now named `docs/ACCESSIBILITY.md`.
-      Verified by diffing `git ls-files` (git's tracked path) against a
-      case-sensitive directory listing — exactly 6 mismatches:
-      `docs/accessibility.md` → `ACCESSIBILITY.md`, `docs/ai-models.md` →
-      `AI-MODELS.md`, `docs/architecture.md` → `ARCHITECTURE.md`,
-      `docs/privacy.md` → `PRIVACY.md`, `docs/roadmap.md` → `ROADMAP.md`,
-      `docs/safety-framing.md` → `SAFETY-FRAMING.md`. Committing as-is would
-      ship a tree where the tracked filenames are still lowercase, so every
-      uppercase reference already added throughout the repo this same
-      branch (`README.md`, `AGENTS.md`, `CLAUDE.md`, `WIKI.md`, and ~30
-      other files) would 404 on any case-sensitive checkout — including
-      `.github/workflows/ci.yml`'s "Docs link check" job, which runs on
-      `ubuntu-latest` (`ci.yml:86`); that job would fail on push. Fix: for
-      each of the 6 files, force git to see an explicit rename — a
-      case-only rename needs a two-step move on a case-insensitive
-      filesystem, e.g. `git mv docs/accessibility.md
-      docs/accessibility.md.tmp && git mv docs/accessibility.md.tmp
-      docs/ACCESSIBILITY.md` (repeat per file), or run the batch with `git
-      -c core.ignorecase=false mv <old> <new>`. Re-run `git status`
-      afterward and confirm each shows as `renamed:` (or `new file` +
-      `deleted`), never `modified`. **Done 2026-07-19** — ran the two-step
-      temp-name `git mv` trick for all 6 files (repo owner explicitly
-      authorized running `git mv` this turn). Verified via `git status
-      --short docs/` showing all 6 as `R` (renamed), not `M`.
-- [x] **[P1]** Once the rename above lands, fix the remaining stale
-      lowercase `docs/*.md` references that survived this branch's
-      reference-update pass (grep for
-      `docs/(accessibility|architecture|privacy|roadmap|safety-framing)\.md`
-      once the 6 renamed files' own tracked paths no longer match):
-      `REVIEW.md:20,24,27` (`safety-framing.md`, `accessibility.md`,
-      `privacy.md`), `SETUP-STATUS.md:59` (`architecture.md`),
-      `.coderabbit.yaml:10` (`safety-framing.md`), `website/README.md:8,47`
-      (`safety-framing.md`, both occurrences), `.agents/context/PRODUCT.md:76`
-      (`safety-framing.md`), `website/eslint.config.mjs:57` (code comment,
-      `safety-framing.md`), `.claude/commands/security-review.md:31`
-      (`privacy.md`), `.agents/skills/swift-actor-persistence/SKILL.md:26`
-      (`privacy.md`), and the `council` skill's `docs/privacy.md` reference
-      at line 64 in **all 5** mirrored copies (`.claude/skills/council`,
-      `.agents/skills/council`, `.cursor/skills/council`,
-      `.gemini/skills/council`, `.github/skills/council`) — same fix needed
-      in each, per the multi-harness mirroring pattern already documented
-      below under "Agentic-file audit follow-ups". **Done 2026-07-19** —
-      fixed all 21 stale references (the 9 listed above plus 12 more the
-      same-session grep also found: 9 Swift doc-comments under `app/` and
-      one unrelated pre-existing broken relative link caught mid-edit in
-      `.claude/commands/security-review.md`; full list in the 2026-07-19
-      `1200-PST` session log). Re-verified: zero stale lowercase
-      `docs/*.md` references remain outside this file's own historical
-      narrative.
-- [x] **[P2]** Docker build verification. **Done 2026-07-18** — Dockerfile
-      rewritten multi-stage (Astro build → non-root static serve of `dist/`);
-      `docker build` succeeded and a container smoke test returned HTTP 200
-      with the disclaimer present on port 3000.
-- [x] **[P0]** `/impeccable harden` — Safety disclaimer semantics.
-      **Resolved 2026-07-18** by the Astro rebuild:
-      `website/src/components/Disclaimer.astro` wraps the verbatim copy in
-      `<aside role="note" aria-label="Safety disclaimer">`; routed through the
-      `safety-framing-reviewer` agent (full PASS, zero findings).
-- [x] **[P1]** `/impeccable clarify` — Footer CTA. **Resolved 2026-07-18**:
-      `website/src/components/Footer.astro` has the descriptive
-      "SenseBridge on GitHub" link plus pre-launch fine print.
-- [x] **[P1]** `/impeccable onboard` — Visible pre-launch sentence.
-      **Resolved 2026-07-18**: hero status line ("SenseBridge is in open
-      development and not yet available to download…") plus footer fine print.
-- [x] **[P2]** `/impeccable distill` — 5 `<li>` vs ≤4 chunking guideline.
-      **Closed by decision 2026-07-18**: all five kept deliberately — they are
-      the real capability list and trimming one would misstate scope
-      (honesty > chunking); the scroll reveal staggers them one-by-one, which
-      provides the temporal chunking the guideline is after.
-- [x] **[P2]** `/impeccable layout` — 320px overflow risk. **Resolved
-      2026-07-18**: header/nav use `flex-wrap` + `gap`; the rebuilt layout is
-      responsive down to 320px (single-column below the 48rem breakpoint).
-- [x] **[P1]** `/impeccable typeset` — Heading typography. **Superseded
-      2026-07-18** by the "First Light" rebuild: hero H1 uses the Inter
-      Variable display face (600, `clamp(2rem…3.5rem)`, 1.1 line-height,
-      -0.02em tracking) from `Hero.module.scss`; the old "Quiet Signal"
-      400-weight spec no longer applies.
-- [x] **[P1]** `/impeccable layout` — Header divider. **Resolved
-      2026-07-18**: `border-bottom` sits on `.site-header` itself
-      (`website/src/components/Header.astro`), spanning full width.
-- [x] **[P2]** `/impeccable adapt` — Nav responsive handling. **Resolved
-      2026-07-18**: `flex-wrap` + `gap` on both `.site-header .wrap` and
-      `nav` in the rebuilt Header.
-- [x] **[P2]** `/impeccable polish` — Nav link color. **Superseded
-      2026-07-18**: "First Light" documents links as Signal Blue everywhere
-      (the global `a { color: accent-primary }` in
-      `src/styles/global/_base.scss` is now the spec, not a divergence);
-      DESIGN.md's rewrite reflects this.
-- [x] **[P2]** `/impeccable polish` — `color-scheme: dark`. **Resolved
-      2026-07-18**: set on `html` in `src/styles/global/_base.scss`.
-- [x] **[P2]** `/impeccable typeset` — The `.disclaimer` callout set
-      `font-size: 0.9375rem` (15px), not a documented step on `DESIGN.md`'s
-      type ramp. Three-way drift: the CSS used it, `.impeccable/design.json`
-      recorded it, `DESIGN.md` never documented it. **Fixed 2026-07-16** by
-      dropping the override so the callout inherits `body` (1rem) — the
-      on-ramp step — rather than documenting a 5th step, which would have
-      worsened the existing `flat-type-hierarchy` finding (14/15/16/18px).
-      Size moved *up* (15px → 16px): this element carries the safety-framing
-      disclaimer, so it must never be the smallest text on the page. Copy
-      untouched, so no safety-framing review was required. Made the rule
-      explicit in `DESIGN.md` (callout now declares
-      `typography: "{typography.body}"` plus a stated floor) and refreshed
-      `design.json`. Verified: `impeccable detect website` 4 → 3 findings,
-      `design-system-font-size` gone.
-      **Only surfaced 2026-07-16**, once `DESIGN.md` actually resolved; the
-      detector's design-system rules had been silently inert before that,
-      which is also why the 2026-07-11 critique snapshot's "zero drift
-      between the documented system and the shipped code" claim was never
-      actually tested for type.
-- [x] **[P1]** Impeccable read `docs/PRODUCT.md` (the **iOS app's** product
-      doc) as the design context for **website** work, and found no
-      `DESIGN.md` at all — so every `/impeccable` run on the site was primed
-      with the wrong product and no design system. **Fixed 2026-07-16** by
-      moving the site's context to `.agents/context/PRODUCT.md` +
-      `.agents/context/DESIGN.md` (impeccable checks `.agents/context/`
-      before `docs/`, so it now resolves deterministically), each with a
-      scope header distinguishing it from `docs/PRODUCT.md`. Verified:
-      `loadContext()` reports `productPath: .agents/context/PRODUCT.md`,
-      `designPath: .agents/context/DESIGN.md` (was `docs/PRODUCT.md` /
-      `null`). Rejected alternatives and the reasoning are in
-      `docs/TOOLING.md` → "Impeccable design context".
-- [x] **[P2]** Cherry-pick the Swift skills/agents from
-      [`affaan-m/ecc`](https://github.com/affaan-m/ecc) (v2.0.0, commit
-      `ed38744`, MIT). **Done 2026-07-16** — vendored 5 of the 10 planned
-      files: skills `swift-concurrency-6-2`, `swift-protocol-di-testing`,
-      `swift-actor-persistence`; agents `swift-reviewer`,
-      `swift-build-resolver`. Each was adapted, not copied: conformed to house
-      style (skills gained the `tool-fallback` / `clarify-before-acting`
-      blocks; agents lost their YAML frontmatter, since all 7 existing agents
-      are plain markdown), had upstream's broken references rewritten, and
-      gained a header naming the SenseBridge invariant it serves. Attribution
-      + the MIT notice are in `CREDITS.md` (MIT is compatible with this
-      repo's Apache-2.0). Verified: markdownlint 0 errors, all links resolve,
-      `gitleaks --no-git` clean, `check-sensitive-files` clean on the staged 5.
-      **Note:** these are preparation — the repo has **zero `.swift` files**
-      today, so none of this is exercised until `app/` exists.
+- [x] **[P3]** `website/src/components/PageLoader.astro`'s countdown readout
+      used `$font-mono` for both `.mark` and `.count`, which Impeccable's
+      `single-font` detector flagged on every PR touching the file (non-
+      blocking, "Impeccable design detectors" job). Owner deferred the
+      original `AskUserQuestion` during PR #42; re-asked and **resolved
+      2026-07-28** — paired `.count` with `$font-display` (Fraunces),
+      matching the mono label / display number contrast used elsewhere in
+      the type system. `tabular-nums` is left on `.count`; Fraunces Variable
+      supports it, and if a build ever lacks the feature the number simply
+      loses fixed-width digits rather than breaking layout.
 
-- [x] **[P3]** Resolve `rules/swift/*.md` — **content folded in, files not
-      vendored. Done 2026-07-16.** The 5 files were not copied, because
-      nothing here reads a `rules/` tree or their `paths:` frontmatter (it
-      would be dead weight), and each is a stub extending a `rules/common/*`
-      tree that was never in scope. Instead every claim in them was audited
-      individually and routed. Nothing was dropped silently:
-
-      **Folded in (was genuinely absent from this repo — verified by grep):**
-
-      - Apple API Design Guidelines naming + "`static let` over global
-        constants" → new "MEDIUM - Naming" section in `swift-reviewer`.
-      - Typed throws (Swift 6 `throws(LoadError)`) → `swift-reviewer`, CRITICAL
-        Error Handling.
-      - Enum-with-associated-values for state → `swift-reviewer`,
-        Protocol-Oriented Design.
-      - Force-unwrapped `URL(string:)!`, and validation of deep links /
-        pasteboard / imported files / OCR text → `swift-reviewer`, CRITICAL
-        Safety. Reframed: these are the *realistic* untrusted-input surfaces
-        for an app with no network.
-      - Test isolation, table-driven cases, `swift test
-        --enable-code-coverage` → the [testing](.agents/skills/testing/SKILL.md)
-        skill.
-
-      **Already covered, so not duplicated** (a rule stated twice drifts into
-      two rules): SwiftFormat/SwiftLint (`docs/TOOLING.md`), `let` over `var`,
-      `struct` over `class`, hardcoded secrets, Keychain-not-`UserDefaults`
-      (`SECURITY.md`, `docs/ENVIRONMENT.md`), ATS, injection, `print()` →
-      `os.Logger`, `Sendable`, structured concurrency, protocol-oriented
-      design (`AGENTS.md`, `api-design`), and DI-by-default-parameter.
-
-      **Rejected, on doctrine:**
-
-      - Certificate pinning / "validate all server certificates" — presumes a
-        server. SenseBridge is serverless; a finding here is an architecture
-        violation, not a practice to adopt. `swift-reviewer` already carries an
-        "On-device caveat" saying exactly that.
-      - `.xcconfig` for build-time secrets — would add a third secret
-        location beside the established two (Keychain on-device, GitHub Actions
-        secrets in CI, per `docs/ENVIRONMENT.md`). A third place to look is a
-        security regression, not a feature.
-      - `rules/swift/hooks.md` in full — it configures `~/.claude/settings.json`,
-        the user's global machine config, which a repo file has no business
-        owning. Its one novel claim (`print()` → `os.Logger`) was already in
-        `swift-reviewer`.
-
-- [x] **[P3]** Adopt **Swift Testing** for unit + integration; keep **XCTest**
-      for end-to-end and performance. **Decided 2026-07-16**, while the repo
-      had zero `.swift` files — the cheapest this decision will ever be.
-      Rationale, all cost-as-it-grows: migration cost is zero now and rises
-      with every test written; Swift Testing parallelises in-process while
-      XCTest clones simulators, which compounds into CI minutes on
-      fixture-heavy suites; and `@Test(arguments:)` matches the shape our tests
-      actually take (one assertion across N fixtures — reading-order cases,
-      hedging phrasings, perception fixtures) instead of N copy-pasted methods.
-      The split is **permanent, not transitional**: `XCUITest` and `XCTMetric`
-      have no Swift Testing equivalent, and the two frameworks coexist in one
-      target. Requires the Swift 6 toolchain, already mandated by
-      `docs/ENVIRONMENT.md`. Authority + reasoning now live in
-      `docs/TESTING.md` → "Frameworks"; propagated to `docs/TOOLING.md`, the
-      `testing` and `ci-green-gate` skills, `swift-protocol-di-testing`, and
-      both planning docs (04 + COMPLETE-PLAN, which duplicate each other).
-      Verified: zero remaining XCTest references outside the E2E/performance
-      layer.
-
-- [x] **[P3]** Docs sync for the 3 global skills installed 2026-07-13
-      (`context-budget`, `production-audit`, `agent-architecture-audit`) that
-      the ECC arc had deferred to land alongside this Swift cherry-pick.
-      **Done 2026-07-16.** All three were bare `SKILL.md` files in
-      `~/.claude/skills/` with zero mention anywhere in the repo. Added a
-      "Global skills — standalone, unattributed" section to
-      `docs/TOOLING.md`, documenting each and — since unlike every plugin in
-      the table above them, none has a plugin manifest, marketplace entry,
-      version, or `LICENSE` — flagging that their provenance couldn't be
-      verified, rather than silently filing them under the "source-verified
-      marketplaces" table. Also caught and documented a name collision:
-      the same batch placed a generic WCAG `accessibility` skill globally,
-      shadowed for SenseBridge work by the pre-existing, more specific
-      `.agents/skills/accessibility`. A 4th skill from the same 07-13 batch
-      (`swift-*` content) was already covered by the cherry-pick items above.
-- [x] **[P1]** De-duplicate the 5 independent copies of the `impeccable`
-      skill. **Resolved 2026-07-16 — the premise was wrong, not the
-      files.** A full pairwise diff (all 5 trees, all 102 shared files,
-      normalizing out expected per-provider substitutions before comparing)
-      found **zero accidental drift**. Every difference across the 5 copies
-      is correct, vendor-generated, per-provider content from `npx
-      impeccable` (installed skill version 3.9.1 in all 5, confirmed current
-      via `npx impeccable check`): invocation prefix (`$impeccable` for
-      Codex CLI vs `/impeccable` elsewhere), self-referential script paths,
-      the model-name line, the project-context filename (`AGENTS.md` vs
-      `CLAUDE.md`), harness-specific frontmatter (`license`,
-      `user-invocable`, `allowed-tools`), and entire Codex-only sections
-      (sub-agent/sandbox-permission guidance, "Codex-specific defects").
-      `.agents/skills/impeccable/agents/*.toml` + `agents/openai.yaml` are
-      Codex-CLI-specific sub-agent configs the installer places only in
-      `.agents/` by design.
-      **Why the original diagnosis was wrong:** the 2026-07-11 audit spot-
-      checked two files and assumed the differences meant independent hand-
-      edits drifting apart. They don't — they're the correct output of the
-      same `impeccable` release, templated per provider.
-      **What this means going forward:** don't hand-edit any one copy (it
-      fights the next `npx impeccable update` and desyncs the others); run
-      `npx impeccable check` to detect real version drift and `npx
-      impeccable update` to refresh all installed copies together. No
-      custom sync script or git hook needed — the vendor CLI already is
-      that mechanism. Documented in `docs/TOOLING.md`'s "Impeccable
-      design-QA" row.
-      **Side effect, since reviewed and kept:** running `npx impeccable
-      update --help` / `install --help` during this investigation did not
-      respect `--help` on those subcommands and performed real (idempotent,
-      additive) work — it wrote `.cursor/hooks.json` and
-      `.github/hooks/impeccable.json`, wiring the same UI-detector hook
-      already active for Claude via `.claude/settings.json` into Cursor and
-      GitHub Copilot too. Security-reviewed 2026-07-16 and kept:
-      `.github/skills/impeccable/scripts/hook.mjs` is **byte-identical**
-      (sha256 `6ffed896…`) to the Claude copy already approved and running,
-      and neither entrypoint has any network or process-spawn surface (the
-      sole `spawn` grep hit is a comment). Same vendor detector, two more
-      harnesses — no new code, no new trust boundary.
-- [x] Configure Railway hosting for `website/`, expanding the general
-      Railway flow (create project → connect repo → build/run config → env
-      vars → deploy) into repo-specific steps. Added
-      `website/Dockerfile` (Node 22 + `serve`, matching the existing local-
-      preview command, PORT-aware for Railway), `website/.dockerignore`, and
-      `website/railway.toml` (Dockerfile builder, restart-on-failure
-      policy). Documented the full first-time-setup flow — including
-      setting the Railway service's Root Directory to `website` since the
-      repo root also holds the iOS app — in `website/README.md`'s
-      Deployment section, which previously just said "not yet configured."
-      No env vars needed: the site has no backend/accounts/telemetry (see
-      `CLAUDE.md`'s architecture invariants). **Verified 2026-07-16**:
-      `docker build -t sensebridge-website website` succeeds and `docker run
-      -p 3000:3000 -e PORT=3000 sensebridge-website` serves `index.html`
-      with `HTTP 200`.
-- [x] Configure a GitHub ruleset protecting `main`, closing `GAPS.md` M2.
-      **Done 2026-07-17.**
-
-      **Correction, same day:** re-checking this against the live repo via
-      `gh api repos/:owner/:repo/rulesets` returned `403 — Upgrade to GitHub
-      Pro or make this repository public to enable this feature`. Rulesets
-      aren't available on a private Free-tier repo, so this configuration
-      either never took effect or was verified against the wrong state. See
-      `GAPS.md` M5 for the open item and `SETUP-STATUS.md` for the exact
-      commands to make the repo public and re-verify/recreate this ruleset.
-      The settings below remain the target configuration once that's done.
-
-      **Ruleset "Protect main"** — target: default branch; enforcement:
-      Active; bypass list: empty (no exceptions, including the owner —
-      matches `AGENTS.md`'s "never commit directly to main").
-
-      - Restrict deletions — enabled.
-      - Restrict force pushes — enabled.
-      - Require linear history — enabled (squash-only merges).
-      - Require signed commits — **disabled for now.** Commit history isn't
-        GPG-signed yet; enabling this would block every push including the
-        owner's. Revisit once commit signing is set up.
-      - Require a pull request before merging — enabled.
-        - Required approvals: **0**. `CODEOWNERS` is solely `@kevinle3212`
-          (solo-maintained per `GOVERNANCE.md`); requiring 1 approval with no
-          second reviewer would deadlock every PR. Raise to 1 the moment a
-          co-maintainer or second CODEOWNER exists.
-        - Dismiss stale approvals on new commits — enabled (pre-set,
-          currently moot at 0 required approvals).
-        - Require review from Code Owners — disabled (same reasoning; enable
-          alongside the approval count).
-        - Require approval of most recent push — enabled (pre-set).
-        - Require conversation resolution before merging — enabled.
-        - Allowed merge methods — squash only.
-      - Require status checks to pass — enabled; require branches up to date
-        — enabled. Required checks (exact names from workflow `name:`
-        fields):
-        - `Build and test` (CI)
-        - `Lint (SwiftFormat + SwiftLint)` (CI)
-        - `Docs link check` (CI)
-        - `Secret scan (TruffleHog)` (Security)
-        - `Dependency scan (OSV)` (Security)
-        - `Sensitive file scan` (Security)
-        - `Semgrep (scripts, workflows, website, Swift)` (Security)
-      - Require deployments to succeed — disabled (no gating environment).
-      - Require code scanning results — disabled (Semgrep/TruffleHog run as
-        plain Actions, not GitHub's native code-scanning integration).
-
-      **Deliberately not required:**
-      `Stylelint + ESLint + Prettier` / `Impeccable design detectors`
-      (`website-ci.yml`) are path-filtered to `website/**` — requiring a
-      check that doesn't trigger on non-website PRs would block merge
-      forever (no path-conditional required checks in GitHub Rulesets).
-      `review` (`claude-code-review.yml`) is an AI first-pass, not a
-      deterministic gate, and its `ANTHROPIC_API_KEY` auth is still
-      unverified as reliable per `GAPS.md` M1 — revisit once M1 closes.
-
-      **Adjacent repo settings** (Settings → General → Pull Requests):
-      squash merging only (merge commits and rebase merging disabled to
-      match "require linear history"); "Allow auto-merge" enabled (needed by
-      `dependabot-automerge.yml`); "Automatically delete head branches"
-      enabled.
-
-      **Not done:** a tag-protection ruleset for release tags (`v*`) — no
-      tags exist yet; deferred until `docs/DISTRIBUTION.md`'s release
-      process actually starts cutting them.
-
-      Propagated to `SETUP-STATUS.md` (branch protection moved from
-      "pending" to "set up") and `GAPS.md` (M2 moved to Resolved).
-
-- [x] **[P1]** Website: Signal Spine nodes mispositioned in production under
-      CSP. **Fixed 2026-07-25** — `website/src/components/SpineNode.astro` now
-      emits `data-spine-top={top}` instead of an inline `style` attribute, and
-      `SpineNode.module.scss` matches on it
-      (`&[data-spine-top="4rem"] { top: 4rem; }` and two siblings). **Two
-      files, no call-site changes**, as scoped. The `top` prop was narrowed
-      from `string` to `"4rem" | "6rem" | "8rem"` so the prop and the CSS stay
-      provably exhaustive: a fourth value now fails `astro check` at the call
-      site until the matching rule exists.
-
-      Enumerated selectors rather than `attr(data-spine-top px)`, because
-      `attr()` with a `<length>` type is still Chromium-only and the site
-      declares no browserslist. No CSS custom property set through a `style`
-      attribute either — that is the same inline-style channel under a
-      different name, and the CSP drops it identically.
-
-      **Verified under the real production CSP, not dev or preview.** New
-      `website/scripts/check-csp.js` (`npm run check:csp`) serves `dist/` with
-      the exact policy read out of `vercel.json` — read, not restated, so a
-      stale probe cannot pass while production fails — drives Puppeteer,
-      asserts computed styles, and fails on any `securitypolicyviolation` the
-      browser reports. All five markers compute to `position: absolute` with
-      `top` = 64px / 96px / 128px, zero violations. A direct A/B under the same
-      header showed the old markup computing to `top: 8px` beside the new
-      markup at `top: 64px`, so the mechanism is confirmed rather than
-      inferred.
-
-      One correction to the original report: `position` did **not** fall back
-      to `static`. `SpineNode.module.scss` supplies `position: absolute`
-      itself; only `top` lived in the attribute, so nodes were absolutely
-      positioned at `top: auto`, i.e. at their static offset. Same visible
-      symptom, different mechanism.
-
-      Follow-up sweep done: `grep -rn 'style=' website/src` now returns only
-      the explanatory comment in `SpineNode.astro`. No other component carried
-      the pattern. `element.style.setProperty` in `motion.ts`,
-      `page-loader.ts`, and `scenes/core.ts` is the CSSOM, which `style-src`
-      does not govern — asserted in `check-csp.js` rather than assumed.
-
-      Local caveat (resolved 2026-07-25): Puppeteer's bundled Chrome was
-      thought to be broken on this machine, so the probe was run with the
-      `PUPPETEER_EXECUTABLE_PATH` workaround. The bundled browser now works —
-      the truncated install was a Node 26 unpack bug, not the machine — and
-      `npm run check:csp` runs with no environment variable set.
-
-- [x] **Won't fix 2026-07-25** — Impeccable `em-dash-overuse` on code comments
-      (e.g. `PageLoader.astro`, `BaseLayout.astro`). Em-dash density is the
-      established comment voice across this repo, and the rule is written for
-      *body copy* — user-facing prose, where an em-dash run is an AI cadence
-      tell — not for source comments. Left unsuppressed on purpose: silencing
-      it in `.impeccable/config.json` would also blind the detector to real
-      findings in user-facing copy, which is where the rule earns its keep. The
-      hook will keep reporting it; this entry is the standing disposition.
-
-- [x] **Won't fix 2026-07-25** — Audit finding that the page-load readout uses
-      a single font. The readout is deliberately all-monospace: it is an
-      instrument register, and `PageLoader.astro` already routes it through the
-      shared `type-label` mixin and `$font-mono` rather than a second copy of
-      the stack. Adding a display face beside it would put two voices in one
-      8-character numeric readout.
-
-      **The rationale is not the One Display Face Rule.**
-      `.agents/context/DESIGN.md` §0 (2026-07-18 owner directive) explicitly
-      **voided** that rule along with the WebGL ban, the Two-Accent Rule, the
-      Flat-By-Default rule, and the no-filled-CTA rule, so citing it would be
-      citing a dead constraint. The live rules that carry this decision are §3
-      ("Annotation — Geist Mono Variable ... a deliberate, single-purpose
-      voice") and §9's Don't ("Don't spread the mono label voice beyond genuine
-      ordered technical sequences — it is an annotation voice, not a
-      section-eyebrow system"). A monotonic 0-100% readout is exactly the
-      ordered technical sequence §9 sanctions. **Flagged for the owner:** if
-      the One Display Face Rule is meant to be back in force, §0 needs
-      amending — several other decisions currently lean on it being void, and
-      two files still cite it (see the motion-pass candidates section).
-
-- [x] **Confirmed resolved 2026-07-25** — Impeccable `design-system-radius`
-      1px finding on `PageLoader.astro` (recorded as
-      `design-system-radius:414:1px` in `.impeccable/hook.cache.json`). The
-      radius was **removed outright, not suppressed**: `.rail` is now
-      `height: 2px` with square ends and a comment saying why, and
-      `.impeccable/config.json` carries no `design-system-radius` waiver.
-      `grep -rn 'radius: 1px' website/src` returns no matches. Re-recorded
-      here because the finding had been closed silently.
-
-- [x] **Fixed 2026-07-25** — Status/error pages no longer play the "Span the
-      gap" page-load animation. `BaseLayout.astro` gained a `pageLoader` prop
-      (defaults `true`, mirroring the existing `ambient` prop's shape);
-      `ErrorPage.astro` passes `pageLoader={false}`, which covers **all 195
-      built status pages** across `en`/`es`/`vi` — `404`, `500`,
-      `[status].astro`, and the `/not-found` alias all render through it, so
-      this is one gate rather than a per-page override.
-
-      Gated at the layout, so a status page ships neither `/page-load.js` nor
-      the overlay markup at all rather than paying for an early return:
-      `output: "static"` resolves the branch at build time. The driver
-      `<script>` is deliberately left ungated, because Astro hoists and bundles
-      a non-inline `<script>` whether or not the expression wrapping it
-      renders, so gating it in source would be a lie the build ignores. It is
-      already a no-op without an overlay (it returns early unless it finds both
-      `[data-page-loader]` and `data-page-load="building"`). Consequence: the
-      exit transition also does not play when leaving a status page, which is
-      the same decision.
-
-      **Verified on a genuinely unmatched path**, not a hand-written `/404`
-      route: `check-csp.js` requests `/no-such-page-anywhere`, the probe server
-      falls back to `dist/404.html` with status 404 exactly as a static host
-      does, and asserts no `[data-page-loader]`, no `/page-load.js`, and no
-      `data-page-load` attribute on `<html>` — i.e. content is never covered.
-      The 5xx case is asserted the same way against `/500`, the file
-      `docker/nginx.conf.template`'s `error_page 500 502 503 504` serves. That
-      route also asserts the `<h1>` still computes to Fraunces, guarding the
-      earlier regression where `style-src` ate the error pages' stylesheet.
-
-- [x] **Done 2026-07-25** — Website motion pass, five items, each implemented
-      and verified on its own before the next was started. Every one is behind
-      `prefers-reduced-motion` on both layers, checked against
-      `.agents/context/DESIGN.md`, and verified in a browser served the real
-      production CSP rather than in dev.
-
-      1. **Scroll-velocity-reactive spine pulse.** The Signal Spine dot draws
-         out into a vertical streak as scroll speed rises. `initSignalSpine()`
-         eases `Math.abs(self.getVelocity())` against a 3000px/s ceiling into
-         `--spine-speed`; `SignalSpine.module.scss` turns that into `scaleY`.
-         Scaling a `border-radius: 50%` dot yields an ellipse, so the streak
-         needs no second element. ScrollTrigger's `scrollEnd` decays it back to
-         0 — without that the streak freezes at its last length, since
-         `onUpdate` stops firing the moment scrolling does. Verified: 0 at rest
-         to 0.511 mid-scroll (`scaleY(3.555)`, exactly `1 + 0.511 x 5`) back to
-         0 once settled.
-      2. **Text-scramble on section headings.** `initHeadingScramble()`, on
-         every `main h2`, fired by its own ScrollTrigger so it need not be
-         threaded into the five separate reveal timelines.
-
-         The accessibility problem it is built around: every stage section
-         names itself from its heading via `aria-labelledby`, so scrambling the
-         heading's text would rename the whole section for the length of the
-         animation, and a screen-reader user navigating by heading mid-run
-         would hear glyph soup. The real text therefore moves into a
-         `visually-hidden` span and the animated copy is `aria-hidden`, so the
-         computed name is the real text at every instant. Verified across `/`,
-         `/es/`, and `/vi/`: visible text scrambles while the accessible name
-         stays byte-identical over 10 samples per locale. Only ASCII letters
-         and digits are ever substituted, so Vietnamese diacritics are never
-         separated from their base letter.
-      3. **Cursor-reactive parallax on the phone and glasses stages.** This
-         closes a gap rather than duplicating existing work: both WebGL scenes
-         already track the cursor through `createPointerParallax()`
-         (`scenes/core.ts`), but `quality-gate.ts` refuses to mount a canvas at
-         all on save-data, `deviceMemory < 4`, or no WebGL2 — and those
-         visitors had a completely inert stage. `initStagePointerParallax()`
-         writes `--stage-pointer-x/y`; the two module stylesheets turn them
-         into an 8px/1.2deg drift, scoped `:not(.scene-active)` so it yields to
-         the camera parallax wherever WebGL does run. Verified with
-         `deviceMemory` forced to 2: zero three.js bytes, zero canvases,
-         `scene-active` absent, and transforms matching the formula exactly
-         (-4.8px/-0.72deg at top-left, +5.6px/+0.84deg at bottom-right) — and
-         confirmed absent on a WebGL-capable browser.
-      4. **"Signal" trail on nav hover.** The drawn underline is now a gradient
-         brightest at its leading edge and falling away behind it, so hovering
-         reads as a signal running the link and leaving a wake.
-
-         A travelling second background layer was built first and **rejected
-         after looking at it**: at 1px scale a small radial gradient renders as
-         a smudge rather than a point, and it has to park somewhere on arrival,
-         leaving a blob past the end of the line for as long as the pointer
-         rests there. Scaling one gradient with the line keeps the bright tip
-         at the growing edge for free and leaves nothing behind. Declared in a
-         separate `motion-safe` block rather than edited into the existing
-         rule, so under `reduce` the underline is byte for byte what shipped
-         before. Verified the link's box is identical at rest and on hover in
-         both motion modes, so the "nothing in a nav row may move" constraint
-         `motion.ts` documents holds by construction.
-      5. **Read-aloud toggle hover state** (found by auditing, not on the
-         original list). `.read-aloud-toggle` had no hover, active, or
-         transition treatment at all — the only interactive control on the site
-         with none, while the theme toggle, language trigger, hero CTA, and
-         back-home link all have one. It now moves to `surface` with an
-         `accent-primary` border. Deliberately no lift: the two toggles are
-         siblings in a row, which is the case `motion.ts` argues against.
-
-      **Performance measured, not assumed** (the likeliest regression from
-      scroll- and cursor-reactive work). Under **4x CPU throttling**: idle
-      median 16.7ms/frame with 0 dropped; continuous scroll, the heaviest new
-      effect, median 16.7ms with p95 17.5ms and 4 frames over 32ms out of 386
-      (~1%); cursor sweep over a stage median 16.7ms with 0 frames over 32ms.
-      **Zero long tasks in all three.** 60fps held throughout.
-
-      **Gates:** build, typecheck (0/0/0), `lint:css`, `lint:js`, `format`,
-      `check:zero-js` (195 pages, 0 islands), `check:disclaimer` (3 locales),
-      `check:csp` (5/5 routes), `test:a11y` (8/8 URLs, 0 errors). Reduced
-      motion re-verified after every item: pulse `opacity: 0` and `transform:
-      none`, headings fully visible, no page-load overlay, **zero canvases and
-      zero motion/3D chunks fetched**.
-
-      The disclaimer was not touched, in any mode (DESIGN.md's Undecorated
-      Disclaimer Rule).
-
-- [x] **Agent error, recorded 2026-07-25** — `TODO.md` lost roughly 750 lines
-      of uncommitted work during the session above, and was rebuilt. Cause:
-      `npx prettier --write TODO.md` was run to tidy new entries, but this file
-      is **not** Prettier-managed (there is no root Prettier config, and the
-      pre-commit hook runs Prettier only over `website/**`). That reflowed 1720
-      lines and introduced 8 `MD046` markdownlint errors. The recovery attempt
-      then made it worse: `git checkout HEAD -- TODO.md` discarded the whole
-      uncommitted working-tree version, not just the reflow.
-
-      Recovered from a 2703-line blob in `.git/lost-found`, plus
-      [`sessions/2026-07-25/1600-PST.md`](sessions/2026-07-25/1600-PST.md) for
-      the one section the blob predated (see the reconstruction note on the
-      dev-environment section under **To-Do**). Nothing else was affected — no
-      other file was checked out.
-
-      **Two rules this file should be read with from now on:** never run
-      Prettier on repo-root Markdown (only `website/**` is Prettier-managed —
-      use `npx markdownlint-cli2` instead, which is the actual CI gate), and
-      never `git checkout` a path with uncommitted work in it to undo a bad
-      edit. `git diff` first, or copy the file aside.
-
----
-
-Need help? See [`SUPPORT.md`](SUPPORT.md).
+*Nothing archived since the last sweep — see [`COMPLETED.todo`](COMPLETED.todo) for history.*

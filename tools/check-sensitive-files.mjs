@@ -73,12 +73,16 @@ const SECRET_PATTERNS = [
 const MAX_SCAN_BYTES = 1_000_000;
 
 // Exact paths exempt from the *name-based* check only (contents still get the
-// secret-pattern scan). Both are deliberately public: the env template holds
-// key names, not values (docs/ENVIRONMENT.md's own guidance is to provide
+// secret-pattern scan). All are deliberately public: the two env templates
+// hold key names, not values (docs/ENVIRONMENT.md's own guidance is to provide
 // one), and website/.npmrc holds dependency-resolution flags
 // (engine-strict, legacy-peer-deps) — no registry auth tokens. A real token
-// in either would still be caught by SECRET_PATTERNS below.
-const NAME_CHECK_EXEMPT = new Set(["website/.env.example", "website/.npmrc"]);
+// in any of them would still be caught by SECRET_PATTERNS below.
+const NAME_CHECK_EXEMPT = new Set([
+	".env.example",
+	"website/.env.example",
+	"website/.npmrc",
+]);
 
 // This file contains the detection patterns as literals, so scanning it
 // always self-matches (e.g. the OpenSSH marker). Exempt exactly this path.

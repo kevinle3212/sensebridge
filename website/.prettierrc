@@ -10,5 +10,11 @@
   "trailingComma": "all",
   "bracketSpacing": true,
   "arrowParens": "always",
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": "*.jsonc",
+      "options": { "trailingComma": "none" }
+    }
+  ]
 }

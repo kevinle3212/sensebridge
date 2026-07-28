@@ -465,7 +465,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.app;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).app";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -483,7 +483,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).SenseBridgeUITests";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -493,6 +493,7 @@
 		};
 		8E69725E59F6D3BFDFF291D9 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -556,6 +557,7 @@
 		};
 		95CD0452D651292B8B0EF7C5 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -621,7 +623,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).SenseBridgeTests";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -649,7 +651,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.app;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).app";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -667,7 +669,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).SenseBridgeUITests";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -686,7 +688,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.sensebridge.SenseBridgeTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).SenseBridgeTests";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
 				TARGETED_DEVICE_FAMILY = "1,2";
