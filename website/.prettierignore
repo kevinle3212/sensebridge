@@ -10,3 +10,7 @@ package-lock.json
 # deliberate — it keeps the tag out of the built HTML entirely). The file is
 # still covered by ESLint, `astro check`, and the build; only Prettier skips it.
 src/layouts/BaseLayout.astro
+
+# Gitignored scratch space (the durable plan file per ~/.claude/CLAUDE.md);
+# never committed, so it should not gate `npm run format`.
+tmp
