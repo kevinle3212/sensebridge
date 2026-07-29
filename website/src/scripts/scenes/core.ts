@@ -330,6 +330,312 @@ export function createPointField(options: PointFieldOptions): PointField {
   };
 }
 
+// --- Neural pathways ------------------------------------------------------
+
+export interface NeuralPathwayOptions {
+  // How many traces fan out from `origin`.
+  branchCount: number;
+  origin: THREE.Vector3;
+  // Half-extents the outermost joint of a branch may reach, per axis.
+  reach: THREE.Vector3;
+  // Joints (and therefore nodes) per branch, excluding the shared origin.
+  jointsPerBranch: number;
+  // Polyline resolution each smoothed branch is baked down to.
+  samplesPerBranch: number;
+  nodeSize: number;
+  pulseSize: number;
+  // Fraction of a branch a pulse covers per second.
+  pulseSpeed: number;
+}
+
+export interface NeuralPathways {
+  object: THREE.Object3D;
+  setTraceColor(color: THREE.Color): void;
+  setPulseColor(color: THREE.Color): void;
+  // 0..1 master opacity; traces/nodes/pulses keep their relative weighting.
+  setOpacity(opacity: number): void;
+  update(deltaSeconds: number): void;
+  dispose(): void;
+}
+
+// Relative weighting inside a pathway network: traces are the quietest layer,
+// the pulse travelling them is the loudest — the same "structure recedes,
+// signal leads" hierarchy the rest of the scenes use.
+const TRACE_OPACITY_SCALE = 0.45;
+const NODE_OPACITY_SCALE = 0.7;
+const PULSE_SPEED_VARIATION = 0.5;
+const BRANCH_JITTER_SCALE = 0.35;
+
+// A small branching "neural pathway" network: traces fanning out from one
+// origin, a node at every joint, and a warm pulse travelling each trace on its
+// own phase. Shared by phone.ts (the Neural Engine) and glasses.ts (the temple
+// electronics) so both devices read as the same on-device pipeline thinking.
+// Branch shapes are baked once at build time; only the pulses move per frame,
+// and they write through BufferAttribute.setXYZ rather than reallocating.
+export function createNeuralPathways(options: NeuralPathwayOptions): NeuralPathways {
+  const {
+    branchCount,
+    origin,
+    reach,
+    jointsPerBranch,
+    samplesPerBranch,
+    nodeSize,
+    pulseSize,
+    pulseSpeed,
+  } = options;
+
+  const segmentsPerBranch = samplesPerBranch - 1;
+  const traceAttribute = new THREE.BufferAttribute(
+    new Float32Array(branchCount * segmentsPerBranch * 2 * 3),
+    3,
+  );
+  const nodeAttribute = new THREE.BufferAttribute(
+    new Float32Array(branchCount * jointsPerBranch * 3),
+    3,
+  );
+  const pulseAttribute = new THREE.BufferAttribute(new Float32Array(branchCount * 3), 3);
+
+  const pulses: { curve: THREE.CatmullRomCurve3; progress: number; speed: number }[] = [];
+  const scratch = new THREE.Vector3();
+  let traceVertex = 0;
+  let nodeVertex = 0;
+
+  for (let branch = 0; branch < branchCount; branch += 1) {
+    // Each branch commits to one outward direction, then wanders around it —
+    // enough jitter to read as organic, not so much that branches tangle.
+    const direction = new THREE.Vector3(
+      Math.random() * 2 - 1,
+      Math.random() * 2 - 1,
+      Math.random() * 2 - 1,
+    ).normalize();
+
+    const joints = [origin.clone()];
+    for (let joint = 1; joint <= jointsPerBranch; joint += 1) {
+      const distance = joint / jointsPerBranch;
+      joints.push(
+        new THREE.Vector3(
+          origin.x +
+            direction.x * reach.x * distance +
+            (Math.random() - 0.5) * reach.x * BRANCH_JITTER_SCALE,
+          origin.y +
+            direction.y * reach.y * distance +
+            (Math.random() - 0.5) * reach.y * BRANCH_JITTER_SCALE,
+          origin.z +
+            direction.z * reach.z * distance +
+            (Math.random() - 0.5) * reach.z * BRANCH_JITTER_SCALE,
+        ),
+      );
+    }
+
+    for (const joint of joints.slice(1)) {
+      nodeAttribute.setXYZ(nodeVertex, joint.x, joint.y, joint.z);
+      nodeVertex += 1;
+    }
+
+    const curve = new THREE.CatmullRomCurve3(joints);
+    for (let segment = 0; segment < segmentsPerBranch; segment += 1) {
+      curve.getPoint(segment / segmentsPerBranch, scratch);
+      traceAttribute.setXYZ(traceVertex, scratch.x, scratch.y, scratch.z);
+      traceVertex += 1;
+      curve.getPoint((segment + 1) / segmentsPerBranch, scratch);
+      traceAttribute.setXYZ(traceVertex, scratch.x, scratch.y, scratch.z);
+      traceVertex += 1;
+    }
+
+    pulses.push({
+      curve,
+      progress: Math.random(),
+      speed: pulseSpeed * (1 - PULSE_SPEED_VARIATION / 2 + Math.random() * PULSE_SPEED_VARIATION),
+    });
+  }
+
+  const traceGeometry = new THREE.BufferGeometry();
+  traceGeometry.setAttribute("position", traceAttribute);
+  const traceMaterial = new THREE.LineBasicMaterial({ transparent: true });
+
+  const nodeGeometry = new THREE.BufferGeometry();
+  nodeGeometry.setAttribute("position", nodeAttribute);
+  const nodeMaterial = new THREE.PointsMaterial({
+    size: nodeSize,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const pulseGeometry = new THREE.BufferGeometry();
+  pulseGeometry.setAttribute("position", pulseAttribute);
+  const pulseMaterial = new THREE.PointsMaterial({
+    size: pulseSize,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const object = new THREE.Group();
+  object.add(
+    new THREE.LineSegments(traceGeometry, traceMaterial),
+    new THREE.Points(nodeGeometry, nodeMaterial),
+    new THREE.Points(pulseGeometry, pulseMaterial),
+  );
+
+  return {
+    object,
+    setTraceColor(color: THREE.Color): void {
+      traceMaterial.color.copy(color);
+      nodeMaterial.color.copy(color);
+    },
+    setPulseColor(color: THREE.Color): void {
+      pulseMaterial.color.copy(color);
+    },
+    setOpacity(opacity: number): void {
+      traceMaterial.opacity = opacity * TRACE_OPACITY_SCALE;
+      nodeMaterial.opacity = opacity * NODE_OPACITY_SCALE;
+      pulseMaterial.opacity = opacity;
+    },
+    update(deltaSeconds: number): void {
+      let pulseVertex = 0;
+      for (const pulse of pulses) {
+        pulse.progress = (pulse.progress + pulse.speed * deltaSeconds) % 1;
+        pulse.curve.getPoint(pulse.progress, scratch);
+        pulseAttribute.setXYZ(pulseVertex, scratch.x, scratch.y, scratch.z);
+        pulseVertex += 1;
+      }
+      pulseAttribute.needsUpdate = true;
+    },
+    dispose(): void {
+      traceGeometry.dispose();
+      traceMaterial.dispose();
+      nodeGeometry.dispose();
+      nodeMaterial.dispose();
+      pulseGeometry.dispose();
+      pulseMaterial.dispose();
+    },
+  };
+}
+
+// --- Drag orbit -----------------------------------------------------------
+
+const DRAG_RADIANS_PER_PIXEL = 0.008;
+const MAX_PITCH_RADIANS = 1.2;
+const MAX_FLICK_RADIANS_PER_SECOND = 6;
+// Flick momentum bleeds back into the idle spin over ~3x this; pitch only
+// starts levelling out after the visitor has been still for a beat, so
+// inspecting the underside of a model doesn't fight a spring.
+const MOMENTUM_TAU_SECONDS = 0.55;
+const PITCH_RETURN_TAU_SECONDS = 1.2;
+const PITCH_RETURN_DELAY_SECONDS = 2.5;
+
+export interface DragOrbit {
+  update(deltaSeconds: number): void;
+  dispose(): void;
+}
+
+// Drag-to-orbit for one scene object: pointer drags own yaw and pitch, a
+// release keeps the flick's momentum and then eases back into `idleSpin`, and
+// pitch levels out only after the visitor has been idle for a beat. Owns
+// `target.rotation.x/y` outright — pass `[]` as createPointerParallax's tilt
+// targets for the same object so the two never fight over the same channel.
+// Toggles `.scene-dragging` on `container` for cursor feedback (see
+// SpatialFuture.module.scss); the container needs `touch-action: pan-y` so a
+// vertical swipe still scrolls the page on touch.
+export function createDragOrbit(
+  container: HTMLElement,
+  target: THREE.Object3D,
+  idleSpinRadiansPerSecond: number,
+): DragOrbit {
+  let yaw = target.rotation.y;
+  let pitch = target.rotation.x;
+  let yawVelocity = idleSpinRadiansPerSecond;
+  let idleSeconds = PITCH_RETURN_DELAY_SECONDS;
+  let activePointerId: number | null = null;
+  let lastClientX = 0;
+  let lastClientY = 0;
+  let lastTimeStamp = 0;
+
+  const handlePointerDown = (event: PointerEvent): void => {
+    if (activePointerId !== null) {
+      return;
+    }
+    activePointerId = event.pointerId;
+    lastClientX = event.clientX;
+    lastClientY = event.clientY;
+    lastTimeStamp = event.timeStamp;
+    yawVelocity = 0;
+    idleSeconds = 0;
+    container.setPointerCapture(event.pointerId);
+    container.classList.add("scene-dragging");
+  };
+
+  const handlePointerMove = (event: PointerEvent): void => {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+    const deltaX = event.clientX - lastClientX;
+    const deltaY = event.clientY - lastClientY;
+    // Guarded against a 0ms gap between coalesced events, which would divide
+    // the flick velocity below by zero.
+    const deltaSeconds = Math.max((event.timeStamp - lastTimeStamp) / 1000, 1 / 240);
+    lastClientX = event.clientX;
+    lastClientY = event.clientY;
+    lastTimeStamp = event.timeStamp;
+
+    yaw += deltaX * DRAG_RADIANS_PER_PIXEL;
+    pitch = Math.min(
+      MAX_PITCH_RADIANS,
+      Math.max(-MAX_PITCH_RADIANS, pitch + deltaY * DRAG_RADIANS_PER_PIXEL),
+    );
+    yawVelocity = Math.min(
+      MAX_FLICK_RADIANS_PER_SECOND,
+      Math.max(-MAX_FLICK_RADIANS_PER_SECOND, (deltaX * DRAG_RADIANS_PER_PIXEL) / deltaSeconds),
+    );
+    idleSeconds = 0;
+  };
+
+  const handlePointerRelease = (event: PointerEvent): void => {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+    if (container.hasPointerCapture(event.pointerId)) {
+      container.releasePointerCapture(event.pointerId);
+    }
+    activePointerId = null;
+    idleSeconds = 0;
+    container.classList.remove("scene-dragging");
+  };
+
+  container.addEventListener("pointerdown", handlePointerDown);
+  container.addEventListener("pointermove", handlePointerMove);
+  container.addEventListener("pointerup", handlePointerRelease);
+  container.addEventListener("pointercancel", handlePointerRelease);
+
+  return {
+    update(deltaSeconds: number): void {
+      if (activePointerId === null) {
+        idleSeconds += deltaSeconds;
+        yaw += yawVelocity * deltaSeconds;
+        yawVelocity +=
+          (idleSpinRadiansPerSecond - yawVelocity) *
+          (1 - Math.exp(-deltaSeconds / MOMENTUM_TAU_SECONDS));
+        if (idleSeconds > PITCH_RETURN_DELAY_SECONDS) {
+          pitch *= Math.exp(-deltaSeconds / PITCH_RETURN_TAU_SECONDS);
+        }
+      }
+      target.rotation.y = yaw;
+      target.rotation.x = pitch;
+    },
+    dispose(): void {
+      if (activePointerId !== null && container.hasPointerCapture(activePointerId)) {
+        container.releasePointerCapture(activePointerId);
+      }
+      container.removeEventListener("pointerdown", handlePointerDown);
+      container.removeEventListener("pointermove", handlePointerMove);
+      container.removeEventListener("pointerup", handlePointerRelease);
+      container.removeEventListener("pointercancel", handlePointerRelease);
+      container.classList.remove("scene-dragging");
+    },
+  };
+}
+
 // --- Pointer parallax -----------------------------------------------------
 
 const CAMERA_OFFSET_FACTOR = 0.04;

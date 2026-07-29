@@ -34,6 +34,7 @@
     "check:zero-js": "node scripts/check-zero-js.js",
     "check:csp": "node scripts/check-csp.js",
     "check:site-url": "node scripts/check-site-url.js",
+    "check:scene-drag": "node scripts/check-scene-drag.js",
     "test:a11y": "pa11y-ci --config .pa11yci.json",
     "audit:react": "react-doctor --no-telemetry",
     "doctor": "react-doctor --no-telemetry",

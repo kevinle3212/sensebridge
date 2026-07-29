@@ -80,6 +80,16 @@ nice-to-have. `check:audio` does no network I/O and needs no key, so it's
 safe to run in CI unattended (after the build step); before any narration has
 ever been generated it prints an informational skip instead of failing.
 
+**Every word inside `<main id="main">` is narrated, including
+`visually-hidden` text** — `extractMainText()` strips tags and keeps the rest,
+so an alt-text-style block written only for screen readers is also read aloud
+verbatim by the natural voice. Two consequences worth knowing before editing
+one: keep those descriptions tight, because an exhaustive parts list makes the
+narration tedious for the very listeners it is written for; and changing a
+single word obligates whoever changes it to regenerate the audio, which needs
+the owner's `ELEVENLABS_API_KEY`. A pass at expanding the Spatial Future
+illustration description was reverted for exactly this reason.
+
 `.env` is git-ignored; never commit a real `ELEVENLABS_API_KEY`. The key is
 only ever read by `scripts/generate-audio.js`, on whichever machine runs
 `generate:audio` — it is not referenced anywhere else in the codebase. Scope
@@ -336,6 +346,16 @@ Two things do not reproduce locally, so check them deliberately:
   this check fails. Adding an island later is fine; raise `EXPECTED_ISLANDS`
   in `scripts/check-zero-js.js` in the same change so the budget stays
   explicit.
+- `npm run check:scene-drag` — drives a real pointer over the built `dist/` and
+  asserts the Spatial Future stage mounts its WebGL scene, marks itself
+  `.scene-dragging` while a drag is in flight, clears that class on release,
+  and logs no page errors. Requires `npm run build` first; serves `dist/` on an
+  ephemeral port for the run and closes it again. This exists because the
+  drag-to-orbit gesture (`createDragOrbit` in `src/scripts/scenes/core.ts`) is
+  the one part of the scene system a typecheck, lint, and build all pass
+  without ever exercising — the alternative was asking a human to drag the
+  glasses and report back. Runs in CI's `a11y` job, which already downloads the
+  Chrome this needs.
 - `npm run check:site-url` — asserts every absolute URL in the built `dist/`
   (canonical link, sitemap, `robots.txt`) comes from the configured `SITE_URL`
   rather than a domain baked into tracked source. Requires `npm run build`

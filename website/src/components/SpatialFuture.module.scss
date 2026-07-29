@@ -66,6 +66,19 @@
   }
 }
 
+// Drag-to-orbit affordance, live only once the WebGL scene has mounted (the
+// static SVG fallback is not draggable). `pan-y` keeps a vertical swipe
+// scrolling the page on touch while a horizontal drag turns the model;
+// `.scene-dragging` is toggled by scripts/scenes/core.ts's createDragOrbit().
+.stage:global(.scene-active) {
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.stage:global(.scene-dragging) {
+  cursor: grabbing;
+}
+
 // `.scene-active` is added at runtime by scripts/scenes/core.ts's
 // mountScene() once glasses.ts's WebGL scene is live — same fade-the-
 // static-art pattern as PhoneExploded.module.scss's `.stage:global(.scene-active)`.

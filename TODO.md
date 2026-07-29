@@ -74,6 +74,69 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ## To-Do
 
+### Spatial Future glasses — drag, components, neural pathways (2026-07-28, 13:00 PST)
+
+Shipped in `website/` this session: drag-to-orbit on the `#future` glasses
+stage (`createDragOrbit` in `src/scripts/scenes/core.ts`), seven new glasses
+components, and a shared `createNeuralPathways()` network wired into both
+`glasses.ts` and `phone.ts`. Covered by the new
+`npm run check:scene-drag` (4/4 locally, now in CI's `a11y` job). Full
+narrative in `sessions/2026-07-28/1300-PST.md`. What's left:
+
+- [ ] **[P2]** The glasses browline (`BROWLINE_Y` in
+      `src/scripts/scenes/glasses.ts`) floats visibly detached above the lens
+      rims, which reads as a stray bar once the model is dragged toward
+      profile. Pre-existing geometry, untouched under surgical-changes —
+      decide whether to lower it onto the rims or leave it as stylization.
+- [ ] **[P2]** **[Needs owner]** Judgement call: no lens fill or waveguide
+      display plane was added to the glasses. A translucent disc muddies the
+      wireframe read, so it was deliberately skipped — say if it's wanted.
+- [ ] **[P2]** **[Needs owner]** Run the drag on a real touch device.
+      `touch-action: pan-y` is asserted by CSS and reasoned about, but the
+      headless check drives a mouse — the horizontal-drag-vs-vertical-scroll
+      split on an actual phone is unverified.
+- [ ] **[P3]** `npm run test:a11y` was not run this session (it needs
+      `astro preview` holding a port, which `CLAUDE.md` forbids starting
+      unasked). No markup, labels, or focusable elements changed, so nothing
+      new is expected — CI covers it. Noted so the gap is explicit.
+
+### GitHub Models workflow scaffold (2026-07-28, 12:30 PST)
+
+Owner wants a `.github/workflows/` job that calls a GitHub Models model via
+`actions/ai-inference` (auth via the built-in `GITHUB_TOKEN`, `models: read`
+permission — no secret needed). Model choice discussed: DeepSeek-V3-0324
+recommended over GPT-5 (cost/latency) and Llama 4 Scout 17B-16E (weaker
+reasoning) for general dev use. Not yet built — owner confirmed Codespaces
+prebuilds are enabled but repo Settings didn't show a "Models" feature
+toggle; likely an org/account-level Copilot policy gate rather than a repo
+setting (see `github.com/marketplace/models` → "Use this model" as the
+direct way to confirm access regardless of the repo Settings toggle).
+
+- [ ] **[P2]** **[Needs owner]** Confirm GitHub Models access is enabled for
+      the account/org (via `github.com/marketplace/models`, not just repo
+      Settings → Features, which may not surface the toggle on every
+      plan/org).
+- [ ] **[P2]** Once confirmed, scaffold `.github/workflows/` calling
+      `actions/ai-inference` with `models: deepseek/DeepSeek-V3-0324` (or
+      final pick) and verify a run succeeds in Actions.
+
+### Docs GH Pages header/content gap (2026-07-28, 12:00 PST)
+
+Owner reported no visible gap between the sticky nav header and the page
+content on `https://kevinle3212.github.io/sensebridge/`. A static read of
+`docs/assets/css/docs.css` found no bug: `main` already has
+`padding-block: 24px` (`40px` at ≥900px, lines 300-320) and `.signal-hero`
+carries no negative margin. The live site was serving `main`'s last deploy
+the whole time this was checked, which predated the PR fixing the adjacent
+hero-SVG "Camera" clip (merged 2026-07-28 as `5e26b01`) — so this needs a
+fresh look now that the fix is live, not more static reading.
+
+- [ ] **[P3]** Load `https://kevinle3212.github.io/sensebridge/` after the
+      next Pages deploy and check the header/content boundary directly
+      (screenshot or a headless-browser pass). If a gap is genuinely
+      missing, it's most likely something JS-driven or page-specific, not
+      the shared `main`/`.signal-hero` rules already read.
+
 ### Contributor-configurable deployment (`SITE_URL`) (2026-07-27, 23:50 PST)
 
 The site's deployment origin now comes from `SITE_URL` (untracked

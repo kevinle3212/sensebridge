@@ -1,0 +1,15 @@
+{
+  "name": "SenseBridge (website/ only — app/ is Xcode/iOS-only, not buildable in a Linux container)",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+  "workspaceFolder": "/workspaces/sensebridge",
+  "postCreateCommand": "cd website && npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "astro-build.astro-vscode",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
