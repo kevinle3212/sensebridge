@@ -1,0 +1,27 @@
+{
+  "name": "main-required-checks",
+  "target": "branch",
+  "enforcement": "active",
+  "bypass_actors": [],
+  "conditions": { "ref_name": { "include": ["refs/heads/main"], "exclude": [] } },
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          { "context": "Build and test" },
+          { "context": "Lint (SwiftFormat + SwiftLint)" },
+          { "context": "CodeQL (JavaScript/TypeScript)" },
+          { "context": "Secret scan (TruffleHog)" },
+          { "context": "Secret scan (GitGuardian)" },
+          { "context": "Dependency scan (OSV)" },
+          { "context": "Dependency review (new/changed deps in this PR)" }
+        ]
+      }
+    }
+  ]
+}

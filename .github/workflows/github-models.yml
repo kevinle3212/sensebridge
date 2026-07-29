@@ -40,11 +40,17 @@ jobs:
                 prompt:
                     - safety-framing-check.prompt.yml
                     - accessibility-label-review.prompt.yml
+                    - privacy-consent-copy-review.prompt.yml
+                    - user-agency-copy-review.prompt.yml
                 include:
                     - prompt: safety-framing-check.prompt.yml
                       input: "There is a person standing in front of you."
                     - prompt: accessibility-label-review.prompt.yml
                       input: 'accessibilityLabel: "Button" accessibilityHint: ""'
+                    - prompt: privacy-consent-copy-review.prompt.yml
+                      input: "We collect usage data to improve your experience."
+                    - prompt: user-agency-copy-review.prompt.yml
+                      input: "Haptic Feedback"
 
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -95,10 +95,11 @@ narrative in `sessions/2026-07-28/1300-PST.md`. What's left:
       `touch-action: pan-y` is asserted by CSS and reasoned about, but the
       headless check drives a mouse — the horizontal-drag-vs-vertical-scroll
       split on an actual phone is unverified.
-- [ ] **[P3]** `npm run test:a11y` was not run this session (it needs
+- [x] `npm run test:a11y` was not run locally this session (it needs
       `astro preview` holding a port, which `CLAUDE.md` forbids starting
-      unasked). No markup, labels, or focusable elements changed, so nothing
-      new is expected — CI covers it. Noted so the gap is explicit.
+      unasked) — closed 2026-07-28 18:00 PST: CI's `pa11y-ci accessibility
+      gate` job ran it on PR #55 (run 30397277957, job 90403521977) and
+      passed, 8 URLs / 0 errors each. PR merged to `main` at `ca72c39`.
 
 ### GitHub Models workflow scaffold (2026-07-28, 12:30 PST)
 
@@ -2961,7 +2962,11 @@ remaining open items.
       (`main-required-checks`, 2026-07-25) — this fuller spec (require-PR-
       before-merge, linear history, squash-only, 3 more checks) is still the
       gap to close if it turns out to matter; see the "CI/CD security audit"
-      To-Do entry above. Steps, in order:
+      To-Do entry above. Both rulesets are now also codified as settings-as-
+      code in [`.github/rulesets/`](.github/rulesets/README.md) (added
+      2026-07-28) — `protect-main.json` is this exact spec, ready to
+      `gh api --method POST` once approved; the steps below are still the
+      authoritative walkthrough. Steps, in order:
       1. `gh repo edit kevinle3212/sensebridge --visibility public --accept-visibility-change-consequences`
       2. `gh api repos/kevinle3212/sensebridge/rulesets` — confirm it now
          returns `[]` instead of `403`.
@@ -3279,18 +3284,20 @@ throwaway island (typecheck/lint/build/hydration), then removed it. Synced
       `steps.meta.outputs.dependency-names` + per-dep version comparison, or
       GitHub's newer `dependency-group` output plus a stricter allowlist).
 - [ ] **[P3]** CodeQL alert #93 (`js/file-access-to-http`,
-      `tools/docs-a11y.mjs:155`) has a well-reasoned inline suppression
+      `tools/docs-a11y.mjs:155`) had a well-reasoned inline suppression
       comment (lines 151-154, added in `339cec6`) explaining the flow is safe
       (URL host is always `http://127.0.0.1:PORT`, only the path segment is
-      filesystem-derived and already passed through `SAFE_HTML_FILENAME`).
-      The commit containing that comment was included in the most recent
-      CodeQL scan (`39791fd`, 2026-07-28T05:53Z) but the alert is still
-      `open` — GitHub's inline-suppression parsing likely requires the
-      `codeql[rule-id]` directive on the line immediately above the flagged
-      line, not 4 lines above with continuation comments in between. Either
-      reformat the comment so the directive is adjacent to line 155, or
-      manually dismiss alert #93 as a false positive with the same
-      justification already written in the code.
+      filesystem-derived and already passed through `SAFE_HTML_FILENAME`),
+      but the `codeql[rule-id]` directive sat 4 lines above the flagged line
+      with continuation comments in between — GitHub's inline-suppression
+      parser likely requires the directive on the line immediately above.
+      **Reformatted 2026-07-28**: prose moved above, `codeql[js/file-access-to-http]`
+      is now the line directly above `page.goto`. `gh api
+      repos/kevinle3212/sensebridge/code-scanning/alerts` confirmed this was
+      the only open alert (#93) before this change. Closing the alert
+      depends on the next CodeQL scan on `main` actually picking up the new
+      placement — if it's still open after that scan, dismiss #93 manually
+      with the same justification.
 
 ## In Progress
 
