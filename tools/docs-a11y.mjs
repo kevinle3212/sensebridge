@@ -148,10 +148,11 @@ async function runStructural(browser, urls) {
     const pageErrors = [];
     page.on("pageerror", (error) => pageErrors.push(String(error.message)));
     await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
-    // codeql[js/file-access-to-http] -- url is always http://127.0.0.1:PORT/...;
-    // only the path segment comes from disk, and it's already filtered through
-    // SAFE_HTML_FILENAME above. No host/scheme this filesystem data could ever
-    // redirect the request to outside localhost.
+    // url is always http://127.0.0.1:PORT/...; only the path segment comes
+    // from disk, and it's already filtered through SAFE_HTML_FILENAME above.
+    // No host/scheme this filesystem data could ever redirect the request to
+    // outside localhost.
+    // codeql[js/file-access-to-http] -- path segment is pre-filtered above.
     await page.goto(url, { waitUntil: "networkidle0" });
 
     const unnamed = [];
