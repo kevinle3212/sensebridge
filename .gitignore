@@ -76,6 +76,11 @@ website/node_modules/
 website/dist/
 website/.astro/
 
+# website/tsconfig.debug.json output — local diagnostics, never shipped.
+website/.tsbuildinfo.debug
+website/profile.cpuprofile
+website/trace/
+
 # Impeccable skill — local/generated state, not project source.
 # (.impeccable/design.json and .impeccable/live/config.json ARE committed —
 # see .agents/skills/impeccable/reference/document.md and live.md.)

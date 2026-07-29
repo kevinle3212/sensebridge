@@ -1,0 +1,40 @@
+{
+  // Extends the main tsconfig and layers debug-only diagnostics on top.
+  // Run with: npx tsc -p tsconfig.debug.json --noEmit
+  //
+  // WARNING: these flags produce large amounts of output.
+  // Disable the ones you don't need before running.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "pretty": true,
+    "preserveWatchOutput": true,
+
+    // tsBuildInfoFile is a no-op under plain --noEmit: tsc only writes
+    // build info when incremental output is actually requested.
+    // Verified against this repo's TS 6.0.3 (2026-07-28).
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo.debug",
+
+    // ── Extra strictness for this pass only — noisier than the main
+    // tsconfig.json (astro/tsconfigs/strictest) wants for iterative dev,
+    // but appropriate for a dedicated deep-diagnostics run. ─────────────
+    "noUnusedLocals": true, // dead local bindings
+    "noUnusedParameters": true, // dead function parameters
+    "skipLibCheck": false, // also typecheck .d.ts files pulled in via node_modules
+
+    // ── Lightweight: safe to enable together ─────────────────────────────
+    "extendedDiagnostics": true, // memory, time, file/line/identifier counts after compile
+    "diagnostics": true, // concise parser/binder/checker timing summary
+    "listEmittedFiles": true // absolute path of every emitted file
+
+    // ── Heavy: enable ONE at a time - each can produce 10k+ lines ────────
+    // "listFiles": true,          // every input file incl. all node_modules .d.ts
+    // "explainFiles": true,       // listFiles + reason each file was loaded
+    // "traceResolution": true     // every module-resolution attempt (extremely noisy)
+
+    // ── Writes files to disk instead of printing to terminal ──────────────
+    // "generateCpuProfile": "./profile.cpuprofile",  // V8 CPU profile for chrome://tracing
+    // "generateTrace": "./trace"                      // perf trace for @typescript/analyze-trace
+  }
+}
