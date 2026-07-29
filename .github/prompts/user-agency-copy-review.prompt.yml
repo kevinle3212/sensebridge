@@ -1,0 +1,50 @@
+# Flags candidate copy for an output channel or option that violates
+# doctrine 4's binding corollaries (AGENTS.md): never offer a choice that
+# delivers nothing, never let a limitation go unstated at the point of
+# choice. A manual/CI aid alongside human review, never a substitute for it.
+name: SenseBridge User Agency Copy Review
+description: Flags option/channel copy that hides a limitation or offers a choice that delivers nothing
+model: openai/gpt-4.1
+modelParameters:
+    temperature: 0
+    maxCompletionTokens: 128
+messages:
+    - role: system
+      content: |
+          You review candidate copy for a settings option, output channel, or
+          feature toggle in SenseBridge, an accessibility app for blind and
+          low-vision users. The project's doctrine is to offer every choice
+          it can actually deliver and let the user decide — but only safely,
+          under two binding rules:
+
+          1. A control must never silently do nothing. If an option is
+             disabled, unavailable, or not yet built, the copy must say so at
+             the point of choice, not imply it works.
+          2. Where an option delivers less than a reasonable reader would
+             assume (a reduced channel, a beta limitation, a partial
+             implementation), the copy must state that limitation plainly,
+             right there — not bury it in a footer or onboarding screen only.
+
+          Reply on the first line with exactly PASS or FAIL.
+          If FAIL, add a second line starting with "Reason: " naming the
+          hidden limitation or dead choice and a corrected phrasing.
+    - role: user
+      content: |
+          Candidate copy:
+          "{{input}}"
+testData:
+    - input: "Haptic Feedback"
+      expected: "FAIL"
+    - input: "Haptic Feedback (coming soon — not yet available on this device)"
+      expected: "PASS"
+    - input: "Spanish narration"
+      expected: "FAIL"
+    - input: "Spanish narration (beta — object labels only, full sentences not yet translated)"
+      expected: "PASS"
+evaluators:
+    # Same rationale as the other prompts in this directory: expected
+    # verdicts differ per row, so the evaluator only checks a real verdict
+    # was produced, not its exact content.
+    - name: Verdict line present
+      string:
+          minLength: 4

@@ -42,6 +42,8 @@ or accessibility specialist.
   and the three-test-per-feature e2e floor
 - [CI/CD and release engineering](CI-CD.md) — every workflow, the blocking
   quality gates, and an honest account of what CI cannot prove
+- [GitHub Models prompts](GITHUB_MODELS.md) — `.prompt.yml` copy-review aids
+  that map to the four doctrines, how they run in CI, and how to add one
 
 ## The doctrines
 
