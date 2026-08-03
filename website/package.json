@@ -57,7 +57,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-scan": "^0.5.7",
-    "sass": "^1.101.7",
+    "sass": "^1.102.0",
     "three": "0.182.0"
   },
   "devDependencies": {
