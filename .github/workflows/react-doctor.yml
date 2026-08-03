@@ -40,7 +40,7 @@ jobs:
       # Pinned to the commit behind the v2 tag, not the mutable v2 ref —
       # same rationale as the other pinned actions in this repo (see
       # security.yml's ggshield job).
-      - uses: millionco/react-doctor@938008119a288f2fb47c66a69cd9279a21f31784
+      - uses: millionco/react-doctor@01820bb4fd4d0a4aebcd8df2b2a143a098649cb2
         with:
           directory: website # this repo's npm/React root; the git root is the repo root, one level up
           # `warning`, not `error`: the scan is at zero findings as of
