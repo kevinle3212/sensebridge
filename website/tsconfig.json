@@ -1,12 +1,36 @@
 {
+  // Astro's strictest preset (bundled with the `astro` package) — the
+  // baseline strict compiler options this whole config layers on top of.
+  // tsconfig.debug.json extends this file for the deep-diagnostics pass.
   "extends": "astro/tsconfigs/strictest",
+  // What this config applies to: Astro's own generated ambient types
+  // (env var / content-collection typings, written to .astro/ by
+  // `astro sync`) plus every other file in the project.
   "include": [".astro/types.d.ts", "**/*"],
+  // The build output — generated, not source, and re-checking it would be
+  // redundant with checking the sources it was built from.
   "exclude": ["dist"],
   "compilerOptions": {
+    // React JSX syntax for the .tsx islands @astrojs/react hydrates via a
+    // client:* directive (see astro.config.mjs) — a .tsx file with no
+    // directive still renders to static HTML with zero shipped JS, so this
+    // doesn't change the site's zero-JS-by-default posture on its own.
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "paths": {
+      // Restores root-relative bare-specifier resolution (e.g. `"src/..."`
+      // instead of `"../../src/..."`) alongside the `@styles/*` alias below.
+      // Verified 2026-07-30: no source file currently imports this way (they
+      // all use relative paths or real package specifiers), so removing this
+      // line wouldn't currently break `tsc`/`astro check` — it's forward
+      // compatibility for whoever reaches for a root-relative import next,
+      // not dead config.
       "*": ["./*"],
+      // Mirrors the Vite `resolve.alias` entry in astro.config.mjs so
+      // TypeScript resolves `@styles/...` imports (used throughout
+      // src/components/*.astro and *.module.scss) the same way Vite does at
+      // build time — without this, the alias would work at runtime but every
+      // editor/typecheck reference to it would be a type error.
       "@styles/*": ["./src/styles/*"]
     }
   }

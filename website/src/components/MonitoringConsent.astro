@@ -1,0 +1,122 @@
+---
+/**
+ * The opt-in/opt-out switch for browser error monitoring.
+ *
+ * Renders nothing at all when `PUBLIC_SENTRY_DSN` is unset, because then the
+ * build carries no monitoring to consent to — a switch with nothing behind it
+ * would be theatre, and the page says so in prose instead (see PrivacyPage).
+ * `output: "static"` resolves this at build time, so an unconfigured deployment
+ * ships neither the markup nor the script.
+ *
+ * Hidden until its script runs. Without JavaScript there is no monitoring
+ * either, so a visible control would be a switch that cannot move; the
+ * `<noscript>` note says that plainly rather than leaving a dead button on the
+ * page.
+ */
+import styles from "./MonitoringConsent.module.scss";
+import { useTranslations, type Locale } from "../i18n";
+
+const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+
+// Gated on the same variable as the integration in astro.config.mjs, so the
+// control and the SDK can never disagree about whether monitoring exists.
+const isConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
+---
+
+{
+  isConfigured && (
+    <div class={styles.consent}>
+      {/* The whole row is the switch, so the label is the accessible name and
+          the hit target is the full width rather than a 44px thumb. */}
+      <button
+        type="button"
+        role="switch"
+        aria-checked="false"
+        class={styles.control}
+        data-monitoring-toggle
+        data-state-on={t.monitoring.stateOn}
+        data-state-off={t.monitoring.stateOff}
+        hidden
+      >
+        <span class={styles.copy}>
+          <span class={styles.label}>{t.monitoring.controlLabel}</span>
+          {/* Hidden from assistive tech: `aria-checked` already carries the
+              state, and announcing "off" twice per activation is noise. This
+              span exists so a sighted user gets the same information. */}
+          <span class={styles.state} data-monitoring-state aria-hidden="true">
+            {t.monitoring.stateOff}
+          </span>
+        </span>
+        <span class={styles.track} aria-hidden="true">
+          <span class={styles.thumb} />
+        </span>
+      </button>
+      <noscript>
+        <p class={styles.note}>{t.monitoring.noScript}</p>
+      </noscript>
+      {/* Replaces the switch entirely when the browser sends a Global Privacy
+          Control signal. Offering a switch that GPC would immediately override
+          is worse than offering none: it invites a choice the site will not
+          honour. Revealed by the script, which is the only thing that can read
+          the signal. */}
+      <p class={styles.note} data-monitoring-gpc hidden>
+        {t.monitoring.globalPrivacyControl}
+      </p>
+    </div>
+  )
+}
+
+<script>
+  // Drives every copy of the control on the page from one listener set, and
+  // keeps them in step through the consent module's own event — so the switch
+  // in a page's body and one in a footer can never disagree.
+  import {
+    MONITORING_CONSENT_EVENT,
+    isGlobalPrivacyControlEnabled,
+    readMonitoringConsent,
+    setMonitoringConsent,
+    type MonitoringConsent,
+  } from "../scripts/monitoring-consent";
+
+  const controls = document.querySelectorAll<HTMLButtonElement>("[data-monitoring-toggle]");
+
+  /** Paints `consent` onto every control, and reveals them on first run. */
+  function render(consent: MonitoringConsent): void {
+    const granted = consent === "granted";
+    for (const control of controls) {
+      // Unhidden here rather than in the markup: reaching this line is proof
+      // that the module loaded and the switch can actually do something.
+      control.hidden = false;
+      control.setAttribute("aria-checked", String(granted));
+      const state = control.querySelector("[data-monitoring-state]");
+      if (state instanceof HTMLElement) {
+        // Read off the element rather than imported, so the strings stay in
+        // the Astro frontmatter where the rest of the site's i18n lives.
+        state.textContent = (granted ? control.dataset.stateOn : control.dataset.stateOff) ?? "";
+      }
+    }
+  }
+
+  if (isGlobalPrivacyControlEnabled()) {
+    // Leave every switch hidden and explain why instead. `readMonitoringConsent`
+    // already forces "denied" under GPC, so nothing is running to switch off.
+    for (const note of document.querySelectorAll<HTMLElement>("[data-monitoring-gpc]")) {
+      note.hidden = false;
+    }
+  } else {
+    render(readMonitoringConsent());
+
+    for (const control of controls) {
+      control.addEventListener("click", () => {
+        // Read from the DOM, not from a captured variable: the control's own
+        // `aria-checked` is the single source of truth that `render` maintains.
+        const granted = control.getAttribute("aria-checked") === "true";
+        setMonitoringConsent(granted ? "denied" : "granted");
+      });
+    }
+
+    window.addEventListener(MONITORING_CONSENT_EVENT, (event) => {
+      render((event as CustomEvent<MonitoringConsent>).detail);
+    });
+  }
+</script>

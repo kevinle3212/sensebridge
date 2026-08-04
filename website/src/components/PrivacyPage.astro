@@ -1,0 +1,101 @@
+---
+/**
+ * The full privacy and data-use notice at `/privacy`, shared by every locale's
+ * page file the same way `HomePage.astro` is — Astro's folder-based i18n
+ * routing would otherwise mean three copies of this markup drifting apart,
+ * which on a legal notice is the one place drift is least acceptable.
+ *
+ * Content lives in `src/i18n/*.ts` under `privacyPage`, not here: the notice is
+ * translated, and a compile error on a missing key is a better failure than a
+ * locale silently serving an English paragraph in the middle of its own.
+ */
+import styles from "./PrivacyPage.module.scss";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MonitoringConsent from "./MonitoringConsent.astro";
+import { defaultLocale, useTranslations, type Locale } from "../i18n";
+
+const locale = (Astro.currentLocale ?? "en") as Locale;
+const t = useTranslations(locale);
+
+/**
+ * The date this notice last changed, as an ISO date so `<time datetime>` is
+ * machine-readable and the rendered form can follow the reader's locale.
+ * Bumped by hand, deliberately: a build-time `new Date()` would restamp the
+ * notice on every unrelated deploy and quietly claim a review that never
+ * happened.
+ */
+const UPDATED = "2026-07-31";
+const updatedLabel = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
+  new Date(`${UPDATED}T00:00:00Z`),
+);
+
+// The notice's authority statement is only meaningful on a translation. Saying
+// "the English version governs" on the English version is noise.
+const showAuthoritative = locale !== defaultLocale;
+
+// Same gate as MonitoringConsent's own: with no DSN there is nothing to consent
+// to, and the page states that instead of showing a switch over an empty space.
+const isMonitoringConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
+---
+
+<BaseLayout
+  title={t.privacyPage.title}
+  description={t.privacyPage.description}
+  ambient={false}
+  pageLoader={false}
+>
+  {
+    /* `ambient` and `pageLoader` off for the same reason the status pages turn
+      them off: this is a page someone opens to read a specific fact about
+      their own data, and a 2s bridge-building sequence in front of it is
+      decoration charged to the wrong moment. */
+  }
+  <article class={styles.notice}>
+    <div class="wrap">
+      <h1 class={styles.heading}>{t.privacyPage.heading}</h1>
+      <p class={styles.lede}>{t.privacyPage.lede}</p>
+      <p class={styles.meta}>
+        {t.privacyPage.updated}
+        <time datetime={UPDATED}>{updatedLabel}</time>
+      </p>
+      {showAuthoritative && <p class={styles.meta}>{t.privacyPage.authoritative}</p>}
+
+      {
+        /* The control comes before the detail on purpose. Withdrawing consent
+          has to be at least as easy as giving it, and burying the switch under
+          a page of prose fails that in practice even when it passes on paper. */
+      }
+      <section class={styles.choice} aria-labelledby="privacy-choice">
+        <h2 id="privacy-choice" class={styles["section-heading"]}>{t.privacyPage.choiceHeading}</h2>
+        {
+          isMonitoringConfigured ? (
+            <>
+              <p>{t.privacyPage.choiceBody}</p>
+              <MonitoringConsent />
+            </>
+          ) : (
+            <p>{t.privacyPage.choiceUnconfigured}</p>
+          )
+        }
+      </section>
+
+      {
+        t.privacyPage.sections.map((section) => (
+          <section class={styles.section}>
+            <h2 class={styles["section-heading"]}>{section.heading}</h2>
+            {section.body.map((paragraph) => (
+              <p>{paragraph}</p>
+            ))}
+            {section.bullets && (
+              <ul class={styles.list}>
+                {section.bullets.map((bullet) => (
+                  <li>{bullet}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ))
+      }
+    </div>
+  </article>
+</BaseLayout>
