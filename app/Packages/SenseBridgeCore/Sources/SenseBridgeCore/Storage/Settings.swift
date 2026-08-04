@@ -31,6 +31,14 @@ public struct Settings: Sendable, Equatable, Codable {
     /// know — see `AmbientSensingSource.regionOfInterest` for the same problem
     /// on the other axis.
     public var awarenessAlertDistanceMeters: Double
+    /// Whether the user has consented to sending crash and hang reports off
+    /// the device. `false` until the user says otherwise, and the only thing
+    /// in this struct that governs an outbound network path at all — see
+    /// `CrashReporting` in the app target and docs/PRIVACY.md. Stored here
+    /// rather than in the app target because this is the app's one persisted
+    /// preferences type; a `Bool` is not a framework dependency, so the
+    /// protocol-seams invariant is untouched.
+    public var crashReportingEnabled: Bool
 
     public init(
         outputProfile: OutputProfile = .blind,
@@ -44,7 +52,8 @@ public struct Settings: Sendable, Equatable, Codable {
         preferredLens: CameraLens = .wide,
         torchDefaultOn: Bool = false,
         narrationIntervalSeconds: Double = 6,
-        awarenessAlertDistanceMeters: Double = 1.5
+        awarenessAlertDistanceMeters: Double = 1.5,
+        crashReportingEnabled: Bool = false
     ) {
         self.outputProfile = outputProfile
         self.speechRate = speechRate
@@ -58,12 +67,14 @@ public struct Settings: Sendable, Equatable, Codable {
         self.torchDefaultOn = torchDefaultOn
         self.narrationIntervalSeconds = narrationIntervalSeconds
         self.awarenessAlertDistanceMeters = awarenessAlertDistanceMeters
+        self.crashReportingEnabled = crashReportingEnabled
     }
 
     private enum CodingKeys: String, CodingKey {
         case outputProfile, speechRate, cloudReasoningEnabled, language
         case speechPitch, speechVolume, hapticsEnabled, hapticIntensity, preferredLens, torchDefaultOn
         case narrationIntervalSeconds, awarenessAlertDistanceMeters
+        case crashReportingEnabled
     }
 
     /// Custom decode so settings persisted before each field below existed
@@ -88,6 +99,13 @@ public struct Settings: Sendable, Equatable, Codable {
         awarenessAlertDistanceMeters = try container.decodeIfPresent(
             Double.self, forKey: .awarenessAlertDistanceMeters
         ) ?? 1.5
+        // Defaults to `false` for an existing install exactly as it does for a
+        // new one. Someone who upgrades into a build that gained crash
+        // reporting has not consented to it, and a missing key is silence, not
+        // agreement.
+        crashReportingEnabled = try container.decodeIfPresent(
+            Bool.self, forKey: .crashReportingEnabled
+        ) ?? false
     }
 }
 
