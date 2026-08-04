@@ -46,13 +46,21 @@ const TARGETS = [
 ];
 
 const problems = [];
+let checked = 0;
 
 for (const { path, pattern, syntax, installerOwned } of TARGETS) {
   if (!existsSync(path)) {
+    // config.user.toml is deliberately gitignored (_bmad/custom/.gitignore) —
+    // it's the owner's local override file, so a fresh CI checkout will never
+    // have it. Only the installer-owned file (committed, actually read by
+    // BMAD skills) is required to exist; the TOML is cross-checked when
+    // present, not demanded.
+    if (!installerOwned) continue;
     problems.push(`${path} is missing — BMAD is expected to be installed in this repo.`);
     continue;
   }
 
+  checked++;
   const match = readFileSync(path, 'utf8').match(pattern);
   if (match === null) {
     problems.push(`${path} declares no \`user_skill_level\` — add \`${syntax}\`.`);
@@ -74,4 +82,4 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`check-bmad-config: clean (user_skill_level="${EXPECTED}" in ${TARGETS.length} file(s)).`);
+console.log(`check-bmad-config: clean (user_skill_level="${EXPECTED}" in ${checked} file(s)).`);

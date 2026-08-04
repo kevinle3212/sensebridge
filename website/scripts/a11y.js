@@ -105,9 +105,16 @@ function writeVariantConfig(standard) {
     JSON.parse(fs.readFileSync(CONFIG, "utf8"))
   );
   const variant = { ...base, defaults: { ...base.defaults, standard } };
-  const target = path.join(os.tmpdir(), `pa11yci-${standard.toLowerCase()}.json`);
-  // The path is the OS temp directory joined with a name derived from this
-  // file's own literal `standard` argument; nothing here comes from outside
+  // mkdtempSync, not a predictable `pa11yci-${standard}.json` path directly
+  // under os.tmpdir(): a fixed name in the shared temp directory is a
+  // symlink-preplant target (CodeQL js/insecure-temporary-file) — another
+  // local process could create `pa11yci-wcag2aaa.json` as a symlink before
+  // this runs, and the write would follow it. mkdtempSync's directory name
+  // has a random suffix, so nothing can be pre-planted at that path.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pa11yci-"));
+  const target = path.join(dir, `${standard.toLowerCase()}.json`);
+  // The path is derived from mkdtempSync's securely-created directory and
+  // this file's own literal `standard` argument; nothing comes from outside
   // the process.
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   fs.writeFileSync(target, JSON.stringify(variant, null, 2));

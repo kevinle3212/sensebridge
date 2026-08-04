@@ -84,7 +84,11 @@ async function waitForSentryChunk(requested) {
 }
 
 const { server, port } = await startDistServer("check-consent");
-const browser = await puppeteer.launch({ headless: true });
+// --no-sandbox: matches every other puppeteer script in this directory
+// (check-bfcache.js, check-csp.js, check-scene-drag.js) — Chrome's sandbox
+// needs kernel namespace support CI runners don't grant by default, so
+// without this flag the browser fails to launch there ("No usable sandbox!").
+const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox"] });
 let skipped = false;
 
 try {
