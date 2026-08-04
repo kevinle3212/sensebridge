@@ -1,3 +1,10 @@
+---
+name: performance-reviewer
+description: Owns on-device responsiveness, battery, and thermal behavior. Use after changes touching the perception/reasoning/output pipeline, camera/depth/inference paths, or main-thread work.
+canonical: true
+registered_by: .claude/agents/performance-reviewer.md
+---
+
 # Performance Reviewer
 
 Owns on-device responsiveness, battery, and thermal behaviour. The demanding
