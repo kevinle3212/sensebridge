@@ -94,6 +94,31 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ## To-Do
 
+### Repo stabilization pass — deferred items (2026-08-04, 06:15 PST)
+
+PR #67 merged (commit `ae3540f`): committed ~409 files of pending WIP that
+had accumulated across prior sessions (Sentry crash reporting, legal docs,
+website privacy/accessibility pages, impeccable skill sync, BMAD adoption,
+tooling), fixed 10 npm audit findings (0 vulnerabilities remain), and
+hardened CI (gate every branch, new repo-guardrails job, pinned actions).
+Full detail in `sessions/2026-08-04/` (background session).
+
+- [ ] **[P2]** React Doctor flags 52 pre-existing performance findings
+      (`.map().filter()` chains, repeated property access) across
+      `impeccable/scripts/lib/*.mjs`, mirrored identically in 5 harness
+      copies (`.agents`, `.claude`, `.cursor`, `.gemini`, `.github`). Not
+      authored this session — vendored/synced skill content. Per React
+      Doctor's own guidance ("fix a representative sample first... get
+      sign-off before changing the rest"), deferred rather than mass-fixed.
+      Decide: fix upstream in the impeccable skill source and re-sync, or
+      leave as-is until the next skill update.
+- [ ] **[P1]** **[Needs owner]** Device build/install and VoiceOver pass for
+      the Sentry crash-reporting UI (`SettingsView`/`DiagnosticsSettingsSection`)
+      — no physical device was attached this session (`xctrace list devices`
+      showed both iPhone/iPad as "Offline"). Simulator build + all
+      unit/package tests (26 + 83) passed; device validation is the one gate
+      CI cannot prove.
+
 ### Context-budget follow-up: computer-use MCP + eager skill-injection hooks (2026-08-03, 21:00 PST)
 
 Owner asked whether any plugins/MCPs need disabling for heavy token usage.
