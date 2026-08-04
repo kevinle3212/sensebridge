@@ -65,9 +65,11 @@
 
 ## Follow-up Actions
 
-<!-- Concrete, assignable next steps. -->
+<!-- Concrete, assignable next steps in - [ ] format. -->
 
-- [ ] action
+- [ ] Action 1
+- [ ] Action 2
+- [ ] Action 3
 
 ## Remaining Work
 

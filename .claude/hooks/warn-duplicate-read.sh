@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# PreToolUse hook (matcher: Read): nudges, doesn't block, when the same
+# PreToolUse hook (matcher: Read, mcp__serena__read_file,
+# mcp__filesystem__read_text_file): nudges, doesn't block, when the same
 # unchanged file region is Read twice in one session.
 #
 # Non-blocking on purpose: this hook can only see a file path and a session
@@ -13,9 +14,16 @@
 set -euo pipefail
 
 input=$(cat)
-file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')
-offset=$(printf '%s' "$input" | jq -r '.tool_input.offset // "0"')
-limit=$(printf '%s' "$input" | jq -r '.tool_input.limit // "0"')
+# Read uses file_path; the filesystem MCP's read_text_file uses path; Serena's
+# read_file uses relative_path. Added 2026-08-03 — those two previously
+# bypassed this hook entirely because only file_path was recognized.
+file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.path // .tool_input.relative_path // empty')
+# offset/limit are Read's pagination fields; Serena's read_file uses
+# start_line/end_line instead. Good enough for a duplicate-detection key
+# either way — it only needs to distinguish "same region" from "different
+# region", not to be a chunking parameter.
+offset=$(printf '%s' "$input" | jq -r '.tool_input.offset // .tool_input.start_line // "0"')
+limit=$(printf '%s' "$input" | jq -r '.tool_input.limit // .tool_input.end_line // "0"')
 session_id=$(printf '%s' "$input" | jq -r '.session_id // "unknown"')
 
 [ -z "$file_path" ] && exit 0

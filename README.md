@@ -39,6 +39,19 @@ positioning.
 [![Last commit](https://img.shields.io/github/last-commit/kevinle3212/sensebridge)](https://github.com/kevinle3212/sensebridge/commits/main)
 [![Open issues](https://img.shields.io/github/issues/kevinle3212/sensebridge)](https://github.com/kevinle3212/sensebridge/issues)
 
+[![Swift](https://img.shields.io/badge/Swift-F05138?logo=swift&logoColor=white&style=flat)](https://www.swift.org)
+[![SwiftUI](https://img.shields.io/badge/SwiftUI-0074E4?logo=swift&logoColor=white&style=flat)](https://developer.apple.com/xcode/swiftui/)
+[![iOS](https://img.shields.io/badge/iOS-000000?logo=apple&logoColor=white&style=flat)](https://developer.apple.com/ios/)
+[![Xcode](https://img.shields.io/badge/Xcode-147EFB?logo=xcode&logoColor=white&style=flat)](https://developer.apple.com/xcode/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=flat)](https://www.typescriptlang.org)
+[![Astro](https://img.shields.io/badge/Astro-BC52EE?logo=astro&logoColor=white&style=flat)](https://astro.build)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=nodedotjs&logoColor=white&style=flat)](https://nodejs.org)
+[![Sass](https://img.shields.io/badge/Sass-CC6699?logo=sass&logoColor=white&style=flat)](https://sass-lang.com)
+[![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB&style=flat)](https://react.dev)
+[![GSAP](https://img.shields.io/badge/GSAP-0AE448?logo=gsap&logoColor=white&style=flat)](https://gsap.com)
+[![Three.js](https://img.shields.io/badge/Three.js-000000?logo=threedotjs&logoColor=white&style=flat)](https://threejs.org)
+[![Sentry](https://img.shields.io/badge/Sentry-362D59?logo=sentry&logoColor=white&style=flat)](https://sentry.io)
+
 ## Table of Contents
 
 - [Scope (MVP)](#scope-mvp)
@@ -81,7 +94,7 @@ Deferred by design, not by oversight — see
 - Any backend, account system, or cloud processing. There is no server, and
   that absence is deliberate.
 - Real-time turn-by-turn navigation guidance. SenseBridge provides cautious,
-  probabilistic *awareness*, never safety or navigation guarantees.
+  probabilistic _awareness_, never safety or navigation guarantees.
 
 ## System Architecture
 
@@ -235,32 +248,85 @@ branch switch via `.githooks/post-commit`/`post-checkout` (see
 it on `main` and uploads a downloadable artifact — advisory only, it never
 blocks a merge.
 
-| Task | Command |
-| --- | --- |
-| Build the graph from scratch | `graphify .` |
-| Update after code changes | `graphify update .` |
-| Ask a natural-language question | `graphify query "<question>"` |
-| Explain a single concept | `graphify explain "<concept>"` |
-| Watch and rebuild live | `graphify watch .` |
+<picture>
+  <source
+    media="(prefers-reduced-motion: reduce)"
+    srcset="docs/assets/graph-static.svg">
+  <img
+    src="docs/assets/graph.svg"
+    alt="Force-directed map of the SenseBridge codebase: 340 of the most connected symbols, joined by 802 extracted relationships, clustered and coloured by subsystem — the Swift app, the Astro website, docs, tooling and CI, governance, and the root orientation docs. Signals pulse along the edges. The most connected nodes are labelled, among them AppEnvironment, CameraSource, AmbientAwarenessSession, PRIVACY.md, and the website's motion.ts."
+    width="100%">
+</picture>
+
+That picture is not decoration and not hand-drawn: `npm run graph`
+([`tools/graph-visual.mjs`](tools/graph-visual.mjs)) reads the real
+`graphify-out/graph.json`, keeps the highest-degree subgraph, runs a
+deterministic force-directed layout, and writes
+[`docs/assets/graph.svg`](docs/assets/graph.svg). Nodes are symbols; edges are
+relationships graphify actually extracted — `imports`, `calls`, `defines`,
+`references`. The travelling pulses trace those edges, so what moves is real
+structure, not an ornament.
+
+Four details worth knowing before you regenerate it:
+
+- **The graph is committed, its source is not.** `graphify-out/` is
+  git-ignored, so the SVG is checked in as an artifact. The layout is seeded,
+  so an unchanged graph re-renders byte-identically and the asset does not
+  churn in diffs.
+- **You do not have to remember to redraw it, and CI checks it.**
+  `.githooks/pre-commit` re-renders and stages the pair whenever a commit
+  touches `docs/` or any graph input, so the committed picture never lags the
+  committed code. CI then runs `npm run check:graph`
+  (`tools/graph-visual.mjs --verify`) as a blocking gate: it lints the
+  committed bytes for the accessible name and description, a genuinely static
+  reduced-motion twin, well-formed XML, and both variants drawing the same
+  graph. It deliberately does not rebuild and diff — the source commit is
+  baked into the image, so a fresh build at a different `HEAD` is legitimately
+  different bytes and would fail every pull request.
+- **Vendored agent tooling is excluded.** The same skill scripts are mirrored
+  verbatim into five per-harness config directories (`.claude/`, `.cursor/`,
+  `.gemini/`, `.agents/`, `.github/skills/`), and they outnumber SenseBridge's
+  own code roughly four to one. Left in, the picture would be a portrait of the
+  tooling mirror. The exclusion list is at the top of the generator.
+- **Motion is opt-out, and the opt-out is real.** GitHub runs no JavaScript in
+  a README, so the animation is declarative SVG. Chrome does _not_ propagate
+  `prefers-reduced-motion` into an `<img>`-referenced SVG, so an in-file media
+  query alone would silently fail; the `<picture>` above swaps in a still
+  twin instead, which is evaluated against the page. Both paths were verified
+  in a headless browser.
+
+For anything beyond a glance, query the graph directly rather than reading the
+picture:
+
+| Task                                             | Command                        |
+| ------------------------------------------------ | ------------------------------ |
+| Build the graph from scratch                     | `graphify .`                   |
+| Update after code changes                        | `graphify update .`            |
+| Ask a natural-language question                  | `graphify query "<question>"`  |
+| Explain a single concept                         | `graphify explain "<concept>"` |
+| Watch and rebuild live                           | `graphify watch .`             |
+| Rebuild the graph and redraw the picture above   | `npm run graph`                |
+| Redraw the picture only, from the existing graph | `npm run graph:visual`         |
+| Check the committed picture is intact (CI gate)  | `npm run check:graph`          |
 
 ## Documentation
 
-| Doc | Covers |
-| --- | --- |
-| [`docs/QUICK-START.md`](docs/QUICK-START.md) | Fast path to a running app on your own device, plus the living usage guide |
-| [`docs/PRODUCT.md`](docs/PRODUCT.md) | Vision, personas, funding, differentiators |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Five-phase roadmap, MVP definition, open questions |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design, protocols, data flow |
-| [`docs/AI-MODELS.md`](docs/AI-MODELS.md) | On-device model choices and licenses |
-| [`docs/SAFETY-FRAMING.md`](docs/SAFETY-FRAMING.md) | The awareness-not-safety doctrine |
-| [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md) | VoiceOver testing and labeling standards |
-| [`docs/PRIVACY.md`](docs/PRIVACY.md) | On-device data handling guarantees |
-| [`docs/TESTING.md`](docs/TESTING.md) | Test strategy, including field testing with blind users |
-| [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) | Dev environment setup |
-| [`docs/SECRETS.md`](docs/SECRETS.md) | Every CI, deployment, and local credential |
-| [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md) | TestFlight / App Store distribution |
-| [`docs/FAQ.md`](docs/FAQ.md) | Common questions |
-| [`docs/TOOLING.md`](docs/TOOLING.md) | Tooling decisions (global vs. project) |
+| Doc                                                | Covers                                                                     |
+| -------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`docs/QUICK-START.md`](docs/QUICK-START.md)       | Fast path to a running app on your own device, plus the living usage guide |
+| [`docs/PRODUCT.md`](docs/PRODUCT.md)               | Vision, personas, funding, differentiators                                 |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md)               | Five-phase roadmap, MVP definition, open questions                         |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)     | System design, protocols, data flow                                        |
+| [`docs/AI-MODELS.md`](docs/AI-MODELS.md)           | On-device model choices and licenses                                       |
+| [`docs/SAFETY-FRAMING.md`](docs/SAFETY-FRAMING.md) | The awareness-not-safety doctrine                                          |
+| [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md)   | VoiceOver testing and labeling standards                                   |
+| [`docs/PRIVACY.md`](docs/PRIVACY.md)               | On-device data handling guarantees                                         |
+| [`docs/TESTING.md`](docs/TESTING.md)               | Test strategy, including field testing with blind users                    |
+| [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)       | Dev environment setup                                                      |
+| [`docs/SECRETS.md`](docs/SECRETS.md)               | Every CI, deployment, and local credential                                 |
+| [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md)     | TestFlight / App Store distribution                                        |
+| [`docs/FAQ.md`](docs/FAQ.md)                       | Common questions                                                           |
+| [`docs/TOOLING.md`](docs/TOOLING.md)               | Tooling decisions (global vs. project)                                     |
 
 The full index, including root orientation docs (`PROJECT_OVERVIEW.md`,
 `GAPS.md`, `MEMORY.md`, `LEARNING.md`), lives in [`WIKI.md`](WIKI.md), and the
@@ -271,22 +337,22 @@ to `main`.
 
 ## GitHub Platform
 
-| Feature | Where |
-| --- | --- |
-| CI (build, test, lint) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
-| Security scanning (secrets, dependencies, SAST) | [`.github/workflows/security.yml`](.github/workflows/security.yml) |
-| Code scanning (CodeQL) | [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml) → [Security tab](https://github.com/kevinle3212/sensebridge/security/code-scanning) |
-| Dependabot | [`.github/dependabot.yml`](.github/dependabot.yml) → [Dependabot alerts](https://github.com/kevinle3212/sensebridge/security/dependabot) |
-| Secret scanning | [Security tab](https://github.com/kevinle3212/sensebridge/security/secret-scanning) (native GitHub feature, public repo) |
-| Security advisories | [Advisories](https://github.com/kevinle3212/sensebridge/security/advisories) |
-| Security policy | [`SECURITY.md`](SECURITY.md) |
-| Pages (docs site) | [`.github/workflows/pages.yml`](.github/workflows/pages.yml) → [kevinle3212.github.io/sensebridge](https://kevinle3212.github.io/sensebridge) |
-| Wiki | [`.github/workflows/wiki-sync.yml`](.github/workflows/wiki-sync.yml) → [GitHub Wiki](https://github.com/kevinle3212/sensebridge/wiki) |
-| GitHub Models prompt evaluation | [`.github/workflows/github-models.yml`](.github/workflows/github-models.yml), [`.github/prompts/`](.github/prompts/) |
-| Copilot coding agent | [`.github/workflows/copilot-setup-steps.yml`](.github/workflows/copilot-setup-steps.yml) |
-| Claude Code review | [`.github/workflows/claude-code-review.yml`](.github/workflows/claude-code-review.yml), [`.github/workflows/claude.yml`](.github/workflows/claude.yml) |
-| Projects | [Project boards](https://github.com/kevinle3212/sensebridge/projects) |
-| Issue / PR templates | [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/), [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) |
+| Feature                                         | Where                                                                                                                                                  |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CI (build, test, lint)                          | [`.github/workflows/ci.yml`](.github/workflows/ci.yml)                                                                                                 |
+| Security scanning (secrets, dependencies, SAST) | [`.github/workflows/security.yml`](.github/workflows/security.yml)                                                                                     |
+| Code scanning (CodeQL)                          | [`.github/workflows/codeql.yml`](.github/workflows/codeql.yml) → [Security tab](https://github.com/kevinle3212/sensebridge/security/code-scanning)     |
+| Dependabot                                      | [`.github/dependabot.yml`](.github/dependabot.yml) → [Dependabot alerts](https://github.com/kevinle3212/sensebridge/security/dependabot)               |
+| Secret scanning                                 | [Security tab](https://github.com/kevinle3212/sensebridge/security/secret-scanning) (native GitHub feature, public repo)                               |
+| Security advisories                             | [Advisories](https://github.com/kevinle3212/sensebridge/security/advisories)                                                                           |
+| Security policy                                 | [`SECURITY.md`](SECURITY.md)                                                                                                                           |
+| Pages (docs site)                               | [`.github/workflows/pages.yml`](.github/workflows/pages.yml) → [kevinle3212.github.io/sensebridge](https://kevinle3212.github.io/sensebridge)          |
+| Wiki                                            | [`.github/workflows/wiki-sync.yml`](.github/workflows/wiki-sync.yml) → [GitHub Wiki](https://github.com/kevinle3212/sensebridge/wiki)                  |
+| GitHub Models prompt evaluation                 | [`.github/workflows/github-models.yml`](.github/workflows/github-models.yml), [`.github/prompts/`](.github/prompts/)                                   |
+| Copilot coding agent                            | [`.github/workflows/copilot-setup-steps.yml`](.github/workflows/copilot-setup-steps.yml)                                                               |
+| Claude Code review                              | [`.github/workflows/claude-code-review.yml`](.github/workflows/claude-code-review.yml), [`.github/workflows/claude.yml`](.github/workflows/claude.yml) |
+| Projects                                        | [Project boards](https://github.com/kevinle3212/sensebridge/projects)                                                                                  |
+| Issue / PR templates                            | [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/), [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md)                           |
 
 ## Maintainer
 
@@ -311,13 +377,13 @@ reads it in this repository. Copy it if you want a starting point:
 
 ## Testing
 
-| Layer | Tests |
-| --- | --- |
-| Unit / integration | Swift Testing, XCTest — see [`docs/TESTING.md`](docs/TESTING.md) |
-| E2E | XCUITest, three per feature (happy path / error / edge case) |
-| Accessibility | VoiceOver pass on every changed screen; zero unlabeled elements is a hard gate |
-| Static analysis | SwiftLint, SwiftFormat (`scripts/lint.sh`), CodeQL, Semgrep, OSV-Scanner |
-| Website | ESLint, Stylelint, Prettier, pa11y-ci, React Doctor — see `website/README.md` |
+| Layer              | Tests                                                                          |
+| ------------------ | ------------------------------------------------------------------------------ |
+| Unit / integration | Swift Testing, XCTest — see [`docs/TESTING.md`](docs/TESTING.md)               |
+| E2E                | XCUITest, three per feature (happy path / error / edge case)                   |
+| Accessibility      | VoiceOver pass on every changed screen; zero unlabeled elements is a hard gate |
+| Static analysis    | SwiftLint, SwiftFormat (`scripts/lint.sh`), CodeQL, Semgrep, OSV-Scanner       |
+| Website            | ESLint, Stylelint, Prettier, pa11y-ci, React Doctor — see `website/README.md`  |
 
 ## License
 

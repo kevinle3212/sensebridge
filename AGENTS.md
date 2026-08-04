@@ -9,7 +9,10 @@ specific skill or persona conflict, the more specific one wins.
 A free, open-source, **on-device** iOS accessibility app that gives blind and
 low-vision users spoken awareness of their surroundings. Swift / SwiftUI,
 VoiceOver-first, serverless — no backend, no accounts, no telemetry by default.
-Product and scope live in [`docs/PRODUCT.md`](docs/PRODUCT.md); architecture in
+The one thing that can leave the device is a crash report, and only after the
+user switches it on themselves (off by default; see
+[`docs/PRIVACY.md`](docs/PRIVACY.md)). Product and scope live in
+[`docs/PRODUCT.md`](docs/PRODUCT.md); architecture in
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## The four doctrines (non-negotiable)
@@ -57,8 +60,8 @@ Product and scope live in [`docs/PRODUCT.md`](docs/PRODUCT.md); architecture in
 
 How to work here, regardless of harness. Per-agent entry points (`CLAUDE.md`,
 `GEMINI.md`, `.codex/AGENTS.md`, `.copilot/instructions.md`, `.continue/rules/`,
-`.cursor/rules/`, `.windsurf/rules/`) all defer to this section — it is stated
-once, here.
+`.cursor/rules/`, `.windsurf/rules/`, `.agents/rules/` for Antigravity) all
+defer to this section — it is stated once, here.
 
 1. **Gather only the context the task needs.** Start from
    [`AGENT-CONTEXT.md`](AGENT-CONTEXT.md)'s "Where to look" table; do not walk

@@ -305,7 +305,17 @@ explicitly excluded from sync by default.
 A privacy-first, offline-first app has nothing to put on a server. Settings
 live on the device; sync uses iCloud at no cost; there is no user content to
 store, no auth to manage, no analytics collected. Nothing to breach, nothing
-to fund, nothing to maintain. A backend becomes worth considering only if a
+to fund, nothing to maintain.
+
+Crash reporting (Sentry, since 2026-07-31) is the one exception, and it does
+not change this: Sentry is a third-party service, so there is still no server
+of ours. It is off until the user turns it on, it is linked only into the App
+layer so `SenseBridgeCore` stays framework-independent under the
+protocol-seams invariant, and it carries diagnostics rather than user content.
+See `app/SenseBridge/App/CrashReporting.swift` and
+[`docs/PRIVACY.md`](PRIVACY.md#crash-reporting-opt-in-off-by-default).
+
+A backend becomes worth considering only if a
 concrete need appears (opt-in cloud-reasoning endpoint, opt-in anonymized
 telemetry, shared model distribution) — and if that day comes: opt-in only,
 minimal data, self-hostable, free/free-tier infrastructure first, Sign in

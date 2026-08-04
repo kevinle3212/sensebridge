@@ -9,6 +9,9 @@ removes objects Docker can always recreate, and a **deep** tier (all unused
 images, volumes) that requires explicit confirmation because it can destroy
 data no `docker pull`/`docker build` gets back.
 
+This is local machine hygiene. It is not tied to any project, and it never
+touches a running container.
+
 ## Steps
 
 1. Confirm Docker is running: `docker info`. If it's not, say so and stop.
@@ -33,7 +36,3 @@ data no `docker pull`/`docker build` gets back.
      previous step.
 6. Report exactly what was removed and how much space was reclaimed, and
    what's left available for a deep clean if the user wants it.
-
-Note: SenseBridge doesn't use Docker for the app itself — serverless/on-device
-by doctrine, see `docs/TOOLING.md`. This command is local machine hygiene
-only, not a project dependency.

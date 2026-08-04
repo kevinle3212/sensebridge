@@ -7,7 +7,7 @@ title: GitHub Models Prompts (Engineering Doctrine)
 `.github/prompts/*.prompt.yml` are text-in/text-out review aids that run
 against a hosted model via [GitHub Models](https://github.com/marketplace/models).
 Each one maps to a specific piece of SenseBridge's review surface — see the
-table in [`.github/prompts/README.md`](../.github/prompts/README.md).
+table in [`.github/prompts/README.md`](https://github.com/kevinle3212/sensebridge/blob/main/.github/prompts/README.md).
 
 ## Why these exist
 
@@ -57,7 +57,7 @@ judge accuracy — this only guards against the model going silent or erroring.
    what it guards and why, `name`/`description`/`model`/`modelParameters`,
    a `messages` block with `{{template}}` variables, `testData` with mixed
    PASS/FAIL rows, and the same verdict-presence `evaluators` block.
-2. Add a row to [`.github/prompts/README.md`](../.github/prompts/README.md)'s
+2. Add a row to [`.github/prompts/README.md`](https://github.com/kevinle3212/sensebridge/blob/main/.github/prompts/README.md)'s
    table, including which doctrine it maps to.
 3. Add a matrix leg (`prompt` + `include.input`) to
    [`.github/workflows/github-models.yml`](../.github/workflows/github-models.yml).

@@ -52,6 +52,11 @@ graphify-out/
 # that owns it. See app/Config/Signing.xcconfig and docs/ENVIRONMENT.md.
 app/Config/Signing.local.xcconfig
 
+# Local Sentry DSN. `app/Config/Sentry.xcconfig` is committed and sets none; a
+# DSN names one project's Sentry org, so a fork must not inherit it. Not secret
+# — a DSN is a write-only ingest endpoint — just personal to a deployment.
+app/Config/Sentry.local.xcconfig
+
 # Private notes: NOTES.md is public/committed; NOTES.local.md is personal and
 # machine-specific and must never be committed. See NOTES.md.
 NOTES.local.md
@@ -146,6 +151,17 @@ _bmad/**/*.user.toml
 # the already-tracked .claude/skills/bmad-*. _bmad-output/ is BMAD's
 # generated planning/implementation artifact scratch space (regenerable,
 # session-specific); keep it local like graphify-out/ and .gitnexus/ above.
+#
+# Simplified 2026-08-01. This was `_bmad-output/*` plus a
+# `!_bmad-output/project-context.md` negation, so that one hand-authored
+# doctrine file could be committed out of an otherwise-ignored output
+# directory. That shape needed a three-paragraph comment to stay safe and
+# still meant a tracked path inside a generated tree. The file now lives at
+# `_bmad/project-context.md` instead — every BMM skill resolves it by glob
+# (`file:{project-root}/**/project-context.md`, see any
+# `.claude/skills/bmad-*/customize.toml`), so its directory was never load-
+# bearing. Doctrine sits with the tracked config it binds, the output folder
+# is ignored whole, and no negation is required.
 _bmad-output/
 
 # Personal scratch assets (raw generated media, working files) — never
