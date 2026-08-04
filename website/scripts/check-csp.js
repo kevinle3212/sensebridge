@@ -299,7 +299,13 @@ const VIOLATION_KEY = "__cspViolations";
 async function main() {
   const csp = await productionCsp();
   const { baseUrl, close } = await serveDist(csp);
-  const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
+  // --enable-unsafe-swiftshader: the home route mounts the same WebGL glasses
+  // scene check-bfcache.js/check-scene-drag.js need it for — without software
+  // WebGL, headless Chrome never settles the scene's asset requests, and
+  // page.goto's networkidle0 wait times out (30s) instead of ever resolving.
+  const browser = await puppeteer.launch({
+    args: ["--no-sandbox", "--enable-unsafe-swiftshader"],
+  });
   /** @type {string[]} */
   const failures = [];
 

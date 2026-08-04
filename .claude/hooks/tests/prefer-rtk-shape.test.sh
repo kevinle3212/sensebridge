@@ -144,6 +144,7 @@ assert_rewrite "\${VAR} must not read as syntax" \
 # this hook rewrote it, and RTK wrote a `--stat` summary. The patch was 67KB
 # instead of 4.7MB and `git apply` rejected it — silently, only at restore time.
 assert_unchanged "git diff into .patch" 'git diff HEAD > backup.patch'
+# shellcheck disable=SC2016
 assert_unchanged "git diff into a quoted, variable path" 'git diff HEAD > "$B/backup.patch"'
 assert_unchanged "append into .patch" 'git diff HEAD >> backup.patch'
 assert_unchanged "git log into .json" 'git log --format=%H > commits.json'
@@ -185,6 +186,7 @@ assert_rewrite "command after a heredoc terminator is still rewritten" \
   "$(printf 'cat <<EOF\ngit status\nEOF\nrtk ls -la | head -3\n')"
 
 # `<<<` is a here-string with no body — the operand is a word, not a delimiter.
+# shellcheck disable=SC2016
 assert_rewrite "here-string is not a heredoc" \
   'grep -rn foo . <<< "$x" | head -2' 'rtk grep -rn foo . <<< "$x" | head -2'
 

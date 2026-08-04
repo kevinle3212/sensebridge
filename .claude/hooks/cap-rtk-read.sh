@@ -33,6 +33,9 @@ rtk\ read\ *) ;;
 esac
 # Bail on anything this hook wasn't built to parse: shell operators, quotes,
 # command/process substitution.
+# shellcheck disable=SC2016 # single quotes are correct here: these are
+# literal case-pattern operators to match against, not expressions meant to
+# expand.
 case "$command" in
 *'|'* | *'>'* | *'<'* | *'&&'* | *';'* | *'`'* | *'$('* | *'"'* | *"'"*) exit 0 ;;
 esac

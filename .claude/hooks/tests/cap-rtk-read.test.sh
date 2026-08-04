@@ -8,7 +8,7 @@ set -uo pipefail
 HOOK="$(cd "$(dirname "$0")/.." && pwd)/cap-rtk-read.sh"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-cd "$TMP"
+cd "$TMP" || exit 1
 
 pass=0
 fail=0
