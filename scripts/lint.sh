@@ -26,6 +26,11 @@ if [ "$KIND" = none ]; then
 	exit 0
 fi
 
+if [ "$(uname -s)" != Darwin ]; then
+	echo "scripts/lint.sh: Swift lint requires macOS (SwiftFormat/SwiftLint target the Xcode toolchain) — skipping on $(uname -s). See docs/ENVIRONMENT.md." >&2
+	exit 0
+fi
+
 for tool in swiftformat swiftlint; do
 	command -v "$tool" >/dev/null 2>&1 || {
 		echo "error: $tool not found (brew install $tool). See docs/ENVIRONMENT.md." >&2

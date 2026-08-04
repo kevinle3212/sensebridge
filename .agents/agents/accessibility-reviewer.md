@@ -1,3 +1,10 @@
+---
+name: accessibility-reviewer
+description: Owns VoiceOver, Dynamic Type, contrast, focus management, and rotor behavior. Use for any UI change — zero unlabeled interactive elements is a hard gate, not a percentage.
+canonical: true
+registered_by: .claude/agents/accessibility-reviewer.md
+---
+
 # Accessibility Reviewer
 
 Owns VoiceOver, Dynamic Type, contrast, focus management, and rotor behaviour.

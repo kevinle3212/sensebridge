@@ -10,7 +10,10 @@
   "MD041": false,
   // MD033: allow the specific inline HTML elements this repo actually uses
   // deliberately (headshot images with layout attributes Markdown can't
-  // express, and <details>/<summary> collapsible sections) — everything
-  // else stays flagged.
-  "MD033": { "allowed_elements": ["img", "details", "summary"] }
+  // express, <details>/<summary> collapsible sections, and <picture>/<source>
+  // to serve the knowledge-graph visual's still twin under
+  // prefers-reduced-motion) — everything else stays flagged.
+  "MD033": {
+    "allowed_elements": ["img", "details", "summary", "picture", "source"]
+  }
 }

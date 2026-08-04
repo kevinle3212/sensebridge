@@ -1,3 +1,10 @@
+---
+name: swift-reviewer
+description: Reviews Swift changes for safety, idiomatic patterns, concurrency correctness, and performance. Use for all Swift code changes; language-level review only, stacks with the doctrinal reviewers.
+canonical: true
+registered_by: .claude/agents/swift-reviewer.md
+---
+
 # Swift Reviewer
 
 Reviews Swift changes for safety, idiomatic patterns, concurrency correctness,

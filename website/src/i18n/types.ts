@@ -10,6 +10,19 @@ export interface ErrorCopy {
   body: string;
 }
 
+/**
+ * One headed block of a published notice — the privacy notice at `/privacy` or
+ * the accessibility statement at `/accessibility`, which are the same shape.
+ * `bullets` is optional because some sections are prose only; a list is used
+ * where the content is genuinely a set of parallel items, not to break up a
+ * paragraph — a screen-reader user hears "list, 6 items" before every one.
+ */
+export interface NoticeSection {
+  heading: string;
+  body: readonly string[];
+  bullets?: readonly string[];
+}
+
 // Every string currently hardcoded across the site's components, grouped by
 // the component that owns it. Each locale module (en.ts/es.ts/vi.ts) must
 // implement this in full — a missing key is a compile error, not a silent
@@ -53,11 +66,67 @@ export interface Translations {
     heading: string;
     body: string;
     supporting: string;
+    /** Link from the home page's privacy section through to `/privacy`. */
+    fullNoticeLink: string;
+  };
+  /** Strings for the error-monitoring consent switch (MonitoringConsent.astro). */
+  monitoring: {
+    controlLabel: string;
+    stateOn: string;
+    stateOff: string;
+    /** Shown instead of the switch when scripting is unavailable. */
+    noScript: string;
+    /**
+     * Shown instead of the switch when the browser sends a Global Privacy
+     * Control signal, which this site treats as a standing opt-out.
+     */
+    globalPrivacyControl: string;
+  };
+  /** The full privacy and data-use notice at `/privacy`. */
+  privacyPage: {
+    title: string;
+    description: string;
+    heading: string;
+    lede: string;
+    /** Rendered as "Last updated <date>"; the date is supplied by the page. */
+    updated: string;
+    /**
+     * Names English as the authoritative text. Present in every locale
+     * including `en`, where it is not rendered — a translated legal notice
+     * that does not say which version governs is the ambiguity this avoids.
+     */
+    authoritative: string;
+    choiceHeading: string;
+    choiceBody: string;
+    /**
+     * Replaces the switch when this deployment has no monitoring configured at
+     * all, so the page never implies a choice that does not exist.
+     */
+    choiceUnconfigured: string;
+    sections: readonly NoticeSection[];
   };
   accessibility: {
     heading: string;
     body: string;
     leadIn: string;
+  };
+  /**
+   * The published accessibility statement at `/accessibility`. The European
+   * Accessibility Act and EN 301 549 both require the statement to be
+   * *published on the service itself*, not only kept in the repository, which
+   * is why this exists as a page rather than as a link to
+   * `legal/ACCESSIBILITY_STATEMENT.md`.
+   */
+  accessibilityPage: {
+    title: string;
+    description: string;
+    heading: string;
+    lede: string;
+    /** Rendered as "Last updated <date>"; the date is supplied by the page. */
+    updated: string;
+    /** Names English as the authoritative text, as `privacyPage` does. */
+    authoritative: string;
+    sections: readonly NoticeSection[];
   };
   readAloud: {
     deviceIdleLabel: string;
@@ -102,8 +171,13 @@ export interface Translations {
   footer: {
     tagline: string;
     githubLink: string;
+    privacyLink: string;
+    /** Link from every page's footer through to `/accessibility`. */
+    accessibilityLink: string;
     notAvailable: string;
     voiceCredit: string;
+    /** Shown only when `PUBLIC_SENTRY_DSN` is set at build time. */
+    monitoringCredit: string;
     poweredBy: string;
     makerPhotoAlt: string;
   };

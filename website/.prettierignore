@@ -14,3 +14,9 @@ src/layouts/BaseLayout.astro
 # Gitignored scratch space (the durable plan file per ~/.claude/CLAUDE.md);
 # never committed, so it should not gate `npm run format`.
 tmp
+
+# Gitignored compiler perf trace written by `npm run typecheck:debug`
+# (`generateTrace` in tsconfig.debug.json) and read by `npm run trace:analyze`.
+# `types.json` runs to hundreds of megabytes, which is enough to OOM Prettier
+# outright — machine output, never hand-edited, so there is nothing to format.
+trace

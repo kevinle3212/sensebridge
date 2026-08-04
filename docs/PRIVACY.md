@@ -59,6 +59,65 @@ among others) is a real, fast-moving exposure. See
 for the full legal notes. **None of this is legal advice — get counsel before
 shipping any facial-enrollment feature.**
 
+## Crash reporting (opt-in, off by default)
+
+Added 2026-07-31 by owner decision, deliberately reversing this project's
+earlier "no crash reporting, on doctrine" position. It is the **only** thing in
+SenseBridge that can send anything off the device, and it is built so that it
+cannot happen by accident.
+
+**Two independent gates, both of which must pass:**
+
+1. A DSN was configured at build time (`app/Config/Sentry.local.xcconfig`,
+   gitignored). A fresh clone has none, so a contributor's build reports
+   nowhere no matter what they tap.
+2. The user switched on **Settings → Diagnostics → Send crash reports**, which
+   defaults to `false` and stays false through an upgrade — a settings blob
+   written before the field existed decodes to `false`, because a missing key
+   is silence, not agreement.
+
+**What is sent, when both gates pass:** a crash or main-thread-hang report —
+stack frames, exception type and message, device model, OS version, app
+version. **What is never sent:** camera frames, recognized text, audio, depth
+data, location, IP address, device name, or any breadcrumb trail of what the
+user did. Screenshots, view hierarchies, network tracking, performance tracing,
+and method swizzling are disabled explicitly rather than left at their
+defaults, and `CrashReporting.scrub` strips `user`, `request`, `serverName`,
+`breadcrumbs`, the device *name*, and locale/timezone context before anything
+leaves. `CrashReportingTests` covers both the consent default and the scrub.
+
+The exception message is **not** scrubbed, because it is what makes a crash
+diagnosable. That is only safe because the logging rule above already forbids
+recognized text, images, and audio from any message the app constructs. If that
+rule is ever relaxed, `CrashReporting.scrub` is where the consequence lands.
+
+Session tracking stays on, which is what produces the crash-free-rate figure.
+It sends one event per launch containing no user data — and only ever after the
+user has opted in.
+
+Every third party that receives anything, what they get, where it lands, and how
+long they keep it is listed in
+[`legal/SUBPROCESSORS.md`](https://github.com/kevinle3212/sensebridge/blob/main/legal/SUBPROCESSORS.md).
+Adding one is a change to the privacy promise, not an implementation detail, so
+it updates that file and the policy in the same change.
+
+## The website
+
+`website/` is a separate surface with its own notice at `/privacy`, published in
+English, Spanish, and Vietnamese. Same posture, one step stricter: with no
+consent the Sentry SDK is **never downloaded**, because the browser bundle
+reaches it only through a dynamic import gated on a stored consent value
+(`website/src/scripts/monitoring-consent.ts`). A visitor who has not opted in
+pays 431 bytes gzipped for the consent bootstrap and fetches none of the ~27kB
+SDK. There is no consent banner, because nothing is stored or sent until the
+visitor uses the switch, so there is nothing to ask for on arrival.
+
+A Global Privacy Control signal from the browser is honoured as a hard
+override: it outranks a previously stored consent, the switch is not offered,
+and the page says why. `website/scripts/check-consent.js` drives a real browser
+and asserts all of this against the built site, so the claim is tested rather
+than asserted.
+
 ## The optional cloud adapter (not built, opt-in when it exists)
 
 If a user ever enables an optional cloud-reasoning provider: explicit opt-in,
@@ -71,6 +130,17 @@ secrets of its own.
 The MVP has essentially no secrets: no backend, no API keys. CI (GitHub
 Actions) uses repository secrets only for release-signing credentials, never
 committed to the repository.
+
+Sentry adds one real credential and one non-credential, and the difference
+matters. A **DSN** is a write-only ingest endpoint: it ships inside the app
+bundle and the browser bundle by necessity, and it cannot read anything back
+out of a Sentry project — it is kept out of git only so a fork does not report
+into this project's issue stream. A **`SENTRY_AUTH_TOKEN`** is a genuine
+credential, used at build time to upload source maps; it is environment-only,
+never `PUBLIC_`-prefixed, and never committed. Both, and where to obtain each,
+are documented in
+[`TODO.md`](https://github.com/kevinle3212/sensebridge/blob/main/TODO.md)
+under "Sentry — environment variables and how to get each one".
 
 ---
 

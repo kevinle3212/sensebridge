@@ -4,6 +4,7 @@
  * and — only on routes that actually ship the pre-rendered narration — the
  * ElevenLabs attribution that audio requires.
  */
+import { getRelativeLocaleUrl } from "astro:i18n";
 import { hasNaturalVoice } from "../data/natural-voice";
 import { POWERED_BY } from "../data/powered-by";
 import { useTranslations, type Locale } from "../i18n";
@@ -22,6 +23,11 @@ const t = useTranslations(locale);
 // plan's 10,000 monthly credits) every time this line changed.
 // See `website/README.md` → "Cost, quota, and licensing".
 const showVoiceCredit = hasNaturalVoice(locale);
+
+// Gated on the same variable as the integration in astro.config.mjs and the
+// consent switch in MonitoringConsent.astro, so this credit can never claim
+// Sentry exists in a build that doesn't carry it.
+const isMonitoringConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
 ---
 
 <footer class="site-footer">
@@ -39,6 +45,26 @@ const showVoiceCredit = hasNaturalVoice(locale);
       <p>{t.footer.tagline}</p>
       <p>
         <a href="https://github.com/kevinle3212/sensebridge">{t.footer.githubLink}</a>
+      </p>
+      {
+        /* On every page, not only the home page: the consent switch lives at
+          the other end of this link, and a preference you can only reach from
+          one route is not one you can withdraw as easily as you gave it.
+          `getRelativeLocaleUrl` keeps a reader inside their own locale. */
+      }
+      <p>
+        <a href={getRelativeLocaleUrl(locale, "/privacy")}>{t.footer.privacyLink}</a>
+      </p>
+      {
+        /* Also on every page, and for a requirement rather than a courtesy:
+          the European Accessibility Act and EN 301 549 expect the accessibility
+          statement to be reachable from anywhere in the service, including from
+          the page where a reader has just hit the barrier they want to report. */
+      }
+      <p>
+        <a href={getRelativeLocaleUrl(locale, "/accessibility")}>
+          {t.footer.accessibilityLink}
+        </a>
       </p>
       <p>{t.footer.notAvailable}</p>
       {
@@ -89,6 +115,23 @@ const showVoiceCredit = hasNaturalVoice(locale);
           ))
         }
       </p>
+      {
+        // Voluntary credit, so it gets the same flat-glyph treatment as the
+        // Powered By row rather than the circular badge reserved for the
+        // ElevenLabs attribution the free-plan licence actually compels.
+        // Gated on `isMonitoringConfigured`: a build with no DSN carries no
+        // Sentry integration at all, and this line would be false in it.
+        isMonitoringConfigured && (
+          <p class="monitoring-credit">
+            <span class="powered-by-item">
+              <svg class="powered-by-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M13.91 2.505c-.873-1.448-2.972-1.448-3.844 0L6.904 7.92a15.478 15.478 0 0 1 8.53 12.811h-2.221A13.301 13.301 0 0 0 5.784 9.814l-2.926 5.06a7.65 7.65 0 0 1 4.435 5.848H2.194a.365.365 0 0 1-.298-.534l1.413-2.402a5.16 5.16 0 0 0-1.614-.913L.296 19.275a2.182 2.182 0 0 0 .812 2.999 2.24 2.24 0 0 0 1.086.288h6.983a9.322 9.322 0 0 0-3.845-8.318l1.11-1.922a11.47 11.47 0 0 1 4.95 10.24h5.915a17.242 17.242 0 0 0-7.885-15.28l2.244-3.845a.37.37 0 0 1 .504-.13c.255.14 9.75 16.708 9.928 16.9a.365.365 0 0 1-.327.543h-2.287c.029.612.029 1.223 0 1.831h2.297a2.206 2.206 0 0 0 1.922-3.31z" />
+              </svg>
+              {t.footer.monitoringCredit}
+            </span>
+          </p>
+        )
+      }
     </div>
   </div>
 </footer>

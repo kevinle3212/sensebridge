@@ -2,9 +2,12 @@
 #
 # setup.sh — check the local toolchain matches docs/ENVIRONMENT.md.
 #
-# Required tooling (blocks): Xcode/xcodebuild, Swift, Git.
-# Swift lint/format tooling (advisory only until app/ exists;
-# scripts/lint.sh no-ops the same way ci.yml does).
+# Required tooling (blocks): Git everywhere; Xcode/xcodebuild + Swift on
+# macOS only, since app/ is a macOS-only Xcode project (see
+# docs/ENVIRONMENT.md#platform-support) — not applicable on Linux/Windows,
+# where this script instead checks the website/docs/tooling path.
+# Swift lint/format tooling (advisory only, macOS-only — scripts/lint.sh
+# skips the same way on other platforms).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -33,8 +36,13 @@ check_advisory() {
 }
 
 echo "== Required =="
-check_required "Xcode command line tools" xcodebuild
-check_required "Swift" swift
+if [ "$(uname -s)" = Darwin ]; then
+	check_required "Xcode command line tools" xcodebuild
+	check_required "Swift" swift
+else
+	echo "n/a  Xcode command line tools — app/ is macOS-only, not required on $(uname -s) (see docs/ENVIRONMENT.md)"
+	echo "n/a  Swift — app/ is macOS-only, not required on $(uname -s) (see docs/ENVIRONMENT.md)"
+fi
 check_required "Git" git
 
 echo

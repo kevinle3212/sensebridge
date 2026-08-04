@@ -31,4 +31,14 @@ if [ -d .gitnexus ]; then
 	echo "post-merge: GitNexus knowledge graph may be stale — run 'gitnexus analyze' (or 'node .gitnexus/run.cjs analyze') to refresh it." >&2
 fi
 
+# Refresh website/tsconfig.debug.json's diagnostics output (.tsbuildinfo.debug,
+# trace/) whenever landing on main with website source changes — deliberately
+# NOT wired into pre-push, pre-commit, or any test/CI job: it's a deep,
+# non-blocking diagnostics pass (see the config's own header comment), not a
+# gate. Best-effort only; a failure here must never fail the merge.
+if [ "$(git rev-parse --abbrev-ref HEAD)" = "main" ] && echo "$CHANGED" | grep -qE '^website/(src/|tsconfig)'; then
+	echo "post-merge: refreshing website/tsconfig.debug.json diagnostics output..." >&2
+	npm --prefix website run typecheck:debug >/dev/null 2>&1 || echo "post-merge: typecheck:debug exited non-zero (expected — it's a diagnostics pass, see tsconfig.debug.json's header comment); output refreshed anyway." >&2
+fi
+
 exit 0

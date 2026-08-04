@@ -52,6 +52,30 @@
         // elsewhere still fails CI.
         "files": ["src/i18n/index.ts"],
         "rules": ["deslop/unused-export"]
+      },
+      {
+        // `useTranslations` (src/i18n/index.ts) is a plain synchronous
+        // dictionary lookup — `isLocale(locale) ? translations[locale] :
+        // translations[defaultLocale]` — not a React hook. It is called at
+        // the top of Astro component frontmatter, which is Astro's own
+        // server-rendered setup scope, never a React render. React Doctor's
+        // rules-of-hooks rule pattern-matches the `use` prefix without
+        // framework awareness of `.astro` files, so every call site trips it.
+        //
+        // Verified 2026-08-04: the function's body (linked above) has no
+        // hook call, no conditional/loop-nested invocation, nothing
+        // rules-of-hooks actually protects against.
+        //
+        // All 16 `.astro` files under src/components/ and src/layouts/ call
+        // `useTranslations` and would trip this identically; these three are
+        // the ones this PR touches. A future PR editing any of the other 13
+        // will hit the same false positive and can extend this list.
+        "files": [
+          "src/components/AccessibilityPage.astro",
+          "src/components/MonitoringConsent.astro",
+          "src/components/PrivacyPage.astro"
+        ],
+        "rules": ["react-doctor/rules-of-hooks"]
       }
     ]
   }

@@ -1,0 +1,80 @@
+---
+/**
+ * The published accessibility statement at `/accessibility`, shared by every
+ * locale's page file exactly as `PrivacyPage.astro` is.
+ *
+ * It exists as a page, not merely as `legal/ACCESSIBILITY_STATEMENT.md`,
+ * because the European Accessibility Act and EN 301 549 require the statement
+ * and its feedback route to be published on the service itself — a statement a
+ * reader has to find in a source repository has not been published to them.
+ *
+ * The two documents are kept deliberately consistent: this page is the reader's
+ * version, the file in `legal/` is the complete one, and neither may claim a
+ * check the other does not. Content lives in `src/i18n/*.ts` under
+ * `accessibilityPage` so a missing translation is a compile error rather than a
+ * locale quietly serving English.
+ */
+import styles from "./PrivacyPage.module.scss";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { defaultLocale, useTranslations, type Locale } from "../i18n";
+
+const locale = (Astro.currentLocale ?? "en") as Locale;
+const t = useTranslations(locale);
+
+/**
+ * The date this statement last changed, as an ISO date so `<time datetime>` is
+ * machine-readable. Bumped by hand for the same reason `PrivacyPage.astro`
+ * bumps its own by hand: a build-time date would restamp the statement on every
+ * unrelated deploy and claim a review that never happened. EN 301 549 expects a
+ * statement to carry the date of its last review, so a false one is worse than
+ * an old one.
+ */
+const UPDATED = "2026-08-01";
+const updatedLabel = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
+  new Date(`${UPDATED}T00:00:00Z`),
+);
+
+const showAuthoritative = locale !== defaultLocale;
+---
+
+<BaseLayout
+  title={t.accessibilityPage.title}
+  description={t.accessibilityPage.description}
+  ambient={false}
+  pageLoader={false}
+>
+  {
+    /* Same reasoning as the privacy notice: someone opening this page is
+      usually here because something did not work for them, and an ambient
+      animation in front of that is decoration charged to the worst moment. */
+  }
+  <article class={styles.notice}>
+    <div class="wrap">
+      <h1 class={styles.heading}>{t.accessibilityPage.heading}</h1>
+      <p class={styles.lede}>{t.accessibilityPage.lede}</p>
+      <p class={styles.meta}>
+        {t.accessibilityPage.updated}
+        <time datetime={UPDATED}>{updatedLabel}</time>
+      </p>
+      {showAuthoritative && <p class={styles.meta}>{t.accessibilityPage.authoritative}</p>}
+
+      {
+        t.accessibilityPage.sections.map((section) => (
+          <section class={styles.section}>
+            <h2 class={styles["section-heading"]}>{section.heading}</h2>
+            {section.body.map((paragraph) => (
+              <p>{paragraph}</p>
+            ))}
+            {section.bullets && (
+              <ul class={styles.list}>
+                {section.bullets.map((bullet) => (
+                  <li>{bullet}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ))
+      }
+    </div>
+  </article>
+</BaseLayout>

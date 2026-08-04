@@ -1,6 +1,8 @@
 {
   "defaults": {
     "standard": "WCAG2AA",
+    "runners": ["htmlcs", "axe"],
+    "levelCapWhenNeedsReview": "warning",
     "timeout": 30000,
     "chromeLaunchConfig": {
       "args": [
@@ -15,6 +17,12 @@
     "http://127.0.0.1:4321/",
     "http://127.0.0.1:4321/es/",
     "http://127.0.0.1:4321/vi/",
+    "http://127.0.0.1:4321/privacy/",
+    "http://127.0.0.1:4321/es/privacy/",
+    "http://127.0.0.1:4321/vi/privacy/",
+    "http://127.0.0.1:4321/accessibility/",
+    "http://127.0.0.1:4321/es/accessibility/",
+    "http://127.0.0.1:4321/vi/accessibility/",
     "http://127.0.0.1:4321/404",
     "http://127.0.0.1:4321/500",
     "http://127.0.0.1:4321/418",
