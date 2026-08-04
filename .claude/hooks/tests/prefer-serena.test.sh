@@ -16,6 +16,15 @@ trap 'rm -rf "$TMP"' EXIT
 # every nudge assertion fails.
 export TMPDIR="$TMP"
 
+# The nudge-logic assertions below (line count, file type, dedup cache) are
+# testing the hook's decision logic, not its serena-availability gate — that
+# gate has its own dedicated section further down. Without this, every nudge
+# assertion silently depends on serena happening to be on the PATH of whatever
+# machine runs the suite: it passes locally (serena installed) and fails in CI
+# (serena not installed), because the hook's own availability check exits 0
+# before the logic under test ever runs.
+export CLAUDE_SERENA_NUDGE_ASSUME_AVAILABLE=1
+
 # Each case gets a fresh session id so the once-per-session cache never
 # cross-contaminates results. Payloads arrive on stdin and are single-quoted at
 # the call site: embedding escaped double quotes in an argument makes the JSON
@@ -115,9 +124,13 @@ if [ -n "$serena_bin" ]; then
   path_without_serena=$(printf '%s' "$PATH" | tr ':' '\n' | grep -vxF "$serena_dir" | paste -sd: -)
 
   if [ -n "$(PATH="$path_without_serena" command -v jq 2>/dev/null)" ]; then
+    # Explicit 0, not just unset: the whole file exports ASSUME_AVAILABLE=1
+    # above so the nudge-logic assertions run deterministically without
+    # serena installed. This is the one call that must prove the real
+    # availability gate, so it overrides that back off rather than inheriting it.
     assert_silent "no nudge when the serena binary is unavailable" \
       "$(printf '%s' '{"session_id":"absent-1","tool_name":"Read","tool_input":{"file_path":"'"$big"'"}}' \
-        | PATH="$path_without_serena" bash "$HOOK" 2>/dev/null)"
+        | PATH="$path_without_serena" CLAUDE_SERENA_NUDGE_ASSUME_AVAILABLE=0 bash "$HOOK" 2>/dev/null)"
 
     assert_nudge "ASSUME_AVAILABLE=1 overrides the availability check" \
       "$(printf '%s' '{"session_id":"absent-2","tool_name":"Read","tool_input":{"file_path":"'"$big"'"}}' \
