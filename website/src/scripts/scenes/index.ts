@@ -68,9 +68,24 @@ if (allowed) {
     observer.observe(container);
   });
 
-  window.addEventListener("pagehide", () => {
+  // Only a real unload frees the WebGL contexts. A bfcache freeze also fires
+  // `pagehide` (with `persisted: true`), but there the document survives and
+  // comes back untouched — and nothing re-runs this module, because
+  // BaseLayout.astro imports it from a `load` listener and bfcache does not
+  // re-fire `load`. Disposing on that path is a one-way door: the scene is
+  // gone, `.scene-active` is off, and the visitor gets the static fallback art
+  // for the rest of the session. Leaving the scenes mounted also skips
+  // rebuilding renderers, geometry, and shaders on the way back, which is main
+  // -thread work the restore does not need. If the browser drops the GL
+  // context while the page is frozen, core.ts's `webglcontextlost` handler
+  // still tears that scene down and restores its static art.
+  window.addEventListener("pagehide", (event) => {
+    if (event.persisted) {
+      return;
+    }
     mountedScenes.forEach((scene) => {
       scene.dispose();
     });
+    mountedScenes.length = 0;
   });
 }

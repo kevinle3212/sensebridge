@@ -1,0 +1,42 @@
+// Crash-reporting configuration for the SenseBridge app target.
+//
+// Committed, and deliberately sets no DSN of its own. Chained in from
+// `Signing.xcconfig` because Xcode allows a target exactly one config file per
+// build configuration, and that one is already spoken for — this is the rest of
+// that file's job, split out so a file named "Signing" is only ever about
+// signing.
+//
+// A Sentry DSN is not a secret: it is a write-only ingest endpoint, it ships
+// inside the app bundle by necessity, and it cannot be used to read anything
+// out of a Sentry project. It is still left empty here for the same reason
+// `DEVELOPMENT_TEAM` is — it identifies *one* project's Sentry org, and a fork
+// that inherited it would silently post its crashes into this project's issue
+// stream.
+//
+// Put your own in `Sentry.local.xcconfig`, which is gitignored:
+//
+//     SENTRY_DSN = https:/$()/<key>@<org-id>.ingest.us.sentry.io/<project-id>
+//
+// The `/$()/` is not a typo and is not optional. Xcode's xcconfig parser treats
+// `//` as the start of a comment *anywhere* on a line, including inside a URL,
+// so a DSN pasted verbatim silently truncates to `https:` and the app reports
+// nowhere. `$()` expands to nothing and breaks up the `//` so the parser never
+// sees it. This is the single most common way to get this wrong.
+//
+// With no local file, `SENTRY_DSN` stays empty, `Info.plist` carries an empty
+// `SentryDSN`, and `CrashReporting.start` returns without initialising the SDK.
+// A fresh clone therefore builds, runs, and passes its tests with crash
+// reporting simply absent — never half-configured.
+//
+// Configuring a DSN does *not* by itself send anything. Reporting also requires
+// the user to switch on Settings → Diagnostics → "Send crash reports", which is
+// off by default and is the actual consent gate. See CrashReporting.swift and
+// docs/PRIVACY.md.
+//
+// It can also be set for a single command, which is how CI would do it without
+// writing a file:
+//
+//     xcodebuild SENTRY_DSN=https:/$()/... ...
+SENTRY_DSN =
+
+#include? "Sentry.local.xcconfig"

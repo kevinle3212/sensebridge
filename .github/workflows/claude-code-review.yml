@@ -30,6 +30,11 @@ jobs:
       - name: Claude review
         uses: anthropics/claude-code-action@fa7e2f0a29a126f0b81cdcf360561b36e44cf608 # v1
         with:
+          # "Context access might be invalid: ANTHROPIC_API_KEY" from an IDE/Copilot
+          # static checker is expected noise, not a defect: those tools can't verify
+          # secrets against live repo settings (github/vscode-github-actions#533,
+          # #222, #113 — open, unresolved upstream). `actionlint` — this repo's
+          # actual CI-blocking gate — passes clean on this file.
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             Review this pull request as a SenseBridge maintainer. The project is a

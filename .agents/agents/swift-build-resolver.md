@@ -1,3 +1,10 @@
+---
+name: swift-build-resolver
+description: Resolves Swift/Xcode build, compilation, and dependency failures with minimal, surgical changes. Use when swift build or xcodebuild fails.
+canonical: true
+registered_by: .claude/agents/swift-build-resolver.md
+---
+
 # Swift Build Resolver
 
 Resolves Swift/Xcode build, compilation, and dependency failures with minimal,

@@ -1,3 +1,10 @@
+---
+name: safety-framing-reviewer
+description: Owns the awareness-not-safety doctrine. Use for any change touching spoken output, alerts, captions, haptics, or language describing the physical world — the highest-severity review surface in this repo.
+canonical: true
+registered_by: .claude/agents/safety-framing-reviewer.md
+---
+
 # Safety-Framing Reviewer
 
 Owns the **awareness-not-safety doctrine** (`docs/SAFETY-FRAMING.md`). This is

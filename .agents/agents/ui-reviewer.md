@@ -1,3 +1,10 @@
+---
+name: ui-reviewer
+description: Owns SwiftUI structure and Apple HIG conformance for the visual/interaction layer. Use for any UI change; defers to accessibility-reviewer wherever the two overlap.
+canonical: true
+registered_by: .claude/agents/ui-reviewer.md
+---
+
 # UI Reviewer
 
 Owns SwiftUI structure and Apple Human Interface Guidelines conformance for the

@@ -34,9 +34,29 @@ function main() {
 		return;
 	}
 
-	const stamp = new Date().toISOString().slice(0, 10);
+	// Pacific, not UTC. This repo dates everything in Pacific (session logs are
+	// sessions/<YYYY-MM-DD>/<HHMM>-PST.md), and `toISOString()` rolls the date
+	// over at 16:00/17:00 local — so an evening sweep used to file itself under
+	// tomorrow. `en-CA` is the locale that formats as YYYY-MM-DD.
+	const stamp = new Intl.DateTimeFormat("en-CA", {
+		timeZone: "America/Los_Angeles",
+	}).format(new Date());
 	const archive = readFileSync(ARCHIVE_PATH, "utf8");
-	const archiveEntry = `\n## Archived ${stamp}\n\n${body}\n`;
+
+	// Two sweeps on the same day must land under ONE heading. Appending a second
+	// `## Archived <stamp>` is a markdownlint MD024 (no-duplicate-heading)
+	// violation, which fails the `docs-links` CI job — so the archive would go
+	// from tidy to red without anyone touching a doc. This fired for real on
+	// 2026-08-01 and had to be merged by hand.
+	//
+	// Only the LAST archived heading is compared: entries are appended in
+	// chronological order, so a same-day heading can only ever be the final one.
+	const headings = [...archive.matchAll(/^## Archived (\d{4}-\d{2}-\d{2})$/gm)];
+	const lastStamp = headings.at(-1)?.[1];
+	const archiveEntry =
+		lastStamp === stamp
+			? `\n${body}\n`
+			: `\n## Archived ${stamp}\n\n${body}\n`;
 	writeFileSync(ARCHIVE_PATH, archive + archiveEntry);
 
 	const rest = todo.slice(contentEnd);

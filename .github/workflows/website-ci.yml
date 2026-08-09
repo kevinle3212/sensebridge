@@ -4,11 +4,16 @@ name: Website CI
 # that path so it never runs (and never blocks) app-only PRs.
 
 on:
+  # Every push on every branch, plus every pull request. A merge into `main` is
+  # itself a push to `main`, so those three events are all covered here.
+  #
+  # Pushing to a branch that already has a PR open runs this twice. That is the
+  # accepted cost of gating branch work: the alternative is a feature branch
+  # whose first accessibility or safety-framing failure surfaces only once a PR
+  # exists. `concurrency` below still cancels superseded runs on the same ref.
   push:
-    branches: [main]
     paths: ["website/**", ".github/workflows/website-ci.yml"]
   pull_request:
-    branches: [main]
     paths: ["website/**", ".github/workflows/website-ci.yml"]
 
 permissions:
@@ -50,6 +55,13 @@ jobs:
         run: npm run format
       - name: Astro type check
         run: npm run typecheck
+      - name: TypeScript project type check
+        # `astro check` above validates .astro files; this validates the plain
+        # .ts under src/scripts and src/i18n against tsconfig.json. Both are in
+        # the local `npm run check` chain as `typecheck:all`, but only the first
+        # was ever wired into CI — so a type error in a script file could reach
+        # main with a green pipeline.
+        run: npm run typecheck:tsc
       - name: Build
         run: npm run build
       - name: Safety disclaimer verbatim in built output
@@ -69,6 +81,13 @@ jobs:
         # the canonical link. It fails if anyone bakes a specific deployment's
         # domain back into tracked source — see website/.env.example.
         run: npm run check:site-url
+      - name: Enhanced contrast (WCAG 1.4.6, 7:1) holds for every text token
+        # legal/ACCESSIBILITY_STATEMENT.md and the /accessibility page both
+        # publish the 7:1 Level AAA ratio as a claim. pa11y cannot prove it —
+        # both its engines decline to compute a ratio behind this site's
+        # gradient link underline — so the palette is proved at its source
+        # instead. See website/scripts/check-contrast.js.
+        run: npm run check:contrast
       - name: Natural-voice narration freshness
         # No network I/O, no secret needed — see website/README.md's
         # "Read-aloud controls" section. Skips gracefully (exit 0) until the
@@ -107,6 +126,55 @@ jobs:
         # built site so the glasses stage's drag gesture is proven by CI
         # instead of by someone dragging it by hand.
         run: npm run check:scene-drag
+      - name: Back/forward-cache restore smoke check
+        # Same reason as the drag check above for living here: it needs this
+        # job's Chrome. Proves a browser-back onto the site brings its 3D
+        # scenes back, which only shows up on a second visit to the same
+        # document and so is invisible to every other gate.
+        run: npm run check:bfcache
+
+  monitoring:
+    name: Crash-reporting consent + CSP gates
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: website
+    # Sentry is the single sanctioned exception to this project's no-telemetry
+    # doctrine, and the whole exception rests on "off until you turn it on, and
+    # off means never downloaded" (CLAUDE.md, docs/PRIVACY.md, and the published
+    # /privacy notice all state it in those terms). check:consent is the only
+    # thing that proves it. It existed as an npm script but ran in no workflow,
+    # so nothing enforced the claim the privacy policy makes.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build with monitoring configured
+        # A syntactically valid but non-routable DSN, not a secret. It exists
+        # only to make the consent control render so the checks below can drive
+        # it; nothing is ever transmitted, because the whole point of the test
+        # is that consent starts off. Without it check-consent exits 0 with
+        # "SKIPPED — this is not a pass", which is the worst possible CI
+        # outcome: a gate that reports success while testing nothing.
+        env:
+          PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+        run: npm run build
+      - name: Consent is off by default and off means never downloaded
+        env:
+          PUBLIC_SENTRY_DSN: https://examplePublicKey@o0.ingest.sentry.io/0
+        run: npm run check:consent
+      - name: Production CSP does not break the built site
+        # Run against the monitoring-configured build on purpose: that build
+        # has the strictest policy, since Sentry adds a connect-src origin. A
+        # policy that silently drops a stylesheet would ship a legally-required
+        # notice as unstyled, unreadable text.
+        run: npm run check:csp
 
   design-qa:
     name: Impeccable design detectors

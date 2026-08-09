@@ -30,7 +30,24 @@ project_name: "sensebridge"
 # When using multiple languages, the first language server that supports a given file will be used for that file.
 # The first language is the default language and the respective language server will be used as a fallback.
 # Note that when using the JetBrains backend, language servers are not used and this list is correspondingly ignored.
-languages: [markdown, html, scss, bash, swift, typescript, yaml, json, toml]
+# Pruned 2026-08-01. Was: [markdown, html, scss, bash, swift, typescript, yaml,
+# json, toml, rust]. Ten language servers produced a 112MB cache and a slow
+# start on every session, for two that carry navigable symbols. Dropped:
+#   - rust    — zero .rs files in the repo (its cache was 0 bytes)
+#   - markdown, json, yaml, toml, html, scss, bash — no symbol graph worth
+#     navigating; `Grep`/`rg` answers those faster than an LSP round-trip, and
+#     they accounted for ~21MB of cache and seven server startups per session.
+# Kept swift (the app, 63 files) and typescript (the website, .ts/.js/.mjs).
+# Re-evaluated 2026-08-03 (yaml specifically, for GitHub Actions workflows):
+# still out, for a stronger reason than the above — yaml-language-server has
+# no `referencesProvider` at all (confirmed in its own capabilities
+# advertisement and in solidlsp's yaml_language_server.py), so
+# find_referencing_symbols could never work on a job id or a `needs:` edge
+# regardless of cache cost. What it does return — every YAML key and array
+# index as a "symbol" — measured ~4.5x the source bytes (up to 11.5x on small
+# files). For "where is job X referenced", `rg -n '^  [a-z_-]+:' file.yml`
+# plus a targeted Read is both cheaper and the only thing that actually works.
+languages: [swift, typescript]
 
 # the encoding used by text files in the project
 # For a list of possible encodings, see https://docs.python.org/3.11/library/codecs.html#standard-encodings
@@ -71,7 +88,26 @@ additional_workspace_folders: []
 # list of additional paths to ignore in this project.
 # Same syntax as gitignore, so you can use * and **.
 # Note: global ignored_paths from serena_config.yml are also applied additively.
-ignored_paths: []
+# `ignore_all_files_in_gitignore` keeps Serena itself out of these, but the
+# TypeScript language server resolves imports on its own and would walk
+# `website/node_modules` (630MB) regardless — naming it here is what actually
+# bounds tsserver.
+#
+# Correction 2026-08-03: the 90MB attributed to node_modules below was wrong.
+# The live cache has zero node_modules files indexed (this ignore works) and
+# is still ~90MB in typescript/ alone — the real cause was five untracked
+# mirrors of the same vendored `skills/impeccable/scripts` bundle
+# (.claude, .cursor, .gemini, .agents, .github — 6.6MB each, 33MB total,
+# 97.3% of the TS symbol cache), which `ignore_all_files_in_gitignore` never
+# caught because most of those mirrors aren't gitignored, they're untracked.
+ignored_paths:
+  - "**/node_modules/**"
+  - "**/.build/**"
+  - "**/DerivedData/**"
+  - "**/dist/**"
+  - "**/.astro/**"
+  - "**/.venv/**"
+  - "**/skills/impeccable/scripts/**"
 
 # whether the project is in read-only mode
 # If set to true, all editing tools will be disabled and attempts to use them will result in an error

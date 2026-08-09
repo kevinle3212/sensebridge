@@ -17,7 +17,8 @@
 // tracked file (useful for a one-off repo-wide sweep).
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, realpathSync, statSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const SENSITIVE_EXTENSIONS = [
 	".p12",
@@ -65,9 +66,16 @@ const SECRET_PATTERNS = [
 	// machine-specific path into a generated/committed file instead of
 	// resolving it at runtime — a personal-machine leak, not a credential,
 	// but still shouldn't ship in a public repo.
-	[/\/Users\/[a-zA-Z0-9_.-]+\//, "Hardcoded macOS home-directory path"],
-	[/\/home\/[a-zA-Z0-9_.-]+\//, "Hardcoded Linux home-directory path"],
-	[/[A-Z]:\\Users\\[a-zA-Z0-9_.-]+\\/, "Hardcoded Windows user-profile path"],
+	// The `(?!\.+[/\\])` guard skips a segment made only of dots. Docs here
+	// deliberately elide the username as `/Users/.../sensebridge`, and `.` is
+	// inside the character class, so without it every such doc line is a
+	// finding — this gate reported `docs/TOOLING.md` on 2026-08-01 for exactly
+	// that. No real username is all dots, so nothing detectable is lost, and a
+	// gate that cries wolf is worse than none: it trains the next person to
+	// reach for `--no-verify`.
+	[/\/Users\/(?!\.+[/\\])[a-zA-Z0-9_.-]+\//, "Hardcoded macOS home-directory path"],
+	[/\/home\/(?!\.+[/\\])[a-zA-Z0-9_.-]+\//, "Hardcoded Linux home-directory path"],
+	[/[A-Z]:\\Users\\(?!\.+[/\\])[a-zA-Z0-9_.-]+\\/, "Hardcoded Windows user-profile path"],
 ];
 
 const MAX_SCAN_BYTES = 1_000_000;
@@ -142,12 +150,38 @@ function ignoredButStaged(files) {
 	}
 }
 
-function isSensitiveByName(path) {
+/**
+ * Reports whether a path names credential or signing material by extension or
+ * filename, without reading it.
+ *
+ * Exported because `.claude/hooks/guard-mcp-sensitive-paths.mjs` denies MCP
+ * tool calls against these same paths at run time. That guard must agree with
+ * this commit-time gate exactly: two hand-maintained copies of the taxonomy
+ * would drift, and the direction they drift in is a file this gate blocks from
+ * a commit but the guard happily hands to an MCP tool first.
+ *
+ * Name-based only — a caller that also needs the content scan runs the script.
+ *
+ * @param {string} path Repo-relative or absolute path; only its shape matters.
+ * @returns {boolean} True when the name alone marks it sensitive.
+ */
+export function isSensitiveByName(path) {
 	const lower = path.toLowerCase();
 	if (SENSITIVE_EXTENSIONS.some((ext) => lower.endsWith(ext))) return true;
 	const base = path.split("/").pop() ?? path;
 	return SENSITIVE_FILENAMES.some((re) => re.test(base));
 }
+
+/**
+ * Paths exempt from the name-based check because they are deliberately public.
+ *
+ * Exported alongside {@link isSensitiveByName} so the run-time guard honours
+ * the same carve-outs — without it, `.env.example` (key names, no values) would
+ * be unreadable by MCP tools while every other tool could read it.
+ *
+ * @type {ReadonlySet<string>}
+ */
+export const nameCheckExempt = NAME_CHECK_EXEMPT;
 
 function scanContent(path) {
 	let size;
@@ -217,4 +251,21 @@ function main() {
 	process.exitCode = 1;
 }
 
-main();
+// Run only when invoked as a script. Without this guard, importing
+// `isSensitiveByName` from a PreToolUse hook would shell out to git and scan
+// the index on every single MCP tool call — turning a name test into a repo
+// walk, inside the latency budget of a hook.
+//
+// `realpathSync` on both sides so a symlinked or relatively-invoked argv[1]
+// still matches; wrapped because argv[1] can be absent (`node -e`, REPL) or
+// point at something unresolvable, and neither case should throw here.
+function invokedAsScript() {
+	if (!process.argv[1]) return false;
+	try {
+		return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+	} catch {
+		return false;
+	}
+}
+
+if (invokedAsScript()) main();

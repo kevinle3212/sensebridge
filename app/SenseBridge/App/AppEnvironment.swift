@@ -53,6 +53,12 @@ final class AppEnvironment {
             intensity: loaded.hapticIntensity
         )
 
+        // Started here, at the first moment settings are known, so a crash in
+        // the rest of launch is still caught — but only for a user who already
+        // opted in on a previous run. `apply` no-ops when this build carries no
+        // DSN, which is every build that has not configured one.
+        CrashReporting.apply(isEnabled: loaded.crashReportingEnabled)
+
         // Deliberately no fallback here. An earlier version substituted
         // `selectableProfiles.first` for an undeliverable persisted profile
         // and saved it — which is `.blind`, so a Deaf user was silently
@@ -174,6 +180,11 @@ final class AppEnvironment {
     /// portions to the shared targets, which hold their own copies.
     func save() {
         settingsStore.save(settings)
+        // Takes effect on the toggle, not on the next launch. Consent that
+        // needs a relaunch to be honoured is not consent — a user who switches
+        // reporting off expects it off now, and one who switches it on expects
+        // the next crash to be caught.
+        CrashReporting.apply(isEnabled: settings.crashReportingEnabled)
         let voice = SpeechVoiceSettings(
             rate: settings.speechRate,
             pitch: settings.speechPitch,

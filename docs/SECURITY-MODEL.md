@@ -22,6 +22,19 @@ data to leak between accounts, because there are no accounts. What remains
 in scope is what's on the device itself, and what's used to build and ship
 it — both covered below.
 
+**The one outbound path.** Since 2026-07-31 the app links Sentry for crash
+reporting. It is off by default and starts only when the user switches on
+Settings → Diagnostics, so an install that has not been touched has exactly
+the surface described above. When it *is* on, the addition to the threat
+model is: a third-party SDK with signal and exception handlers installed, and
+an HTTPS egress to Sentry's ingest endpoint carrying stack traces, device
+model, and OS/app version. Breadcrumbs, screenshots, view hierarchies,
+network tracking, and method swizzling are all disabled in code, and
+`CrashReporting.scrub` strips user, request, server-name, and device-name
+fields before transmission. See
+[`docs/PRIVACY.md`](PRIVACY.md#crash-reporting-opt-in-off-by-default) and
+`app/SenseBridge/App/CrashReporting.swift`.
+
 ## Trust boundaries
 
 ```text

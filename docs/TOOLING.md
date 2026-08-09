@@ -4,255 +4,100 @@ title: Tooling — Global vs. Project Decision Matrix
 
 # Tooling — Global vs. Project Decision Matrix
 
-Every development/AI tool considered for SenseBridge, where it lives, and why.
+Every development/AI tool SenseBridge uses, where it lives, and how to run it.
 The standing rule: **global by default; project-level only when the repo needs
 a pinned, portable, or shareable config.** Fewer, higher-quality tools beat
-more tools. Last reviewed 2026-07-11.
+more tools.
+
+**This file is current state.** The decision history behind every row — why a
+tool was chosen or refused, what broke, what superseded what — lives in
+[`docs/archive/TOOLING-DECISIONS.md`](archive/TOOLING-DECISIONS.md), split out
+2026-08-01 when this file had reached 92 KB (~23k tokens to read) and had
+become session-by-session archaeology rather than a reference. Look a tool up
+by name there before changing anything about it; the reasoning is usually
+load-bearing.
 
 SenseBridge is a Swift/SwiftUI iOS app with **no Node or Python stack in the
-app itself** — that fact still decides most rows below. As of 2026-07-11 the
-repo also has a small, deliberately separate Node/web stack under
-[`website/`](https://github.com/kevinle3212/sensebridge/tree/main/website)
-(the marketing site) — see that row for scope. It
-does not change anything about the app: no Node, Python, backend, container,
+app itself** — that fact still decides most rows below. The repo also has a
+small, deliberately separate Node/web stack under `website/` (the marketing
+site). It changes nothing about the app: no Node, Python, backend, container,
 or orchestration platform touches `app/`.
 
 ## Project-level (in this repository)
 
-| Tool / config | Where | Why project-level |
+| Tool / config | Where | What it does |
 | --- | --- | --- |
-| Git hooks | `.githooks/` (`pre-commit`, `commit-msg`, `pre-push`, `post-commit`, `post-checkout`, `post-merge`) | Shareable quality gate; enabled by `scripts/setup.sh` via `core.hooksPath`. `commit-msg` prefers commitlint (see the "Commitlint" row below) when the root `npm ci` has been run, falling back to a dependency-free bash regex otherwise, so the hook still works with no Node installed. `pre-commit` also lints staged `.github/workflows/*.yml` with actionlint (advisory if not installed). `pre-push` mirrors the CI build gate and blocks direct pushes to `main`, and also runs a local `osv-scanner` dependency scan mirroring `security.yml`'s osv-scan job when `osv-scanner` is installed (`brew install osv-scanner`; advisory-only if it isn't, same as the `ggshield` row below); `post-merge` flags manifest/toolchain files a pull just changed. `post-commit`/`post-checkout`/`post-merge` also each carry a hand-maintained, advisory-only GitNexus staleness reminder (see the GitNexus row) — separate from the Graphify auto-rebuild blocks those first two files otherwise contain |
-| Commitlint | Root `package.json` (devDependencies only, no runtime deps), `commitlint.config.js`, `package-lock.json` | Added 2026-07-23 to keep manually-typed commits (not just agent-authored ones) consistent with the conventional-commit format — a local hook is always bypassable (`--no-verify`, or Node simply not installed), so `.github/workflows/commitlint.yml` runs it blocking in CI over every commit in a PR's range plus the PR title (the eventual squash-merge message). Rules in `commitlint.config.js` mirror `.githooks/commit-msg`'s bash-regex semantics (same 11 types, 72-char subject cap); the bash regex remains the dependency-free local fallback, so this is additive, not a replacement. This is the repo's first root-level Node surface — deliberately minimal (no scripts, no runtime deps) so it stays a policy tool, not a build stack |
-| Actionlint | `.githooks/pre-commit` (staged-workflow-scoped, advisory), `.github/workflows/actionlint.yml` (blocking) | Added 2026-07-23 alongside Commitlint. Lints `.github/workflows/*.yml` for syntax/expression errors and shellchecks `run:` blocks. No official GitHub Action exists for it; CI downloads the pinned release binary and verifies its SHA256 before running, tighter supply-chain control than trusting a third-party action wrapper (see the workflow file's header comment for the version-bump procedure) |
-| Markdownlint | `.markdownlint.jsonc` (rules), `.markdownlint-cli2.jsonc` (CLI globs/ignores — repeats `.markdownlintignore`'s excludes explicitly since the CLI doesn't appear to load that file automatically), `.githooks/pre-commit` (whole-repo, advisory alongside the other node-gated checks), `.github/workflows/ci.yml`'s `docs-links` job (blocking) | Config existed before either was wired in; added 2026-07-25. `MD033` allowlists `img`/`details`/`summary` (headshot photos, collapsible sections already used deliberately) rather than rewriting that markup — everything else stays flagged. Deliberately unpinned (`npx markdownlint-cli2`, resolved fresh each run) rather than a `website/`-style devDependency, since its globs cover the whole repo, not just one directory |
-| Claude Code hooks | `.claude/hooks/` (six scripts), wired in `.claude/settings.json` | Session-level guardrails the git hooks can't see: `cap-large-read.sh` + `warn-duplicate-read.sh` (PreToolUse Read — token discipline), `limit-agent-fanout.sh` (PreToolUse Agent — subagent cap), `guard-main-commit.sh` (PreToolUse Bash — denies `git commit` on `main`, complementing `.githooks/pre-push`), `check-md-links.sh` (PostToolUse Edit/Write — flags broken relative links in edited `.md` files, advisory), `session-log-reminder.sh` (Stop — nudges the hourly session log per `CLAUDE.md`) |
-| gitleaks config | `.gitleaks.toml` | Shared by the pre-commit hook and any local sweep; CI uses TruffleHog (complementary: local pattern scan pre-commit, verified-credential scan on push). Extends the default ruleset with **AI-provider key rules the default misses** — verified 2026-07-16 against gitleaks 8.30.1, which caught only `github-pat`/`gcp-api-key` and scanned Anthropic, both OpenAI formats, and Hugging Face **clean**. `sk-ant-` is this repo's likeliest leak. Carries **no path allowlist**: it previously excluded `docs/**.md` + `audits/**.md`, so an identical GitHub PAT was blocked at the repo root and silently allowed in `docs/`. False positives go to `.gitleaksignore` by fingerprint, never back into a blanket path rule |
-| ggshield config | `.gitguardian.yaml` | Third, independent secret-detection layer (added 2026-07-20): GitGuardian's hosted detector set, run locally by `.githooks/pre-commit` (advisory if `ggshield` isn't installed/authenticated) and in CI by `.github/workflows/security.yml`'s `ggshield` job. `exit_zero: false` — strict, any finding fails the scan. Same no-path-allowlist stance as `.gitleaks.toml` and for the same reason; false positives go in `secret.ignored_matches` by fingerprint. CI needs the `GITGUARDIAN_API_KEY` repository secret (owner action, not yet set) or the job fails closed |
-| Sensitive-file check | `tools/check-sensitive-files.mjs` | Stdlib-only Node script; the **second local layer, not a duplicate** of gitleaks — pre-commit runs gitleaks only when installed and silently skips it otherwise, so on a machine without it this is the sole gate before a public push. Guards signing/credential material (iOS-specific formats), provider tokens, hardcoded machine paths, and **gitignored-but-force-added files** (`git add -f NOTES.local.md`), which it detects via `git check-ignore --no-index` rather than re-encoding `.gitignore` — a second copy of those rules would drift, and negations like `!tmp/README.md` make hand-rolled matching wrong both ways. `--no-index` is load-bearing: without it, check-ignore consults the index and never reports a staged path as ignored, which is precisely the case being caught |
-| SwiftLint / SwiftFormat | `scripts/lint.sh` (configs land with `app/`) | Binaries are global (Homebrew); the invocations and future configs are repo-specific |
-| Serena MCP | `.mcp.json`, `.serena/project.yml` (`languages:`) | Per-project semantic indexing; least privilege — local process, no network, project-scoped. Update `languages:` whenever a new language is introduced (e.g. `swift` once `app/` lands) so its language server starts |
-| CI/CD | `.github/workflows/` | CI, security scanning (CodeQL + TruffleHog + GitGuardian + OSV + Semgrep + GitHub Dependency Review + sensitive files), Claude PR review, Dependabot auto-merge |
-| Agent instructions | `AGENTS.md` + thin pointers (`CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.github/copilot-instructions.md`) | One canonical instruction file, agent-agnostic; pointers prevent lock-in and duplication |
-| Per-agent configs | `.codex/` (AGENTS.md, `config.toml`, `hooks.json`), `.gemini/settings.json`, `.copilot/` (instructions + MCP), `.continue/rules/`, `.windsurf/` (rules + MCP), `.openclaw/README.md`, `.cursor/mcp.json`, `.vscode/mcp.json` (VS Code's own Copilot Chat agent mode — separate from `.copilot/mcp-config.json`, which is the Copilot CLI) | Each wires Serena MCP and defers to root `AGENTS.md` — configuration without instruction duplication |
-| Continue config template | `.continue/config.template.yaml`, `.continue/README.md` | Example only, never active config (Continue reads the user-global `~/.continue/config.yaml`); shareable starting point so a new machine doesn't hand-roll the role/model setup documented in [`docs/OLLAMA.md`](OLLAMA.md) |
-| Skills / reviewer personas | `.agents/`, `.claude/`, `.cursor/`, `.gemini/`, `.github/` skills dirs | Project-doctrine-specific (safety framing, accessibility, model licensing); includes the `council` decision-review skill, the `website-design` integration router, and the vendored `seo-schema`/`seo-technical` offline SEO skills (from `AgriciDaniel/claude-seo`, MIT — see `CREDITS.md`), all mirrored across all five harness dirs via `tools/sync-skills.mjs` (next row) |
-| Mirrored-skill sync | `tools/sync-skills.mjs`; enforced by `.githooks/pre-commit` and CI's docs-links job (both run `--check`) | Canonical source for hand-mirrored skills is `.claude/skills/<name>/`; the tool regenerates the `.agents`/`.cursor`/`.gemini`/`.github` copies from it, applying the two deliberate per-harness path substitutions as data-driven rules, so the copies **cannot drift silently**. Edit only the canonical copy, then run `node tools/sync-skills.mjs`. Excludes `impeccable`, which is vendor-managed (`npx impeccable check`/`update`) with intentionally different per-provider content — and, for the same reason, `react-doctor` (see the "React Doctor, React Scan" row above), which is vendor-managed by its own `install`/`ci install` CLI, not this tool |
-| Review companions | `REVIEW.md` (root), `.claude/commands/security-review.md` | Extend the built-in `/code-review` and `/security-review` with project severity overrides, skip paths, and on-device/privacy/model-license checks — additive, not a fork. See "Built-in reviews — extended, not replaced" below |
-| Audit system | `audits/` | Append-only; process docs (`README.md`, `GOVERNANCE.md`, `AGENT-GUIDE.md`, `scripts/`, `templates/`) are tracked, but report findings themselves are gitignored/local-only — see `audits/README.md` |
-| Marketing website | `website/` (`package.json`, `.stylelintrc.json`, `.prettierrc`, `eslint.config.mjs`, mostly static HTML/CSS via Astro) | The one deliberate exception to "no web stack" — copy still follows `docs/SAFETY-FRAMING.md`. Node tooling (Stylelint, Prettier, ESLint) is scoped to this directory only via `.github/workflows/website-ci.yml` (path-filtered) and its own `dependabot.yml` entry. `eslint.config.mjs` is a strict flat config (TypeScript, React Hooks, `jsx-a11y` strict, security). **React (2026-07-20):** `@astrojs/react` is wired in `astro.config.mjs`; React only ships to a page when a component opts into a `client:*` hydration directive (Astro islands), so the zero-JS-by-default posture holds until a component actually needs one — no component uses React yet, this is framework-ready capacity, verified end-to-end (typecheck/lint/build/hydration) but not yet adopted by any real UI; see `website/README.md` |
-| React Doctor, React Scan | `website/package.json` — React Doctor in `devDependencies`, React Scan in **`dependencies`** (added 2026-07-20 alongside the React integration above) | React Doctor (`npm run audit:react`/`npm run doctor`, both `react-doctor --no-telemetry` — `--no-telemetry` is load-bearing for this repo's no-telemetry-by-default posture) is a static audit CLI for AI-agent-written React code (Hooks correctness, a11y, security, perf). Its `install`/`ci install` subcommands were run 2026-07-20, then **manually reconciled to this repo's actual layout** — the upstream CLI assumes npm-root == git-root, which isn't true here (npm root is `website/`, git/agent-config root is the repo root), so its output had to be relocated by hand: skill files → `.claude/skills/react-doctor/`, `.agents/skills/react-doctor/`, `.continue/skills/react-doctor/`, `skills/react-doctor/` (matching this repo's existing per-harness layout, not the tool's own `website/`-nested defaults); agent hooks → `.claude/hooks/react-doctor.mjs` + a merged `PostToolBatch` entry in `.claude/settings.json`, `.cursor/hooks/react-doctor.mjs` + a merged `postToolUse` entry in `.cursor/hooks.json`; the pre-commit integration was hand-rewritten (not the tool's auto-inserted version) to match the existing `cd website && ...`, staged-changes-only pattern already used for `lint-staged` in `.githooks/pre-commit`; the CI workflow was moved from the tool's default `website/.github/workflows/react-doctor.yml` (inert — GitHub Actions never discovers workflows outside the repo-root `.github/workflows/`) to `.github/workflows/react-doctor.yml` with an explicit `directory: website` input, path-filtered like `website-ci.yml`, and the third-party action pinned to the commit behind the `v2` tag (same convention as `security.yml`'s `ggshield` job) — **`blocking: warning` since 2026-07-25** (any finding fails the check, holding the scan at zero; at `blocking: error` the gate was vacuous, because every finding this repo has ever produced was warning-severity). The gate is deliberately "zero findings" rather than a numeric score: React Doctor's score comes from a **remote score API**, and `--no-telemetry` is documented upstream as an alias for `--no-score`, so a printed score would mean egress. Known false positives are suppressed per-file/per-rule with rationale in `website/doctor.config.jsonc` — React Doctor's dead-code pass does not follow imports out of `src/layouts/**`, so components reachable only through `BaseLayout.astro` read as orphaned; no lint rule is weakened (`react-doctor rules list --configured` returns nothing). **Caution for future runs:** the CLI's own `install`/`ci install` **will misplace files again** if re-run naively — always verify output against this repo's actual (root-vs-`website/`) layout before trusting it, and never run it with cwd or `--cwd` pointed anywhere that lacks a clear project root, since it silently falls back to writing into your **global** `~/.claude/`/`~/.cursor/` config when it can't resolve one (this happened once during setup and was cleaned up). **Second caution — `GIT_DIR`:** `react-doctor --staged` resolves its git queries from `website/`, but an inherited `GIT_DIR` beats normal discovery, and git exports `GIT_DIR` to every hook. From a linked worktree (`.claude/worktrees/*`) that value is `.git/worktrees/<name>`, which makes its index-vs-worktree config precondition resolve against the wrong root and abort with "configuration differs between the index and worktree", listing every gitignored `node_modules/**/package.json` — the run passes standalone and fails only inside the hook, which makes it look transient. `.githooks/pre-commit` therefore calls it via `env -u GIT_DIR`; keep that wrapper on any new invocation that can run from a hook. React Scan is a render-profiler for spotting unnecessary re-renders. **There is no `npm run scan` script** — it was removed 2026-07-25 because react-scan 0.5.x's CLI exposes only `init` (a project scaffolder that installs packages and rewrites config), so the old `react-scan http://localhost:4321` invocation failed with `error: unknown command`. The profiler is instead wired as a dev-only inline import in `website/src/layouts/BaseLayout.astro`, gated behind a frontmatter-level `import.meta.env.DEV` check — just run `npm run dev`. It is interactive and browser-driven, emits no pass/fail and no score, and therefore **cannot** be a CI gate. It also still has nothing to profile: since 2026-07-25 `website/` does contain one `.tsx` file (`src/components/StructuredData.tsx`, the schema.org JSON-LD emitter), but it is server-rendered with no `client:*` directive, so no React ever renders in a browser. React Scan only becomes useful once a real hydrated island ships. That dev-only import is why React Scan sits in `dependencies`, not `devDependencies`: Vite resolves the import before dead-code-eliminating the `false` branch, so the package must be physically installed for `npm ci --omit=dev` builds to succeed (see `docker/README.md`'s "Build-time dependencies") — since the site is `output: "static"`, that check is resolved at build time, so the `<script>` tag itself never appears in the built HTML and zero bytes reach a production visitor |
-| Website hosting (Railway) | `docker/` (`Dockerfile`, `Dockerfile.dockerignore`, `nginx.conf.template`, `docker-compose.yml`), `railway.toml` (repo root) | Deploys the static site only — no env vars, no backend, doesn't touch the app's serverless/on-device posture. Requires the Railway service's Root Directory to stay the **repo root** (dashboard setting, not a repo file) since the Dockerfile build context spans both `docker/` and `website/`. See `docker/README.md` and `website/README.md`'s Deployment section for the full setup flow |
-| Impeccable design-QA | Skill in the 5 harness dirs; design context in `.agents/context/`; generated state in `.impeccable/` — **all rooted at the repo root, never `website/`** (see "Impeccable project root" and "Impeccable design context" below). Targets `website/` (via `npx impeccable install` + `/impeccable init`, run manually — see below); also runs **automatically** repo-wide via a `PostToolUse` hook in `.claude/settings.json` (`Edit\|Write\|MultiEdit` → `.claude/skills/impeccable/scripts/hook.mjs`) | Frontend design-anti-pattern detector (contrast, layout, typography); the hook self-filters to UI file extensions (`.tsx`, `.jsx`, `.html`, `.css`, etc. — see `hook-lib.mjs`) so it's a no-op on non-UI edits. `.github/workflows/website-ci.yml` runs `impeccable detect` (`continue-on-error: true` until `PRODUCT.md`/`DESIGN.md` are initialized). **The skill is installed in all 5 harness dirs** (`.agents/skills/impeccable/`, `.claude/skills/impeccable/`, `.cursor/skills/impeccable/`, `.gemini/skills/impeccable/`, `.github/skills/impeccable/`) by `npx impeccable install`, which is a **multi-provider build**, not five copies of one file: each copy's content correctly differs by target (invocation prefix `$impeccable` for Codex CLI vs `/impeccable` elsewhere, self-referential script paths, the model-name line, the project-context filename `AGENTS.md` vs `CLAUDE.md`, and Codex-only sections like its sub-agent/sandbox-permission guidance). **Never hand-edit one copy** — that both fights the next `npx impeccable update` and desyncs the others; use `npx impeccable check` to detect version drift and `npx impeccable update` to refresh all installed copies in place. `.agents/skills/impeccable/agents/*.toml` + `agents/openai.yaml` are Codex-CLI-specific sub-agent configs the installer places only in `.agents/`, by design — no equivalent needed elsewhere. **Always invoke it from the repo root** — see "Impeccable project root" below |
-| Handoff auto-load | `SessionStart` hook in `.claude/settings.json` (matcher `clear\|startup` → `cat tmp/handoff.md`) | Surfaces the last `/handoff` entry automatically on `/clear` or a fresh session so work survives context resets; `tmp/handoff.md` is gitignored local scratch and the sole `/handoff` output — see [`.claude/commands/handoff.md`](https://github.com/kevinle3212/sensebridge/blob/main/.claude/commands/handoff.md) |
-| Notes (public / private split) | [`NOTES.md`](https://github.com/kevinle3212/sensebridge/blob/main/NOTES.md) tracked; `NOTES.local.md` gitignored | **`NOTES.md`** is a public, committed, linted digest: durable contributor-facing findings, each pointing at the doc that owns the detail (never a second copy of it). **`NOTES.local.md`** is private — the user's own personal and machine-specific notes, not written by `/handoff` — and must never be committed. `NOTES.md` states the rule; `/handoff` step 5 is where the digest entry gets written |
-| Workflow commands | [`.claude/commands/cleanup-notes.md`](https://github.com/kevinle3212/sensebridge/blob/main/.claude/commands/cleanup-notes.md), [`.claude/commands/session-log.md`](https://github.com/kevinle3212/sensebridge/blob/main/.claude/commands/session-log.md), [`.claude/commands/todo-groom.md`](https://github.com/kevinle3212/sensebridge/blob/main/.claude/commands/todo-groom.md) | `/cleanup-notes` grooms the private `NOTES.local.md` (consolidates personal/reference material, collapses any legacy handoff-style entries, surfaces open items; backup in `tmp/`, never commits); `/session-log` encodes the mandatory `CLAUDE.md` session-log rule (log entry + `TODO.md` follow-up mirroring); `/todo-groom` re-grounds `TODO.md` against actual repo state using the file's own completion-annotation rule. All three are thin wrappers around rules that already live in `CLAUDE.md`/`TODO.md` — mechanics only, no duplicated policy |
-| CodeRabbit | `.coderabbit.yaml`, path-scoped to `website/**` only | Second reviewer for the one part of the repo `claude-code-review.yml`'s doctrine-tuned prompt wasn't written for (general web/CSS quality). Requires the CodeRabbit GitHub App installed on the repo (owner action, not yet done) |
-| GitNexus (`gitnexus` npm CLI) | Installed globally (`npm install -g gitnexus`); index at `.gitnexus/` (gitignored); config at `.gitnexusrc` (`skipContextFiles: true` so it never touches our hand-curated `CLAUDE.md`/`AGENTS.md`) | Knowledge-graph code navigation (call chains, blast-radius/impact analysis, clusters), alternative/complement to Graphify+Serena. `gitnexus analyze` indexes the repo; `gitnexus setup -c claude` wires the MCP server + PreToolUse/PostToolUse hooks into the **user-global** `~/.claude/` config (not this repo's tracked files — reversible any time with `gitnexus uninstall`). Fully local: parsing, graph store, and embeddings (transformers.js/ONNX) all run on-device with no network calls; only the optional `gitnexus wiki` command needs an LLM API key, and this repo doesn't use it. Corrects a prior mistaken doc entry here that described a VS Code extension called "Nexus" requiring an API key for chat/embeddings — no such tool matches that description; the real `Nexus-tree.nexus-extension` on the VS Code Marketplace is an unrelated Next.js component-tree visualizer with no CLI, evaluated and not used. **Freshness**: the user-global PostToolUse hook only nudges the agent to reindex inside a Claude Code session; unlike Graphify (below), GitNexus ships no `hook install` equivalent, so `.githooks/post-commit`/`post-checkout`/`post-merge` each carry a small hand-maintained, advisory-only block (never blocks, never runs `analyze` itself — a full rebuild can take up to ~120s and an unclean kill risks index corruption, per the vendor's own hook) that prints a stderr reminder to run `gitnexus analyze` after any commit/branch-switch/merge, once the repo has been indexed at least once. This covers git activity outside a Claude Code session (plain terminal, other editors, CI) that the vendor hook can't see |
-| Editor config | `.vscode/extensions.json`, `.vscode/settings.json` | Recommended-extensions list + strict per-language formatting/lint settings; excludes generated dirs (`graphify-out/`, `.gitnexus/`, `tmp/`, `logs/`) from search/watch |
-| Agent/CI scratch space | `tmp/`, `logs/` | Gitignored scratch dirs (`.gitkeep` + README tracked) so agents stop reaching for shared `/tmp` or leaving untracked litter at repo root |
-| Line-ending/merge hygiene | `.gitattributes` | LF normalization, `linguist-generated` on `graphify-out/`, `.gitnexus/`, lockfiles |
-| Secret-scan overrides | `.gitleaksignore` | Fingerprint allowlist for verified false positives, separate from the pattern rules in `.gitleaks.toml`; empty until a real false positive needs one |
-| Static analysis (generic) | `.github/workflows/security.yml` → `semgrep` job (`p/security-audit`, `p/secrets`, `p/owasp-top-ten`, `p/swift`) | Scans scripts, workflows, `website/`, and (since `app/` landed) Swift — `p/swift` is in the job's config and verified clean, see `GAPS.md`'s H1 resolution |
-| Monthly log archive | [`.agents/skills/monthly-log-archive/SKILL.md`](https://github.com/kevinle3212/sensebridge/blob/main/.agents/skills/monthly-log-archive/SKILL.md), `tools/condense-monthly-logs.mjs` (added 2026-07-21) | Stdlib-only Node script (no new deps) that condenses last month's gitignored `sessions/<YYYY-MM-DD>/*.md` into one `sessions/<YYYY-MM>/SESSIONS.md` and removes the per-day directories. For `audits/` it only ever builds a derived, regeneratable `audits/<YYYY-MM>/INDEX.md` linking to that month's reports — it never moves, edits, or deletes a report, since audits are append-only (`audits/AGENT-GUIDE.md`). The skill's description-based trigger ("today is the 1st") only fires if a session happens to start that day; a guaranteed trigger would need a `SessionStart` hook or a monthly `schedule` cron, neither added yet pending owner sign-off |
-| Completed-TODO archive | `tools/archive-completed-todo.mjs` (added 2026-07-28), `~/Library/LaunchAgents/com.kevinkhanhle.sensebridge-archive-completed-todo.plist` (machine-global, not tracked) | Stdlib-only Node script that moves everything under `TODO.md`'s `## Completed` heading into a new `## Archived <date>` block in [`COMPLETED.todo`](https://github.com/kevinle3212/sensebridge/blob/main/COMPLETED.todo), replacing it with a one-line placeholder so `TODO.md` stays short. `TODO.md`'s own "Item Completion" rule already appends finished items to `## Completed`; this only sweeps that section out periodically. The launchd job runs it every 3 days (`StartInterval: 259200`) with `WorkingDirectory` set to the repo root; load it with `launchctl load ~/Library/LaunchAgents/com.kevinkhanhle.sensebridge-archive-completed-todo.plist`. `COMPLETED.todo` carries the same `.vscode/settings.json` `files.associations` entry (`*.todo` → markdown) as any other `.todo` file, and is linted by `markdownlint-cli2` alongside `**/*.md` (both the pre-commit hook and CI's `docs-links` job pass it explicitly, since `.markdownlint-cli2.jsonc`'s own `globs` are overridden by CLI arguments) |
+| Git hooks | `.githooks/` (`pre-commit`, `commit-msg`, `pre-push`, `post-commit`, `post-checkout`, `post-merge`) | Shareable quality gate, enabled by `scripts/setup.sh` via `core.hooksPath`. `commit-msg` prefers commitlint and falls back to a dependency-free bash regex; `pre-commit` runs the secret/sensitive/settings/BMAD checks, markdownlint, and staged-workflow actionlint; `pre-push` mirrors the CI build gate, blocks direct pushes to `main`, and runs `osv-scanner` when installed; `post-merge` flags changed manifests and refreshes `website/tsconfig.debug.json` only on `main` |
+| Commitlint | Root `package.json` (devDependencies only), `commitlint.config.js` | Conventional-commit format, enforced locally by `.githooks/commit-msg` and blocking in CI (`.github/workflows/commitlint.yml`) over every commit in a PR range plus the PR title. Rules mirror the bash-regex fallback: same 11 types, 72-char subject cap |
+| Command center | Root `package.json` `scripts`, `website/package.json` `scripts`; see [`docs/ENVIRONMENT.md`](ENVIRONMENT.md#command-center) | Every routine command is an `npm run` script, so bare `npm run` is the discoverable index of what the repo can do. The scripts are thin wrappers around `scripts/*.sh`, `tools/*.mjs`, and `xcodebuild` — never reimplementations |
+| Actionlint | `.githooks/pre-commit` (advisory), `.github/workflows/actionlint.yml` (blocking) | Lints `.github/workflows/*.yml` and shellchecks `run:` blocks. CI downloads a pinned release binary and verifies its SHA256 — see the workflow header for the version-bump procedure |
+| Markdownlint | `.markdownlint.jsonc`, `.markdownlint-cli2.jsonc`, `.githooks/pre-commit` (advisory), `ci.yml`'s `docs-links` job (blocking) | Whole-repo Markdown lint. `MD033` allowlists `img`/`details`/`summary`. Deliberately unpinned (`npx markdownlint-cli2`) since its globs cover the whole repo, not just `website/` |
+| Claude Code hooks | `.claude/hooks/` (twelve shell scripts + `react-doctor.mjs`, `prefer-rtk-shape.mjs`, `guard-mcp-sensitive-paths.mjs`, and `guard-bash-secret-read.mjs`), wired in `.claude/settings.json` | Session-level guardrails the git hooks can't see: read-token discipline (`cap-large-read.sh`, `warn-duplicate-read.sh`, `prefer-serena.sh` — measured effect of the read pair, 2026-08-01: mean cost per `Read` fell 911 → 826 tokens, ~9%, and reads over 8k stayed flat at ~1.2%; modest because most reads were already small, so keep them but do not expect them to be the lever), subagent cap (`limit-agent-fanout.sh`), git safety (`guard-main-commit.sh`, `guard-destructive-git.sh`, `guard-protected-delete.sh`, `guard-serena-legal.sh`), and `prefer-rtk-shape.mjs`, which auto-rewrites the command shapes RTK's own hook skips (pipes, redirects, loops, substitutions, subshells, `eval`). **Permission-rule path globs do not reach MCP tool arguments** — `Read(**/*.pem)` and `Edit(legal/**)` scope by path for *built-in* tools only, because MCP rules match on tool name alone. Confirmed by probe on 2026-08-01, not inferred: with the built-in `Read` of a scratch `.pem` denied, `mcp__filesystem__read_text_file` returned that same file's contents and `mcp__filesystem__write_file` wrote to it. `guard-serena-legal.sh` had already patched this for one case (`legal/`, Serena's six mutating tools); `guard-mcp-sensitive-paths.mjs` closes the rest, denying the whole `mcp__filesystem__*` family plus Serena's mutators on credential material and `legal/`. The same MCP-bypass shape existed on the *token*-discipline side: `cap-large-read.sh` and `warn-duplicate-read.sh` only recognized `file_path` (native `Read`'s field), so `mcp__serena__read_file` (`relative_path`) and `mcp__filesystem__read_text_file` (`path`) skipped both the size cap and the duplicate-read nudge entirely. Fixed 2026-08-03: both hooks now check `file_path // path // relative_path`, wired to those two MCP tools via their own `PreToolUse` matcher group (kept separate from `prefer-serena.sh`, which would misfire advising "use Serena" on a call that already is one). The `limit`-field rewrite stays `Read`-only — Serena's read_file (`start_line`/`end_line`) and the filesystem MCP's `read_text_file` (no pagination field) have nothing this hook can safely rewrite, so those two get an advisory `additionalContext` with no attempted clamp. It imports its taxonomy from `tools/check-sensitive-files.mjs` rather than restating it, so the run-time guard and the commit-time gate cannot drift apart, and it is the one hook here that **fails closed**: an unparseable payload means the path is unknown, which is exactly what a malformed input produces. **Bash arguments are not path-scoped either**, so `guard-bash-secret-read.mjs` mirrors the same rules for the shell — same imported taxonomy, third enforcement point. It is **best-effort and bypassable by design, and must never be cited as a boundary**: Bash is a general-purpose interpreter, so `python3 -c 'open(".env").read()'`, a here-doc, a base64 round trip, or a path assembled from variables all sail past — demonstrated, not assumed (2026-08-01). What it buys is the *accident*: `cat .env` on autopilot, a `grep -r` wandering into a key file, a `cp` of signing material to a scratch dir. It peels `rtk`/`sudo`/`env` wrappers (a guard blind to the `rtk` prefix would be blind on this repo's normal path), judges each `&&`, `;`, and pipe segment independently so a readme read chained to a discard of a stale key stays allowed, and unlike its MCP sibling it **fails open** — it sits on the Bash path, so failing closed on a parse error would take the session down to defend a boundary it already admits it cannot hold. Validated against 20 real commands replayed from the session that built it: zero false positives. The two git guards are each registered **twice** — once for `Bash(git *)`, once for `Bash(rtk git *)` — so RTK's rewrite can't slip a destructive command past a guard. **`cap-large-read.sh` treats `TODO.md` and `COMPLETED.todo` as queue files**: a Read with no offset *and* no limit is clamped to 120 lines and pointed at `Grep` for the `###` section heading, because `TODO.md` was the most expensive file in the whole transcript corpus (264k tokens over 182 reads) and nobody ever needs it sequentially; an explicit offset or limit falls through to the ordinary 500-line rule. **A guard that fires on prose is a defect, not caution** — `guard-main-commit.sh` used to deny any command whose *text* contained `git commit`, blocking test fixtures and docs that merely quoted it, which teaches agents to route around the guard. Quoted string literals are now blanked before classification, with commands that execute a string (`eval`, `sh -c`) opting out so their contents stay visible. `guard-protected-delete.sh` had the same defect and got the same treatment on 2026-08-01, after it denied two commands whose here-doc **data** merely mentioned a discard verb near a protected path — its `sed 's/<<.*//'` ran line by line, so it truncated the `cat <<EOF` line and left the body it was meant to cut. The blanking could not simply be copied, though: this guard matches on an *argument*, and arguments are routinely quoted, so blanking quoted text wholesale would have let `rm -rf "sessions/x"` through. It instead walks the command once, quote-aware, and keeps two views per segment — quoted runs collapsed for **verb** detection, quote characters dropped but contents kept for **path** detection. Splitting is quote-aware for the same reason, so a `;` inside a string does not start a new command. Self-checks: `.claude/hooks/tests/*.test.sh`, run by `npm run check:hook-tests` (172 assertions; the runner globs `*.test.sh`, so a new suite is picked up without wiring). `npm run check:hooks` additionally verifies every registered hook **script still exists and is executable** — a renamed or deleted hook otherwise fails silently, since Claude Code logs the spawn error and carries on, leaving the config claiming a guarantee that is gone. It also cross-checks `.mcp.json` against the `guard-mcp-sensitive-paths.mjs` matcher: **every project-scoped MCP server inherits the name-only-matching bypass**, and the guard itself needs no change when one is added — only its matcher does, which nothing would otherwise notice. Adding a server now fails the gate until it is either covered by the matcher or recorded in `MCP_SERVERS_WITHOUT_PATH_ARGS` with the reason it takes no filesystem path. This sees *project-scoped* servers only; user-scope servers (`claude mcp add -s user`, e.g. `filesystem`) live in the owner's global config, which a tracked repo gate cannot read. The user-global `~/.claude/hooks/away-guard.sh` carries the same fix and its own suite at `~/.claude/hooks/tests/away-guard.test.sh` — deliberately **not** run by this repo's CI, since gating a repo on a user-global file would break every other clone |
+| Secret scanning (three layers) | `.gitleaks.toml`, `.gitguardian.yaml`, `tools/check-sensitive-files.mjs`, `.gitleaksignore` | Local pattern scan (gitleaks) + hosted detector set (ggshield, advisory if not installed) + a stdlib-only Node path/content check that always runs, so a missing binary can't silently disable the layer. CI adds TruffleHog (verified-credential scan). `.gitleaksignore` holds fingerprint allowlists for verified false positives |
+| Settings-hook check | `tools/check-settings-hooks.mjs`; `.githooks/pre-commit`, `npm run check:hooks` | Guards the tracked `.claude/settings.json` hook table against owner-personal hooks leaking into the repo and against double registration. Duplicate key is `(event, matcher, if, command)` — identical commands under *different* guards are deliberate |
+| BMAD config check | `tools/check-bmad-config.mjs`; `.githooks/pre-commit`, `npm run check:bmad` | Asserts `user_skill_level` reads `expert` in **both** `_bmad/bmm/config.yaml` and `_bmad/custom/config.user.toml`, since the installer regenerates the YAML |
+| SwiftLint / SwiftFormat | `scripts/lint.sh` (configs land with `app/`) | Binaries are global (Homebrew); the invocations and configs are repo-specific |
+| Serena MCP | `.mcp.json`, `.serena/project.yml` (`languages:`), `.claude/settings.json` (`enabledMcpjsonServers`), `.serena/memories/` | Per-project semantic indexing — local process, no network, project-scoped. **Only add a language to `languages:` when it has a real `referencesProvider`/symbol graph** — yaml-language-server, for example, has none (`find_referencing_symbols` cannot work on it regardless of cache spent), and its document-symbol tree runs ~4.5x source bytes; `Grep`/`rg`/`search_for_pattern` answer config-shaped languages (yaml, json, toml, markdown) faster than an LSP round-trip. See `.serena/project.yml`'s own comments for the measured cost of getting this wrong (2026-08-01 prune, re-evaluated 2026-08-03). **Enabled from tracked settings, not `settings.local.json`**, so the server starts on session open for every clone rather than only on the machine that first approved it. `.serena/memories/` is **versioned on purpose** — those six files are curated project knowledge (doctrine, tech stack, conventions, task-completion checklist), so a fresh clone gets a Serena that already knows the project; `cache/`, `logs/`, and `project.local.yml` are per-machine and gitignored. Health check: `serena project health-check` (last green 2026-08-01, LSP up in 0.65s) |
+| CI/CD | `.github/workflows/` | CI, security scanning (CodeQL, TruffleHog, GitGuardian, OSV, Semgrep, Dependency Review, sensitive files), Claude PR review, Dependabot auto-merge |
+| Agent instructions | `AGENTS.md` + thin pointers (`CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.github/copilot-instructions.md`) | One canonical instruction file, agent-agnostic; the pointers prevent lock-in and duplication |
+| Per-agent configs | `.codex/`, `.gemini/settings.json`, `.copilot/`, `.continue/rules/`, `.windsurf/`, `.cursor/` | Each wires Serena MCP and defers to root `AGENTS.md` — configuration without instruction duplication |
+| Continue config template | `.continue/config.template.yaml`, `.continue/README.md` | Example only, never active config (Continue reads user-global `~/.continue/config.yaml`) |
+| Skills / reviewer personas | `.agents/`, `.claude/`, `.cursor/`, `.gemini/`, `.github/` skills dirs | Project-doctrine-specific: safety framing, accessibility, model licensing, plus the `council` decision-review skill and the `website-design` route |
+| Mirrored-skill sync | `tools/sync-skills.mjs`; `.githooks/pre-commit` and CI's `docs-links` job (both `--check`) | Canonical source is `.claude/skills/<name>/`; the tool regenerates the `.agents`/`.cursor`/`.gemini`/`.github` copies. Never hand-edit a mirror |
+| Review companions | `REVIEW.md` (root), `.claude/commands/security-review.md` | Extend the built-in `/code-review` and `/security-review` with project severity overrides, skip paths, and on-device/privacy/model-license checks — additive, not replacements |
+| Audit system | `audits/` | Append-only. Process docs are tracked; findings are gitignored. Create reports via `audits/scripts/new-audit.sh`; read `audits/AGENT-GUIDE.md` first |
+| Marketing website | `website/` (Astro, `package.json`, `.stylelintrc.json`, `.prettierrc`, `eslint.config.mjs`) | The one deliberate exception to "no web stack" — copy still follows `docs/SAFETY-FRAMING.md`. Node tooling is scoped to this directory |
+| React Doctor, React Scan | `website/package.json` — React Doctor in `devDependencies`, React Scan in **`dependencies`** | `npm run audit:react` / `npm run doctor`, both `--no-telemetry` (load-bearing for the no-telemetry posture). CI gate is `blocking: warning`, held at zero findings; suppressions live in `website/doctor.config.jsonc`. Call it via `env -u GIT_DIR` from any hook. React Scan is a dev-only inline import in `BaseLayout.astro`; **there is no `npm run scan`** |
+| Website hosting (Railway) | `docker/` (`Dockerfile`, `nginx.conf.template`, `docker-compose.yml`), `railway.toml` | Deploys the static site only — no env vars, no backend, no effect on the app's serverless/on-device posture. The Railway service's Root Directory must stay the **repo root**, since the build context spans `docker/` and `website/` |
+| Impeccable design-QA | Skill in the 5 harness dirs; design context in `.agents/context/`; state in `.impeccable/` — **all rooted at the repo root, never `website/`** | Frontend design-anti-pattern detector. See the two subsections below; both are live rules, not history |
+| Handoff auto-load | `SessionStart` hook in `~/.claude/settings.json` (owner-personal, deliberately **not** in the tracked settings) | Surfaces `tmp/handoff.md` on `/clear` or a fresh session. `tmp/` is gitignored; `tools/check-settings-hooks.mjs` blocks this hook from entering the tracked config |
+| Notes (public / private split) | `NOTES.md` tracked; `NOTES.local.md` gitignored | `NOTES.md` is a public, linted digest of durable contributor-facing findings, each pointing at the doc that owns the detail. `NOTES.local.md` is the private trail — absolute paths and machine state stay there |
+| Workflow commands | `.claude/commands/` (`cleanup-notes`, `session-log`, `todo-groom`, `cleanup-commit`, `security-review`) | Project-scoped commands only. Owner-personal commands (`/handoff`, `/claude-cli`, `/docker-clean`) are owned by `~/.claude/commands/`; project copies mirror them verbatim rather than diverging |
+| CodeRabbit | `.coderabbit.yaml`, path-scoped to `website/**` | Second reviewer for the one part of the repo the doctrine-tuned Claude review prompt wasn't written for (general web/CSS quality) |
+| GitNexus (`gitnexus` npm CLI) | Global install; index at `.gitnexus/` (gitignored), config `.gitnexusrc` (`skipContextFiles: true`) | Knowledge-graph code navigation — call chains, blast-radius/impact analysis, clusters. `gitnexus analyze` indexes; the git hooks carry an advisory staleness reminder |
+| Editor config | `.vscode/extensions.json`, `.vscode/settings.json` | Recommended extensions + strict per-language formatting; excludes generated dirs (`graphify-out/`, `.gitnexus/`, `tmp/`, `logs/`) from search |
+| Agent/CI scratch space | `tmp/`, `logs/` | Gitignored scratch dirs (`.gitkeep` + README tracked) so agents stop reaching for shared `/tmp` or littering the repo root |
+| Line-ending/merge hygiene | `.gitattributes` | LF normalization; `linguist-generated` on `graphify-out/`, `.gitnexus/`, lockfiles |
+| Static analysis (generic) | `.github/workflows/security.yml` → `semgrep` job | `p/security-audit`, `p/secrets`, `p/owasp-top-ten`, `p/swift` — scans scripts, workflows, `website/`, and Swift |
+| Monthly log archive | `.agents/skills/monthly-log-archive/SKILL.md`, `tools/condense-sessions.mjs` | Stdlib-only Node script condensing last month's gitignored `sessions/<YYYY-MM-DD>/*.md` into one `sessions/<YYYY-MM>/SESSIONS.md` |
+| Completed-TODO archive | `tools/archive-completed-todo.mjs`, `tools/sweep-done-todo.mjs`; `npm run todo:sweep` then `npm run todo:archive` | Sweep cuts ticked bullets out of To-Do into `## Completed`; archive moves that section into `COMPLETED.todo`. A machine-global launchd plist runs it monthly |
 
 ## Global (installed on this machine, nothing to add to the repo)
 
 | Tool | Status | Use here |
 | --- | --- | --- |
 | Xcode / Swift toolchain | required | The build |
-| SwiftLint, SwiftFormat, xcbeautify | installed (Homebrew) | Invoked by `scripts/lint.sh` once `app/` exists |
+| SwiftLint, SwiftFormat, xcbeautify | installed (Homebrew) | Invoked by `scripts/lint.sh` |
 | gitleaks | installed | Pre-commit secret scan |
-| ggshield | not installed — advisory (`brew install ggshield`, then `ggshield auth login`) | Pre-commit GitGuardian secret scan; CI runs regardless via the `ggshield` job, gated on the `GITGUARDIAN_API_KEY` repo secret |
-| semgrep | installed | Ad-hoc local runs; CI coverage lives in `security.yml`'s `semgrep` job, including `p/swift` (added once `app/` landed) |
-| osv-scanner | installed (Homebrew) | Pre-push dependency vulnerability scan (`.githooks/pre-push`), mirroring `security.yml`'s `osv-scan` job |
-| actionlint | installed (Homebrew) | Pre-commit lint of staged `.github/workflows/*.yml` (`.githooks/pre-commit`, advisory if not installed); CI runs a version-pinned, checksum-verified copy of the same binary regardless (`.github/workflows/actionlint.yml`) |
-| gh | installed | GitHub workflows |
-| Serena | installed (`uv` tool) | Semantic code navigation via `.mcp.json` |
-| Graphify | installed | Knowledge-graph queries; output (`graphify-out/`) is gitignored. Auto-rebuilds via versioned `.githooks/post-commit` + `post-checkout` (installed by `graphify hook install`, detached/non-blocking, skips rebases and graph-only changes); optional live mode: `graphify watch .` (needs `watchdog` in graphify's env). CI rebuilds it advisorily on `main` and uploads it as a downloadable artifact (`.github/workflows/graphify.yml`, scope in `.graphifyignore`) |
-| GitNexus (`gitnexus`) | installed (`npm install -g gitnexus`) | Knowledge-graph code navigation via `.mcp.json`-equivalent wired into the user-global `~/.claude/` config (`gitnexus setup -c claude`), not this repo's tracked files. Index (`.gitnexus/`) gitignored; refresh with `gitnexus analyze` |
-| RTK | installed | Token-efficient repo indexing |
-| gstack | installed (`~/.claude/skills/gstack`) | Web browsing + review/ship skill suite |
-| Composio | installed (binary at `~/.composio/composio`, v0.2.32 — **not on `$PATH`**, always use the absolute path), logged in as `kevinle3212@gmail.com` | Authenticated CLI reaching 1000+ third-party APIs. **A CLI, not an MCP server** — nothing to add to the MCP inventory below. Only the `github` toolkit is linked (`ACTIVE`, OAuth2, since 2026-07-25); every other service this repo touches is unlinked. Redundant with the `github` MCP + `gh` for GitHub work — its value here is services with no local integration. Per-toolkit status, coverage gaps, and linking steps: [`TODO.md`](https://github.com/kevinle3212/sensebridge/blob/main/TODO.md) → "Composio". Every `link` needs an owner browser click; treat every response as credential-bearing and never write one into a tracked file |
-| Ollama | installed | Local LLM experiments only — **not** an app dependency; on-device inference uses Core ML/ANE, never a local server. Full setup, two-machine topology, and security posture: [`docs/OLLAMA.md`](OLLAMA.md) |
-| Node, bun, uv, python3 | installed | Script runtimes only; no project package manifests |
-| Obsidian vault (`~/Vault`) | present | Cross-project knowledge via the `vault-capture` skill (see `MEMORY.md`) |
-| WakaTime | installed (key in `~/.wakatime.cfg`, `wakatime-cli` at `~/.wakatime/wakatime-cli`) | Automatic coding-time tracking; the on-device CLI posts heartbeats to the [WakaTime dashboard](https://wakatime.com/dashboard). **One key, many clients** — every client reads `~/.wakatime.cfg`, never a copy, so no secret enters the repo. Wired: **Claude Code** via a `PostToolUse` hook in the user-global `~/.claude/settings.json`; **VS Code** via the WakaTime extension. Documented, pending setup (see [`TODO.md`](https://github.com/kevinle3212/sensebridge/blob/main/TODO.md)): **Cursor / Antigravity** (VS Code forks) via the same Open VSX extension; **Xcode + Word/Excel/MySQL Workbench/Terminal** via the macOS menu-bar app (`brew install --cask wakatime`, Monitored Apps); **Codex CLI** via a per-repo `.codex/hooks.json` `PostToolUse` hook (the one project-level touchpoint). No official WakaTime plugin exists for Office/Workbench (app-level heartbeats only) or the Copilot CLI (no hook API) |
+| ggshield | **not installed** — advisory (`brew install ggshield`, then `ggshield auth login`) | Pre-commit GitGuardian scan; CI runs regardless via the `ggshield` job, gated on the `GITGUARDIAN_API_KEY` repo secret |
+| semgrep | installed | Ad-hoc local runs; CI coverage lives in `security.yml` |
+| osv-scanner | installed (Homebrew) | Pre-push dependency vulnerability scan, mirroring `security.yml`'s `osv-scan` job |
+| actionlint | installed (Homebrew) | Pre-commit lint of staged workflows; CI runs a pinned, checksum-verified copy |
+| gh | installed | GitHub workflows. **Agents never run `git`/`gh` autonomously** — see `CLAUDE.md` |
+| Serena | installed (`uv` tool) | Semantic code navigation via `.mcp.json`. **First tier for any code file** per `CLAUDE.md` |
+| Graphify | installed | Knowledge-graph queries; `graphify-out/` is gitignored. Auto-rebuilds via versioned `post-commit`/`post-checkout` hooks |
+| GitNexus | installed (`npm install -g gitnexus`) | Knowledge-graph navigation, wired into the user-global `~/.claude/` config, not this repo's tracked `.mcp.json` |
+| RTK (`rtk`) | installed (`/opt/homebrew/bin/rtk`), global `PreToolUse`/`Bash` hook active | Transparently rewrites covered Bash calls to their output-compacted `rtk` equivalent before they run. **The rewrite matches on command shape and the coverage is partial**: bare commands and `&&`, `;`, `&`, and or-else chains are rewritten; pipes, redirects, substitutions, subshells, and loop bodies are not — `.claude/hooks/prefer-rtk-shape.mjs` fills exactly that gap. **A newline is the shape that mattered most, and it is easy to get wrong**: RTK rewrites only the *first line* of a multi-line command (`ls -la\ngrep foo src` → `rtk ls -la` with `grep` untouched) and rewrites nothing at all when line one is a command outside its set — which is exactly the `cd <abs path>` that opened **1,298 of this repo's 1,810 `cd`-prefixed calls (72%)**. Those reached neither hook until `\n` was added as a leaking shape on 2026-08-01. Note what is *not* a problem: `&&` and `;` are fine, and prefixing a command with `cd` does not block coverage. **Write commands as bare calls anyway** — the Bash working directory already persists between calls and starts at the repo root, so `cd /Users/.../sensebridge` at the head of a command is pure noise on every call that carries it. **How partial, measured** (6,672 project Bash calls, 2026-08-01, `measure-context-growth.py --bash-shapes`): **9.8%** are a plain shape RTK's own hook rewrites, 2.8% were already written as `rtk`, **35.3%** are RTK-coverable but shape-broken (the `prefer-rtk-shape.mjs` gap — `grep` 625 calls, `git` 308, `gh` 207, `ls` 330, `cat` 231), and **52.0%** name a command outside RTK's set (`cd`, `echo`, `npx`, `node`, `python3`, `xcodebuild`, `curl`, `docker`). Those buckets count the *first word*, so they understate real coverage: after the newline fix, a multi-line block opening with `cd` or `echo` still gets every covered command inside it rewritten. Treat RTK as a partial tool, not a general answer to Bash output volume. **Compaction is lossy and the savings are smaller than the marketing**: measured 2026-08-01 at ~10% output reduction on a realistic 12-command mix (`ls`/`find`/`wc` compact 55–76%, large `rg` ~41%, `git log`/`git show`/file reads compact **0%**), against a `rtk gain` headline of 78% that came almost entirely from one outlier. It has silently corrupted a `.patch` file. Use `rtk proxy <cmd>` whenever output must stay byte-exact. **Division of labor with Serena**: RTK compacts *shell* output; Serena replaces *code-file* Read/Grep/Edit |
+| Context measurement | `~/.claude/scripts/measure-context-baseline.py` (session-start floor), `measure-context-growth.py` (mid-session growth) | Answer "where did the tokens go" from transcript `message.usage` records rather than from config. The baseline script measures the fixed floor; the growth script attributes the climb from that floor using **real per-request deltas**, not character estimates — `--bash-shapes` adds the RTK-coverage breakdown quoted in the RTK row. Rerun both before acting on any token-optimization theory; the 2026-08-01 pass found a character-based estimate off by 40× on one tool |
+| gstack | installed (`~/.claude/skills/gstack`) | Web browsing (`/browse`) + review/ship skill suite. The global standard for all agent browsing |
+| Gemini CLI | installed (`@google/gemini-cli`, `/opt/homebrew/bin/gemini`) | Uses this repo's `.gemini/settings.json` + `GEMINI.md` |
+| Antigravity | installed (IDE + CLI, Homebrew casks) | Reads this repo's `.agents/mcp_config.json` + `.agents/rules/*.md` — a different product from Gemini CLI with different project config |
+| Composio | installed (binary at `~/.composio/composio`, **not on `$PATH`**) | Authenticated CLI reaching 1000+ third-party APIs. **A CLI, not an MCP server** — nothing to add to the MCP inventory. Gap-filler only; `gh` and the repo's own scripts win where they apply |
+| Ollama | installed | Local LLM experiments only — **not** an app dependency. On-device inference uses Core ML/ANE, never a local server |
+| Node, bun, uv, python3 | installed | Script runtimes only; no project package manifests for the app |
+| Obsidian vault (`~/Vault`) | present | Cross-project knowledge via the `vault-capture` skill |
+| WakaTime | installed (key in `~/.wakatime.cfg`) | Automatic coding-time tracking; posts heartbeats to the WakaTime dashboard. One key, many clients |
 
 ## Claude skills and plugins
 
-Installed globally (user scope) from source-verified marketplaces. Versions and
-sources re-verified 2026-07-11 against upstream (GitHub API + release notes):
+Installed globally (user scope) from source-verified marketplaces, plus the
+project-scoped skills under `.agents/skills/` and `.claude/skills/`. The full
+install log — what was added when, from which marketplace, and which
+candidates were evaluated and refused — is in
+[the archive](archive/TOOLING-DECISIONS.md).
 
-| Plugin | Source | Why |
-| --- | --- | --- |
-| superpowers 6.1.1 | `obra/superpowers-marketplace` | Engineering-workflow skills + skill search (TDD, debugging, planning dispatch). **Note:** the legacy `/brainstorm`, `/write-plan`, `/execute-plan` slash commands and the named `superpowers:code-reviewer` agent were **removed in 6.x** — do not reference them. 6.x also hardened the brainstorm server (per-session auth, sandboxing) and removed a Codex `SessionStart` auto-exec hook (net-positive) |
-| claude-mem 13.10.2 | `thedotmack/claude-mem` | Cross-session memory capture/injection. **Disabled at project scope for SenseBridge** (`.claude/settings.json` → `enabledPlugins`) because the harness's built-in auto-memory already persists here — running both would inject duplicated context. Keep disabled here: claude-mem compresses sessions through a configured LLM provider (data egress) and has a history of local-surface issues (an unauthenticated local API on port 37777, since fixed; a `shell:true` spawn footgun, tracked upstream) — neither is a fit for this repo's on-device/no-telemetry posture. It stays available globally; never run both memory systems at once. **2026-07-19:** a personal global tooling build-out asked to wire claude-mem to Obsidian for token savings — see `TODO.md`'s "Global Claude Code tooling build-out" entry for the open question of whether that should touch this row |
-| humanizer 2.8.2 | `blader/humanizer` | Strips AI-writing tells from prose/docs. **Guard:** never let a humanizer pass soften a required safety-framing hedge in app or marketing copy (see [SAFETY-FRAMING.md](SAFETY-FRAMING.md)) |
-| codex 1.0.6 (`codex-plugin-cc`) | `openai/codex-plugin-cc` (Apache-2.0, official OpenAI) | Optional second-opinion reviewer: shells out to the locally installed `codex` CLI so a different vendor's model can adversarially review a diff — complements `/code-review` and the `council` skill, never replaces them and is never a CI gate. Installed 2026-07-17 after a code-level review: registers `SessionStart`/`SessionEnd` hooks that manage a **local-only** Unix-domain-socket broker for `codex app-server` (pidfile, torn down at session end) plus an **opt-in** `Stop` review gate; zero network calls, telemetry, or auto-updates found in the shipped scripts. Inert without a per-developer OpenAI login/key — never configure one in this repo or CI |
-| privacy-legal 1.0.2 (`claude-for-legal`) | `anthropics/claude-for-legal` (Apache-2.0, official) | Privacy-law workflow plugin, installed 2026-07-17 on owner override (the marketplace's 12 sibling plugins are one `claude plugin install <name>@claude-for-legal` away). Zero hooks (verified empty `hooks.json`); bundles Slack + Google Drive hosted MCP connectors that stay **unauthenticated/inert** until the owner logs in. Using it never overrides this repo's rule that `legal/` edits need explicit owner approval |
-| task-observer ("One Skill to Rule Them All") | `rebelytics/one-skill-to-rule-them-all` (CC BY 4.0) | Logs skill-improvement observations during task-oriented sessions; mirrored into both `~/.claude/skills/` and `~/.codex/skills/` with a matching activation trigger in `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md`. **Cowork users only:** the skill persists its observation log (`skill-observations/`) and staged updates (`skill-updates/`) to whatever folder you select as the shared workspace on your first Cowork task for this project — pick one and keep reusing it, since the log won't carry over if you switch folders. Claude Code and Codex CLI need no equivalent step; they use the project root automatically |
-
-### Ponytail — project-scoped only, not global (added 2026-07-17)
-
-Unlike the table above, `ponytail@ponytail` (`DietrichGebert/ponytail`, MIT,
-v4.8.4) is installed at **project scope** (`.claude/settings.json` →
-`enabledPlugins`), not user scope — it does not apply in other repositories.
-A YAGNI/lazy-senior-dev ruleset (smallest correct change, stdlib first, no
-unrequested abstractions) — the same instinct this repo's own "Surgical
-Changes"/"Simplicity First" norms already ask for.
-
-Evaluated with a real code-level review before install, not just README
-claims: fetched every hook file (`ponytail-activate.js`,
-`ponytail-mode-tracker.js`, `ponytail-subagent.js`, `ponytail-runtime.js`)
-and the bundled `ponytail-mcp` server (`index.js`) directly. Findings: zero
-network calls, zero arbitrary `exec`/`spawn`, filesystem writes confined to
-Claude's own config tree, path-safety validation before any shell string
-embedding, a tested uninstall path, and an MCP server that only serves a
-static local instruction string (self-declared `readOnlyHint: true,
-openWorldHint: false`). Its claimed popularity (85,184 GitHub stars per the
-API, verified directly — an earlier "implausible inflation" concern from a
-shallower pass does not hold up) reflects genuine adoption, not a farmed
-count.
-
-**One gap the upstream project has no reason to know about, closed
-locally**: nothing in Ponytail's own `SKILL.md` "Permanent Exceptions" list
-(which already protects security and accessibility from simplification)
-covers this repo's hedging string literals specifically. Closed via an
-explicit carve-out in `AGENTS.md`'s doctrine #1 — the YAGNI ladder never
-applies to `docs/SAFETY-FRAMING.md`-governed spoken/caption/haptic strings
-or accessibility labels.
-
-**Configuration, pinned explicitly rather than left to the tool's default:**
-
-- Default mode is `full` (via `~/.config/ponytail/config.json` →
-  `defaultMode`) — never `ultra`, which the tool's own docs describe as
-  "challenges requirements," the wrong instinct anywhere near a
-  safety-framing string. This file was written to make the choice explicit
-  and durable rather than relying on the tool's own implicit default, which
-  could change in a future release.
-- Marketplace registered at project scope too
-  (`extraKnownMarketplaces.ponytail` in `.claude/settings.json`), so it
-  isn't silently available to other projects that happen to share this
-  machine.
-
-### Global skills — standalone, unattributed (added 2026-07-13)
-
-Three more skills sit in `~/.claude/skills/` as bare `SKILL.md` files with no
-plugin manifest, marketplace entry, version string, or `LICENSE` — unlike every
-plugin in the table above, their provenance could not be verified against an
-upstream source. Documented here anyway, since they're active and in scope for
-this repo; treat them as unattributed until a source turns up.
-
-| Skill | Location | Why relevant here |
-| --- | --- | --- |
-| context-budget | `~/.claude/skills/context-budget/SKILL.md` | Audits context-window overhead across loaded agents/skills/MCP servers/`CLAUDE.md` files. Relevant given the size of this repo's own instruction surface (global + project `CLAUDE.md`, `.agents/`, `.claude/skills/`, multiple MCP servers) |
-| production-audit | `~/.claude/skills/production-audit/SKILL.md` | Local-evidence production-readiness audit (no external data egress) — complements, doesn't replace, this repo's own `audits/` append-only system and the [ci-green-gate](https://github.com/kevinle3212/sensebridge/blob/main/.agents/skills/ci-green-gate/SKILL.md) gates |
-| agent-architecture-audit | `~/.claude/skills/agent-architecture-audit/SKILL.md` | Diagnostic for agent/LLM application stacks (prompt, memory, tool calling, rendering). Relevant if SenseBridge's on-device model-inference layer ever grows agent-like wrapper logic; not yet exercised |
-
-**Name collision:** the same 2026-07-13 batch also placed a *generic* WCAG
-`accessibility` skill at `~/.claude/skills/accessibility/SKILL.md`, sharing its
-name with this repo's own `.agents/skills/accessibility` (SenseBridge-specific:
-VoiceOver, Dynamic Type, the rotor). They are different files with different
-content. Per this harness's "most specific wins" skill-resolution rule, the
-project-scoped copy takes precedence for SenseBridge work — the global one is
-effectively shadowed here and undocumented elsewhere, so it's noted for
-awareness only; no action needed unless resolution behavior changes.
-
-### Global skills — installed 2026-07-17 (prefer-integration re-evaluation)
-
-Installed after the owner reversed the earlier skip-on-overlap policy: overlap
-alone no longer disqualifies a tool; each item below passed a fresh
-maintenance/license check (GitHub API, 2026-07-17) and a content-level
-security review (text-only instruction files, no executable surface, no
-network calls) before activation.
-
-| Skill | Source | Scope and guardrail |
-| --- | --- | --- |
-| stop-slop | `hardikpandya/stop-slop` (MIT) | `~/.claude/skills/stop-slop/`. Anti-AI-slop writing pass, complementing (not replacing) humanizer. **Same guard as humanizer:** a de-slop pass must never soften a required safety-framing hedge — `docs/SAFETY-FRAMING.md` and the `safety-framing-reviewer` win every conflict on app strings and marketing copy |
-| copywriting, copy-editing, ai-seo, seo-audit, schema, product-marketing | `coreyhaines31/marketingskills` (MIT) | `~/.claude/skills/<name>/`. The 6-of-47 subset compatible with an honest pre-launch site; the other 41 (CRO, popups/paywalls, paid ads, cold outbound, programmatic SEO, growth loops) were deliberately not installed — conversion-pressure and mass-generated-page mechanics conflict with the restraint and honesty-over-hype doctrines in `.agents/context/PRODUCT.md`. Copy produced with these still routes through `website-design`'s guardrails |
-| find-skills | `vercel-labs/skills` (repo has **no top-level LICENSE**) | `~/.claude/skills/find-skills/`. Already installed and in active use (see `MEMORY.md`); documented here rather than re-litigated. **Discovery only:** use it to *find* candidate skills; every candidate still goes through this file's fetch→review→activate flow before install — never let it auto-install unvetted third-party skills. The missing upstream license is tolerable for a locally-run discovery aid but would block vendoring any of its content into this repo |
-
-**Second wave, same evening (explicit owner override of the remaining
-blockers).** Each was still fetch→reviewed before activation; the original
-concerns didn't vanish — they're recorded here as operating conditions:
-
-| Skill | Source | Scope and guardrail |
-| --- | --- | --- |
-| hyperframes (8-skill core set incl. `media-use`) | `heygen-com/hyperframes` (Apache-2.0) via `npm i -g hyperframes` (0.7.61) + `hyperframes skills update` | Video/animation authoring. **PostHog telemetry disabled before first run** (`~/.hyperframes/config.json` → `telemetryEnabled: false` — keep it that way per the no-telemetry doctrine). No hooks or daemons. `media-use` legitimately calls HeyGen/TTS provider APIs when used — that's its function, not a defect; never point it at app or user-surroundings data. Rendering needs `ffmpeg` (not yet installed) |
-| notebooklm | `PleasePrompto/notebooklm-skill` (MIT) | Installed **files-only**; first run (owner-triggered, deliberately not done by an agent) creates a venv, pip-installs `patchright`, downloads Chrome, and persists Google session cookies to `~/.claude/skills/notebooklm/data/browser_state/` with anti-bot flags (`--no-sandbox`, stealth input). Personal-productivity tool for the owner's own NotebookLM account; **never invoke it from SenseBridge work** — [`NOTEBOOKLM.md`](NOTEBOOKLM.md)'s manual path remains the project rule |
-| social-media-skills (all 17) | `charlie947/social-media-skills` (MIT) | Pure-markdown instruction skills, no code (verified by grep). `post-scorer` + `reels-scripting` stay inert without `APIFY_API_TOKEN`/`GOOGLE_AI_API_KEY` — leave unset until wanted. Any SenseBridge-related social copy still routes through safety-framing/honesty guardrails |
-| agent-browser | `vercel-labs/agent-browser` (Apache-2.0) via `npm i -g agent-browser` (0.32.2) | Rust CLI + optional stdio MCP (`agent-browser mcp`); registers no hooks/config. **gstack `/browse` remains the default for all agent browsing per the global standard** — use agent-browser only when explicitly asked for it. Its Chrome-for-Testing fetch (`agent-browser install`) is still pending (permission-gated; owner runs it). On use, a local daemon persists between commands (idle-timeout via `AGENT_BROWSER_IDLE_TIMEOUT_MS`); dashboard, when used, listens on `localhost:4848` |
-
-### Global tooling build-out — installed 2026-07-19
-
-A large personal, machine-wide install pass (~30 items: MCP servers, CLI
-tools/agent frameworks, and skills), tracked in full at
-`~/.claude/tmp/tools.md` — not re-documented item-by-item here since none of
-it is SenseBridge-specific except where noted. Listed here only for the
-items with a real guardrail or overlap concern relevant to this repo:
-
-| Tool/skill | Source | Guardrail |
-| --- | --- | --- |
-| usestrix/strix | `usestrix/strix` (installed to `~/.strix/bin`) | AI-driven penetration-testing tool. **Authorized/defensive use only** (owner's own systems, CTFs, sanctioned pentests) — never point it at third-party systems, and never at SenseBridge's own surfaces without a documented reason, since this repo has no backend to scan and its threat model is on-device (`security/THREAT-MODEL.md`) |
-| `/watch` (`bradautomates/claude-video`) | via `npx skills add`, → `~/.agents/skills/watch` | **The installer's own risk scan flagged this "Snyk: High Risk"** (Gen: Safe, Socket: 0 alerts — mixed signal). Runs arbitrary Bash, auto-installs `yt-dlp`/`ffmpeg`, and sends audio to a third-party Whisper API (OpenAI/Groq) when a video has no captions. Kept installed per owner decision; **never use it on anything containing user-surroundings data** — that would be a `docs/PRIVACY.md` violation regardless of what the tool itself does with it |
-| Skyvern-AI/skyvern | `pipx install skyvern` | Browser-automation agent — same guardrail as `agent-browser`/`puppeteer` above: **gstack `/browse` remains the default**, use Skyvern only when explicitly asked for it |
-| SuperClaude-Org/SuperClaude_Framework | `pipx install SuperClaude` + `superclaude install` | Installed 20 agents to `~/.claude/agents/` and `/sc:*` commands to `~/.claude/commands/sc/`. No name collisions with this repo's own agents (`.agents/agents/*`) or the global `advisor`/`code-reviewer`/`implementer`/`orchestrator`/`security-reviewer` set — but if a future `/sc:` command's behavior overlaps one of this repo's doctrinal reviewers (safety-framing, accessibility, model-license), the project-specific reviewer wins per this repo's own gates |
-| santifer/career-ops | cloned into `~/.claude/skills/career-ops/` | Personal job-search tool, no SenseBridge relevance; noted only so the skill list here stays complete |
-
-### BMAD-METHOD — project-level, uncommitted, pending review (2026-07-19)
-
-`bmad-code-org/BMAD-METHOD` was installed **into this repo** (not just
-globally) via `npx bmad-method install --yes --tools claude-code`, on a
-dedicated branch `chore/bmad-method-setup` (kept separate from
-`feat/website-first-light` rather than mixing an unrelated scaffold into an
-in-progress feature branch). Added `_bmad/` (module core) and 46 skills
-under `.claude/skills/bmad-*`. **Left uncommitted** — nothing here is active
-until reviewed and committed; see `TODO.md`'s "Global Claude Code tooling
-build-out" entry for the open reconciliation question (several `bmad-*`
-skills overlap conceptually with this repo's existing `.agents/skills/*` and
-review-agent infrastructure, e.g. `bmad-code-review` vs.
-`code-reviewer`/`security-reviewer`). If kept, add a "Project-level" table
-row above and run the `update-context` skill per this repo's docs-sync rule.
-
-### Built-in reviews — extended, not replaced
-
-Built-in harness skills already cover code review, security review, deep
-research, and scheduling. Rather than install competing review plugins, the repo
-**extends the built-ins** through their documented, additive extension points
-(Anthropic's own guidance: automated reviews complement, never replace, manual
-review and the [ci-green-gate](https://github.com/kevinle3212/sensebridge/blob/main/.agents/skills/ci-green-gate/SKILL.md)):
-
-| Companion | File | Extends |
-| --- | --- | --- |
-| Code-review guidance | [`REVIEW.md`](https://github.com/kevinle3212/sensebridge/blob/main/REVIEW.md) (repo root) | `/code-review` reads this as highest-priority, review-only instructions: project severity overrides (safety-framing = Critical, unlabeled UI = blocking, privacy-boundary = Critical), skip paths, and the honesty rule about what CI cannot prove |
-| Security-review command | [`.claude/commands/security-review.md`](https://github.com/kevinle3212/sensebridge/blob/main/.claude/commands/security-review.md) | `/security-review` — runs the stock diff scan, then layers on the data-egress boundary, model-license, secret/signing-material, dependency-provenance, permission-scope, and workflow-integrity checks specific to an on-device app |
-| Council | [`.agents/skills/council/SKILL.md`](https://github.com/kevinle3212/sensebridge/blob/main/.agents/skills/council/SKILL.md) (mirrored to `.claude/`, `.cursor/`, `.gemini/`, `.github/` skills dirs) | Independent multi-perspective review of an important, hard-to-reverse architectural decision **before** approval (architecture, safety-framing, accessibility, privacy/security, performance, licensing, simplicity seats). Advisory; reuses existing personas, does not replace owner sign-off or CI gates |
-
-The Karpathy principles (think-before-coding, simplicity-first, surgical-changes,
-goal-driven execution) are already encoded in the global `~/.claude/CLAUDE.md`
-— that plugin would duplicate them, so it is deliberately **not** installed.
-
-### Website design — required capability, integrated not duplicated
-
-The public
-[`website/`](https://github.com/kevinle3212/sensebridge/tree/main/website)
-makes distinctive frontend design a real
-need. It is served by the already-wired **impeccable** skill (execution +
-critique/audit, brand register, AI-slop detection) plus Anthropic's official
-**frontend-design** skill for design *direction*, with **ui-reviewer** and the
-**accessibility** skill owning review. The
-[`website-design`](https://github.com/kevinle3212/sensebridge/blob/main/.agents/skills/website-design/SKILL.md)
-skill (mirrored to
-`.claude/`, `.cursor/`, `.gemini/`, `.github/` skills dirs) is the router that
-ties them together and enforces the two guardrails the generic tools do not
-know: honesty-over-hype (no CTA/availability claims) and safety-framing on
-product copy.
-
-| Tool | Disposition | Why |
-| --- | --- | --- |
-| **Frontend Design** (`frontend-design@claude-plugins-official`, Apache-2.0) | **Installed** as a global (user-scope) plugin; wired via `website-design` | Anthropic-official (lowest supply-chain risk); SwiftUI is a supported stack, so it also informs app-side identity. Installed 2026-07-26 via `claude plugin marketplace add anthropics/claude-plugins-official` + `claude plugin install frontend-design@claude-plugins-official` |
-| **UI/UX Pro** (`nextlevelbuilder/ui-ux-pro-max-skill`, MIT) | **Method folded in**; npm package **not installed** | The capability (style/palette/font-pairing selection, a design brief) is already covered by impeccable's `palette.mjs` + brand/product registers and the official frontend-design skill. The package is an unofficial single-maintainer distribution that ships executable install scripts and has an outlier star count — installing it would add supply-chain risk for a capability we already hold. Its *method* is captured in `website-design` |
+Two rules below are **live constraints, not history**, and are linked from
+`CLAUDE.md`:
 
 ### Impeccable project root — always the repo root
 
@@ -328,99 +173,36 @@ decision (impeccable's own `init.md` prescribes a per-app `PRODUCT.md` plus a
 root one for the primary surface — which requires the workspace markers this
 repo deliberately does not have).
 
-### Evaluated 2026-07-11, re-evaluated 2026-07-17 — still not installed
-
-First evaluated 2026-07-11; **re-evaluated item-by-item 2026-07-17** under an
-owner-directed prefer-integration policy (overlap alone no longer
-disqualifies; adapt/wrap where a conflict can be scoped away). That pass
-re-verified every source against the GitHub API (all actively maintained,
-none archived) and **installed** what could be integrated safely: Stop Slop,
-a 6-skill marketingskills subset, and find-skills (see "Global skills —
-installed 2026-07-17"), `codex-plugin-cc` (plugin table above), the offline
-slice of claude-seo (vendored as the `seo-schema`/`seo-technical` project
-skills — see `CREDITS.md`), and Perplexity as a documented per-developer
-option (MCP inventory below). Later the same evening the owner **explicitly
-overrode** the remaining blockers for Hyperframes, NotebookLM,
-claude-for-legal, Agent Browser, social-media-skills, Granola, and
-Higgsfield — all installed; see "Global skills — installed 2026-07-17" (second
-wave), the plugin table, and the MCP inventory. Only these remain out:
-
-| Item | Source (verified) | Reason it stays out (re-checked 2026-07-17) |
-| --- | --- | --- |
-| Caveman | `juliusbrussee/caveman` (MIT, SAFE-with-conditions) | Core mechanic strips hedging/qualifiers for token savings — direct conflict with awareness-not-safety; and its value is delivered through **user-global SessionStart/UserPromptSubmit hooks** that cannot be scoped away from SenseBridge sessions, so no adaptation preserves both the tool and the doctrine. See the expanded rationale below |
-| AI Second Brain | `NicholasSpisak/second-brain` | **Still no LICENSE file** (re-verified 2026-07-17: `GET /license` → 404; default copyright is a hard legal blocker to any install or vendoring, regardless of policy); also directs global `npm i -g` of scraping CLIs. Capability already served by `~/Vault` + `vault-capture`. Revisit only if upstream adds a license |
-| claude-skills | ambiguous — official `anthropics/skills` vs. community aggregator `alirezarezvani/claude-skills` | Treat `anthropics/skills` as the trusted source (it already supplies frontend-design); do **not** bulk-install the 345-skill unvetted community aggregator |
-
-Revisit any skipped row with `npx -y skills add <owner/repo>` or
-`claude plugin marketplace add <repo>` + `claude plugin install` if its reason
-stops applying (e.g. a marketing surface appears, or a blocker like AI Second
-Brain's missing license is resolved).
-
-#### Why Caveman specifically cannot be installed here (expanded)
-
-This is a hard "no," not a soft preference, so it's worth spelling out the
-mechanism rather than just the one-line table reason:
-
-- Caveman's entire purpose is compressing agent output by stripping
-  qualifiers, hedges, and softening language to cut token spend. That is the
-  literal opposite of what `docs/SAFETY-FRAMING.md` requires: every
-  spoken/caption/haptic string this app produces **must** hedge ("looks like
-  a person is nearby," never "a person is nearby") because the app has no
-  way to guarantee its perception is correct, and asserting false certainty
-  to a blind or low-vision user is the single highest-severity failure mode
-  this project has. A tool whose core mechanic is "remove qualifiers" would
-  need to be actively fought on every output surface, forever — not a
-  one-time review comment.
-- It's not scoped to chat responses — it installs `SessionStart` and
-  `UserPromptSubmit` hooks, meaning it changes agent behavior repo-wide and
-  session-wide, not just in places a developer opts in. There's no safe
-  partial-install here (unlike Ponytail below, which can be scoped to a
-  passive rules file).
-- Its secondary features (commit/review skills) are already covered by
-  superpowers + the built-in `/code-review`, so there's no unique
-  capability being given up by skipping it.
-
-This reasoning is specific to SenseBridge's awareness-not-safety doctrine —
-Caveman isn't unsafe in general, it's incompatible with *this* project's one
-non-negotiable output constraint.
-
-### Evaluated 2026-07-17 and deliberately not installed
-
-| Item | Source (verified) | Reason to skip |
-| --- | --- | --- |
-| ctxlint / cclint / agnix | `YawLabs/ctxlint`, `felixgeelhaar/cclint`, `agnix` | Real projects that lint `CLAUDE.md`/`AGENTS.md`/skills against actual repo state for staleness — a legitimate fit for "drift detection." Not adopted yet: none has verified track record/stability from this pass, and the repo already has two lower-risk mechanisms doing most of the same job — the `update-context` skill (manual, on-demand refresh after repo changes) and the fact that this session's own audit found the instruction-file architecture already duplication-free (see Task 10 of the 2026-07-17 mega-audit). Revisit if drift becomes a recurring real problem, not preemptively |
-| Prompt-injection / security "enforcement" as a single tool | — | No single named tool fits; current best practice (OWASP Agentic Top 10, 2026) is defense-in-depth via primitives already in use here: Claude Code's `PreToolUse`/`PostToolUse` hooks (`.claude/settings.json`, both project and user-global), permission/sandbox allowlists, and MCP server scoping — not a bolt-on product |
-
 ## Not needed (and why)
 
 | Tool | Reason |
 | --- | --- |
-| SWC, Jest, Knip, Husky | `website/` is mostly static HTML/CSS — nothing for a bundler, test runner, or dead-code tool to do yet. Add if/when the site gains real JS/React logic beyond what ESLint already covers (see the "Marketing website" row above). Husky specifically: hooks are already dependency-free shell (`.githooks/`), no wrapper needed. SwiftLint/SwiftFormat plus Swift Testing (unit/integration) and XCTest (E2E/performance) cover the app — see [`TESTING.md`](TESTING.md). **Commitlint was in this row until 2026-07-23** — adopted; see the "Commitlint" row above |
-| Playwright | iOS UI testing is XCUITest + VoiceOver passes; no browser E2E surface on the website yet (pa11y-ci covers its accessibility gate — see `website/README.md`'s Tooling section). Revisit if the site grows real interactive flows worth E2E-testing |
-| Vercel, Docker, Kubernetes | Serverless-by-doctrine for the **app**: there is no backend to deploy — a container platform would violate `docs/PRIVACY.md`. `website/` is a static site with no deploy target chosen yet (see `website/README.md`); revisit only for static hosting, never a container/orchestration platform |
-| `@costline/nexus-graph` (TrustLedger's `scripts/nexus-mcp.js`) | Different package from `gitnexus` (the "GitNexus" row above) despite the shared "Nexus" name — that TrustLedger-specific script still has no home here. GitNexus now covers the call-graph/navigation need it would have filled |
+| SWC, Jest, Knip, Husky | `website/` is mostly static HTML/CSS — nothing for a bundler, test runner, or dead-code tool to do yet |
+| Playwright | iOS UI testing is XCUITest + VoiceOver passes; no browser E2E surface on the website yet (pa11y-ci covers its accessibility gate) |
+| Vercel, Docker, Kubernetes | Serverless-by-doctrine for the **app**: there is no backend to deploy, and a container platform would violate `docs/PRIVACY.md`. Docker exists in this repo only to build the static `website/` image for Railway |
+| `@costline/nexus-graph` | A different package from `gitnexus` despite the shared "Nexus" name; no home here |
 | Python venv | No Python code in this repo |
 | Oracle tooling | No database; explicitly unjustified |
-| Dune MCP (global) | Crypto analytics for other projects; not referenced here |
+| Caveman | Its core mechanic strips hedging and qualifiers — a direct conflict with awareness-not-safety, and it installs as user-global hooks that cannot be scoped away from SenseBridge sessions. No adaptation preserves both the tool and the doctrine |
 
 ## MCP inventory
 
+Verified against `~/.claude.json` and `.mcp.json` on **2026-08-01**. Seven
+servers (`dune`, `github`, `gitnexus`, `glyph`, `granola`, `memory`,
+`sequential-thinking`) were removed from the user-scope config on 2026-07-31
+after 30 days with zero calls; `headroom` was removed when its routing was
+disabled. `graphify`, `gitnexus`, and `glyph` still work as **CLIs** from Bash.
+Their original entries are in [the archive](archive/TOOLING-DECISIONS.md).
+
 | Server | Scope | Permissions | Status |
 | --- | --- | --- | --- |
-| serena | project (`.mcp.json` for Claude; `.codex/config.toml`, `.gemini/settings.json`, `.copilot/mcp-config.json`, `.windsurf/mcp_config.json`, `.cursor/mcp.json` for the others) | Local process, project files only | Active |
-| gitnexus | user-global (`~/.claude.json`, via `gitnexus setup -c claude`) | Local process, project files only (no network calls) | Active |
-| dune | user-global (`~/.claude.json`) | Remote, read-only analytics | Unrelated to SenseBridge; left global, nothing to remove here |
-| claude-in-chrome | user-global (extension) | Site-gated browser automation | Available; gstack `/browse` preferred per global CLAUDE.md |
-| perplexity (optional, per-developer) | user-global only — never project-scoped | Remote search API; **every query is egress** and needs `PERPLEXITY_API_KEY` | Not installed. Approved 2026-07-17 as a dev-research aid for any developer who wants it: `claude mcp add --scope user perplexity -e PERPLEXITY_API_KEY=<key> -- npx -y @perplexity-ai/mcp-server` (source: `perplexityai/modelcontextprotocol`, MIT, official). Never coupled to the shipped app or CI |
-| context7 (optional, per-developer) | user-global only — never project-scoped, same reasoning as perplexity above | Remote docs-lookup API (Upstash); **every query is egress**, optional `CONTEXT7_API_KEY` for higher rate limits | Installed 2026-07-20: `claude mcp add --scope user context7 -- npx -y @upstash/context7-mcp` (source: `upstash/context7-mcp`, MIT, official; unauthenticated — add `-e CONTEXT7_API_KEY=<key>` for a higher rate limit if needed later). Note: the unscoped `context7` npm package is a **different, unrelated** third-party CLI — do not confuse the two |
-| granola | user-global (`~/.claude.json`) | Remote hosted MCP (`https://mcp.granola.ai/mcp`), owner's meeting notes | Registered 2026-07-17 (owner override); **needs authentication** — owner completes OAuth via `/mcp`. Personal productivity; unrelated to the app, never touches repo data |
-| higgsfield | user-global (`~/.claude.json`) | Remote hosted MCP (`https://mcp.higgsfield.ai/mcp`), AI media generation (egress on use) | Registered 2026-07-17 (owner override); **needs authentication** — owner completes OAuth via `/mcp`. Any marketing use of generated media still passes the honesty-over-hype guardrails |
-| filesystem | user-global (`~/.claude.json`) | Local process, filesystem read/write scoped to `$HOME` | Added 2026-07-19, part of a personal global tooling build-out (`~/.claude/tmp/tools.md`); unrelated to SenseBridge, left global |
-| github | user-global (`~/.claude.json`) | Remote GitHub API, token reused from `gh auth token` | Added 2026-07-19, same build-out. Unrelated to SenseBridge's own `gh` CLI usage in workflows |
-| puppeteer | user-global (`~/.claude.json`) | Local headless-browser automation | Added 2026-07-19, same build-out. **gstack `/browse` remains the default for all agent browsing per the global standard** (same guardrail as `claude-in-chrome`/`agent-browser` above) — use this only when explicitly asked for scripted/programmatic browser automation, never as a substitute for `/browse` |
-| memory (`@modelcontextprotocol/server-memory`) | user-global (`~/.claude.json`) | Local knowledge-graph memory store | Added 2026-07-19, same build-out. **Distinct from claude-mem and from this harness's built-in auto-memory** — do not let all three collide; SenseBridge work should keep using the harness's built-in memory (claude-mem stays disabled here, see below), and this MCP memory server is not currently referenced by any SenseBridge workflow |
-| sequential-thinking | user-global (`~/.claude.json`) | Local, structured-reasoning scratchpad only, no network | Added 2026-07-19, same build-out |
-| glyph (`benmyles/glyph`) | user-global (`~/.claude.json`, binary at `~/.local/bin/glyph`) | Local process, Tree-sitter symbol extraction, no network | Added 2026-07-19, same build-out. **Heavy functional overlap with GitNexus and Serena** (both already cover semantic/graph code navigation here and are more capable) — prefer those two for SenseBridge work; treat glyph as a lightweight fallback only |
+| serena | project (`.mcp.json`, plus the per-harness configs) | Local process, project files only. Read/navigation tools and the eight non-destructive mutating tools; destructive ones denied, `guard-serena-legal.sh` mirrors `Edit(legal/**)` for them, and `guard-mcp-sensitive-paths.mjs` mirrors the credential deny rules. **Web dashboard**: enabled project-scoped via the `--enable-web-dashboard=true --open-web-dashboard=true` flags in `.mcp.json`, which bind `127.0.0.1` only (verified 2026-08-01). Serena is spawned **once per MCP client**, not once per project, so two concurrent Claude Code sessions mean two `start-mcp-server` processes — that is stdio MCP working as designed, not a duplicate to hunt down. They do not fight over the dashboard port: it walks up from its base, observed live as 24283 and 24284 with two sessions attached. It cannot be set in `.serena/project.local.yml` — `web_dashboard*` are fields of the global `SerenaConfig`, not `ProjectConfig`, so the key is **silently ignored** there; the CLI flags are the only project-scoped route | Active — first tier for code files |
+| context7 | user-global | Remote docs-lookup API (Upstash); **every query is egress** | Active, optional per developer |
+| filesystem | user-global | Local process, filesystem read/write scoped to `$HOME` | Active; unrelated to SenseBridge, left global |
+| puppeteer | user-global | Local headless-browser automation | Active, but **gstack `/browse` remains the default for all agent browsing** |
+| higgsfield | user-global | Remote hosted MCP, AI media generation (egress on use) | Registered by owner override; needs OAuth. Any marketing use of generated media still passes the honesty and safety-framing gates |
+| claude-in-chrome | user-global (browser extension) | Site-gated browser automation | Available; gstack `/browse` preferred per global `CLAUDE.md` |
+| perplexity | user-global only — never project-scoped | Remote search API; **every query is egress**, needs `PERPLEXITY_API_KEY` | Approved but **not installed**; opt-in per developer |
 
 Adding an MCP server to this repo requires: local-first, least privilege,
 a row in this table, and — if it could ever see user-surroundings data — a

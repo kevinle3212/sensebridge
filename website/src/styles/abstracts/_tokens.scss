@@ -6,16 +6,22 @@
 // (dark under :root, light under [data-theme="light"]) for runtime theming —
 // see abstracts/_functions.scss's color()/shadow(), which resolve to
 // `var(--color-<key>)` / `var(--shadow-<key>)` rather than a literal value.
-// Contrast (against $color-dark "bg" #080a10, WCAG AA body-text floor 4.5:1):
-//   text-primary   #e8ebf2 → ~17.9:1
-//   text-secondary #a7afc2 → ~8.6:1
-//   accent-primary #5eb1ff → ~8.1:1 (links/focus — carries text)
+// Every text-carrying token clears WCAG 2.2 **1.4.6 Contrast (Enhanced), 7:1**
+// — the Level AAA floor, not the 4.5:1 Level AA one — and clears it against the
+// *worst* background of its theme, not just the page background. That is the
+// claim `legal/ACCESSIBILITY_STATEMENT.md` makes under "Where we exceed Level
+// AA", so it is stated here against the surface that decides it. Ratios below
+// are computed, not estimated; re-derive them before changing any value.
+//   dark, worst background "surface" #161b28:
+//     text-primary   #e8ebf2 → 14.41:1
+//     text-secondary #a7afc2 →  7.82:1
+//     accent-primary #5eb1ff →  7.54:1 (links/focus — carries text)
+//   light, worst background "surface" #eef1f7:
+//     text-primary   #101422 → 16.21:1
+//     text-secondary #454c5e →  7.58:1
+//     accent-primary #0d4894 →  7.83:1
 // accent-warm is decorative-only (hero glow/light-sweep) and never carries
-// text, so it is not held to the text contrast floor. Light-mode contrast
-// (against $color-light "bg" #f7f8fb):
-//   text-primary   #101422 → ~17.4:1
-//   text-secondary #4d5468 → ~7.5:1
-//   accent-primary #145fc4 → ~6.2:1
+// text, so it is not held to the text contrast floor.
 @use "sass:map";
 
 $color-dark: (
@@ -40,8 +46,8 @@ $color-light: (
   "surface-glass": rgb(255 255 255 / 60%),
   "hairline": #d4d9e4,
   "text-primary": #101422,
-  "text-secondary": #4d5468,
-  "accent-primary": #145fc4,
+  "text-secondary": #454c5e,
+  "accent-primary": #0d4894,
   "accent-warm": #a8480d,
   "surface-raised": #eef1f7,
 );
