@@ -299,7 +299,13 @@ const VIOLATION_KEY = "__cspViolations";
 async function main() {
   const csp = await productionCsp();
   const { baseUrl, close } = await serveDist(csp);
-  const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
+  // --enable-unsafe-swiftshader: the home route mounts the same WebGL glasses
+  // scene check-bfcache.js/check-scene-drag.js need it for — without software
+  // WebGL, headless Chrome never settles the scene's asset requests, and
+  // page.goto's networkidle0 wait times out (30s) instead of ever resolving.
+  const browser = await puppeteer.launch({
+    args: ["--no-sandbox", "--enable-unsafe-swiftshader"],
+  });
   /** @type {string[]} */
   const failures = [];
 
@@ -318,7 +324,16 @@ async function main() {
         });
       }, VIOLATION_KEY);
 
-      await page.goto(`${baseUrl}${route.path}`, { waitUntil: "networkidle0" });
+      // domcontentloaded, not networkidle0: the home route mounts a
+      // continuously-animated WebGL scene (same one check-scene-drag.js/
+      // check-bfcache.js already avoid networkidle0 for), so "zero network
+      // connections for 500ms" may never actually occur, and a fast local
+      // run getting lucky under 30s just masked the CI-runner timeout this
+      // caused. The follow-up wait below still gives late CSP-triggering
+      // resource loads a bounded window to register a violation, capped
+      // instead of open-ended.
+      await page.goto(`${baseUrl}${route.path}`, { waitUntil: "domcontentloaded" });
+      await page.waitForNetworkIdle({ idleTime: 500, timeout: 3000 }).catch(() => null);
       const routeFailures = await page.evaluate(route.assert);
       const violations = await page.evaluate((key) => {
         // `Reflect.get` rather than `window[key]`: the bracket form is an

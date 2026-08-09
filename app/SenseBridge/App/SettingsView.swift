@@ -157,6 +157,7 @@ struct SettingsView: View {
                 }
                 .accessibilityHint("Choose the app's display language.")
             }
+            DiagnosticsSettingsSection(crashReportingEnabled: binding(\.crashReportingEnabled))
         }
         .navigationTitle("Settings")
     }

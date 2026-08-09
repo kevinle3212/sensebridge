@@ -1,0 +1,65 @@
+@use "@styles/abstracts" as *;
+
+.notice {
+  @include section-band("default");
+}
+
+.heading {
+  color: color("text-primary");
+
+  @include type-h2;
+}
+
+.lede {
+  max-width: $measure;
+  margin-top: space("2");
+
+  @include type-lede;
+}
+
+.meta {
+  max-width: $measure;
+  margin-top: space("1");
+  color: color("text-secondary");
+
+  @include type-small;
+}
+
+// Set apart from the prose sections below it, because it is the only part of
+// this page that does something rather than says something.
+.choice {
+  max-width: $measure;
+  margin-top: space("4");
+  padding: space("3");
+  background: color("bg-elevated");
+  border: 1px solid color("hairline");
+  border-radius: radius("lg");
+}
+
+.section {
+  max-width: $measure;
+  margin-top: space("4");
+}
+
+.section-heading {
+  color: color("text-primary");
+
+  @include type-h3;
+}
+
+.section p,
+.choice p {
+  margin-top: space("2");
+}
+
+// Generous row spacing rather than tight: this list is read one item at a
+// time, often aloud, and each item is a separate claim about someone's data.
+.list {
+  margin-top: space("2");
+  padding-inline-start: space("3");
+  list-style: disc;
+
+  li + li {
+    margin-top: space("1");
+  }
+}

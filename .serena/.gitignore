@@ -1,3 +1,8 @@
 # Serena MCP local state — regenerated per machine, not shared config.
+# `memories/` is deliberately NOT here: those files are curated project
+# knowledge (doctrine, tech stack, conventions, the task-completion checklist),
+# so they are versioned and reviewed like any other doc. A fresh clone then has
+# a Serena that already knows the project instead of re-onboarding.
 /cache
+/logs
 /project.local.yml

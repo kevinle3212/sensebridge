@@ -74,7 +74,7 @@ fi
 if [ -z "$GRAPHIFY_PYTHON" ]; then
     _GFY_PYTHON_FILE="graphify-out/.graphify_python"
     if [ -f "$_GFY_PYTHON_FILE" ]; then
-        _FROM_FILE=$(cat "$_GFY_PYTHON_FILE" 2>/dev/null | tr -d '[:space:]')
+        _FROM_FILE=$(tr -d '[:space:]' < "$_GFY_PYTHON_FILE" 2>/dev/null)
         case "$_FROM_FILE" in
             *[!a-zA-Z0-9/_.@:-]*) _FROM_FILE="" ;;  # allowlist (covers Windows paths)
         esac

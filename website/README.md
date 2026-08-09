@@ -1,9 +1,58 @@
 # SenseBridge Website
 
+> **This is a sub-README. It documents `website/` only.**
+> For what SenseBridge is, the iOS app, the architecture, and everything else,
+> start at the **[root `README.md`](../README.md)**.
+
+## Where this fits
+
+SenseBridge is a free, open-source iPhone app that translates a blind or
+low-vision person's surroundings into clear spoken information, processing
+everything on the device by default. This directory is **not** that app — it is
+the public marketing site that describes it, and the two share almost nothing
+but doctrine.
+
+|            | `app/`                   | `website/` (you are here)           |
+| ---------- | ------------------------ | ----------------------------------- |
+| What it is | The product — native iOS | The page that describes the product |
+| Stack      | Swift, SwiftUI, SwiftPM  | Astro, SCSS, TypeScript             |
+| Ships to   | An iPhone                | A static CDN                        |
+| Docs       | [`docs/`](../docs)       | This file                           |
+
+The site is **pre-launch**: there is no build to download, so nothing here may
+imply one exists. Two rules cross the boundary from the app and bind this
+directory just as hard:
+
+- **Awareness, not safety.** Every user-facing string hedges and never claims a
+  safety or navigation guarantee — see
+  [`../docs/SAFETY-FRAMING.md`](../docs/SAFETY-FRAMING.md).
+- **Screen-reader-first.** Accessibility is a blocking gate here, not a
+  post-launch cleanup — see [`../docs/ACCESSIBILITY.md`](../docs/ACCESSIBILITY.md).
+
+Start at the root for anything broader than this directory:
+
+| Looking for                               | Go to                                                          |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| The project, end to end                   | [`../README.md`](../README.md)                                 |
+| Product vision, personas, positioning     | [`../docs/PRODUCT.md`](../docs/PRODUCT.md)                     |
+| App architecture and protocol seams       | [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)           |
+| Roadmap and phases                        | [`../docs/ROADMAP.md`](../docs/ROADMAP.md)                     |
+| Privacy guarantees                        | [`../docs/PRIVACY.md`](../docs/PRIVACY.md)                     |
+| Contributing, PR process                  | [`../CONTRIBUTING.md`](../CONTRIBUTING.md)                     |
+| Site design principles and brand register | [`../.agents/context/DESIGN.md`](../.agents/context/DESIGN.md) |
+| Every doc, indexed                        | [`../WIKI.md`](../WIKI.md)                                     |
+
+The rest of this file is the website's own reference: what it is built from,
+how to run it, what gates it, and how it deploys.
+
+## The site itself
+
 Static marketing site for SenseBridge, built with [Astro](https://astro.build)
 (static output — every page is prerendered HTML, no backend, no accounts, no
-telemetry). Styling is SCSS (design tokens in `src/styles/abstracts/`,
-co-located `*.module.scss` per component). The only client-side JavaScript is:
+cookies, and no telemetry unless a visitor asks for it — see
+[Error monitoring](#error-monitoring-opt-in-and-off-by-default)). Styling is
+SCSS (design tokens in `src/styles/abstracts/`, co-located `*.module.scss` per
+component). The only client-side JavaScript is:
 
 - `src/scripts/read-aloud.ts` — two progressive-enhancement "listen to this
   page" controls; see [Read-aloud controls](#read-aloud-controls).
@@ -12,6 +61,11 @@ co-located `*.module.scss` per component). The only client-side JavaScript is:
   under `prefers-reduced-motion: reduce` (or with JavaScript disabled) nothing
   instantiates and the page renders as a complete, static, fully-readable
   document. That completeness is a hard requirement, not a fallback.
+- `src/scripts/monitoring-consent.ts` — 431 bytes gzipped, and present only when
+  `PUBLIC_SENTRY_DSN` is set at build time. It reads one `localStorage` value
+  and does nothing else; the Sentry SDK lives behind a dynamic import in
+  `src/scripts/monitoring.ts`, so without consent that ~27kB chunk is never
+  fetched. See [Error monitoring](#error-monitoring-opt-in-and-off-by-default).
 
 `@astrojs/react` is wired in `astro.config.mjs` so a component can opt into a
 React island with a `client:*` directive. **No component does today, and the
@@ -203,6 +257,50 @@ the active locale in the menu. See
 for the full design (this covers the website half only; the iOS app has its
 own localization).
 
+The full privacy notice is part of this — `/privacy`, `/es/privacy`,
+`/vi/privacy` all render from `src/components/PrivacyPage.astro` against the
+same dictionaries. The translations carry a line saying the English version
+governs, because a mistranslated legal notice should not become a second,
+divergent promise.
+
+## Error monitoring (opt-in, and off by default)
+
+Sentry is wired for error reporting, and the wiring is built so that "off by
+default" is true at the _network_ layer rather than at a config flag. Three
+gates, in order:
+
+1. **Build time.** With `PUBLIC_SENTRY_DSN` unset — the default, and what a
+   fresh clone gets — `astro.config.mjs` does not register the Sentry
+   integration at all, and the consent switch does not render. Nothing about
+   Sentry reaches the bundle.
+2. **Bundle time.** With a DSN set, the only module that imports `@sentry/astro`
+   is `src/scripts/monitoring.ts`, and the only thing that reaches it is an
+   `await import()` inside `src/scripts/monitoring-consent.ts`. Vite therefore
+   emits it as a separate chunk that no HTML file references. A visitor who has
+   not opted in downloads 431 bytes gzipped, not the ~27kB SDK.
+3. **Runtime.** The visitor grants consent with the switch on `/privacy`. There
+   is no consent banner, and deliberately so: nothing is stored or sent before
+   the switch is used, so there is nothing to ask for on arrival — which is both
+   the strictest reading of GDPR/ePrivacy and the least intrusive thing to do to
+   someone who came to read a page.
+
+A [Global Privacy Control](https://globalprivacycontrol.org/) signal is a hard
+override. It outranks a previously stored `granted`, and the switch is not
+offered at all — offering a choice the site would then override is a dark
+pattern, so the page explains the situation instead.
+
+What is sent, once someone opts in: the error, its stack, the page URL with the
+query string stripped, and browser/OS version. `beforeSend` in `monitoring.ts`
+deletes `user`, `server_name`, and the request's cookies, headers, body, and
+query string; tracing, session replay, and every default integration are off
+(`integrations: []`, `tracesSampleRate: 0`).
+
+`npm run check:consent` asserts all of the above against a real browser, so the
+claim is tested rather than documented. Environment variables and where to get
+each one are in [`.env.example`](.env.example) and, at more length, in
+[`../TODO.md`](../TODO.md) under "Sentry — environment variables and how to get
+each one". The DSN is not a credential; `SENTRY_AUTH_TOKEN` is.
+
 ## Local development
 
 ```sh
@@ -331,9 +429,11 @@ Two things do not reproduce locally, so check them deliberately:
   which is how the dev-only React Scan block is gated. It is still covered by
   ESLint, `astro check`, and the build.)
 - `npm run test:a11y` — [pa11y-ci](https://github.com/pa11y/pa11y-ci) against
-  the built `dist/` (zero errors required). Automated checks are a floor, not
-  the gate: a manual VoiceOver + keyboard pass on changed UI is still
-  required per the repo's quality gates.
+  the built `dist/` (zero errors required). Self-contained: `scripts/a11y.js`
+  builds `dist/` if it is missing and serves it itself, so there is no separate
+  server to start (see "Serving the site for `test:a11y`" below). Automated
+  checks are a floor, not the gate: a manual VoiceOver + keyboard pass on
+  changed UI is still required per the repo's quality gates.
 - `npm run check:zero-js` — asserts the built `dist/` ships **no hydrated
   island**, guarding the zero-JS-by-default posture. Requires `npm run build`
   first; no network, no key. It asserts on `<astro-island>`, the element Astro
@@ -356,6 +456,17 @@ Two things do not reproduce locally, so check them deliberately:
   without ever exercising — the alternative was asking a human to drag the
   glasses and report back. Runs in CI's `a11y` job, which already downloads the
   Chrome this needs.
+- `npm run check:bfcache` — visits the built `dist/`, waits for the phone stage
+  to mount its WebGL scene, navigates away, comes back through history, and
+  asserts the stage is still `.scene-active` with a WebGL context that is not
+  lost. Also records the longest main-thread task after `pageshow` and fails
+  above 500ms. Requires `npm run build` first; same ephemeral `dist/` server as
+  `check:scene-drag`. This exists because the back/forward cache restores a
+  document instead of re-running it — `load` never fires a second time — so
+  anything a page tears down on `pagehide` is gone for the rest of the session,
+  and no typecheck, lint, build, or first-visit browser check can see it.
+  Skips loudly (never silently passes) when the runner has no WebGL2 or its
+  Chrome declines to bfcache the page.
 - `npm run check:site-url` — asserts every absolute URL in the built `dist/`
   (canonical link, sitemap, `robots.txt`) comes from the configured `SITE_URL`
   rather than a domain baked into tracked source. Requires `npm run build`
@@ -363,6 +474,21 @@ Two things do not reproduce locally, so check them deliberately:
   failure it catches is silent: a hardcoded origin builds, lints, and type-
   checks perfectly, and only shows up as a fork advertising somebody else's
   deployment as its canonical home. See [Deployment](#deployment).
+- `npm run check:contrast` — asserts every colour token that carries text
+  clears **7:1**, the WCAG 2.2 **1.4.6 Contrast (Enhanced)** Level AAA ratio,
+  against every background of its own theme rather than only the page
+  background. Reads `src/styles/abstracts/_tokens.scss` directly; no build, no
+  browser, no network.
+
+  This exists because that ratio is a **published claim** —
+  [`legal/ACCESSIBILITY_STATEMENT.md`](../legal/ACCESSIBILITY_STATEMENT.md) and
+  the `/accessibility` page both state it — and the page-level gate cannot
+  prove it. Both pa11y engines decline to compute a ratio wherever this site's
+  animated link underline puts a `linear-gradient` behind text: axe returns
+  `messageKey: "bgGradient"` and HTML CodeSniffer returns `NaN:1`. Those are
+  honest "cannot determine" results, not failures, but they mean nothing was
+  re-checking the numbers a legal document asserts.
+
 - `npm run check:csp` — serves the built `dist/` **with the real production
   Content-Security-Policy header** and asserts the pages still work under it.
   Requires `npm run build` first; no network beyond localhost.
@@ -426,11 +552,32 @@ Two things do not reproduce locally, so check them deliberately:
     npm run test:a11y
   ```
 
-  `npm run test:a11y` needs a server on `127.0.0.1:4321`, so run
-  `npm run preview` first. That script passes `--host 127.0.0.1` for this
-  reason — bare `astro preview` binds `::1`, which those URLs do not reach,
-  and pa11y then fails against a server that is demonstrably up.
+  **Serving the site for `test:a11y`.** The URLs in `.pa11yci.json` are
+  absolute, so the gate needs something on `127.0.0.1:4321`. `scripts/a11y.js`
+  supplies it by calling Astro's programmatic `preview()` **in its own
+  process** — not by spawning `astro preview` as a child.
 
+  That is the point, not an implementation detail. A wrapper that starts a
+  child server and stops it afterwards leaves the child holding port 4321 if it
+  dies in between, and `../CLAUDE.md` forbids leaving a port held by something
+  nobody asked to start. A listener owned by the script's own PID cannot
+  outlive it: the kernel closes the socket whatever happens, `SIGKILL`
+  included. This is why the script has no signal handlers or cleanup traps —
+  the guarantee comes from process ownership, not from remembering to tidy up.
+
+  Two consequences worth knowing. The host is `127.0.0.1`, never `localhost`:
+  bare `astro preview` binds `::1`, which those URLs do not reach, and pa11y
+  then fails against a server that is demonstrably up. And if you already have
+  `npm run preview` running, the script notices, skips starting its own, and
+  tests against yours — so the old two-terminal workflow still works.
+
+- `npm run check:consent` — drives the built `dist/` in Puppeteer and asserts
+  the monitoring consent switch actually gates the network, not just a flag:
+  no request for the Sentry chunk before consent, one after granting, none
+  again after revoking, and none at all under Global Privacy Control. Requires
+  `npm run build` first, with `PUBLIC_SENTRY_DSN` set — without a DSN the site
+  has no switch to test and the script **skips loudly** rather than reporting a
+  pass. See [Error monitoring](#error-monitoring-opt-in-and-off-by-default).
 - `lint-staged` runs on staged `website/**` files via the repo's
   `.githooks/pre-commit` (the repo uses `core.hooksPath .githooks`, not
   Husky).
@@ -517,8 +664,12 @@ npm run vercel:inspect   # inspect the latest deployment, including its logs
    deployment: canonical links, the sitemap, `robots.txt`, and the OG/Twitter
    meta will all point at `localhost`.
 
-   Nothing else is required. This is a static site with no backend, accounts,
-   or telemetry (see the repo's architecture invariants in `../CLAUDE.md`).
+   Nothing else is required. This is a static site with no backend and no
+   accounts (see the repo's architecture invariants in `../CLAUDE.md`).
+   The optional Sentry variables are the one thing you might add — and only
+   `SENTRY_AUTH_TOKEN` is a credential; setting `PUBLIC_SENTRY_DSN` only
+   _offers_ visitors the choice, it does not collect anything. See
+   [Error monitoring](#error-monitoring-opt-in-and-off-by-default).
    `ELEVENLABS_API_KEY` (see [Read-aloud controls](#read-aloud-controls)) is a
    local-only, generation-time secret — it is never set on Railway and never
    deployed; only the `audio/main.mp3` it produces gets shipped. If another
@@ -542,4 +693,5 @@ Or `docker compose -f docker/docker-compose.yml up web`. Then open
 
 ---
 
-Need help? See [`SUPPORT.md`](../SUPPORT.md).
+Back to the project overview: [`../README.md`](../README.md). Need help? See
+[`SUPPORT.md`](../SUPPORT.md).

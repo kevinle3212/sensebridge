@@ -2,6 +2,16 @@
 /**
  * Privacy section: explains the on-device/no-telemetry stance. Renders
  * the Signal Spine's "stays on-device" stage marker.
+ *
+ * Deliberately carries no link to the full notice at `/privacy`, even though
+ * this is where a reader who cares about it is looking. Everything inside
+ * `<main id="main">` is the exact text `scripts/generate-audio.js` hashes, so
+ * one more link here invalidates the pre-rendered narration and costs ~4,400
+ * of the ElevenLabs free plan's 10,000 monthly credits to regenerate. The
+ * footer's link sits outside `<main>` and appears on every page, including
+ * this one, so nothing is actually unreachable. See website/README.md →
+ * "Cost, quota, and licensing", and `t.privacy.fullNoticeLink`, which is kept
+ * translated and ready for the day the narration is regenerated anyway.
  */
 import styles from "./Privacy.module.scss";
 import SpineNode from "./SpineNode.astro";

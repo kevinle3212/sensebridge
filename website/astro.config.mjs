@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
+import sentry from "@sentry/astro";
 
 // Deployment origin. Astro needs an absolute one to emit canonical URLs,
 // sitemap entries, robots.txt, and OG/Twitter meta — but which origin is a
@@ -27,6 +28,24 @@ const DEFAULT_SITE_URL = "http://localhost:4321";
 const configuredSiteUrl = process.env.SITE_URL?.trim();
 // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- see above
 const site = configuredSiteUrl ? configuredSiteUrl : DEFAULT_SITE_URL;
+
+// Error reporting is opt-in per deployment, and its absence is the default.
+//
+// Gating the *integration* on the DSN, rather than letting sentry.client.config.js
+// no-op on an empty one, is what keeps this site's zero-JS-by-default posture
+// intact for anyone who has not configured Sentry: with the variable unset, the
+// SDK is never added to the bundle graph at all, so a fresh clone ships exactly
+// as much JavaScript as it did before Sentry existed. Registering the
+// integration unconditionally would inline ~35kB of disabled SDK into every
+// page — code that runs on every visit to do nothing.
+const sentryDsn = process.env.PUBLIC_SENTRY_DSN?.trim();
+
+// Uploading source maps needs a write-scoped auth token, which most builds
+// (a fork, CI, a local `npm run build`) neither have nor should have. Without
+// one the build still succeeds and still reports errors — the stack traces are
+// just minified. Never inline this token: it is the one piece of Sentry
+// configuration here that is a real credential. See .env.example.
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN?.trim();
 
 export default defineConfig({
   output: "static",
@@ -47,6 +66,26 @@ export default defineConfig({
       // prop, so this is the sitemap half of one decision.
       filter: (page) => !/\/(?:\d{3}|not-found)\/?$/.test(page),
     }),
+    // Spread rather than a ternary yielding `false`: Astro's integration array
+    // is typed as AstroIntegration[], so an empty spread is the way to say
+    // "nothing here" without a cast. See sentryDsn above for why this is gated.
+    ...(sentryDsn
+      ? [
+          sentry({
+            sourceMapsUploadOptions: {
+              enabled: Boolean(sentryAuthToken),
+              authToken: sentryAuthToken,
+              org: process.env.SENTRY_ORG,
+              project: process.env.SENTRY_PROJECT,
+              // Source maps are uploaded to Sentry, then deleted from dist/ so
+              // they are never served publicly. Shipping them would hand any
+              // visitor the site's unminified source — the readable stack trace
+              // is for the maintainer, in Sentry, not for the open web.
+              filesToDeleteAfterUpload: ["./dist/**/*.map"],
+            },
+          }),
+        ]
+      : []),
   ],
   // Built-in i18n routing (no new dependency, per the language-support
   // design spec): default locale "en" is unprefixed at "/" (Astro's default
@@ -69,6 +108,24 @@ export default defineConfig({
     inlineStylesheets: "never",
   },
   vite: {
+    // Sentry ships these as build-time flags precisely so an app that does not
+    // use a feature does not pay for it. Setting `integrations: []` in
+    // sentry.client.config.js stops the tracing code from *running*, but the
+    // bundler still cannot prove it is unreachable, so it stays in the bundle —
+    // measured on this site at 48.3kB gzipped before these and 26.9kB after. On
+    // a site whose whole performance posture is zero-JS-by-default, 21kB of
+    // provably dead code is worth one config block.
+    //
+    // Both must be string literals: Vite's `define` does a raw text
+    // substitution, so a real boolean would be stringified anyway.
+    //
+    // If tracing is ever genuinely wanted here, flipping __SENTRY_TRACING__
+    // back is required — a tracesSampleRate alone will do nothing once the code
+    // has been compiled out.
+    define: {
+      __SENTRY_DEBUG__: "false",
+      __SENTRY_TRACING__: "false",
+    },
     resolve: {
       alias: {
         "@styles": fileURLToPath(new URL("./src/styles", import.meta.url)),
