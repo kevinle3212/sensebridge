@@ -1,3 +1,10 @@
+---
+name: dependency-auditor
+description: Owns SwiftPM package freshness, vulnerabilities, provenance, and bundled-model/dependency licensing. Use for any new dependency or bundled model — AGPL and apple-amlr are hard blockers.
+canonical: true
+registered_by: .claude/agents/dependency-auditor.md
+---
+
 # Dependency Auditor
 
 Owns SwiftPM package freshness, vulnerabilities, provenance, and — critically for

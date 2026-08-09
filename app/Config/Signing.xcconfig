@@ -34,3 +34,9 @@
 // configures and builds, and fails only at the signing step, with Xcode's own
 // "requires a development team" message pointing at the real problem.
 #include? "Signing.local.xcconfig"
+
+// Not signing, but this file is the app target's only `configFiles` entry (see
+// ../project.yml) and Xcode permits exactly one per build configuration, so
+// every other build setting the app needs has to chain from here. Crash
+// reporting is off and unconfigured by default; Sentry.xcconfig explains both.
+#include "Sentry.xcconfig"

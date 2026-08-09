@@ -1,40 +1,48 @@
 {
   // Extends the main tsconfig and layers debug-only diagnostics on top.
-  // Run with: npx tsc -p tsconfig.debug.json --noEmit
+  // Run with: npm run typecheck:debug
   //
   // WARNING: these flags produce large amounts of output.
   // Disable the ones you don't need before running.
+  //
+  // This is a diagnostics pass, not a gate: `skipLibCheck: false` surfaces
+  // pre-existing conflicts inside generated `.astro/*.d.ts` and vendored
+  // `node_modules` typings (e.g. @webgpu/types vs. lib.dom), so it exits
+  // non-zero even when `website/src` is completely clean — which is why
+  // nothing chains it. `npm run typecheck:all` is the blocking pair.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
     "pretty": true,
     "preserveWatchOutput": true,
-
-    // tsBuildInfoFile is a no-op under plain --noEmit: tsc only writes
-    // build info when incremental output is actually requested.
-    // Verified against this repo's TS 6.0.3 (2026-07-28).
+    // `incremental` writes tsBuildInfoFile even under `noEmit`, so repeat
+    // runs of this deliberately slow pass reuse the previous one's work.
+    // Verified against this repo's TS 6.0.3 (2026-07-28): deleting the file
+    // and re-running recreates it. It is gitignored (.gitignore) —
+    // `npm run clean` deletes it.
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo.debug",
-
     // ── Extra strictness for this pass only — noisier than the main
     // tsconfig.json (astro/tsconfigs/strictest) wants for iterative dev,
     // but appropriate for a dedicated deep-diagnostics run. ─────────────
     "noUnusedLocals": true, // dead local bindings
     "noUnusedParameters": true, // dead function parameters
     "skipLibCheck": false, // also typecheck .d.ts files pulled in via node_modules
-
     // ── Lightweight: safe to enable together ─────────────────────────────
     "extendedDiagnostics": true, // memory, time, file/line/identifier counts after compile
     "diagnostics": true, // concise parser/binder/checker timing summary
-    "listEmittedFiles": true // absolute path of every emitted file
-
-    // ── Heavy: enable ONE at a time - each can produce 10k+ lines ────────
-    // "listFiles": true,          // every input file incl. all node_modules .d.ts
-    // "explainFiles": true,       // listFiles + reason each file was loaded
-    // "traceResolution": true     // every module-resolution attempt (extremely noisy)
-
+    "listEmittedFiles": true, // absolute path of every emitted file
+    // ── Heavy: enable ONE at a time - each can produce 10k+ lines. Only
+    // listFiles runs by default; uncomment explainFiles or traceResolution
+    // instead (not alongside) if you need one of those. ──────────────────
+    "listFiles": true, // every input file incl. all node_modules .d.ts
+    // "explainFiles": true, // listFiles + reason each file was loaded
+    // "traceResolution": true, // every module-resolution attempt (extremely noisy)
     // ── Writes files to disk instead of printing to terminal ──────────────
-    // "generateCpuProfile": "./profile.cpuprofile",  // V8 CPU profile for chrome://tracing
-    // "generateTrace": "./trace"                      // perf trace for @typescript/analyze-trace
+    // generateCpuProfile is CLI-only: verified 2026-07-30 against this repo's
+    // TS 6.0.3 that setting it here in compilerOptions is silently ignored
+    // (no error, no file written). Get a profile with:
+    //   npx tsc --generateCpuProfile ./profile.cpuprofile -p tsconfig.debug.json
+    "generateTrace": "./trace" // perf trace for @typescript/analyze-trace
   }
 }

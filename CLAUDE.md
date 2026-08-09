@@ -1,7 +1,7 @@
 # CLAUDE.md — SenseBridge
 
 Project rules only. Personal preferences (communication style, simplicity,
-surgical changes, git permission rules, tooling) live in the global
+surgical changes, git permission rules, tooling) live in the root global
 `~/.claude/CLAUDE.md` and are never repeated here — a rule stated twice drifts
 into two rules. When this file and the global file conflict, this file wins for
 SenseBridge work.
@@ -36,6 +36,18 @@ about pre-launch status.
   by default. Do not introduce a network round-trip for perception or reasoning;
   anything leaving the device needs explicit, revocable user consent and a
   privacy-doc update. See [`docs/PRIVACY.md`](docs/PRIVACY.md).
+- **Crash reporting is the one sanctioned exception, and it is opt-in.**
+  Sentry ships on `app/` and `website/` (owner decision, 2026-07-31, reversing
+  the previous no-crash-reporting stance). It is off until the user turns it
+  on, it carries diagnostics only — never camera frames, recognized text,
+  audio, location, or identity — and on the website the SDK is not even
+  downloaded before consent. The exception covers **crash and error reporting
+  only**: product analytics, session replay, and usage telemetry remain
+  prohibited, and widening what is collected requires updating
+  [`docs/PRIVACY.md`](docs/PRIVACY.md), [`legal/PRIVACY_POLICY.md`](legal/PRIVACY_POLICY.md),
+  and the site's `/privacy` notice in the same change. Mechanism:
+  `app/SenseBridge/App/CrashReporting.swift` and
+  `website/src/scripts/monitoring-consent.ts`.
 - **Protocol seams.** The pipeline is `SensingSource` → perception services →
   Reasoning → `RenderTarget`. Dependencies point inward; reasoning logic stays
   pure and framework-independent. Never couple reasoning to a specific capture or
@@ -81,24 +93,12 @@ compiles; they prove nothing about the thing they actually asked for.
   most of this app cannot run there. Build for the device even when the
   simulator build already passed — signing and arm64 are only exercised on the
   device destination.
-- Resolve the device at run time rather than hardcoding a UDID; personal Apple
-  identifiers stay out of tracked files, which is the same reason the team ID
-  lives in the gitignored `Config/Signing.local.xcconfig`:
-
-  ```bash
-  # Match the UDID by shape, not by column: device names contain spaces, so
-  # positional awk fields silently return the wrong token.
-  DEVICE=$(xcrun devicectl list devices | awk '/iPhone/ && \
-    match($0, /[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/) \
-    {print substr($0, RSTART, RLENGTH); exit}')
-  xcodebuild -project app/SenseBridge.xcodeproj -scheme SenseBridge \
-    -destination "platform=iOS,id=$DEVICE" build
-  xcrun devicectl device install app --device "$DEVICE" \
-    "$(xcodebuild -project app/SenseBridge.xcodeproj -scheme SenseBridge \
-       -destination "platform=iOS,id=$DEVICE" -showBuildSettings \
-       | awk -F' = ' '/ BUILT_PRODUCTS_DIR/ {print $2; exit}')/SenseBridge.app"
-  ```
-
+- The command is `npm run app:install` (`scripts/app.sh install`). It resolves
+  the attached device at run time rather than hardcoding a UDID — personal
+  Apple identifiers stay out of tracked files, the same reason the team ID
+  lives in the gitignored `Config/Signing.local.xcconfig`. `npm run` lists the
+  rest of the suite; see
+  [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md#command-center).
 - The phone must be unlocked or the developer disk image will not mount; say
   that rather than reporting a bare failure.
 - Installing to the owner's own device is **not** owner-gated — unlike every
@@ -121,6 +121,45 @@ compiles; they prove nothing about the thing they actually asked for.
 - Audits are append-only via `audits/scripts/new-audit.sh`; read
   [`audits/AGENT-GUIDE.md`](audits/AGENT-GUIDE.md) first. Report findings — don't
   silently fix during an audit.
+- **Serena and RTK are the priority tools for this repo, in this order —
+  fall back to default `Read`/`Grep`/`Glob`/`Bash` only once both are ruled
+  out for the operation at hand:**
+  1. **Serena's symbol tools** (`find_symbol`, `get_symbols_overview`,
+     `find_referencing_symbols`, `replace_symbol_body`, …) for anything
+     touching a code file — navigation, reading, or editing. Reach for these
+     before `Read`/`Grep`/`Edit` on any code file, every time.
+  2. **RTK** for shell operations (`git`/`gh`/`grep`/`ls`/`find`/`diff`/
+     test-runners/package managers; `npm test` is outside its covered set).
+     Two `PreToolUse` hooks wrap `Bash` calls in `rtk` before they run:
+     RTK's own global hook, which matches on command **shape** and silently
+     skips pipes, redirects, loop bodies, substitutions, subshells, and
+     `eval`/`sh -c`; and `.claude/hooks/prefer-rtk-shape.mjs`, which closes
+     exactly that gap. Both are automatic — the rule you must apply by hand
+     is the escape hatch: **compaction is lossy**, so when a call needs raw
+     fidelity (a patch file, a value captured into a variable, a `grep` that
+     must see every line), write it as `rtk proxy <cmd>`, which executes
+     unfiltered and is never rewritten. Mechanism and shape matrix live in
+     [`docs/TOOLING.md`](docs/TOOLING.md)'s RTK row and the hook's own header.
+  3. **Default `Read`/`Grep`/`Glob`/`Bash`** for what's left: prose/config
+     with no code symbols (docs, `TODO.md`, JSON/YAML — Serena's `languages:`
+     deliberately excludes these; see `.serena/project.yml`'s comments for
+     why a language server buys nothing on config-shaped files), or shell
+     operations outside RTK's covered command set. Among defaults, prefer the
+     narrower call first — `Grep`/`Glob` (targeted match) before a full
+     `Read`, before raw `Bash cat`/`find`/`ls` — each step down trades a
+     smaller, filtered result for a larger, unfiltered one. Serena's
+     `search_for_pattern` is also a legitimate option here even for
+     non-code files (context-line search, project-scoped) — it just isn't a
+     symbol tool, so it doesn't imply reaching for a language server.
+
+  Both are wired (`.mcp.json` + per-harness configs; RTK's global hook) to
+  cut token spend, so leaving them installed but routing around them defeats
+  the point. They cover different layers — RTK compacts shell output, Serena
+  replaces code-file navigation — so using both together is additive, not
+  redundant. **Say which tier served a non-trivial action.** Serena calls
+  already surface as their own tool name in the transcript, but RTK's
+  rewrite is silent by design — call it out in your one-line update (e.g.
+  "RTK-covered, hook compacted it") or it's invisible.
 
 ## Legal and licensing
 
@@ -146,6 +185,16 @@ Full rule in [`AGENTS.md`](AGENTS.md#session-logs) — log every substantive
 session under `sessions/<YYYY-MM-DD>/<HHMM>-PST.md` (gitignored, hour-bucketed,
 Pacific time) and carry any substantive follow-up into [`TODO.md`](TODO.md) in
 the same change per [`AGENTS.md`](AGENTS.md#when-you-cant-do-something).
+
+## Session hygiene
+
+Before ending a session, sweep back over what surfaced — stale references,
+minor config drift, an obviously-safe fix noticed in passing but not yet
+applied — and close what's safe to close, per the global `CLAUDE.md`'s
+Opportunistic Fixes bar ("safe to fix now → fix it"). A session should not
+end with fixable loose ends it could have closed itself; reserve
+[`TODO.md`](TODO.md) for items that are genuinely risky, large, or need a
+decision only the owner can make.
 
 ## Docs sync (per change)
 

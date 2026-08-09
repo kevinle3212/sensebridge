@@ -1,25 +1,27 @@
 {
   "detector": {
     "ignoreRules": [],
-    "ignoreFiles": [],
+    "ignoreFiles": [
+      "tmp/hyperframes-demo/**"
+    ],
     "ignoreValues": [
       {
         "rule": "overused-font",
         "value": "fraunces",
-        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\"",
-        "createdAt": "2026-07-21T21:17:15.989Z"
+        "createdAt": "2026-07-21T21:17:15.989Z",
+        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\""
       },
       {
         "rule": "overused-font",
         "value": "geist",
-        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\"",
-        "createdAt": "2026-07-21T21:17:16.688Z"
+        "createdAt": "2026-07-21T21:17:16.688Z",
+        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\""
       },
       {
         "rule": "overused-font",
         "value": "geist mono",
-        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\"",
-        "createdAt": "2026-07-21T21:17:17.360Z"
+        "createdAt": "2026-07-21T21:17:17.360Z",
+        "reason": "User confirmed intentional — deliberate brand pairing, see .agents/context/DESIGN.md \"3. Typography\""
       }
     ]
   }

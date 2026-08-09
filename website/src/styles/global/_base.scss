@@ -190,8 +190,8 @@ main {
   padding: space("1") space("2");
   background: color("accent-primary");
 
-  // bg-elevated rather than bg: in light mode this is #ffffff (5.7:1 against
-  // accent-primary #145fc4), the exact pairing the light palette spec calls
+  // bg-elevated rather than bg: in light mode this is #ffffff (8.85:1 against
+  // accent-primary #0d4894), the exact pairing the light palette spec calls
   // for; bg (#f7f8fb) would sit slightly lower.
   color: color("bg-elevated");
 

@@ -30,7 +30,7 @@ const PALETTES: Record<ThemeName, ScenePalette> = {
   },
   light: {
     bloom: false,
-    particleColor: new THREE.Color("#145fc4"),
+    particleColor: new THREE.Color("#0d4894"),
     warmColor: new THREE.Color("#a8480d"),
     particleOpacityScale: 0.5,
     emissiveIntensity: 0.15,
@@ -189,6 +189,12 @@ export function mountScene(container: HTMLElement, factory: SceneFactory): Mount
   container.classList.add("scene-active");
 
   const dispose = (): void => {
+    // Un-marked here rather than in handleContextLost alone: the class is what
+    // hides each stage's static fallback art (PhoneExploded.module.scss,
+    // SpatialFuture.module.scss, Hero.module.scss), so any teardown path that
+    // left it on would leave the container blank instead of returning it to
+    // the CSS/SVG art it was covering.
+    container.classList.remove("scene-active");
     cancelAnimationFrame(rafId);
     resizeObserver.disconnect();
     intersectionObserver.disconnect();
@@ -202,7 +208,6 @@ export function mountScene(container: HTMLElement, factory: SceneFactory): Mount
 
   function handleContextLost(event: Event): void {
     event.preventDefault();
-    container.classList.remove("scene-active");
     dispose();
   }
   canvas.addEventListener("webglcontextlost", handleContextLost);

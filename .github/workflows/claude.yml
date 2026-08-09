@@ -41,4 +41,6 @@ jobs:
       - name: Run Claude Code
         uses: anthropics/claude-code-action@fa7e2f0a29a126f0b81cdcf360561b36e44cf608 # v1
         with:
+          # See claude-code-review.yml for why a "Context access might be invalid"
+          # warning here is expected IDE/Copilot noise, not a defect.
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}

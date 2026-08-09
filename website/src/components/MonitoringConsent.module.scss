@@ -1,0 +1,99 @@
+@use "@styles/abstracts" as *;
+
+.consent {
+  margin-top: space("3");
+  max-width: $measure;
+}
+
+// The whole row is the button, so the label is the accessible name and the hit
+// target spans the card rather than a thumb-sized thing a shaky hand has to
+// find. Same bordered-surface vocabulary as the site's other cards and the
+// theme toggle, rather than a new treatment.
+.control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space("2");
+  width: 100%;
+  min-height: 3.5rem;
+  padding: space("2");
+  background: color("surface");
+  border: 1px solid color("hairline");
+  border-radius: radius("md");
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  @include theme-transition;
+
+  &:focus-visible {
+    @include focus-visible-outline;
+  }
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.label {
+  color: color("text-primary");
+  font-weight: 500;
+}
+
+.state {
+  color: color("text-secondary");
+
+  @include type-small;
+}
+
+.track {
+  position: relative;
+  flex: none;
+  width: 3rem;
+  height: 1.75rem;
+  background: color("bg");
+  border: 1px solid color("hairline");
+  border-radius: 999px;
+
+  @include theme-transition;
+}
+
+.thumb {
+  position: absolute;
+  inset-block-start: 0.1875rem;
+  inset-inline-start: 0.1875rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: color("text-primary");
+  border-radius: 50%;
+
+  // Instant for a reduced-motion visitor: the thumb's travel is the only
+  // confirmation a sighted user gets that the tap registered, so it still
+  // moves — it just stops sliding there.
+  @include motion-safe {
+    transition: transform duration("fast") ease("standard");
+  }
+}
+
+// Colouring the whole card when on would make "on" the visually dominant
+// state, which reads as the recommended one. It isn't — this is off by
+// default, and the design should not lean on the answer.
+.control[aria-checked="true"] {
+  .track {
+    background: color("accent-primary");
+    border-color: color("accent-primary");
+  }
+
+  .thumb {
+    background: color("bg");
+    transform: translateX(1.375rem);
+  }
+}
+
+.note {
+  color: color("text-secondary");
+
+  @include type-small;
+}

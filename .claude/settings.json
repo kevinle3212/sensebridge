@@ -13,7 +13,67 @@
       "Bash(gh pr merge:*)",
       "Bash(docker compose build:*)",
       "Bash(docker compose up:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "mcp__serena__find_symbol",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__find_referencing_symbols",
+      "mcp__serena__find_declaration",
+      "mcp__serena__find_implementations",
+      "mcp__serena__get_diagnostics_for_file",
+      "mcp__serena__list_memories",
+      "mcp__serena__read_memory",
+      "mcp__serena__initial_instructions",
+      "mcp__serena__onboarding",
+      "mcp__serena__open_dashboard",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__insert_after_symbol",
+      "mcp__serena__insert_before_symbol",
+      "mcp__serena__replace_content",
+      "mcp__serena__rename_symbol",
+      "mcp__serena__write_memory",
+      "mcp__serena__edit_memory",
+      "mcp__serena__rename_memory",
+      "Bash(rtk git status:*)",
+      "Bash(rtk git log:*)",
+      "Bash(rtk git diff:*)",
+      "Bash(rtk git show:*)",
+      "Bash(rtk gh pr list:*)",
+      "Bash(rtk gh pr view:*)",
+      "Bash(rtk gh pr status:*)",
+      "Bash(rtk grep:*)",
+      "Bash(rtk ls:*)",
+      "Bash(rtk tree:*)",
+      "Bash(rtk find:*)",
+      "Bash(rtk read:*)",
+      "Bash(rtk diff:*)",
+      "Bash(rtk err:*)",
+      "Bash(rtk test:*)",
+      "Bash(rtk json:*)",
+      "Bash(rtk summary:*)",
+      "Bash(rtk env:*)",
+      "Bash(rtk deps:*)",
+      "Bash(rtk smart:*)",
+      "Bash(rtk gain:*)",
+      "Bash(rtk discover:*)",
+      "Bash(rtk rg:*)",
+      "Bash(rtk jq:*)",
+      "Bash(rtk npm:*)",
+      "Bash(rtk npx:*)",
+      "Bash(rtk swift:*)",
+      "Bash(rtk xcodebuild:*)",
+      "Bash(rtk tsc:*)",
+      "Bash(rtk lint:*)",
+      "Bash(rtk prettier:*)",
+      "Bash(rtk format:*)",
+      "Bash(rtk vitest:*)",
+      "Bash(rtk playwright:*)",
+      "Bash(rtk wc:*)",
+      "Bash(rtk log:*)",
+      "Bash(rtk proxy:*)",
+      "Bash(npm run lint:js)",
+      "Bash(npm run lint:md)",
+      "Bash(npm run check:links)",
+      "Bash(npm run format)"
     ],
     "deny": [
       "Edit(legal/**)",
@@ -26,20 +86,72 @@
       "Grep(Carthage/Build/**)",
       "Grep(graphify-out/**)",
       "Grep(.gitnexus/**)",
-      "Grep(**/node_modules/**)"
+      "Grep(**/node_modules/**)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.*.local)",
+      "Read(**/.env.production)",
+      "Read(**/.env.staging)",
+      "Read(**/.env.development)",
+      "Read(**/.env.test)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/id_rsa*)",
+      "Read(**/id_ed25519*)",
+      "Read(**/credentials.json)",
+      "Read(**/secrets.json)",
+      "Grep(**/.env)",
+      "Grep(**/.env.local)",
+      "Grep(**/.env.*.local)",
+      "Grep(**/.env.production)",
+      "Grep(**/.env.staging)",
+      "Grep(**/.env.development)",
+      "Grep(**/.env.test)",
+      "Grep(**/*.pem)",
+      "Grep(**/*.key)",
+      "Grep(**/*.p12)",
+      "Grep(**/*.pfx)",
+      "Grep(**/id_rsa*)",
+      "Grep(**/id_ed25519*)",
+      "Grep(**/credentials.json)",
+      "Grep(**/secrets.json)",
+      "Edit(**/.env)",
+      "Edit(**/.env.local)",
+      "Edit(**/.env.*.local)",
+      "Edit(**/.env.production)",
+      "Edit(**/.env.staging)",
+      "Edit(**/.env.development)",
+      "Edit(**/.env.test)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.key)",
+      "Edit(**/*.p12)",
+      "Edit(**/*.pfx)",
+      "Edit(**/id_rsa*)",
+      "Edit(**/id_ed25519*)",
+      "Edit(**/credentials.json)",
+      "Edit(**/secrets.json)"
     ],
     "ask": [
-      "Workflow"
-    ]
+      "Workflow",
+      "Bash(rtk run:*)",
+      "Bash(rtk pipe:*)",
+      "mcp__serena__safe_delete_symbol",
+      "mcp__serena__delete_memory"
+    ],
+    "defaultMode": "default"
   },
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "clear|startup",
+        "matcher": "startup|resume|clear",
         "hooks": [
           {
             "type": "command",
-            "command": "test -f tmp/handoff.md && cat tmp/handoff.md || true"
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/announce-tooling.sh\"",
+            "timeout": 5,
+            "statusMessage": "Confirming Serena/RTK are wired"
           }
         ]
       }
@@ -78,6 +190,51 @@
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/warn-duplicate-read.sh\"",
             "timeout": 5,
             "statusMessage": "Checking for duplicate read"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/prefer-serena.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking for a Serena alternative"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__serena__read_file|mcp__filesystem__read_text_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/cap-large-read.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking read size cap"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/warn-duplicate-read.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking for duplicate read"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/prefer-serena.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking for a Serena alternative"
+          }
+        ]
+      },
+      {
+        "matcher": "Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/prefer-serena.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking for a Serena alternative"
           }
         ]
       },
@@ -93,6 +250,28 @@
         ]
       },
       {
+        "matcher": "mcp__serena__replace_content|mcp__serena__replace_symbol_body|mcp__serena__insert_before_symbol|mcp__serena__insert_after_symbol|mcp__serena__safe_delete_symbol|mcp__serena__rename_symbol",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-serena-legal.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking Serena legal/ guard"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__filesystem__.*|mcp__serena__replace_content|mcp__serena__replace_symbol_body|mcp__serena__insert_before_symbol|mcp__serena__insert_after_symbol|mcp__serena__safe_delete_symbol|mcp__serena__rename_symbol",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-mcp-sensitive-paths.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking MCP path guard"
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -104,6 +283,20 @@
           },
           {
             "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-main-commit.sh\"",
+            "if": "Bash(rtk git *)",
+            "timeout": 5,
+            "statusMessage": "Checking branch guard (rtk-wrapped)"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-main-commit.sh\"",
+            "if": "Bash(rtk proxy git *)",
+            "timeout": 5,
+            "statusMessage": "Checking branch guard (rtk proxy-wrapped)"
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-destructive-git.sh\"",
             "if": "Bash(git *)",
             "timeout": 5,
@@ -111,9 +304,42 @@
           },
           {
             "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-destructive-git.sh\"",
+            "if": "Bash(rtk git *)",
+            "timeout": 5,
+            "statusMessage": "Checking destructive git guard (rtk-wrapped)"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-destructive-git.sh\"",
+            "if": "Bash(rtk proxy git *)",
+            "timeout": 5,
+            "statusMessage": "Checking destructive git guard (rtk proxy-wrapped)"
+          },
+          {
+            "type": "command",
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-protected-delete.sh\"",
             "timeout": 5,
             "statusMessage": "Checking protected-path delete guard"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-bash-secret-read.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking Bash secret-read guard"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/prefer-rtk-shape.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Applying RTK to shapes its own hook skips"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/cap-rtk-read.sh\"",
+            "if": "Bash(rtk read:*)",
+            "timeout": 5,
+            "statusMessage": "Checking rtk read size cap"
           }
         ]
       }
@@ -126,6 +352,12 @@
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/session-log-reminder.sh\"",
             "timeout": 10,
             "statusMessage": "Checking session log"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/handoff-clear-reminder.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking handoff plan is cleared"
           }
         ]
       }
@@ -146,15 +378,9 @@
   },
   "workflowKeywordTriggerEnabled": false,
   "enabledPlugins": {
-    "claude-mem@thedotmack": false,
-    "ponytail@ponytail": true
+    "claude-mem@thedotmack": false
   },
-  "extraKnownMarketplaces": {
-    "ponytail": {
-      "source": {
-        "source": "github",
-        "repo": "DietrichGebert/ponytail"
-      }
-    }
-  }
+  "enabledMcpjsonServers": [
+    "serena"
+  ]
 }

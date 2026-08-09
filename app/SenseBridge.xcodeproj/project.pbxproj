@@ -8,31 +8,36 @@
 
 /* Begin PBXBuildFile section */
 		014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73B9444B53F2DD88AD973EA /* HomeView.swift */; };
+		0EC253358BB6592F0066F3A3 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 0C7C04C5AB2A89D896C5A4A4 /* Sentry */; };
+		1CAA3958ACD6EBEF05E24464 /* AwarenessPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */; };
 		1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */; };
+		268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */; };
 		2F02E08A4B22B4E8836E8DDD /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3030507FD05945D3B89734B5 /* SenseBridgeCore */; };
 		311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */; };
+		3310BF73FB5557F408A36388 /* FoundationModelsSceneComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711F69574DFEC999FAF004AF /* FoundationModelsSceneComposer.swift */; };
+		3F02B88DA178392F7EEB35EF /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25B799EEB369166FD737AEA /* CameraController.swift */; };
 		45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */; };
 		608A9FB837FD1E25D7527BD5 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */; };
+		6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A609680B79ECF22EB121BCAA /* CrashReporting.swift */; };
 		76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */; };
-		A33D9E2E5F716C4DAE8F2033 /* AmbientPreviewImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33D9E2E5F716C4DAE8F2034 /* AmbientPreviewImageTests.swift */; };
-		A11B7E0C3D5F4A2B8C6D0E11 /* AmbientAwarenessSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B7E0C3D5F4A2B8C6D0E12 /* AmbientAwarenessSession.swift */; };
-		A22C8F1D4E605B3C9D7E1F22 /* AwarenessPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22C8F1D4E605B3C9D7E1F23 /* AwarenessPreviewView.swift */; };
-		A44E0F3F60827D5EBF9A3144 /* AwarenessPreviewFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = A44E0F3F60827D5EBF9A3145 /* AwarenessPreviewFeed.swift */; };
-		A11B7E0C3D5F4A2B8C6D0E21 /* FoundationModelsSceneComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B7E0C3D5F4A2B8C6D0E22 /* FoundationModelsSceneComposer.swift */; };
 		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
+		82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */; };
+		843C2D8C082A6B1538F573FD /* AwarenessPreviewFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */; };
+		8E0DBCD0890C974B156BDFFB /* CameraControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C66C23119670006B9FEC57 /* CameraControlsView.swift */; };
 		97465151AB4FA48835E0174E /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */; };
 		9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03597A1D36C216848B88E81D /* ReadingView.swift */; };
-		4B7A1E902B7C4C2E9F1D6A31 /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */; };
-		7C9E2A1D4F8B4D3E8A6C5B92 /* CameraControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E2A1D4F8B4D3E8A6C5B91 /* CameraControlsView.swift */; };
-		7C9E2A1D4F8B4D3E8A6C5B94 /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9E2A1D4F8B4D3E8A6C5B93 /* CameraController.swift */; };
 		A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */; };
 		A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */; };
 		A4130055EDBE13F4F595E785 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */; };
 		A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66C553969EFB2A7DED18325B /* LabelingView.swift */; };
 		B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */; };
 		B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */; };
+		B616562B724CF082D62A1B28 /* DiagnosticsSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */; };
 		B62B6F726B5A68E041AADB00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */; };
 		CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */; };
+		D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */; };
+		F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */; };
+		FBE1008D99DC64D5C2F7B689 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 6F8902BD3171C6B275867212 /* Sentry */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,34 +58,36 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		AA01C0FFEE1111111111111A /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
-		AA01C0FFEE2222222222222B /* Signing.local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.local.xcconfig; sourceTree = "<group>"; };
 		03597A1D36C216848B88E81D /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
-		7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
-		7C9E2A1D4F8B4D3E8A6C5B91 /* CameraControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControlsView.swift; sourceTree = "<group>"; };
-		7C9E2A1D4F8B4D3E8A6C5B93 /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverAnnouncement.swift; sourceTree = "<group>"; };
 		1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeApp.swift; sourceTree = "<group>"; };
 		1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentTests.swift; sourceTree = "<group>"; };
-		A33D9E2E5F716C4DAE8F2034 /* AmbientPreviewImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientPreviewImageTests.swift; sourceTree = "<group>"; };
+		2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewFeed.swift; sourceTree = "<group>"; };
+		309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsSection.swift; sourceTree = "<group>"; };
+		38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportingTests.swift; sourceTree = "<group>"; };
 		509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeUITests.swift; sourceTree = "<group>"; };
 		50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionUITests.swift; sourceTree = "<group>"; };
 		53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		60602C61EB43396734122316 /* SenseBridgeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		66C553969EFB2A7DED18325B /* LabelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingView.swift; sourceTree = "<group>"; };
+		711F69574DFEC999FAF004AF /* FoundationModelsSceneComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsSceneComposer.swift; sourceTree = "<group>"; };
 		8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		90C66C23119670006B9FEC57 /* CameraControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControlsView.swift; sourceTree = "<group>"; };
 		91ABE54B3D488D3FD6947263 /* SenseBridge.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SenseBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAlertsView.swift; sourceTree = "<group>"; };
+		9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientPreviewImageTests.swift; sourceTree = "<group>"; };
+		A609680B79ECF22EB121BCAA /* CrashReporting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporting.swift; sourceTree = "<group>"; };
+		B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
 		B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A11B7E0C3D5F4A2B8C6D0E12 /* AmbientAwarenessSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAwarenessSession.swift; sourceTree = "<group>"; };
-		A22C8F1D4E605B3C9D7E1F23 /* AwarenessPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewView.swift; sourceTree = "<group>"; };
-		A44E0F3F60827D5EBF9A3145 /* AwarenessPreviewFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewFeed.swift; sourceTree = "<group>"; };
-		A11B7E0C3D5F4A2B8C6D0E22 /* FoundationModelsSceneComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsSceneComposer.swift; sourceTree = "<group>"; };
 		C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObstacleAwarenessView.swift; sourceTree = "<group>"; };
 		D73B9444B53F2DD88AD973EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		D863B3D0A276D8D92A986648 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionView.swift; sourceTree = "<group>"; };
+		EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAwarenessSession.swift; sourceTree = "<group>"; };
+		EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewView.swift; sourceTree = "<group>"; };
+		F25B799EEB369166FD737AEA /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		F590D9D32D5528105C06EC89 /* SenseBridgeCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SenseBridgeCore; path = Packages/SenseBridgeCore; sourceTree = SOURCE_ROOT; };
 		FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -91,6 +98,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				97465151AB4FA48835E0174E /* SenseBridgeCore in Frameworks */,
+				0EC253358BB6592F0066F3A3 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -99,6 +107,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F02E08A4B22B4E8836E8DDD /* SenseBridgeCore in Frameworks */,
+				FBE1008D99DC64D5C2F7B689 /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,7 +118,9 @@
 			isa = PBXGroup;
 			children = (
 				53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */,
-				7C9E2A1D4F8B4D3E8A6C5B93 /* CameraController.swift */,
+				F25B799EEB369166FD737AEA /* CameraController.swift */,
+				A609680B79ECF22EB121BCAA /* CrashReporting.swift */,
+				309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */,
 				D73B9444B53F2DD88AD973EA /* HomeView.swift */,
 				1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */,
 				212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */,
@@ -120,7 +131,7 @@
 		167BD6B707F5CD3F5FED1BF9 /* SceneDescription */ = {
 			isa = PBXGroup;
 			children = (
-				A11B7E0C3D5F4A2B8C6D0E22 /* FoundationModelsSceneComposer.swift */,
+				711F69574DFEC999FAF004AF /* FoundationModelsSceneComposer.swift */,
 				E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */,
 			);
 			path = SceneDescription;
@@ -129,12 +140,21 @@
 		17CFC050C0ED11ADC4123CC8 /* ObstacleAwareness */ = {
 			isa = PBXGroup;
 			children = (
-				A11B7E0C3D5F4A2B8C6D0E12 /* AmbientAwarenessSession.swift */,
-				A22C8F1D4E605B3C9D7E1F23 /* AwarenessPreviewView.swift */,
-				A44E0F3F60827D5EBF9A3145 /* AwarenessPreviewFeed.swift */,
+				EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */,
+				2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */,
+				EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */,
 				C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */,
 			);
 			path = ObstacleAwareness;
+			sourceTree = "<group>";
+		};
+		1A00C09BCEBC54B23880399D /* Camera */ = {
+			isa = PBXGroup;
+			children = (
+				90C66C23119670006B9FEC57 /* CameraControlsView.swift */,
+				B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */,
+			);
+			path = Camera;
 			sourceTree = "<group>";
 		};
 		3EBC69DB8F2361D9C073B8C9 /* Resources */ = {
@@ -185,19 +205,10 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		7C9E2A1D4F8B4D3E8A6C5B95 /* Camera */ = {
-			isa = PBXGroup;
-			children = (
-				7C9E2A1D4F8B4D3E8A6C5B91 /* CameraControlsView.swift */,
-				7C9E2A1D4F8B4D3E8A6C5B90 /* CameraPreviewView.swift */,
-			);
-			path = Camera;
-			sourceTree = "<group>";
-		};
 		A8D2ED2B5A7CCBD36D5B5CFF /* Features */ = {
 			isa = PBXGroup;
 			children = (
-				7C9E2A1D4F8B4D3E8A6C5B95 /* Camera */,
+				1A00C09BCEBC54B23880399D /* Camera */,
 				BA5152B824E40A94F9DBC660 /* Labeling */,
 				17CFC050C0ED11ADC4123CC8 /* ObstacleAwareness */,
 				F72FA9A23C21D154DC914D16 /* Reading */,
@@ -218,8 +229,9 @@
 		BC56C0FDC55E64F74C1BF52B /* SenseBridgeTests */ = {
 			isa = PBXGroup;
 			children = (
+				9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */,
 				274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */,
-				A33D9E2E5F716C4DAE8F2034 /* AmbientPreviewImageTests.swift */,
+				38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */,
 			);
 			path = SenseBridgeTests;
 			sourceTree = "<group>";
@@ -240,11 +252,10 @@
 			path = SoundAlerts;
 			sourceTree = "<group>";
 		};
-		AA01C0FFEE3333333333333C /* Config */ = {
+		DE64EFE3F36B48F133E872C9 /* Config */ = {
 			isa = PBXGroup;
 			children = (
-				AA01C0FFEE1111111111111A /* Signing.xcconfig */,
-				AA01C0FFEE2222222222222B /* Signing.local.xcconfig */,
+				D863B3D0A276D8D92A986648 /* Signing.xcconfig */,
 			);
 			path = Config;
 			sourceTree = "<group>";
@@ -252,7 +263,7 @@
 		EB885AD887785FC1F0AFBF21 = {
 			isa = PBXGroup;
 			children = (
-				AA01C0FFEE3333333333333C /* Config */,
+				DE64EFE3F36B48F133E872C9 /* Config */,
 				7D27507FB965F45DAB7E0D83 /* Packages */,
 				59F08F74B9E6D8A4F9346606 /* SenseBridge */,
 				BC56C0FDC55E64F74C1BF52B /* SenseBridgeTests */,
@@ -287,6 +298,7 @@
 			name = SenseBridge;
 			packageProductDependencies = (
 				E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */,
+				0C7C04C5AB2A89D896C5A4A4 /* Sentry */,
 			);
 			productName = SenseBridge;
 			productReference = 91ABE54B3D488D3FD6947263 /* SenseBridge.app */;
@@ -325,6 +337,7 @@
 			name = SenseBridgeTests;
 			packageProductDependencies = (
 				3030507FD05945D3B89734B5 /* SenseBridgeCore */,
+				6F8902BD3171C6B275867212 /* Sentry */,
 			);
 			productName = SenseBridgeTests;
 			productReference = 60602C61EB43396734122316 /* SenseBridgeTests.xctest */;
@@ -359,6 +372,7 @@
 			mainGroup = EB885AD887785FC1F0AFBF21;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				C1DF60C7ECDE2E6E0DD1934D /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				6114C7349D9E8AF391CD5E45 /* XCLocalSwiftPackageReference "Packages/SenseBridgeCore" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -400,8 +414,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */,
 				76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */,
-				A33D9E2E5F716C4DAE8F2033 /* AmbientPreviewImageTests.swift in Sources */,
+				268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -409,18 +424,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */,
 				1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */,
-				7C9E2A1D4F8B4D3E8A6C5B94 /* CameraController.swift in Sources */,
-				7C9E2A1D4F8B4D3E8A6C5B92 /* CameraControlsView.swift in Sources */,
+				843C2D8C082A6B1538F573FD /* AwarenessPreviewFeed.swift in Sources */,
+				1CAA3958ACD6EBEF05E24464 /* AwarenessPreviewView.swift in Sources */,
+				3F02B88DA178392F7EEB35EF /* CameraController.swift in Sources */,
+				8E0DBCD0890C974B156BDFFB /* CameraControlsView.swift in Sources */,
+				D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */,
+				6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */,
+				B616562B724CF082D62A1B28 /* DiagnosticsSettingsSection.swift in Sources */,
+				3310BF73FB5557F408A36388 /* FoundationModelsSceneComposer.swift in Sources */,
 				014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */,
 				A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */,
-				A11B7E0C3D5F4A2B8C6D0E11 /* AmbientAwarenessSession.swift in Sources */,
-				A22C8F1D4E605B3C9D7E1F22 /* AwarenessPreviewView.swift in Sources */,
-				A44E0F3F60827D5EBF9A3144 /* AwarenessPreviewFeed.swift in Sources */,
-				A11B7E0C3D5F4A2B8C6D0E21 /* FoundationModelsSceneComposer.swift in Sources */,
 				774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */,
 				9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */,
-				4B7A1E902B7C4C2E9F1D6A31 /* CameraPreviewView.swift in Sources */,
 				A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */,
 				B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */,
 				B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */,
@@ -447,17 +464,17 @@
 /* Begin XCBuildConfiguration section */
 		2FF7325F917C4AE6DB2F4E1D /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
+			baseConfigurationReference = D863B3D0A276D8D92A986648 /* Signing.xcconfig */;
 			buildSettings = {
-				LM_FORCE_LINK_GENERATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
-				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
+				INFOPLIST_KEY_SentryDSN = "$(SENTRY_DSN)";
+				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -465,6 +482,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LM_FORCE_LINK_GENERATION = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).app";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
@@ -493,7 +511,6 @@
 		};
 		8E69725E59F6D3BFDFF291D9 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -557,7 +574,6 @@
 		};
 		95CD0452D651292B8B0EF7C5 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -633,17 +649,17 @@
 		};
 		C19C11B259EAEA9C90D9E6A8 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AA01C0FFEE1111111111111A /* Signing.xcconfig */;
+			baseConfigurationReference = D863B3D0A276D8D92A986648 /* Signing.xcconfig */;
 			buildSettings = {
-				LM_FORCE_LINK_GENERATION = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
-				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
+				INFOPLIST_KEY_SentryDSN = "$(SENTRY_DSN)";
+				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -651,6 +667,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LM_FORCE_LINK_GENERATION = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_ID_PREFIX:default=com.sensebridge).app";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6;
@@ -744,10 +761,31 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		C1DF60C7ECDE2E6E0DD1934D /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.24.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
+		0C7C04C5AB2A89D896C5A4A4 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DF60C7ECDE2E6E0DD1934D /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
 		3030507FD05945D3B89734B5 /* SenseBridgeCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SenseBridgeCore;
+		};
+		6F8902BD3171C6B275867212 /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1DF60C7ECDE2E6E0DD1934D /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
 		};
 		E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */ = {
 			isa = XCSwiftPackageProductDependency;

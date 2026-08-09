@@ -35,13 +35,25 @@ if compgen -G "Package.swift" >/dev/null || compgen -G "app/Package.swift" >/dev
 	echo "== swift build =="
 	swift build
 elif compgen -G "app/*.xcodeproj" >/dev/null || compgen -G "app/*.xcworkspace" >/dev/null; then
-	PROJ=$(find app -maxdepth 1 \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -quit)
-	FLAG=-project
-	[ "${PROJ##*.}" = "xcworkspace" ] && FLAG=-workspace
-	echo "== xcodebuild build =="
-	xcodebuild build "$FLAG" "$PROJ" -scheme SenseBridge \
-		-destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
-		CODE_SIGNING_ALLOWED=NO
+	if [ "$(uname -s)" != Darwin ]; then
+		echo "pre-push: Xcode project build requires macOS — skipping on $(uname -s); app/ is macOS-only, see docs/ENVIRONMENT.md." >&2
+	else
+		# Delegated rather than duplicated: scripts/app.sh build is the single
+		# copy of the simulator-build invocation, and it is what ci.yml's gate
+		# must stay in sync with. The macOS guard stays here because app.sh has
+		# none — it is only ever run on the owner's Mac.
+		#
+		# The existence check is not paranoia: scripts/app.sh is currently
+		# untracked (every sibling in scripts/ is committed; it alone is not),
+		# so a fresh clone has this hook but no app.sh. Fail with a sentence
+		# that names the cause instead of a bare "No such file or directory".
+		if [ ! -x "$REPO_ROOT/scripts/app.sh" ]; then
+			echo "pre-push: scripts/app.sh is missing or not executable — the build gate lives there now. If this is a fresh clone, that file is untracked and needs committing; see TODO.md." >&2
+			exit 1
+		fi
+		echo "== xcodebuild build =="
+		"$REPO_ROOT/scripts/app.sh" build
+	fi
 else
 	echo "pre-push: no Swift package or Xcode project found under app/ yet — skipping build check."
 fi
