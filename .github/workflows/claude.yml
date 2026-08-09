@@ -39,7 +39,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Run Claude Code
-        uses: anthropics/claude-code-action@fa7e2f0a29a126f0b81cdcf360561b36e44cf608 # v1
+        uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
         with:
           # See claude-code-review.yml for why a "Context access might be invalid"
           # warning here is expected IDE/Copilot noise, not a defect.
