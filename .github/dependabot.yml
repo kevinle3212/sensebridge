@@ -94,6 +94,16 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+    groups:
+      # `github/codeql-action/init` and `.../analyze` are separate action paths,
+      # so Dependabot opens a PR per path by default. The action refuses to run
+      # a mismatched pair ("Loaded a configuration file for version 'X', but
+      # running version 'Y'"), which means a split bump makes *both* PRs
+      # permanently red and blocks every other PR's CodeQL check behind them.
+      # Grouping the whole action into one PR is what keeps the pair in step.
+      codeql-action:
+        patterns:
+          - "github/codeql-action*"
     labels:
       - dependencies
       - github-actions
