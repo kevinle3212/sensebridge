@@ -51,17 +51,17 @@ const PROJECT_DIR = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
  * @returns {never}
  */
 function decide(decision, reason) {
-	if (decision === "allow" && !reason) process.exit(0);
-	process.stdout.write(
-		JSON.stringify({
-			hookSpecificOutput: {
-				hookEventName: "PreToolUse",
-				permissionDecision: decision,
-				permissionDecisionReason: reason,
-			},
-		}),
-	);
-	process.exit(0);
+  if (decision === "allow" && !reason) process.exit(0);
+  process.stdout.write(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: decision,
+        permissionDecisionReason: reason,
+      },
+    }),
+  );
+  process.exit(0);
 }
 
 /**
@@ -70,9 +70,9 @@ function decide(decision, reason) {
  * @returns {Promise<string>} Raw payload, empty string when nothing was piped.
  */
 async function readStdin() {
-	const chunks = [];
-	for await (const chunk of process.stdin) chunks.push(chunk);
-	return Buffer.concat(chunks).toString("utf8");
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 /**
@@ -82,17 +82,17 @@ async function readStdin() {
  * @returns {string[]} Non-empty path strings, in declaration order.
  */
 function extractPaths(toolInput) {
-	const found = [];
-	for (const key of PATH_KEYS) {
-		const value = toolInput?.[key];
-		if (typeof value === "string" && value.length > 0) found.push(value);
-		else if (Array.isArray(value)) {
-			for (const entry of value) {
-				if (typeof entry === "string" && entry.length > 0) found.push(entry);
-			}
-		}
-	}
-	return found;
+  const found = [];
+  for (const key of PATH_KEYS) {
+    const value = toolInput?.[key];
+    if (typeof value === "string" && value.length > 0) found.push(value);
+    else if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (typeof entry === "string" && entry.length > 0) found.push(entry);
+      }
+    }
+  }
+  return found;
 }
 
 /**
@@ -108,19 +108,19 @@ function extractPaths(toolInput) {
  * @returns {{kind: "secret"|"legal", shown: string}|null} Null when allowed.
  */
 function classify(candidate) {
-	const absolute = isAbsolute(candidate) ? candidate : resolve(PROJECT_DIR, candidate);
-	const rel = relative(PROJECT_DIR, absolute);
-	// Inside the repo, judge and display the tidy relative form; outside it
-	// (an absolute path elsewhere on the machine) keep the original.
-	const inRepo = rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
-	const shown = inRepo ? rel : candidate;
+  const absolute = isAbsolute(candidate) ? candidate : resolve(PROJECT_DIR, candidate);
+  const rel = relative(PROJECT_DIR, absolute);
+  // Inside the repo, judge and display the tidy relative form; outside it
+  // (an absolute path elsewhere on the machine) keep the original.
+  const inRepo = rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+  const shown = inRepo ? rel : candidate;
 
-	if (inRepo && (rel === "legal" || rel.startsWith("legal/"))) {
-		return { kind: "legal", shown };
-	}
-	if (inRepo && nameCheckExempt.has(rel)) return null;
-	if (isSensitiveByName(shown)) return { kind: "secret", shown };
-	return null;
+  if (inRepo && (rel === "legal" || rel.startsWith("legal/"))) {
+    return { kind: "legal", shown };
+  }
+  if (inRepo && nameCheckExempt.has(rel)) return null;
+  if (isSensitiveByName(shown)) return { kind: "secret", shown };
+  return null;
 }
 
 const raw = await readStdin();
@@ -134,37 +134,37 @@ const raw = await readStdin();
 // matched MCP tools, and the reason string names the way forward.
 let payload;
 try {
-	payload = JSON.parse(raw);
+  payload = JSON.parse(raw);
 } catch {
-	decide(
-		"deny",
-		"Blocked: guard-mcp-sensitive-paths could not parse the tool payload, so it " +
-			"cannot prove this call stays clear of credential material or legal/. " +
-			"This guard fails closed by design. Use the built-in Read/Edit tools, " +
-			"whose deny rules are enforced by Claude Code itself.",
-	);
+  decide(
+    "deny",
+    "Blocked: guard-mcp-sensitive-paths could not parse the tool payload, so it " +
+      "cannot prove this call stays clear of credential material or legal/. " +
+      "This guard fails closed by design. Use the built-in Read/Edit tools, " +
+      "whose deny rules are enforced by Claude Code itself.",
+  );
 }
 
 const toolName = typeof payload?.tool_name === "string" ? payload.tool_name : "(unknown MCP tool)";
 
 for (const candidate of extractPaths(payload?.tool_input)) {
-	const hit = classify(candidate);
-	if (hit === null) continue;
+  const hit = classify(candidate);
+  if (hit === null) continue;
 
-	const reason =
-		hit.kind === "legal"
-			? `Blocked: ${hit.shown} is under legal/, which CLAUDE.md gates on explicit ` +
-				`owner approval for every edit. ${toolName} is an MCP tool, so the ` +
-				`Edit(legal/**) deny rule in settings.json does not apply to it — this ` +
-				`hook enforces it instead. Ask the user before touching it.`
-			: `Blocked: ${hit.shown} is credential or signing material. The ` +
-				`Read/Grep/Edit(**/*.pem, **/.env, ...) deny rules in settings.json ` +
-				`cover built-in tools only; ${toolName} is an MCP tool and would ` +
-				`bypass them, so this hook denies it instead. Secrets live in the ` +
-				`Keychain (on-device) or GitHub Actions secrets (CI) — see ` +
-				`docs/ENVIRONMENT.md. If you genuinely need this file, ask the user.`;
+  const reason =
+    hit.kind === "legal"
+      ? `Blocked: ${hit.shown} is under legal/, which CLAUDE.md gates on explicit ` +
+        `owner approval for every edit. ${toolName} is an MCP tool, so the ` +
+        "Edit(legal/**) deny rule in settings.json does not apply to it — this " +
+        "hook enforces it instead. Ask the user before touching it."
+      : `Blocked: ${hit.shown} is credential or signing material. The ` +
+        "Read/Grep/Edit(**/*.pem, **/.env, ...) deny rules in settings.json " +
+        `cover built-in tools only; ${toolName} is an MCP tool and would ` +
+        "bypass them, so this hook denies it instead. Secrets live in the " +
+        "Keychain (on-device) or GitHub Actions secrets (CI) — see " +
+        "docs/ENVIRONMENT.md. If you genuinely need this file, ask the user.";
 
-	decide("deny", reason);
+  decide("deny", reason);
 }
 
 decide("allow");

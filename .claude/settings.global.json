@@ -1,0 +1,202 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk git status:*)",
+      "Bash(rtk git log:*)",
+      "Bash(rtk git diff:*)",
+      "Bash(rtk git show:*)",
+      "Bash(rtk gh pr list:*)",
+      "Bash(rtk gh pr view:*)",
+      "Bash(rtk gh pr status:*)",
+      "Bash(rtk grep:*)",
+      "Bash(rtk rg:*)",
+      "Bash(rtk ls:*)",
+      "Bash(rtk tree:*)",
+      "Bash(rtk find:*)",
+      "Bash(rtk read:*)",
+      "Bash(rtk diff:*)",
+      "Bash(rtk json:*)",
+      "Bash(rtk log:*)",
+      "Bash(rtk deps:*)",
+      "Bash(rtk env:*)",
+      "Bash(rtk smart:*)",
+      "Bash(rtk wc:*)",
+      "Bash(rtk gain:*)",
+      "Bash(rtk discover:*)",
+      "Bash(rtk session:*)",
+      "Bash(rtk telemetry:*)",
+      "Bash(rtk config:*)",
+      "Bash(rtk learn:*)",
+      "Bash(rtk verify:*)",
+      "Bash(rtk hook-audit:*)",
+      "Bash(rtk cc-economics:*)",
+      "Bash(rtk proxy:*)",
+      "mcp__serena__find_symbol",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__find_referencing_symbols",
+      "mcp__serena__find_declaration",
+      "mcp__serena__find_implementations",
+      "mcp__serena__get_diagnostics_for_file",
+      "mcp__serena__list_memories",
+      "mcp__serena__read_memory",
+      "mcp__serena__initial_instructions",
+      "mcp__serena__onboarding",
+      "Bash(docker ps:*)",
+      "Bash(docker images:*)",
+      "Bash(docker image ls:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker version)",
+      "Bash(docker info)",
+      "Bash(docker stats --no-stream:*)",
+      "Bash(docker context ls)",
+      "Bash(docker compose ps:*)",
+      "Bash(docker compose config:*)",
+      "Bash(docker compose logs:*)"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.*.local)",
+      "Read(**/.env.production)",
+      "Read(**/.env.staging)",
+      "Read(**/.env.development)",
+      "Read(**/.env.test)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pfx)",
+      "Read(**/id_rsa*)",
+      "Read(**/id_ed25519*)",
+      "Read(**/credentials.json)",
+      "Read(**/secrets.json)",
+      "Grep(**/.env)",
+      "Grep(**/.env.local)",
+      "Grep(**/.env.*.local)",
+      "Grep(**/.env.production)",
+      "Grep(**/.env.staging)",
+      "Grep(**/.env.development)",
+      "Grep(**/.env.test)",
+      "Grep(**/*.pem)",
+      "Grep(**/*.key)",
+      "Grep(**/*.p12)",
+      "Grep(**/*.pfx)",
+      "Grep(**/id_rsa*)",
+      "Grep(**/id_ed25519*)",
+      "Grep(**/credentials.json)",
+      "Grep(**/secrets.json)",
+      "Edit(**/.env)",
+      "Edit(**/.env.local)",
+      "Edit(**/.env.*.local)",
+      "Edit(**/.env.production)",
+      "Edit(**/.env.staging)",
+      "Edit(**/.env.development)",
+      "Edit(**/.env.test)",
+      "Edit(**/*.pem)",
+      "Edit(**/*.key)",
+      "Edit(**/*.p12)",
+      "Edit(**/*.pfx)",
+      "Edit(**/id_rsa*)",
+      "Edit(**/id_ed25519*)",
+      "Edit(**/credentials.json)",
+      "Edit(**/secrets.json)",
+      "Read(**/node_modules/**)",
+      "Read(**/dist/**)",
+      "Read(**/build/**)",
+      "Read(**/.next/**)",
+      "Read(**/.build/**)",
+      "Read(**/DerivedData/**)",
+      "Read(**/coverage/**)",
+      "Read(**/.venv/**)",
+      "Read(**/__pycache__/**)",
+      "Read(**/target/**)",
+      "Grep(**/node_modules/**)",
+      "Grep(**/dist/**)",
+      "Grep(**/build/**)",
+      "Grep(**/.next/**)",
+      "Grep(**/.build/**)",
+      "Grep(**/DerivedData/**)",
+      "Grep(**/coverage/**)",
+      "Grep(**/.venv/**)",
+      "Grep(**/__pycache__/**)",
+      "Grep(**/target/**)",
+      "mcp__MCP_DOCKER__code-mode",
+      "mcp__MCP_DOCKER__mcp-add",
+      "mcp__MCP_DOCKER__mcp-remove",
+      "Bash(docker system prune:*)",
+      "Bash(docker volume prune:*)",
+      "Bash(docker image prune:*)",
+      "Bash(docker network prune:*)",
+      "Bash(docker builder prune:*)",
+      "Bash(docker volume rm:*)"
+    ],
+    "ask": [
+      "Bash(rtk run:*)",
+      "Bash(rtk pipe:*)",
+      "Bash(docker run:*)",
+      "Bash(docker exec:*)",
+      "mcp__MCP_DOCKER__mcp-exec",
+      "mcp__MCP_DOCKER__mcp-config-set",
+      "mcp__serena__safe_delete_symbol",
+      "mcp__serena__delete_memory"
+    ],
+    "defaultMode": "default"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -f tmp/handoff.md && awk 'NR<=12{print;next} /^#+ /{h=$0;shown=0;next} /^[[:space:]]*- \\[ \\]/{if(!shown&&h!=\"\"){print \"\";print h;shown=1}print} END{printf \"\\n(%d lines total in tmp/handoff.md — Read it for full detail.)\\n\", NR}' tmp/handoff.md; exit 0",
+            "timeout": 5,
+            "statusMessage": "Loading handoff snapshot..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk hook claude"
+          },
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/guard-attribution.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking attribution guard"
+          },
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/guard-commit-shape.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking commit/branch shape"
+          },
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/guard-long-running-server.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking long-running-server guard"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/require-doc-comments.mjs\"",
+            "timeout": 5,
+            "statusMessage": "Checking new declarations carry doc comments"
+          }
+        ]
+      }
+    ]
+  },
+  "effortLevel": "high"
+}

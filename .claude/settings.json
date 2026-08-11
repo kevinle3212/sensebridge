@@ -33,43 +33,7 @@
       "mcp__serena__write_memory",
       "mcp__serena__edit_memory",
       "mcp__serena__rename_memory",
-      "Bash(rtk git status:*)",
-      "Bash(rtk git log:*)",
-      "Bash(rtk git diff:*)",
-      "Bash(rtk git show:*)",
-      "Bash(rtk gh pr list:*)",
-      "Bash(rtk gh pr view:*)",
-      "Bash(rtk gh pr status:*)",
-      "Bash(rtk grep:*)",
-      "Bash(rtk ls:*)",
-      "Bash(rtk tree:*)",
-      "Bash(rtk find:*)",
-      "Bash(rtk read:*)",
-      "Bash(rtk diff:*)",
-      "Bash(rtk err:*)",
-      "Bash(rtk test:*)",
-      "Bash(rtk json:*)",
-      "Bash(rtk summary:*)",
-      "Bash(rtk env:*)",
-      "Bash(rtk deps:*)",
-      "Bash(rtk smart:*)",
-      "Bash(rtk gain:*)",
-      "Bash(rtk discover:*)",
-      "Bash(rtk rg:*)",
-      "Bash(rtk jq:*)",
-      "Bash(rtk npm:*)",
-      "Bash(rtk npx:*)",
-      "Bash(rtk swift:*)",
-      "Bash(rtk xcodebuild:*)",
-      "Bash(rtk tsc:*)",
-      "Bash(rtk lint:*)",
-      "Bash(rtk prettier:*)",
-      "Bash(rtk format:*)",
-      "Bash(rtk vitest:*)",
-      "Bash(rtk playwright:*)",
-      "Bash(rtk wc:*)",
-      "Bash(rtk log:*)",
-      "Bash(rtk proxy:*)",
+      "Bash(rtk:*)",
       "Bash(npm run lint:js)",
       "Bash(npm run lint:md)",
       "Bash(npm run check:links)",
@@ -171,6 +135,12 @@
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/check-md-links.sh\"",
             "timeout": 10,
             "statusMessage": "Checking Markdown links"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/require-device-install.sh\" stamp-edit",
+            "timeout": 5,
+            "statusMessage": "Recording app/ code change"
           }
         ]
       }
@@ -358,6 +328,12 @@
             "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/handoff-clear-reminder.sh\"",
             "timeout": 10,
             "statusMessage": "Checking handoff plan is cleared"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/require-device-install.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking app/ changes reached the device"
           }
         ]
       }
