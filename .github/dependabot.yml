@@ -14,11 +14,17 @@ version: 2
 # Dependabot resolves via semver (npm); others (swift, docker,
 # github-actions) get default-days only.
 
+# Cadence is monthly, not weekly. Five ecosystems on a weekly timer opened PRs
+# faster than a solo maintainer could land them, so "main is green" was never
+# a reachable state -- there was always a fresh red PR mid-review. Dependabot
+# *security* updates ignore `schedule` and still fire immediately, so this
+# trades routine churn for reviewability and costs nothing in exposure.
+
 updates:
   - package-ecosystem: swift
     directory: /app
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
     open-pull-requests-limit: 5
     cooldown:
@@ -33,7 +39,7 @@ updates:
   - package-ecosystem: npm
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
     open-pull-requests-limit: 5
     cooldown:
@@ -53,7 +59,7 @@ updates:
   - package-ecosystem: npm
     directory: /website
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
     open-pull-requests-limit: 5
     cooldown:
@@ -74,7 +80,7 @@ updates:
   - package-ecosystem: docker
     directory: /docker
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
     open-pull-requests-limit: 5
     cooldown:
@@ -89,7 +95,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
       day: monday
     open-pull-requests-limit: 5
     cooldown:
