@@ -62,8 +62,9 @@ that site's landing page and carries the same list grouped for readers.
 | `docs/NOTEBOOKLM.md` | Manual NotebookLM setup for project research |
 | `docs/GLOSSARY.md` | Project vocabulary, plus reading paths per audience |
 
-`docs/planning/` is gitignored working research, deliberately unpublished — it
-is neither in this index nor on the docs site.
+`deprecated/planning/` (formerly `docs/planning/`) is gitignored working
+research, deliberately unpublished — it is neither in this index nor on the
+docs site.
 
 ## Governance, community, legal
 

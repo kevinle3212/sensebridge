@@ -143,6 +143,11 @@ cmd_install() {
 		-destination "platform=iOS,id=$device" -allowProvisioningUpdates
 	products="$(built_products_dir "platform=iOS,id=$device")"
 	xcrun devicectl device install app --device "$device" "$products/$SCHEME.app"
+	# Clears the Stop-hook gate in .claude/hooks/require-device-install.sh, which
+	# blocks a turn from reporting done while app/ Swift changes have never
+	# reached the phone. Stamped here, after the install command has succeeded,
+	# so a failed install cannot satisfy the gate. tmp/ is gitignored.
+	mkdir -p "$REPO_ROOT/tmp" && touch "$REPO_ROOT/tmp/.last-app-install"
 }
 
 cmd_clean() {

@@ -161,13 +161,19 @@ test for that property and runs in CI.
    (`.tsbuildinfo.debug`, `trace/`) whenever a merge into `main` touches
    `website/`, advisory-only and deliberately outside the test suite/pre-push
    gate (see the "Command center" section below and `tsconfig.debug.json`'s
-   own header comment). `gitleaks`, `ggshield`,
-   `actionlint`, and Node are advisory for the hooks (`brew install
+   own header comment). `gitleaks`, `ggshield`, `actionlint`, `shellcheck`,
+   `osv-scanner`, and Node are advisory for the hooks (`brew install
    gitleaks`; `brew install ggshield` then `ggshield auth login`; `brew
-   install actionlint`; CI enforces commitlint and actionlint regardless via
+   install actionlint`; `brew install shellcheck`; `brew install
+   osv-scanner`; CI enforces commitlint and actionlint regardless via
    `.github/workflows/commitlint.yml` and `.github/workflows/actionlint.yml`).
-   `npm run lint` (or `scripts/lint.sh`) can also be run directly before
-   committing — see the command center below.
+   `scripts/setup.sh` offers to install any missing advisory tool via
+   Homebrew, prompting per tool when run interactively; `-y`/`--yes` installs
+   everything missing without asking (scripted/CI use), `-n`/`--no-install`
+   reports only and never prompts (the default when stdin isn't a terminal),
+   and `-h`/`--help` prints the full flag list. `npm run lint` (or
+   `scripts/lint.sh`) can also be run directly before committing — see the
+   command center below.
 
 ## Command center
 
@@ -178,28 +184,32 @@ agent alike. Nothing here is npm-specific work: the scripts wrap the same
 hooks run, so a local run and a CI run are the same code path rather than two
 copies that drift.
 
-Run `npm install` once at the root (commitlint only — no heavy dependencies).
+Run `npm install` once at the root (commitlint, eslint, prettier,
+markdownlint-cli2 — no heavy dependencies).
 
 ### Root — `npm run <script>`
 
 | Script | What it does |
 | --- | --- |
-| `setup` | `scripts/setup.sh` — toolchain check, enables `.githooks/` |
-| `verify` | `lint` + `check` — the local mirror of CI's non-Swift gates |
+| `setup` | `scripts/setup.sh` — toolchain check, offers to install missing tools, enables `.githooks/` |
+| `verify` | `lint` + `format` + `check` — the local mirror of CI's non-Swift gates |
 | `test` / `app:test` | Simulator build + test of the `SenseBridge` scheme |
 | `app:build` | Simulator build, no code signing (what `pre-push` runs) |
 | `app:package-test` | `xcodebuild test` for every package under `app/Packages/*` |
 | `app:device` | Signed build for the attached iPhone |
 | `app:install` | Device build, then install onto the attached iPhone |
 | `app:clean` / `app:open` | Clean build products / open the Xcode project |
-| `lint` | `lint:swift` + `lint:md` |
+| `lint` | `lint:swift` + `lint:md` + `lint:mjs` |
 | `lint:swift` | SwiftFormat + SwiftLint (`scripts/lint.sh`) |
 | `lint:md` / `lint:md:fix` | markdownlint-cli2 over all Markdown + `COMPLETED.todo` |
+| `lint:mjs` / `lint:mjs:fix` | ESLint over the hand-authored `.mjs` tooling (`.claude/hooks`, `.cursor/hooks`, `tools/`) |
 | `lint:actions` | `actionlint` over `.github/workflows/` (needs `brew install actionlint`) |
 | `lint:shell` | ShellCheck over `scripts/` and `.githooks/` (needs `brew install shellcheck`) |
+| `format` / `format:fix` | `format:mjs` / `format:mjs:fix` |
+| `format:mjs` / `format:mjs:fix` | Prettier (check / write) over the same `.mjs` files `lint:mjs` covers |
 | `check` | Every non-Swift gate below, in order |
 | `check:sensitive` / `:all` | `tools/check-sensitive-files.mjs` — staged, or the whole tree |
-| `check:skills` | Mirrored skills still match canonical (`tools/sync-skills.mjs --check`) |
+| `check:skills` | Canonical skill tree, personas, and harness adapters match the hash-lock (`tools/skill-lock.mjs`) |
 | `check:hooks` | `.claude/settings.json` carries no owner-personal or double-registered hook (`tools/check-settings-hooks.mjs`) |
 | `check:bmad` | BMAD's `user_skill_level` still reads `expert` in both config files (`tools/check-bmad-config.mjs`) |
 | `check:links` | Relative Markdown links resolve (`scripts/check-links.sh`) |

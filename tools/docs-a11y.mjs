@@ -89,7 +89,9 @@ function serve(siteDir, basePath) {
         res.writeHead(404).end("not found");
         return;
       }
-      res.writeHead(200, { "content-type": CONTENT_TYPES[path.extname(target)] || "application/octet-stream" });
+      res.writeHead(200, {
+        "content-type": CONTENT_TYPES[path.extname(target)] || "application/octet-stream",
+      });
       res.end(body);
     });
   });
@@ -124,7 +126,9 @@ async function runPa11y(browser, pa11y, urls, theme) {
     const applied = await page.evaluate(() => document.documentElement.getAttribute("data-theme"));
     if (applied !== theme) failures.push(`${url} [${theme}]: theme not applied (got ${applied})`);
     for (const issue of result.issues) {
-      failures.push(`${url} [${theme}]: ${issue.code}\n    ${issue.message}\n    ${issue.selector}`);
+      failures.push(
+        `${url} [${theme}]: ${issue.code}\n    ${issue.message}\n    ${issue.selector}`,
+      );
     }
     await page.close();
   }
@@ -169,7 +173,7 @@ async function runStructural(browser, urls) {
     const dom = await page.evaluate(() => {
       const focusable = [
         ...document.querySelectorAll(
-          'a[href],button,input,select,textarea,summary,[tabindex]:not([tabindex="-1"])'
+          'a[href],button,input,select,textarea,summary,[tabindex]:not([tabindex="-1"])',
         ),
       ];
       const animating = [...document.querySelectorAll("*")]
@@ -199,10 +203,14 @@ async function runStructural(browser, urls) {
 
     const issues = [];
     if (pageErrors.length) issues.push(`uncaught page error: ${pageErrors.join("; ")}`);
-    if (unnamed.length) issues.push(`interactive elements with no accessible name: ${unnamed.join(", ")}`);
-    if (dom.positiveTabindex) issues.push(`positive tabindex on ${dom.positiveTabindex} element(s)`);
-    if (!String(dom.first).includes("skip-link")) issues.push(`first focusable element is ${dom.first}, not the skip link`);
-    if (dom.animating.length) issues.push(`animates under prefers-reduced-motion: ${dom.animating.join(", ")}`);
+    if (unnamed.length)
+      issues.push(`interactive elements with no accessible name: ${unnamed.join(", ")}`);
+    if (dom.positiveTabindex)
+      issues.push(`positive tabindex on ${dom.positiveTabindex} element(s)`);
+    if (!String(dom.first).includes("skip-link"))
+      issues.push(`first focusable element is ${dom.first}, not the skip link`);
+    if (dom.animating.length)
+      issues.push(`animates under prefers-reduced-motion: ${dom.animating.join(", ")}`);
     if (dom.h1Count !== 1) issues.push(`${dom.h1Count} <h1> in <main>, expected exactly 1`);
     if (dom.duplicateIds.length) issues.push(`duplicate ids: ${dom.duplicateIds.join(", ")}`);
     if (!dom.lang) issues.push("<html> has no lang attribute");
@@ -232,9 +240,7 @@ const pages = fs
   .readdirSync(siteDir)
   .filter((f) => SAFE_HTML_FILENAME.test(f))
   .sort();
-const urls = pages.map(
-  (f) => `http://127.0.0.1:${PORT}${basePath}/${f === "index.html" ? "" : f}`
-);
+const urls = pages.map((f) => `http://127.0.0.1:${PORT}${basePath}/${f === "index.html" ? "" : f}`);
 
 const browser = await puppeteer.launch({
   args: ["--no-sandbox", "--disable-dev-shm-usage", "--enable-unsafe-swiftshader"],

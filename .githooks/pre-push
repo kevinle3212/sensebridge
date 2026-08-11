@@ -5,8 +5,12 @@
 # Refuses to push commits directly to refs/heads/main (branch as
 # feat/fix/chore/... and open a PR, per CONTRIBUTING.md), then runs a
 # build-only check using the same project-detection as .github/workflows/ci.yml
-# (no-ops until app/ is scaffolded), then an OSV dependency scan mirroring
-# .github/workflows/security.yml's osv-scan job. CI still runs the full
+# (no-ops until app/ is scaffolded), an OSV dependency scan mirroring
+# .github/workflows/security.yml's osv-scan job, and — when the push touches
+# website/ — a React Doctor scan mirroring .github/workflows/react-doctor.yml's
+# `blocking: warning` gate (zero findings; see website/doctor.config.jsonc for
+# the two documented analyzer-blind-spot suppressions and CLAUDE.md's Quality
+# gates section for the merge rule this backs up). CI still runs the full
 # build+test+scan; this just catches the fast, common breakage before a push.
 #
 # Enabled by `git config core.hooksPath .githooks` — scripts/setup.sh does
@@ -72,4 +76,20 @@ if command -v osv-scanner >/dev/null 2>&1; then
 	osv-scanner --lockfile ./package-lock.json --lockfile ./website/package-lock.json
 else
 	echo "pre-push: osv-scanner not installed (brew install osv-scanner) — skipping local dependency scan; CI's osv-scan job still runs on push." >&2
+fi
+
+# Scoped to website/ (this repo's only React code), same as
+# .github/workflows/react-doctor.yml's `paths` trigger — skip the scan
+# entirely on a push that never touches it.
+merge_base="$(git merge-base HEAD origin/main 2>/dev/null || true)"
+if [ -n "$merge_base" ] && ! git diff --quiet "$merge_base" HEAD -- website; then
+	if [ -x "$REPO_ROOT/website/node_modules/.bin/react-doctor" ]; then
+		echo "== react-doctor (website/) =="
+		# --no-telemetry: skip the score API (an off-device network call) —
+		# see docs/PRIVACY.md and react-doctor.yml's own comment on why this
+		# repo never calls it. --blocking warning matches CI exactly.
+		(cd "$REPO_ROOT/website" && ./node_modules/.bin/react-doctor --no-telemetry --blocking warning --scope changed --base main)
+	else
+		echo "pre-push: react-doctor not installed (run 'npm install' in website/) — skipping local scan; CI's React Doctor gate still runs on push." >&2
+	fi
 fi

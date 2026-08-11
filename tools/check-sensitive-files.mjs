@@ -21,61 +21,61 @@ import { readFileSync, realpathSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const SENSITIVE_EXTENSIONS = [
-	".p12",
-	".p8",
-	".cer",
-	".mobileprovision",
-	".keystore",
-	".jks",
-	".pem",
-	".key",
-	".env",
+  ".p12",
+  ".p8",
+  ".cer",
+  ".mobileprovision",
+  ".keystore",
+  ".jks",
+  ".pem",
+  ".key",
+  ".env",
 ];
 
 const SENSITIVE_FILENAMES = [
-	/^id_rsa$/,
-	/^id_ed25519$/,
-	/^id_ecdsa$/,
-	/^id_dsa$/,
-	/^\.env\..+/,
-	/^\.netrc$/,
-	/^\.npmrc$/,
+  /^id_rsa$/,
+  /^id_ed25519$/,
+  /^id_ecdsa$/,
+  /^id_dsa$/,
+  /^\.env\..+/,
+  /^\.netrc$/,
+  /^\.npmrc$/,
 ];
 
 const SECRET_PATTERNS = [
-	[/-----BEGIN [A-Z ]*PRIVATE KEY-----/, "PEM private key block"],
-	[/AKIA[0-9A-Z]{16}/, "AWS access key ID"],
-	[/xox[baprs]-[0-9A-Za-z-]{10,}/, "Slack token"],
-	[/-----BEGIN OPENSSH PRIVATE KEY-----/, "OpenSSH private key"],
-	// Provider tokens. This is the second layer on purpose: .githooks/pre-commit
-	// treats gitleaks as advisory and skips it silently when it is not
-	// installed, at which point this file is the only local gate. gitleaks
-	// 8.30.1's default ruleset misses every AI-provider format below (verified
-	// 2026-07-16), so these are not redundant with it — see .gitleaks.toml.
-	[/sk-ant-[a-zA-Z0-9_-]{24,}/, "Anthropic API key"],
-	[/sk-proj-[a-zA-Z0-9_-]{40,}/, "OpenAI project API key"],
-	[/sk-[a-zA-Z0-9]{48}/, "OpenAI legacy API key"],
-	[/hf_[a-zA-Z0-9]{30,}/, "Hugging Face access token"],
-	[/gh[pousr]_[A-Za-z0-9]{36,}/, "GitHub token"],
-	[/github_pat_[A-Za-z0-9_]{22,}/, "GitHub fine-grained PAT"],
-	[/AIza[0-9A-Za-z_-]{35}/, "Google API key"],
-	[/glpat-[A-Za-z0-9_-]{20}/, "GitLab personal access token"],
-	[/npm_[A-Za-z0-9]{36}/, "npm access token"],
-	[/hooks\.slack\.com\/services\/[A-Za-z0-9/+]{20,}/, "Slack webhook URL"],
-	// Catches tools (graphify, gitnexus, serena, ...) that bake an absolute,
-	// machine-specific path into a generated/committed file instead of
-	// resolving it at runtime — a personal-machine leak, not a credential,
-	// but still shouldn't ship in a public repo.
-	// The `(?!\.+[/\\])` guard skips a segment made only of dots. Docs here
-	// deliberately elide the username as `/Users/.../sensebridge`, and `.` is
-	// inside the character class, so without it every such doc line is a
-	// finding — this gate reported `docs/TOOLING.md` on 2026-08-01 for exactly
-	// that. No real username is all dots, so nothing detectable is lost, and a
-	// gate that cries wolf is worse than none: it trains the next person to
-	// reach for `--no-verify`.
-	[/\/Users\/(?!\.+[/\\])[a-zA-Z0-9_.-]+\//, "Hardcoded macOS home-directory path"],
-	[/\/home\/(?!\.+[/\\])[a-zA-Z0-9_.-]+\//, "Hardcoded Linux home-directory path"],
-	[/[A-Z]:\\Users\\(?!\.+[/\\])[a-zA-Z0-9_.-]+\\/, "Hardcoded Windows user-profile path"],
+  [/-----BEGIN [A-Z ]*PRIVATE KEY-----/, "PEM private key block"],
+  [/AKIA[0-9A-Z]{16}/, "AWS access key ID"],
+  [/xox[baprs]-[0-9A-Za-z-]{10,}/, "Slack token"],
+  [/-----BEGIN OPENSSH PRIVATE KEY-----/, "OpenSSH private key"],
+  // Provider tokens. This is the second layer on purpose: .githooks/pre-commit
+  // treats gitleaks as advisory and skips it silently when it is not
+  // installed, at which point this file is the only local gate. gitleaks
+  // 8.30.1's default ruleset misses every AI-provider format below (verified
+  // 2026-07-16), so these are not redundant with it — see .gitleaks.toml.
+  [/sk-ant-[a-zA-Z0-9_-]{24,}/, "Anthropic API key"],
+  [/sk-proj-[a-zA-Z0-9_-]{40,}/, "OpenAI project API key"],
+  [/sk-[a-zA-Z0-9]{48}/, "OpenAI legacy API key"],
+  [/hf_[a-zA-Z0-9]{30,}/, "Hugging Face access token"],
+  [/gh[pousr]_[A-Za-z0-9]{36,}/, "GitHub token"],
+  [/github_pat_[A-Za-z0-9_]{22,}/, "GitHub fine-grained PAT"],
+  [/AIza[0-9A-Za-z_-]{35}/, "Google API key"],
+  [/glpat-[A-Za-z0-9_-]{20}/, "GitLab personal access token"],
+  [/npm_[A-Za-z0-9]{36}/, "npm access token"],
+  [/hooks\.slack\.com\/services\/[A-Za-z0-9/+]{20,}/, "Slack webhook URL"],
+  // Catches tools (graphify, gitnexus, serena, ...) that bake an absolute,
+  // machine-specific path into a generated/committed file instead of
+  // resolving it at runtime — a personal-machine leak, not a credential,
+  // but still shouldn't ship in a public repo.
+  // The `(?!\.+[/\\])` guard skips a segment made only of dots. Docs here
+  // deliberately elide the username as `/Users/.../sensebridge`, and `.` is
+  // inside the character class, so without it every such doc line is a
+  // finding — this gate reported `docs/TOOLING.md` on 2026-08-01 for exactly
+  // that. No real username is all dots, so nothing detectable is lost, and a
+  // gate that cries wolf is worse than none: it trains the next person to
+  // reach for `--no-verify`.
+  [/\/Users\/(?!\.+[/\\])[a-zA-Z0-9_.-]+\//, "Hardcoded macOS home-directory path"],
+  [/\/home\/(?!\.+[/\\])[a-zA-Z0-9_.-]+\//, "Hardcoded Linux home-directory path"],
+  [/[A-Z]:\\Users\\(?!\.+[/\\])[a-zA-Z0-9_.-]+\\/, "Hardcoded Windows user-profile path"],
 ];
 
 const MAX_SCAN_BYTES = 1_000_000;
@@ -86,33 +86,25 @@ const MAX_SCAN_BYTES = 1_000_000;
 // one), and website/.npmrc holds dependency-resolution flags
 // (engine-strict, legacy-peer-deps) — no registry auth tokens. A real token
 // in any of them would still be caught by SECRET_PATTERNS below.
-const NAME_CHECK_EXEMPT = new Set([
-	".env.example",
-	"website/.env.example",
-	"website/.npmrc",
-]);
+const NAME_CHECK_EXEMPT = new Set([".env.example", "website/.env.example", "website/.npmrc"]);
 
 // This file contains the detection patterns as literals, so scanning it
 // always self-matches (e.g. the OpenSSH marker). Exempt exactly this path.
 const SELF = "tools/check-sensitive-files.mjs";
 
 function gitFiles(all) {
-	const args = all
-		? ["ls-files"]
-		: ["diff", "--name-only", "--cached", "--diff-filter=ACM"];
-	const out = execFileSync("git", args, { encoding: "utf8" });
-	return out.split("\n").filter(Boolean);
+  const args = all ? ["ls-files"] : ["diff", "--name-only", "--cached", "--diff-filter=ACM"];
+  const out = execFileSync("git", args, { encoding: "utf8" });
+  return out.split("\n").filter(Boolean);
 }
 
 // Staged paths that are new to the index (A), not edits to tracked files (M).
 // The force-add check below applies only to these — see why there.
 function stagedAdditions() {
-	const out = execFileSync(
-		"git",
-		["diff", "--name-only", "--cached", "--diff-filter=A"],
-		{ encoding: "utf8" },
-	);
-	return out.split("\n").filter(Boolean);
+  const out = execFileSync("git", ["diff", "--name-only", "--cached", "--diff-filter=A"], {
+    encoding: "utf8",
+  });
+  return out.split("\n").filter(Boolean);
 }
 
 // Files .gitignore excludes can still reach a commit via `git add -f`, and
@@ -130,24 +122,24 @@ function stagedAdditions() {
 // and block the commit; checking every tracked path (--all) would flag them
 // permanently. Only a *new* ignored path in the index implies `git add -f`.
 function ignoredButStaged(files) {
-	if (files.length === 0) return [];
-	try {
-		// --no-index is load-bearing: by default check-ignore consults the index
-		// and never calls a tracked path ignored. Every path handed to this
-		// function is staged (i.e. in the index), so without this flag the check
-		// silently matches nothing — which is exactly the `git add -f` case it
-		// exists to catch. git's own docs point at --no-index for this.
-		const out = execFileSync("git", ["check-ignore", "--no-index", "--stdin"], {
-			input: files.join("\n"),
-			encoding: "utf8",
-		});
-		return out.split("\n").filter(Boolean);
-	} catch (err) {
-		// check-ignore exits 1 when nothing matched — the expected, good path.
-		// Anything else is a real failure and must not pass silently.
-		if (err.status === 1) return [];
-		throw err;
-	}
+  if (files.length === 0) return [];
+  try {
+    // --no-index is load-bearing: by default check-ignore consults the index
+    // and never calls a tracked path ignored. Every path handed to this
+    // function is staged (i.e. in the index), so without this flag the check
+    // silently matches nothing — which is exactly the `git add -f` case it
+    // exists to catch. git's own docs point at --no-index for this.
+    const out = execFileSync("git", ["check-ignore", "--no-index", "--stdin"], {
+      input: files.join("\n"),
+      encoding: "utf8",
+    });
+    return out.split("\n").filter(Boolean);
+  } catch (err) {
+    // check-ignore exits 1 when nothing matched — the expected, good path.
+    // Anything else is a real failure and must not pass silently.
+    if (err.status === 1) return [];
+    throw err;
+  }
 }
 
 /**
@@ -166,10 +158,10 @@ function ignoredButStaged(files) {
  * @returns {boolean} True when the name alone marks it sensitive.
  */
 export function isSensitiveByName(path) {
-	const lower = path.toLowerCase();
-	if (SENSITIVE_EXTENSIONS.some((ext) => lower.endsWith(ext))) return true;
-	const base = path.split("/").pop() ?? path;
-	return SENSITIVE_FILENAMES.some((re) => re.test(base));
+  const lower = path.toLowerCase();
+  if (SENSITIVE_EXTENSIONS.some((ext) => lower.endsWith(ext))) return true;
+  const base = path.split("/").pop() ?? path;
+  return SENSITIVE_FILENAMES.some((re) => re.test(base));
 }
 
 /**
@@ -184,71 +176,71 @@ export function isSensitiveByName(path) {
 export const nameCheckExempt = NAME_CHECK_EXEMPT;
 
 function scanContent(path) {
-	let size;
-	try {
-		size = statSync(path).size;
-	} catch {
-		return []; // deleted/renamed file, nothing to scan
-	}
-	if (size > MAX_SCAN_BYTES) return [];
+  let size;
+  try {
+    size = statSync(path).size;
+  } catch {
+    return []; // deleted/renamed file, nothing to scan
+  }
+  if (size > MAX_SCAN_BYTES) return [];
 
-	let text;
-	try {
-		text = readFileSync(path, "utf8");
-	} catch {
-		return []; // binary or unreadable — extension check already covers signing formats
-	}
+  let text;
+  try {
+    text = readFileSync(path, "utf8");
+  } catch {
+    return []; // binary or unreadable — extension check already covers signing formats
+  }
 
-	const hits = [];
-	for (const [pattern, label] of SECRET_PATTERNS) {
-		if (pattern.test(text)) hits.push(label);
-	}
-	return hits;
+  const hits = [];
+  for (const [pattern, label] of SECRET_PATTERNS) {
+    if (pattern.test(text)) hits.push(label);
+  }
+  return hits;
 }
 
 function main() {
-	const all = process.argv.includes("--all");
-	const files = gitFiles(all);
+  const all = process.argv.includes("--all");
+  const files = gitFiles(all);
 
-	const findings = [];
-	// Staged mode only: --all sweeps tracked files, where "ignored but present"
-	// is the normal, intended state for GAPS.md / THREAT-MODEL.md / audits/**.
-	if (!all) {
-		for (const file of ignoredButStaged(stagedAdditions())) {
-			findings.push({
-				file,
-				reason: "gitignored file force-added (`git add -f`) — it is private",
-			});
-		}
-	}
-	for (const file of files) {
-		if (file === SELF) continue;
-		if (!NAME_CHECK_EXEMPT.has(file) && isSensitiveByName(file)) {
-			findings.push({ file, reason: "sensitive file extension/name" });
-			continue;
-		}
-		for (const reason of scanContent(file)) {
-			findings.push({ file, reason });
-		}
-	}
+  const findings = [];
+  // Staged mode only: --all sweeps tracked files, where "ignored but present"
+  // is the normal, intended state for GAPS.md / THREAT-MODEL.md / audits/**.
+  if (!all) {
+    for (const file of ignoredButStaged(stagedAdditions())) {
+      findings.push({
+        file,
+        reason: "gitignored file force-added (`git add -f`) — it is private",
+      });
+    }
+  }
+  for (const file of files) {
+    if (file === SELF) continue;
+    if (!NAME_CHECK_EXEMPT.has(file) && isSensitiveByName(file)) {
+      findings.push({ file, reason: "sensitive file extension/name" });
+      continue;
+    }
+    for (const reason of scanContent(file)) {
+      findings.push({ file, reason });
+    }
+  }
 
-	if (findings.length === 0) {
-		console.log(`check-sensitive-files: clean (${files.length} file(s) checked).`);
-		return;
-	}
+  if (findings.length === 0) {
+    console.log(`check-sensitive-files: clean (${files.length} file(s) checked).`);
+    return;
+  }
 
-	console.error("check-sensitive-files: refusing to publish:\n");
-	for (const { file, reason } of findings) {
-		console.error(`  ${file} — ${reason}`);
-	}
-	console.error(
-		"\nCredentials and signing material belong in the Keychain (on-device) or " +
-			"GitHub Actions secrets (CI) — never in the repository; see " +
-			"docs/ENVIRONMENT.md. A gitignored file listed above was force-added " +
-			"(`git add -f`): it is private by design — unstage it with `git restore " +
-			"--staged <file>`. See NOTES.md for the public/private split.",
-	);
-	process.exitCode = 1;
+  console.error("check-sensitive-files: refusing to publish:\n");
+  for (const { file, reason } of findings) {
+    console.error(`  ${file} — ${reason}`);
+  }
+  console.error(
+    "\nCredentials and signing material belong in the Keychain (on-device) or " +
+      "GitHub Actions secrets (CI) — never in the repository; see " +
+      "docs/ENVIRONMENT.md. A gitignored file listed above was force-added " +
+      "(`git add -f`): it is private by design — unstage it with `git restore " +
+      "--staged <file>`. See NOTES.md for the public/private split.",
+  );
+  process.exitCode = 1;
 }
 
 // Run only when invoked as a script. Without this guard, importing
@@ -260,12 +252,12 @@ function main() {
 // still matches; wrapped because argv[1] can be absent (`node -e`, REPL) or
 // point at something unresolvable, and neither case should throw here.
 function invokedAsScript() {
-	if (!process.argv[1]) return false;
-	try {
-		return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
-	} catch {
-		return false;
-	}
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
 }
 
 if (invokedAsScript()) main();

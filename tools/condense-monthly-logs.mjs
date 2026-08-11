@@ -87,7 +87,9 @@ function indexAudits(month) {
     "",
     "| Category | Report | Title |",
     "| --- | --- | --- |",
-    ...entries.map((e) => `| ${e.category} | [\`${e.file}\`](../${e.category}/${e.file}) | ${e.title} |`),
+    ...entries.map(
+      (e) => `| ${e.category} | [\`${e.file}\`](../${e.category}/${e.file}) | ${e.title} |`,
+    ),
     "",
   ];
   const outPath = join(outDir, "INDEX.md");
@@ -101,8 +103,12 @@ const audits = indexAudits(month);
 
 console.log(`Month: ${month}`);
 console.log(
-  sessions.count ? `Sessions: condensed ${sessions.count} file(s) into ${sessions.outPath}` : "Sessions: nothing to condense",
+  sessions.count
+    ? `Sessions: condensed ${sessions.count} file(s) into ${sessions.outPath}`
+    : "Sessions: nothing to condense",
 );
 console.log(
-  audits.count ? `Audits: indexed ${audits.count} report(s) into ${audits.outPath}` : "Audits: nothing to index",
+  audits.count
+    ? `Audits: indexed ${audits.count} report(s) into ${audits.outPath}`
+    : "Audits: nothing to index",
 );

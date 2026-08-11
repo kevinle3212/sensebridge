@@ -4,8 +4,10 @@
 #
 # Runs, in order: secret scan of staged changes (gitleaks + ggshield, each
 # advisory if not installed), the sensitive-file check
-# (tools/check-sensitive-files.mjs), the mirrored-skill drift check
-# (tools/sync-skills.mjs --check), the settings-hook check
+# (tools/check-sensitive-files.mjs), the skill-lock drift check
+# (tools/skill-lock.mjs, hashing the canonical skill tree, review personas,
+# and every harness adapter against .agents/skill-lock.json), the
+# settings-hook check
 # (tools/check-settings-hooks.mjs, which blocks owner-personal or
 # double-registered hooks landing in the tracked .claude/settings.json), the
 # BMAD skill-level check (tools/check-bmad-config.mjs, which catches an
@@ -47,12 +49,12 @@ fi
 
 if command -v node >/dev/null 2>&1; then
 	node tools/check-sensitive-files.mjs
-	node tools/sync-skills.mjs --check
+	node tools/skill-lock.mjs
 	node tools/check-settings-hooks.mjs
 	node tools/check-bmad-config.mjs
 	npx --yes markdownlint-cli2 "**/*.md" "COMPLETED.todo"
 else
-	echo "pre-commit: node not installed — skipping sensitive-file check, mirrored-skill drift check, settings-hook check, BMAD config check, and Markdown lint; CI still scans." >&2
+	echo "pre-commit: node not installed — skipping sensitive-file check, skill-lock drift check, settings-hook check, BMAD config check, and Markdown lint; CI still scans." >&2
 fi
 
 # Keep the committed knowledge-graph visual in step with the commit being made,

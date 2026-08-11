@@ -35,9 +35,20 @@ all about what this costs as the suite grows:
 - **Migration cost only goes up.** It is zero now and rises with every test
   written. Deciding later means paying to convert, or living with a split that
   isn't principled.
-- **Parallelism is cheaper.** Swift Testing runs tests in parallel in-process
-  by default; XCTest parallelises by cloning simulators. On the fixture-heavy
-  suites below, that difference compounds into CI minutes.
+- **Parallelism is cheaper — measured, not assumed.** Swift Testing runs tests
+  in parallel in-process by default; XCTest parallelises by cloning
+  simulators. Measured 2026-08-06 on this repo's `SenseBridgeCoreTests`
+  package (90 tests, 16 suites, M-series Mac, 8 logical / 4 performance
+  cores): `swift test --disable-xctest` (default, in-process parallel) runs
+  the suite in ~0.36s versus ~0.67s with `--no-parallel` forced — a ~1.8×
+  speedup with zero extra setup, since it's just more concurrent tasks in the
+  process already running. The cost XCTest pays instead is per-worker, not
+  per-test: `xcrun simctl clone` plus `simctl boot` to bring up one additional
+  parallel simulator took ~10.3s (4.5s clone + 5.8s boot) *before any test
+  runs*, and that cost repeats for every worker XCTest fans out to. On a small
+  suite that fixed cost already dwarfs the run itself; it scales with worker
+  count, not test count, which is what "compounds into CI minutes" means in
+  practice as the suite — and the CI matrix — grow.
 - **Parameterisation fits the work.** Our tests are overwhelmingly "one
   assertion across N fixtures" — reading-order cases, hedging phrasings,
   perception fixtures. `@Test(arguments:)` expresses that as one test that
@@ -85,6 +96,31 @@ chase exhaustive coverage where wrongness is dangerous (reasoning, phrasing,
 awareness logic) and where regressions are silent (perception); for glue code
 and SwiftUI views a minimal covering test suffices. A test you'll actually
 maintain beats one that looks good in a report.
+
+**One deliberate exception: App-layer types that wrap an Xcode-generated or
+system-provided type carry no package-level unit test.**
+`FoundationModelsSceneComposer` (needs `SystemLanguageModel`) and
+`CustomSoundClassifier` (needs the Create ML model's auto-generated Swift
+wrapper, which only exists in the App target's compiled output — see
+`docs/ARCHITECTURE.md`'s "Sound Alerts data flow") both live in the App
+layer specifically because `SenseBridgeCore` cannot depend on either type.
+Neither can be constructed from a `SenseBridgeCoreTests`-style unit test for
+the same reason, so this is a structural limit of where the type can live,
+not a gap to backfill.
+
+That does not mean both are manual-only. `FoundationModelsSceneComposer` is
+manual-only: no automated test touches it or `SystemLanguageModel`, so its
+coverage is the manual/VoiceOver pass. `CustomSoundClassifier` is not — after
+an audit found
+non-alert audio (room hiss, white noise, a pure tone, a frequency sweep)
+scoring an alert class at 1.000 confidence and reaching spoken output (see
+`audits/safety-framing/20260806-064241-custom-sound-classifier-out-of-distribution-false-positives-reach-spoken-output.md`),
+`app/SenseBridgeTests/CustomSoundClassifierOODTests.swift` was added as an
+App-target Swift Testing suite that runs the shipped `.mlmodel` through the
+same model, request, and target-class filter `CustomSoundClassifier.process(_:)`
+uses. It still does not construct `CustomSoundClassifier` itself — so the
+package-level-unit-test limit above still holds — but it is real automated
+regression coverage of the inference path the type wraps, not a manual check.
 
 ## Recruiting field testers
 

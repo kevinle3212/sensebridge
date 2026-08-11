@@ -87,8 +87,8 @@ common breakage is caught before it ever reaches a PR:
 
 - **`pre-commit`** — secret scan of staged changes (`gitleaks`, `ggshield`,
   each advisory if not installed locally), the sensitive-file check
-  (`tools/check-sensitive-files.mjs`), the mirrored-skill drift check
-  (`tools/sync-skills.mjs --check`), Markdown lint, `scripts/lint.sh`
+  (`tools/check-sensitive-files.mjs`), the skill-lock drift check
+  (`tools/skill-lock.mjs`), Markdown lint, `scripts/lint.sh`
   (SwiftFormat + SwiftLint, a no-op until `app/` exists on a given branch
   state), `actionlint` on staged workflow files, and — only when staged
   changes touch `website/` — `website/`'s `lint-staged` and React Doctor,
@@ -99,7 +99,9 @@ common breakage is caught before it ever reaches a PR:
   bypassed with `git commit --no-verify`.
 - **`pre-push`** — refuses to push directly to `main`, runs a build-only
   check (`swift build` or `xcodebuild build`, same project-detection as
-  `ci.yml`), and an `osv-scanner` dependency check.
+  `ci.yml`), an `osv-scanner` dependency check, and — when the push touches
+  `website/` — a `react-doctor` scan at `--blocking warning`, mirroring
+  `react-doctor.yml`.
 - **`post-checkout` / `post-commit` / `post-merge`** — advisory checks that
   flag manifest/toolchain drift after a branch switch, commit, or merge.
 

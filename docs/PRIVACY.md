@@ -38,6 +38,12 @@ exist on.
   announcement that hands-free awareness *stopped* is audible after the app
   leaves the screen. iOS revokes camera access on backgrounding regardless, so
   this grants no ability to observe surroundings in the background.
+- **Sound Alerts is one-shot, like Reading/Identify/Describe, not continuous
+  like hands-free awareness.** One tap records a few seconds of audio, held
+  only in memory and a temporary file deleted before the capture call
+  returns. Both the built-in and bundled classifiers run on that same
+  in-memory data on-device; no audio is ever written to durable storage or
+  leaves the device.
 
 ## Biometric data (facial enrollment — deferred, designed now)
 

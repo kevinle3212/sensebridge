@@ -123,6 +123,10 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
       - name: Settings-declared hooks exist and are executable
         run: npm run check:hooks
       - name: Hook test suite
@@ -134,6 +138,15 @@ jobs:
         # workflow files; nothing checked these standalone scripts. shellcheck
         # is preinstalled on the ubuntu runner image.
         run: npm run lint:shell
+      - name: Lint hand-authored .mjs files
+        # Scoped to .claude/hooks, .cursor/hooks, and tools — see
+        # eslint.config.mjs's header for why vendored/regenerated .mjs under
+        # any skills/ directory, and website/*.mjs, are out of scope here.
+        # eslint is a pinned root devDependency (installed above), not npx.
+        run: npm run lint:mjs
+      - name: Format-check hand-authored .mjs files
+        # Same scope as lint:mjs, paired Prettier gate — see prettier.config.mjs.
+        run: npm run format:mjs
 
   docs-links:
     name: Docs link check
@@ -143,12 +156,16 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
       - name: Markdown lint
-        # Deliberately unpinned (npx resolves fresh) — see
-        # .markdownlint-cli2.jsonc's own comment for why.
-        run: npx --yes markdownlint-cli2 "**/*.md" "COMPLETED.todo"
-      - name: Check mirrored skills match canonical
-        run: node tools/sync-skills.mjs --check
+        # markdownlint-cli2 is a pinned root devDependency (installed above),
+        # not npx — see .markdownlint-cli2.jsonc's own comment for the globs.
+        run: npm run lint:md
+      - name: Check canonical skills, personas, and adapters match the lock
+        run: node tools/skill-lock.mjs
       - name: Check relative Markdown links resolve
         # The checker itself, and the reasoning behind what it skips, lives in
         # the script — it used to be inlined here, which meant it could only be
