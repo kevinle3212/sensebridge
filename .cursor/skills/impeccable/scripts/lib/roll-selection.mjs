@@ -213,9 +213,10 @@ export function* selectApprovedChallengers({ scope, key, reroll = 0, minRating =
       const order = [];
       const seen = new Set();
       for (const entry of ranked) {
-        if (seen.has(entry.concept.id)) continue;
-        seen.add(entry.concept.id);
-        order.push(entry.concept);
+        const { concept } = entry;
+        if (seen.has(concept.id)) continue;
+        seen.add(concept.id);
+        order.push(concept);
       }
       const first = order[0];
       const second = order.find(concept => concept.familyId !== first.familyId)

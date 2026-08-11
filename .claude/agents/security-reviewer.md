@@ -2,7 +2,7 @@
 name: security-reviewer
 description: Reviews on-device privacy posture, permission surface, data-at-rest, and supply chain. Use for any new network call, sensor permission, persisted data, or third-party dependency.
 tools: Read, Grep, Glob, Bash, Edit, Skill
-model: opus
+model: claude-opus-5
 color: red
 ---
 

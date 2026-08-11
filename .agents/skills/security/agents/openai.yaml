@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security"
+  short_description: "changing permissions, sensors, network paths, logging, or"
+  default_prompt: "Use $security when changing permissions, sensors, network paths, logging, or data at rest."

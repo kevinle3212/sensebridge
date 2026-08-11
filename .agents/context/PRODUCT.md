@@ -67,9 +67,14 @@ manufactured where none exists — the tone already used in `README.md` and
 ## Anti-references
 
 Generic SaaS-gradient startup marketing: hero-metric templates, gradient
-text, glassmorphism, tiny uppercase eyebrows on every section. This is a
-free, no-subscription, pre-launch open-source project — it should not look
-or sound like it's selling something.
+text, tiny uppercase eyebrows on every section. This is a free,
+no-subscription, pre-launch open-source project — it should not look or
+sound like it's selling something. (Glassmorphism dropped from this list
+2026-08-05: the 2026-07-18 owner directive voided the doctrines this
+anti-reference traced to — see
+[`DESIGN.md`](DESIGN.md#0-doctrine-status-2026-07-18-owner-directive) §0 —
+and the site now ships a deliberate glass-surface treatment, hero/nav only,
+per `website/src/styles/abstracts/_mixins.scss`'s `glass-surface` mixin.)
 
 ## Design Principles
 

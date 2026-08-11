@@ -10,14 +10,12 @@
  * of the ElevenLabs free plan's 10,000 monthly credits to regenerate. The
  * footer's link sits outside `<main>` and appears on every page, including
  * this one, so nothing is actually unreachable. See website/README.md →
- * "Cost, quota, and licensing", and `t.privacy.fullNoticeLink`, which is kept
- * translated and ready for the day the narration is regenerated anyway.
+ * "Cost, quota, and licensing", and `m.privacy_full_notice_link()`, which is
+ * kept translated and ready for the day the narration is regenerated anyway.
  */
 import styles from "./Privacy.module.scss";
 import SpineNode from "./SpineNode.astro";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 ---
 
 <section id="privacy" class={styles.privacy} aria-labelledby="privacy-heading" data-stage>
@@ -25,10 +23,10 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
        Spine"). -->
   <SpineNode top="8rem" />
   <div class="wrap section-columns">
-    <h2 id="privacy-heading" class="section-heading">{t.privacy.heading}</h2>
+    <h2 id="privacy-heading" class="section-heading">{m.privacy_heading()}</h2>
     <div>
-      <p class={styles.body} data-reveal-item>{t.privacy.body}</p>
-      <p class={styles.supporting} data-reveal-item>{t.privacy.supporting}</p>
+      <p class={styles.body} data-reveal-item>{m.privacy_body()}</p>
+      <p class={styles.supporting} data-reveal-item>{m.privacy_supporting()}</p>
     </div>
   </div>
 </section>

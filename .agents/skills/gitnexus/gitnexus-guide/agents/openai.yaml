@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gitnexus Guide"
+  short_description: "the user asks about GitNexus itself"
+  default_prompt: "Use $gitnexus-guide when the user asks about GitNexus itself — available tools, how to query the knowledge graph, MCP resources, graph schema, or workflow reference."

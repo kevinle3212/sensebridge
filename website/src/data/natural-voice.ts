@@ -10,7 +10,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-import type { Locale } from "../i18n";
+import type { Locale } from "../paraglide/runtime.js";
 
 /**
  * Whether `/audio/main.mp3` is both generated and appropriate for `locale`.

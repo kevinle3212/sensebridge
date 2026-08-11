@@ -6,11 +6,11 @@
  * bundle so it works before that bundle loads.
  */
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { localeNames, translations, useTranslations, type Locale } from "../i18n";
+import { m } from "../paraglide/messages.js";
+import { locales, type Locale } from "../paraglide/runtime.js";
+import { localeNames } from "../i18n/locale-names";
 
 const locale = (Astro.currentLocale ?? "en") as Locale;
-const t = useTranslations(locale);
-const locales = Object.keys(translations) as Locale[];
 
 // The three section links are rooted at this locale's home page rather than
 // written as bare `#features`-style fragments. The header is shared by every
@@ -21,6 +21,17 @@ const locales = Object.keys(translations) as Locale[];
 // navigate home and scroll to the section from a status page, while staying an
 // ordinary same-document fragment jump when already on the home page.
 const home = getRelativeLocaleUrl(locale, "/");
+
+type ThemeMode = "system" | "light" | "dark";
+
+// Translated mode names, passed as the `current`/`next` params to
+// `header_theme_toggle_aria_label` below rather than the raw enum values —
+// the sentence must read in the visitor's language, not leak "dark"/"system".
+const themeModeName: Record<ThemeMode, string> = {
+  system: m.header_theme_toggle_mode_system({}, { locale }),
+  light: m.header_theme_toggle_mode_light({}, { locale }),
+  dark: m.header_theme_toggle_mode_dark({}, { locale }),
+};
 
 // Whether this page *is* the home page, so the wordmark link below can say so
 // with aria-current. Compared with trailing slashes stripped from both sides:
@@ -43,10 +54,10 @@ const isHome = Astro.url.pathname.replace(/\/$/, "") === home.replace(/\/$/, "")
          options, this link has no siblings it must be distinguished from. -->
     <a class="logo" href={home} aria-current={isHome ? "page" : undefined}>SenseBridge</a>
     <nav aria-label="Primary">
-      <a href={`${home}#features`}>{t.header.nav.features}</a>
-      <a href={`${home}#privacy`}>{t.header.nav.privacy}</a>
-      <a href={`${home}#accessibility`}>{t.header.nav.accessibility}</a>
-      <a href="https://github.com/kevinle3212/sensebridge">{t.header.nav.github}</a>
+      <a href={`${home}#features`}>{m.header_nav_features()}</a>
+      <a href={`${home}#privacy`}>{m.header_nav_privacy()}</a>
+      <a href={`${home}#accessibility`}>{m.header_nav_accessibility()}</a>
+      <a href="https://github.com/kevinle3212/sensebridge">{m.header_nav_github()}</a>
     </nav>
     <!-- Language switcher: a native <details>/<summary> dropdown — no JS
          needed for the core open/close, keyboard operation (Tab to focus,
@@ -60,7 +71,7 @@ const isHome = Astro.url.pathname.replace(/\/$/, "") === home.replace(/\/$/, "")
          degrades to an instant show under prefers-reduced-motion or in
          engines that don't support @starting-style yet. -->
     <details class="language-switcher" data-lang-switcher>
-      <summary aria-label={`${t.header.languageSwitcher.label}: ${localeNames[locale]}`}>
+      <summary aria-label={`${m.header_language_switcher_label()}: ${localeNames[locale]}`}>
         <span>{localeNames[locale]}</span>
         <svg
           class="language-switcher-caret"
@@ -102,7 +113,10 @@ const isHome = Astro.url.pathname.replace(/\/$/, "") === home.replace(/\/$/, "")
       type="button"
       class="theme-toggle"
       data-theme-toggle
-      aria-label={t.header.themeToggle.ariaLabel("dark", "system")}
+      aria-label={m.header_theme_toggle_aria_label(
+        { current: themeModeName.dark, next: themeModeName.system },
+        { locale },
+      )}
     >
       <svg
         class="theme-toggle-icon"
@@ -157,12 +171,25 @@ const isHome = Astro.url.pathname.replace(/\/$/, "") === home.replace(/\/$/, "")
 </header>
 
 <script>
-  import { useTranslations } from "../i18n";
+  import { m } from "../paraglide/messages.js";
 
+  // Stays on `localStorage`, unlike the site's other client storage (see
+  // idb-store.ts) — `public/theme-init.js` reads this key synchronously,
+  // before first paint, to avoid a flash of the wrong theme, and IndexedDB has
+  // no synchronous main-thread read. See TODO.md's "Add localStorage
+  // migration to databases" entry.
   const STORAGE_KEY = "sb-theme";
   type Mode = "system" | "light" | "dark";
   const NEXT_MODE: Record<Mode, Mode> = { system: "light", light: "dark", dark: "system" };
-  const t = useTranslations(document.documentElement.lang);
+  // Paraglide's `url` strategy resolves the active locale from the page's own
+  // URL in the browser, the same way Astro's own routing already did — no
+  // explicit locale plumbing needed here, unlike the server-rendered
+  // frontmatter above (see src/middleware.ts).
+  const modeName: Record<Mode, string> = {
+    system: m.header_theme_toggle_mode_system(),
+    light: m.header_theme_toggle_mode_light(),
+    dark: m.header_theme_toggle_mode_dark(),
+  };
 
   // Reads the persisted theme mode. A true first visit (nothing ever
   // stored) defaults to "dark" — DESIGN.md's "dark (default), light, and
@@ -184,7 +211,13 @@ const isHome = Astro.url.pathname.replace(/\/$/, "") === home.replace(/\/$/, "")
 
   // Updates the toggle button's aria-label and visible icon to match the current mode.
   function updateButton(button: HTMLButtonElement, mode: Mode): void {
-    button.setAttribute("aria-label", t.header.themeToggle.ariaLabel(mode, NEXT_MODE[mode]));
+    button.setAttribute(
+      "aria-label",
+      m.header_theme_toggle_aria_label({
+        current: modeName[mode],
+        next: modeName[NEXT_MODE[mode]],
+      }),
+    );
     button.querySelectorAll<SVGElement>("[data-icon]").forEach((icon) => {
       icon.style.display = icon.dataset.icon === mode ? "block" : "none";
     });

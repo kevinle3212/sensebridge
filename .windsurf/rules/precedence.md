@@ -10,8 +10,9 @@ description: Guidance precedence for Cascade in SenseBridge
    useful precedent, not binding on Cascade.
 5. General repository documentation (`docs/`, `README.md`).
 
-Current state (`AGENT-CONTEXT.md`): the Swift app under `app/` is not
-scaffolded yet — never assume code exists. Non-negotiables: hedged
+Current state (`AGENT-CONTEXT.md`): `app/` has an early scaffold but no
+distributable build — never assume more exists than that file describes.
+Non-negotiables: hedged
 awareness-not-safety wording for physical-world output, on-device by default,
 zero unlabeled UI elements, no commits to `main`, no edits under `legal/`,
 AGPL / `apple-amlr` licenses blocked.

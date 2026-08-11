@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73B9444B53F2DD88AD973EA /* HomeView.swift */; };
 		0EC253358BB6592F0066F3A3 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 0C7C04C5AB2A89D896C5A4A4 /* Sentry */; };
+		0FC9712197828F50E15A7423 /* SettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B659E56450AFF17FFC6D075A /* SettingsSections.swift */; };
 		1CAA3958ACD6EBEF05E24464 /* AwarenessPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */; };
 		1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */; };
 		268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */; };
@@ -18,7 +19,10 @@
 		3F02B88DA178392F7EEB35EF /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25B799EEB369166FD737AEA /* CameraController.swift */; };
 		45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */; };
 		608A9FB837FD1E25D7527BD5 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */; };
+		682E27D38574104D02AD5E83 /* CustomSoundClassifierOODTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */; };
+		6BD59D76920B98A3444D4972 /* CustomSoundClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B39F5A26EF1C431714DEF58F /* CustomSoundClassifier.swift */; };
 		6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A609680B79ECF22EB121BCAA /* CrashReporting.swift */; };
+		75103B4FD7ACCB429708A1F6 /* SenseBridgeSoundClassifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */; };
 		76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */; };
 		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
 		82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */; };
@@ -36,7 +40,9 @@
 		B62B6F726B5A68E041AADB00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */; };
 		CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */; };
 		D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */; };
+		F291E9E90D67D7F2F4E634DA /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86D1BA5F897BD45FD1CCDC6 /* OnboardingView.swift */; };
 		F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */; };
+		F7FA11AE4011CC7899DA53DF /* AlphaScaffoldingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */; };
 		FBE1008D99DC64D5C2F7B689 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 6F8902BD3171C6B275867212 /* Sentry */; };
 /* End PBXBuildFile section */
 
@@ -66,21 +72,27 @@
 		274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentTests.swift; sourceTree = "<group>"; };
 		2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewFeed.swift; sourceTree = "<group>"; };
 		309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsSection.swift; sourceTree = "<group>"; };
+		385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = SenseBridgeSoundClassifier.mlmodel; sourceTree = "<group>"; };
 		38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportingTests.swift; sourceTree = "<group>"; };
+		3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlphaScaffoldingUITests.swift; sourceTree = "<group>"; };
 		509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeUITests.swift; sourceTree = "<group>"; };
 		50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionUITests.swift; sourceTree = "<group>"; };
 		53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		60602C61EB43396734122316 /* SenseBridgeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		66C553969EFB2A7DED18325B /* LabelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingView.swift; sourceTree = "<group>"; };
 		711F69574DFEC999FAF004AF /* FoundationModelsSceneComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationModelsSceneComposer.swift; sourceTree = "<group>"; };
+		80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSoundClassifierOODTests.swift; sourceTree = "<group>"; };
 		8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		90C66C23119670006B9FEC57 /* CameraControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraControlsView.swift; sourceTree = "<group>"; };
 		91ABE54B3D488D3FD6947263 /* SenseBridge.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SenseBridge.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAlertsView.swift; sourceTree = "<group>"; };
 		9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientPreviewImageTests.swift; sourceTree = "<group>"; };
 		A609680B79ECF22EB121BCAA /* CrashReporting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporting.swift; sourceTree = "<group>"; };
+		A86D1BA5F897BD45FD1CCDC6 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
+		B39F5A26EF1C431714DEF58F /* CustomSoundClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSoundClassifier.swift; sourceTree = "<group>"; };
 		B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B659E56450AFF17FFC6D075A /* SettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSections.swift; sourceTree = "<group>"; };
 		C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObstacleAwarenessView.swift; sourceTree = "<group>"; };
 		D73B9444B53F2DD88AD973EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		D863B3D0A276D8D92A986648 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
@@ -123,6 +135,7 @@
 				309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */,
 				D73B9444B53F2DD88AD973EA /* HomeView.swift */,
 				1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */,
+				B659E56450AFF17FFC6D075A /* SettingsSections.swift */,
 				212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */,
 			);
 			path = App;
@@ -163,8 +176,17 @@
 				B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */,
 				8FBEBA521A094D8D3C1C577A /* InfoPlist.xcstrings */,
 				FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */,
+				385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		54585F491B0F183430FB05D2 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				A86D1BA5F897BD45FD1CCDC6 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		59F08F74B9E6D8A4F9346606 /* SenseBridge */ = {
@@ -181,6 +203,7 @@
 		5B4CCA89F1AB81F1218D7F0C /* SenseBridgeUITests */ = {
 			isa = PBXGroup;
 			children = (
+				3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */,
 				50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */,
 				509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */,
 			);
@@ -211,6 +234,7 @@
 				1A00C09BCEBC54B23880399D /* Camera */,
 				BA5152B824E40A94F9DBC660 /* Labeling */,
 				17CFC050C0ED11ADC4123CC8 /* ObstacleAwareness */,
+				54585F491B0F183430FB05D2 /* Onboarding */,
 				F72FA9A23C21D154DC914D16 /* Reading */,
 				167BD6B707F5CD3F5FED1BF9 /* SceneDescription */,
 				D25363759E83B808857037EF /* SoundAlerts */,
@@ -232,6 +256,7 @@
 				9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */,
 				274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */,
 				38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */,
+				80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */,
 			);
 			path = SenseBridgeTests;
 			sourceTree = "<group>";
@@ -247,6 +272,7 @@
 		D25363759E83B808857037EF /* SoundAlerts */ = {
 			isa = PBXGroup;
 			children = (
+				B39F5A26EF1C431714DEF58F /* CustomSoundClassifier.swift */,
 				96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */,
 			);
 			path = SoundAlerts;
@@ -405,6 +431,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F7FA11AE4011CC7899DA53DF /* AlphaScaffoldingUITests.swift in Sources */,
 				311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */,
 				45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */,
 			);
@@ -417,6 +444,7 @@
 				82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */,
 				76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */,
 				268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */,
+				682E27D38574104D02AD5E83 /* CustomSoundClassifierOODTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -432,14 +460,18 @@
 				8E0DBCD0890C974B156BDFFB /* CameraControlsView.swift in Sources */,
 				D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */,
 				6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */,
+				6BD59D76920B98A3444D4972 /* CustomSoundClassifier.swift in Sources */,
 				B616562B724CF082D62A1B28 /* DiagnosticsSettingsSection.swift in Sources */,
 				3310BF73FB5557F408A36388 /* FoundationModelsSceneComposer.swift in Sources */,
 				014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */,
 				A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */,
 				774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */,
+				F291E9E90D67D7F2F4E634DA /* OnboardingView.swift in Sources */,
 				9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */,
 				A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */,
 				B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */,
+				75103B4FD7ACCB429708A1F6 /* SenseBridgeSoundClassifier.mlmodel in Sources */,
+				0FC9712197828F50E15A7423 /* SettingsSections.swift in Sources */,
 				B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */,
 				CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */,
 				A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */,
@@ -492,6 +524,7 @@
 		};
 		5848DBF74A3DDB5EE31C1770 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D863B3D0A276D8D92A986648 /* Signing.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
@@ -630,6 +663,7 @@
 		};
 		C0D226AD8A46B6E036230822 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D863B3D0A276D8D92A986648 /* Signing.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
@@ -677,6 +711,7 @@
 		};
 		CCBFF280C428668A89957505 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D863B3D0A276D8D92A986648 /* Signing.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
@@ -696,6 +731,7 @@
 		};
 		E324DDCE085A93581856E7CE /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D863B3D0A276D8D92A986648 /* Signing.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;

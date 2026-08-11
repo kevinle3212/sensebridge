@@ -5,17 +5,20 @@
  * routing would otherwise mean three copies of this markup drifting apart,
  * which on a legal notice is the one place drift is least acceptable.
  *
- * Content lives in `src/i18n/*.ts` under `privacyPage`, not here: the notice is
- * translated, and a compile error on a missing key is a better failure than a
- * locale silently serving an English paragraph in the middle of its own.
+ * Content lives in Paraglide's message catalogs (`messages/*.json`) under the
+ * `privacy_page_*` keys, not here: the notice is translated, and a missing
+ * key is a compile error — a better failure than a locale silently serving an
+ * English paragraph in the middle of its own.
  */
 import styles from "./PrivacyPage.module.scss";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MonitoringConsent from "./MonitoringConsent.astro";
-import { defaultLocale, useTranslations, type Locale } from "../i18n";
+import { m } from "../paraglide/messages.js";
+import { baseLocale, type Locale } from "../paraglide/runtime.js";
+import { getPrivacySections } from "../i18n/privacy-sections";
 
 const locale = (Astro.currentLocale ?? "en") as Locale;
-const t = useTranslations(locale);
+const sections = getPrivacySections();
 
 /**
  * The date this notice last changed, as an ISO date so `<time datetime>` is
@@ -31,7 +34,7 @@ const updatedLabel = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).form
 
 // The notice's authority statement is only meaningful on a translation. Saying
 // "the English version governs" on the English version is noise.
-const showAuthoritative = locale !== defaultLocale;
+const showAuthoritative = locale !== baseLocale;
 
 // Same gate as MonitoringConsent's own: with no DSN there is nothing to consent
 // to, and the page states that instead of showing a switch over an empty space.
@@ -39,8 +42,8 @@ const isMonitoringConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim()
 ---
 
 <BaseLayout
-  title={t.privacyPage.title}
-  description={t.privacyPage.description}
+  title={m.privacy_page_title()}
+  description={m.privacy_page_description()}
   ambient={false}
   pageLoader={false}
 >
@@ -52,13 +55,13 @@ const isMonitoringConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim()
   }
   <article class={styles.notice}>
     <div class="wrap">
-      <h1 class={styles.heading}>{t.privacyPage.heading}</h1>
-      <p class={styles.lede}>{t.privacyPage.lede}</p>
+      <h1 class={styles.heading}>{m.privacy_page_heading()}</h1>
+      <p class={styles.lede}>{m.privacy_page_lede()}</p>
       <p class={styles.meta}>
-        {t.privacyPage.updated}
+        {m.privacy_page_updated()}
         <time datetime={UPDATED}>{updatedLabel}</time>
       </p>
-      {showAuthoritative && <p class={styles.meta}>{t.privacyPage.authoritative}</p>}
+      {showAuthoritative && <p class={styles.meta}>{m.privacy_page_authoritative()}</p>}
 
       {
         /* The control comes before the detail on purpose. Withdrawing consent
@@ -66,21 +69,23 @@ const isMonitoringConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim()
           a page of prose fails that in practice even when it passes on paper. */
       }
       <section class={styles.choice} aria-labelledby="privacy-choice">
-        <h2 id="privacy-choice" class={styles["section-heading"]}>{t.privacyPage.choiceHeading}</h2>
+        <h2 id="privacy-choice" class={styles["section-heading"]}>
+          {m.privacy_page_choice_heading()}
+        </h2>
         {
           isMonitoringConfigured ? (
             <>
-              <p>{t.privacyPage.choiceBody}</p>
+              <p>{m.privacy_page_choice_body()}</p>
               <MonitoringConsent />
             </>
           ) : (
-            <p>{t.privacyPage.choiceUnconfigured}</p>
+            <p>{m.privacy_page_choice_unconfigured()}</p>
           )
         }
       </section>
 
       {
-        t.privacyPage.sections.map((section) => (
+        sections.map((section) => (
           <section class={styles.section}>
             <h2 class={styles["section-heading"]}>{section.heading}</h2>
             {section.body.map((paragraph) => (

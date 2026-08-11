@@ -1,0 +1,4 @@
+interface:
+  display_name: "Session Log"
+  short_description: "Write the per-session log entry and mirror TODOs"
+  default_prompt: "Use $session-log to write this session's log entry and mirror follow-ups into TODO.md."

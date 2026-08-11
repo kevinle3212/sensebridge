@@ -34,6 +34,14 @@ fastlane/test_output
 # Generated analysis output (graphify, etc.)
 graphify-out/
 
+# Raw training clips for the sound classifier — only the trained .mlmodel
+# and the attribution manifest are committed, not the source audio. See
+# models/sound-classifier/README.md.
+models/sound-classifier/training-data/
+models/sound-classifier/combined-training-data/
+models/sound-classifier/freesound-training-data/*
+!models/sound-classifier/freesound-training-data/MANIFEST.csv
+
 # GitNexus knowledge-graph index — local-only, no network calls. Regenerate
 # with `gitnexus analyze`. See docs/TOOLING.md.
 .gitnexus/
@@ -135,10 +143,11 @@ audits/**
 !audits/templates/**
 !audits/.markdownlint.jsonc
 
-# docs/planning/ — original research/strategy series, kept local per explicit
-# request. Already tracked (initial commit): this only stops future re-adds,
-# not a history purge (needs git filter-repo — destructive, needs sign-off).
-docs/planning/
+# deprecated/planning/ (formerly docs/planning/) — original research/strategy
+# series, kept local per explicit request. History was purged with
+# git filter-repo on 2026-07-23 (see TODO.md's "Git/CI cleanup, history
+# purge..." entry); this line only stops future re-adds.
+deprecated/planning/
 .gstack/
 
 # BMAD installer-managed personal config — "Holds install answers scoped to

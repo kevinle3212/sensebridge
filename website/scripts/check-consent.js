@@ -8,7 +8,7 @@
 // over the built site and watches what it actually fetches. Asserts, in order:
 //
 //   1. a visitor who has never answered downloads no Sentry chunk at all;
-//   2. nothing is written to `localStorage` before they answer;
+//   2. nothing is written to storage before they answer;
 //   3. the switch is exposed to assistive tech as an off switch;
 //   4. turning it on fetches the SDK chunk and records the consent;
 //   5. turning it back off records the withdrawal;
@@ -32,6 +32,67 @@ const CHUNK_FETCH_TIMEOUT_MS = 10_000;
 
 /** Must match MONITORING_CONSENT_KEY in src/scripts/monitoring-consent.ts. */
 const CONSENT_KEY = "sensebridge.monitoring-consent";
+
+/**
+ * Reads a value from the site's on-device IndexedDB key-value store (see
+ * src/scripts/idb-store.ts) inside the page. Duplicates that module's schema
+ * — `page.evaluate` runs in the browser and can't import project TypeScript —
+ * and creates the object store if it doesn't exist yet, matching idb-store.ts's
+ * own `openDb`.
+ * @param {import("puppeteer").Page} page
+ * @param {string} key
+ * @returns {Promise<string | null>}
+ */
+function readIdb(page, key) {
+  return page.evaluate(
+    (dbKey) =>
+      new Promise((resolve, reject) => {
+        const openRequest = indexedDB.open("sensebridge", 1);
+        openRequest.onupgradeneeded = () => {
+          openRequest.result.createObjectStore("kv");
+        };
+        openRequest.onsuccess = () => {
+          const getRequest = openRequest.result
+            .transaction("kv", "readonly")
+            .objectStore("kv")
+            .get(dbKey);
+          getRequest.onsuccess = () => {
+            resolve(getRequest.result ?? null);
+          };
+          getRequest.onerror = () => {
+            reject(new Error(getRequest.error?.message ?? "IndexedDB read failed"));
+          };
+        };
+        openRequest.onerror = () => {
+          reject(new Error(openRequest.error?.message ?? "IndexedDB open failed"));
+        };
+      }),
+    key,
+  );
+}
+
+/**
+ * Writes a value to the same IndexedDB store `readIdb` reads, from within
+ * `page.evaluateOnNewDocument` — used to pre-seed a stored consent before the
+ * app's own scripts run.
+ * @param {import("puppeteer").Page} page
+ * @param {string} key
+ * @param {string} value
+ * @returns {Promise<void>}
+ */
+function writeIdbOnNewDocument(page, key, value) {
+  return page.evaluateOnNewDocument(
+    (dbKey, dbValue) => {
+      const openRequest = indexedDB.open("sensebridge", 1);
+      openRequest.onupgradeneeded = () => openRequest.result.createObjectStore("kv");
+      openRequest.onsuccess = () => {
+        openRequest.result.transaction("kv", "readwrite").objectStore("kv").put(dbValue, dbKey);
+      };
+    },
+    key,
+    value,
+  );
+}
 
 const failures = [];
 
@@ -111,10 +172,7 @@ try {
       !requested.some(isSentryChunk),
       "a visitor who has not answered fetches no Sentry chunk",
     );
-    const storedBefore = await page.evaluate(
-      (key) => window.localStorage.getItem(key),
-      CONSENT_KEY,
-    );
+    const storedBefore = await readIdb(page, CONSENT_KEY);
     expect(storedBefore === null, "nothing is written to storage before the visitor answers");
 
     // Read `hidden` as an attribute rather than as the `HTMLElement` property:
@@ -136,10 +194,7 @@ try {
     requested = [];
     await page.click("[data-monitoring-toggle]");
     expect(await waitForSentryChunk(requested), "opting in fetches the Sentry chunk");
-    const storedAfterOptIn = await page.evaluate(
-      (key) => window.localStorage.getItem(key),
-      CONSENT_KEY,
-    );
+    const storedAfterOptIn = await readIdb(page, CONSENT_KEY);
     expect(storedAfterOptIn === "granted", "opting in records consent");
     const checkedAfterOptIn = await page.$eval("[data-monitoring-toggle]", (element) =>
       element.getAttribute("aria-checked"),
@@ -148,10 +203,7 @@ try {
 
     // Opt back out.
     await page.click("[data-monitoring-toggle]");
-    const storedAfterOptOut = await page.evaluate(
-      (key) => window.localStorage.getItem(key),
-      CONSENT_KEY,
-    );
+    const storedAfterOptOut = await readIdb(page, CONSENT_KEY);
     expect(storedAfterOptOut === "denied", "opting back out records the withdrawal");
 
     // Global Privacy Control outranks a stored consent. Set storage to
@@ -160,10 +212,10 @@ try {
     const gpcRequested = [];
     gpcPage.on("request", (request) => gpcRequested.push(request.url()));
     gpcPage.on("pageerror", (/** @type {Error} */ error) => pageErrors.push(error.message));
-    await gpcPage.evaluateOnNewDocument((key) => {
+    await gpcPage.evaluateOnNewDocument(() => {
       Object.defineProperty(navigator, "globalPrivacyControl", { get: () => true });
-      window.localStorage.setItem(key, "granted");
-    }, CONSENT_KEY);
+    });
+    await writeIdbOnNewDocument(gpcPage, CONSENT_KEY, "granted");
     await gpcPage.goto(`http://127.0.0.1:${port}/privacy/`, { waitUntil: "networkidle0" });
     expect(
       !gpcRequested.some(isSentryChunk),

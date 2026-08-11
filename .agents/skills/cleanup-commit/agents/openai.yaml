@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cleanup Commit"
+  short_description: "Clean tree, clear gates, commit correctly in SenseBridge"
+  default_prompt: "Use $cleanup-commit to clean up and commit the current work correctly."

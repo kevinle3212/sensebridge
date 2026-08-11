@@ -2,7 +2,7 @@
 name: ui-reviewer
 description: Owns SwiftUI structure and Apple HIG conformance for the visual/interaction layer. Use for any UI change; defers to accessibility-reviewer wherever the two overlap.
 tools: Read, Grep, Glob, Bash, Edit, Skill
-model: sonnet
+model: claude-sonnet-5
 color: yellow
 ---
 

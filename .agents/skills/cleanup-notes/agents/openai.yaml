@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cleanup Notes"
+  short_description: "Groom NOTES.local.md, backup first, never touch git"
+  default_prompt: "Use $cleanup-notes to groom NOTES.local.md and report before/after."

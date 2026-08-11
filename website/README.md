@@ -241,21 +241,29 @@ inferring it from anything here.
 ## Internationalization
 
 The site ships in English, Spanish, and Vietnamese via Astro's built-in i18n
-routing (no i18n library dependency): `/` (English, default/unprefixed),
-`/es/`, `/vi/`. Copy lives in typed dictionaries under `src/i18n/`
-(`en.ts`/`es.ts`/`vi.ts`, all implementing the `Translations` interface in
-`src/i18n/types.ts` — a missing key in one locale is a compile error, not a
-silent fallback); components read from them via `useTranslations()`, keyed
-off `Astro.currentLocale` (or `document.documentElement.lang` in the two
-client scripts that need it, `read-aloud.ts` and the theme toggle in
-`Header.astro`). The header's language switcher is a native
-`<details>`/`<summary>` dropdown — keyboard-operable and screen-reader
-labeled without any ARIA state management (the browser exposes
-`aria-expanded` on `<summary>` for free), with `aria-current="page"` marking
-the active locale in the menu. See
+routing: `/` (English, default/unprefixed), `/es/`, `/vi/`. Copy lives in
+[Paraglide](https://paraglidejs.com) message catalogs — flat JSON key-value
+maps under `messages/` (`en.json`/`es.json`/`vi.json`), compiled by the vite
+plugin in `astro.config.mjs` into typed message functions under
+`src/paraglide/` (gitignored, regenerated on every `astro dev`/`astro build`).
+A missing key in one locale is a compile error, not a silent fallback.
+Components call the generated `m.*()` functions (`import { m } from
+"../paraglide/messages.js"`), which resolve the active locale automatically —
+server-side from `src/middleware.ts` (Paraglide's static-site-generation
+pattern, since a static render has no request to read a locale from) and
+client-side from the page's own URL (the two client scripts that need it,
+`read-aloud.ts` and the theme toggle in `Header.astro`, need no explicit
+locale plumbing as a result). The variable-length privacy/accessibility
+notice sections (headings, paragraphs, bullet lists — a shape Paraglide's flat
+catalogs don't model directly) are assembled from fixed per-section message
+keys in `src/i18n/privacy-sections.ts` and `src/i18n/accessibility-sections.ts`.
+The header's language switcher is a native `<details>`/`<summary>` dropdown —
+keyboard-operable and screen-reader labeled without any ARIA state management
+(the browser exposes `aria-expanded` on `<summary>` for free), with
+`aria-current="page"` marking the active locale in the menu. See
 [`../docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`](../docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md)
-for the full design (this covers the website half only; the iOS app has its
-own localization).
+for the full design history (this covers the website half only; the iOS app
+has its own localization).
 
 The full privacy notice is part of this — `/privacy`, `/es/privacy`,
 `/vi/privacy` all render from `src/components/PrivacyPage.astro` against the

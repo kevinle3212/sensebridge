@@ -3,7 +3,13 @@
 		"serena": {
 			"type": "stdio",
 			"command": "serena",
-			"args": ["start-mcp-server", "--context=vscode", "--project-from-cwd"],
+			"args": [
+				"start-mcp-server",
+				"--context=vscode",
+				"--project-from-cwd",
+				"--enable-web-dashboard=true",
+				"--open-web-dashboard=false"
+			],
 			"env": {
 				"NO_COLOR": "1"
 			}

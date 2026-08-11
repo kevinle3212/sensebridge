@@ -96,6 +96,12 @@ targets:
       # the SDK's own types rather than a stand-in.
       - package: Sentry
         product: Sentry
+    # Same reason as the app target's configFiles above: a device test run
+    # needs DEVELOPMENT_TEAM, and it lives only in the gitignored
+    # Config/Signing.local.xcconfig this chains to.
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
     settings:
       base:
         SWIFT_VERSION: "6"
@@ -114,6 +120,10 @@ targets:
       - path: SenseBridgeUITests
     dependencies:
       - target: SenseBridge
+    # See the note on SenseBridgeTests above — device UI tests need it too.
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
     settings:
       base:
         SWIFT_VERSION: "6"

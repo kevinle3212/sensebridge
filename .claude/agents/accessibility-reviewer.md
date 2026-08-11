@@ -2,7 +2,7 @@
 name: accessibility-reviewer
 description: Owns VoiceOver, Dynamic Type, contrast, focus management, and rotor behavior. Use for any UI change — zero unlabeled interactive elements is a hard gate, not a percentage.
 tools: Read, Grep, Glob, Bash, Edit, Skill
-model: sonnet
+model: claude-sonnet-5
 color: yellow
 ---
 

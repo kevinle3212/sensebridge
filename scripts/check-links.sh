@@ -11,7 +11,7 @@
 # that are examples, not real navigable docs.
 #
 # Also skips gitignored files and links to gitignored targets (GAPS.md,
-# sessions/, docs/planning/, security/THREAT-MODEL.md, NOTES.local.md,
+# sessions/, deprecated/planning/, security/THREAT-MODEL.md, NOTES.local.md,
 # node_modules/, ...): those are intentionally local-only and never reach the
 # CI checkout, so their absence there isn't a broken link. Skipping the files
 # themselves is what makes a local run match CI's — a clean checkout simply has

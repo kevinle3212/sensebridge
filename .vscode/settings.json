@@ -33,6 +33,12 @@
   "[json][jsonc][yaml][markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[javascript][typescript][javascriptreact][typescriptreact][astro]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
   "stylelint.validate": [
     "css"
   ],
@@ -46,9 +52,6 @@
       "mode": "auto"
     }
   ],
-  "markdownlint.config": {
-    "extends": ".markdownlint.jsonc"
-  },
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
     "https://json.schemastore.org/dependabot-2.0.json": ".github/dependabot.yml"
@@ -93,28 +96,16 @@
     "**/.DS_Store": true
   },
   "git.ignoreLimitWarning": true,
-  "todo-tree.filtering.excludeGlobs": [
-    "**/node_modules/**",
-    "**/.build/**",
-    "audits/templates/**",
-    "security/CHECKLIST.md",
-    ".github/PULL_REQUEST_TEMPLATE.md",
-    "**/skills/impeccable/reference/**"
+  "todo-tree.general.tags": [
+    "- [ ]",
+    "- [x]"
   ],
-  "todohighlight.exclude": [
-    "**/node_modules/**",
-    "**/bower_components/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/.build/**",
-    "**/.vscode/**",
-    "**/.github/**",
-    "**/_output/**",
-    "**/*.min.*",
-    "**/*.map",
-    "**/.next/**",
-    "audits/templates/**",
-    "security/CHECKLIST.md",
-    "**/skills/impeccable/reference/**"
+  "todo-tree.filtering.includeGlobs": [
+    "**/TODO.md",
+    "**/COMPLETED.todo"
+  ],
+  "todohighlight.include": [
+    "**/TODO.md",
+    "**/COMPLETED.todo"
   ]
 }

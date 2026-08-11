@@ -49,4 +49,22 @@ struct SettingsTests {
         #expect(decoded.preferredLens == .wide)
         #expect(decoded.torchDefaultOn == false)
     }
+
+    @Test
+    func freshSettingsHaveNotCompletedOnboarding() {
+        #expect(Settings().hasCompletedOnboarding == false)
+    }
+
+    @Test
+    func decodingSettingsPersistedBeforeOnboardingExistedYieldsCompleted() throws {
+        // An existing install upgrading into this field already knows the app —
+        // a missing key here means a settings blob existed before onboarding
+        // did, which only a pre-existing install can be true of.
+        let preOnboardingJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"cloudReasoningEnabled":false,"language":"system"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(preOnboardingJSON.utf8))
+
+        #expect(decoded.hasCompletedOnboarding == true)
+    }
 }

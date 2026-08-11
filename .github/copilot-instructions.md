@@ -5,3 +5,6 @@ All conventions live in [`AGENTS.md`](../AGENTS.md); current repo state in
 violated: awareness-not-safety wording for any physical-world output,
 on-device by default (no backend, no telemetry), zero unlabeled UI elements,
 conventional commit headers, never commit to `main`, never edit `legal/`.
+
+Skills: read `.agents/manifest.json` and load exactly one matching skill from
+`.agents/skills/`. Review personas live in `.agents/agents/`.

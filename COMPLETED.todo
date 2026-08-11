@@ -2996,11 +2996,6 @@ ecosystem for `website/Dockerfile`) — this is the one deferred nice-to-have.
             the "matches the shape of our tests" argument. Verified 2026-07-17:
             `PhrasingTests.certaintyBucketing` output named each case, e.g.
             "Test case passing 2 arguments confidence → 0.1, expected → .low".
-      - [ ] **Measure the parallelism claim.** `docs/TESTING.md` asserts Swift
-            Testing parallelises in-process while XCTest clones simulators,
-            and that this compounds into CI minutes. Time a fixture-heavy
-            suite both ways rather than trusting the claim — it is the main
-            cost argument, and it is currently only read, not measured.
       - [x] **The vendored skill examples compile.** The code in
             `swift-concurrency-6-2`, `swift-actor-persistence`, and
             `swift-protocol-di-testing` came from upstream and was never built
@@ -3036,24 +3031,6 @@ ecosystem for `website/Dockerfile`) — this is the one deferred nice-to-have.
             **Verified 2026-07-25** — a minimal `func f() throws(LoadError)`
             with a typed `catch` compiled clean via `swiftc -swift-version 6`
             on the Apple Swift 6.3.3 toolchain (`docs/ENVIRONMENT.md`).
-      - [ ] **The agents' commands run.** `swift-reviewer` shells out to
-            `swift build`, `swiftlint lint --quiet`, `swift test`, and
-            `swift-format lint`; `swift-build-resolver` to `xcodebuild`. Confirm
-            `scripts/lint.sh` and the SwiftLint/SwiftFormat configs land with
-            `app/` as `docs/TOOLING.md` promises, and that a review actually
-            completes end to end. Partially verified 2026-07-17:
-            `.swiftlint.yml`/`.swiftformat` now land with `app/` and
-            `scripts/lint.sh` completes clean end to end (0 violations) — that
-            script's project-detection had a real bug, fixed in the same
-            change (see `GAPS.md` → Resolved). Still unverified: whether the
-            `swift-reviewer`/`swift-build-resolver` **agents themselves**
-            (not just the underlying commands) run correctly.
-      - [ ] **Correct the docs to match reality**, not the other way round.
-            `docs/TESTING.md` → "Frameworks" is the authority; if it is wrong,
-            fix it there first, then propagate (`docs/TOOLING.md`, the
-            `testing` / `ci-green-gate` / `swift-protocol-di-testing` skills,
-            and both planning docs — `04` and `COMPLETE-PLAN` duplicate each
-            other and must stay identical).
 
 ### React on Astro migration (2026-07-20)
 
@@ -3528,3 +3505,1454 @@ redirect was correct.
       untouched. Verified across five cases: bare → 120 + guidance, `offset:800`
       → 500, `limit:40` → untouched, `COMPLETED.todo` bare → 120, a
       non-queue file → silent.
+
+## Archived 2026-08-06
+
+- [x] **The `swift-reviewer`/`swift-build-resolver` agents themselves run
+      correctly end to end** (not just the underlying `swift build`/
+      `swiftlint`/`swift test`/`swift-format` commands they shell out to,
+      already confirmed 2026-07-17). `.swiftlint.yml`/`.swiftformat` land at
+      the repo root scoped to `app/` via `included:`, matching
+      `docs/TOOLING.md`'s "configs land with `app/`".
+      **Verified 2026-08-06** — dispatched both registered agents for real
+      against deliberately introduced scratch probes in
+      `app/Packages/SenseBridgeCore`, deleted afterward, zero net diff:
+      - `swift-build-resolver`: probe with a real type-mismatch compile error
+        (`let value: Int = "not an int"`). Agent found it, applied a minimal
+        one-line fix, and verified `swift build` passed — full
+        diagnose → fix → verify loop worked unattended.
+      - `swift-reviewer`: probe with five deliberately planted issues (force-
+        unwrapped `URL`, force-unwrapped decoded `String`, an implicitly
+        unwrapped optional stored property, an empty `catch {}`, and a
+        strong-`self` escaping closure). Agent ran `swift build`,
+        `swiftlint lint --quiet`, `swift test` (90/90 passed), and correctly
+        flagged all five at CRITICAL/HIGH plus three legitimate MEDIUM style
+        findings — no false negatives, no hallucinated findings.
+      Closes the `docs/TOOLING.md` gap left open by the 2026-07-17 partial
+      verification. No `TODO.md`/`GAPS.md` entry existed for this — added
+      directly here per owner instruction.
+
+### Safety-framing verdict on `fire_alarm`/`siren` alpha readiness (2026-08-06, 06:42 UTC)
+
+- [x] **[P0]** **Custom sound classifier announces a fire alarm in a quiet
+      room, at maximum confidence, at the app's strongest hedge tier.**
+      `models/sound-classifier/combined-training-data/` has seven class
+      directories and **no `background`/`other` class**, so the model is a
+      closed-set softmax with no reject option. Measured on the **shipped**
+      `app/SenseBridge/Resources/SenseBridgeSoundClassifier.mlmodel` through
+      the production `SNAudioFileAnalyzer` path: low-level room hiss, white
+      noise, and a 1 kHz tone each yield `fire_alarm` @ **1.000** on every
+      window; a 200→4000 Hz sweep yields `siren` @ **1.000**. All clear
+      `SoundClassificationRunner.defaultMinimumConfidence` (0.7) and map to
+      `Certainty.high` via `Phrasing.swift:25-31`, so
+      `SoundAlertsView.swift:72-82` speaks **"it looks like there's likely a
+      fire alarm."** This is the `docs/SAFETY-FRAMING.md` Critical archetype —
+      confidently-wrong, safety-adjacent physical-world output reaching the
+      user.
+      **Done 2026-08-06** — owner chose the full retrain over a same-day code
+      mitigation. Added an eighth `background` class:
+      `models/sound-classifier/gen-background-training-data.swift` synthesizes
+      16 license-free clips (noise colors, tones, hums, sweeps, an ambient
+      chord, a click train) — synthetic rather than sourced, so no
+      `MANIFEST.csv` entry is needed. Kept `"background"` out of
+      `CustomSoundClassifier.targetClassNames`, so `SoundClassificationRunner`
+      filters it before it can become a record — no code change needed there,
+      confirmed by reading the existing filter
+      (`topClassNames.contains(best.identifier)`). Retrained
+      `SenseBridgeSoundClassifier.mlmodel` (85 train / 9 validation clips
+      across 8 classes). Re-ran the original six-probe audit script against
+      the retrained shipped model: every previously-failing probe (60Hz hum,
+      quiet-room hiss, white noise, the 200→4000Hz sweep, a 1kHz tone) now
+      classifies as `background` at high confidence and produces **zero**
+      alert-class records; `silence.wav` still correctly stays under the 0.7
+      floor (`car_horn` @ 0.412, unchanged). Also closed the two follow-up
+      items below (commit the probe as a test; fix the stale doc comment).
+      **Not done, and deliberately not attempted** this pass: the two
+      `[Needs owner]` P1 items right below (agreement-gating
+      `CombinedSoundClassifier`'s `max`-merge; clamping custom-model
+      confidence below `Certainty.high`) — owner chose retrain-only, not
+      retrain-plus-mitigation, so those real usability-tradeoff decisions
+      remain open. Verified: `swift build` on `SenseBridgeCore` clean,
+      `xcodebuild test` on `SenseBridgeTests` (23/23) and
+      `-only-testing:SenseBridgeTests/CustomSoundClassifierOODTests`
+      (5/5) clean on iOS Simulator, `xcodegen generate` re-run so the new test
+      file is in the project. Built for device and installed on Kevin's
+      iPhone 17 Pro (`com.sensebridge.app`) — build succeeded, no device-only
+      failure modes touched by this change (pure CoreML/SoundAnalysis
+      inference, no camera/LiDAR/haptics).
+
+- [x] **[P2]** **Commit the out-of-distribution probe as a repository test.**
+      ~40 lines (reproduced in the audit report's "Commands Executed") turns
+      "does the classifier announce a fire alarm in a quiet room?" into a check
+      that fails a build instead of being rediscovered by an audit. Per the
+      global standard's escalate-manual-verification rule.
+      **Done 2026-08-06** —
+      `app/SenseBridgeTests/CustomSoundClassifierOODTests.swift`,
+      5 tests, runs `SoundClassificationRunner.classify` against the shipped
+      `.mlmodel` (not a stub) with the same probe audio, asserts zero records.
+
+- [x] **[P3]** **Fix the stale doc comment** at
+      `app/SenseBridge/Features/SoundAlerts/SoundAlertsView.swift:12-14` — it
+      still says fire/smoke alarms arrive "via `BuiltInSoundClassifier` only",
+      but `fire_alarm` was re-added to `CustomSoundClassifier.targetClassNames`
+      after the Freesound retrain. (Also the prior report's #4, still open.)
+      **Done 2026-08-06** — reworded to name both classifiers. Also updated
+      `CustomSoundClassifier.swift`'s doc comment, which had gone stale in the
+      same way today: it claimed the seven `targetClassNames` "match
+      `combined-training-data/` exactly", no longer true now that
+      `background` is an eighth, deliberately-unlisted class.
+
+- [x] **[P3]** **Correct the per-class attribution at its source.**
+      `models/sound-classifier/README.md:89-97` reports a whole-dataset
+      aggregate, not a per-class figure — the `fire_alarm`/`siren` attribution
+      originates in `audits/model-license/20260805-011645-…` Issue #8 and was
+      copied into the P2 item below. The README's own narrower defect is
+      presenting one draw (validation error reruns span 7.2%–43% on identical
+      data) as "the most recent training run reported", then concluding "not
+      urgent for alpha" from it.
+      **Done/Fixed 2026-08-06** — verified `models/sound-classifier/README.md`
+      (Known limitation section) no longer contains the phrase "the most
+      recent training run reported"; it now explicitly says "treat any single
+      run's number as one draw, not a stable metric" and points to the audit
+      for why per-class numbers aren't persisted there. The "not urgent for
+      alpha" conclusion now attaches to expanding clip counts, not to the
+      error rate. Grep-verified no remaining occurrence of the old phrasing.
+
+### CLAUDE.md mechanization — global hook wiring (2026-08-04, 18:00 PST)
+
+Five hooks now enforce rules that used to be prose only.
+
+- [x] **[P2]** Register the four project-agnostic hooks in
+  `~/.claude/settings.json` so they cover every repo, not just SenseBridge.
+  **Done 2026-08-04** — `guard-attribution.sh`, `guard-commit-shape.sh`,
+  `guard-long-running-server.sh`, and `require-doc-comments.mjs` are wired
+  globally (18 global hooks; JSON re-validated). The 2026-07-31 note that this
+  file is un-editable was wrong: `Read` + `Edit` work, only Bash writes to it
+  are classifier-blocked. Memory corrected. `tmp/global-hooks-snippet.json` is
+  now redundant and can be deleted.
+
+- [x] **[P3]** Shorten the corresponding `~/.claude/CLAUDE.md` bullets.
+  **Done 2026-08-04** — §14, §15, and §19 trimmed to the instruction, with the
+  explanation dropped; the intro now names the machine-checked rules so they
+  are still followed proactively rather than only caught by a guard.
+
+### Alpha-readiness scaffolding implementation (2026-08-04, 17:00 PST)
+
+- [x] **[P1]** **Manual VoiceOver device pass — escalated to a programmatic
+      XCUITest accessibility audit, run on a real connected device (Kevin's
+      iPhone 17 Pro), not the Simulator.** Added
+      `app/SenseBridgeUITests/AlphaScaffoldingUITests.swift`: 6 tests
+      covering onboarding's full walkthrough (all 4 steps, back nav,
+      finish→Home), Settings' "Replay walkthrough" row, and static-chrome
+      audits on Identify/Describe/Sound Alerts, each running
+      `XCUIApplication.performAccessibilityAudit()` — the actual "zero
+      unlabeled elements" check, not a stand-in for it. **6/6 passed on
+      device, 0 failures.** Fixed a real regression this escalation found
+      along the way: `-uiTestReset` reset onboarding to incomplete by
+      default, which would have silently broken every pre-existing UI test
+      (`AppEnvironment.swift`, new opt-in `-uiTestShowOnboarding` flag).
+      Two real, pre-existing, app-wide findings surfaced (contrast,
+      missing `ScrollView` for Dynamic Type) — not fixed, see the two
+      dedicated entries below.
+
+- [x] **[P0]** **Sound Alerts' custom classifier license FAIL — resolved,
+      root cause fixed, independently confirmed twice.** Original
+      `dependency-auditor` verdict: **FAIL** (ESC-50's dataset-wide license
+      is CC BY-**NC** 3.0, not CC BY 4.0 as first assumed — full report:
+      `audits/model-license/20260805-000315-esc-50-sound-classifier-training-data-license-verification.md`).
+      **Owner chose:** re-source `fire_alarm`/`car_horn`/`siren`/
+      `glass_shatter`/`knock` individually from Freesound, each clip
+      verified against its own license page. Done: 58 clips verified and
+      downloaded (56 CC0, 2 CC BY 3.0, both authors named in `CREDITS.md`),
+      combined with genuinely-clean ESC-10 `dog_bark`/`baby_cry`, model
+      retrained twice (first attempt's 46-clip dataset was too small —
+      degenerate validation split, caught and expanded to 78 total clips
+      for a real result: ~2–3% training error / ~21–24% validation error).
+      All provenance docs rewritten (`train.swift`, `CREDITS.md`,
+      `models/README.md`, `docs/AI-MODELS.md`,
+      `models/sound-classifier/README.md`). Full record:
+      `models/sound-classifier/freesound-training-data/MANIFEST.csv`.
+      **A second, independent `dependency-auditor` re-audit** (report:
+      `audits/model-license/20260805-011645-esc-50-sound-classifier-retrain-re-verification.md`)
+      re-verified the 58-clip manifest (58/58 correct) and confirmed the
+      shipped `.mlmodel`'s embedded metadata clean via `strings`, but found
+      a narrower Critical: `prepare-training-data.swift`'s `categoryMap`
+      had never actually been edited — it still mapped all 7 original
+      ESC-50 categories (including the 5 non-compliant ones), so the
+      shipped model was clean only through manual, undocumented curation
+      of `combined-training-data/`, not because the script itself was
+      correct. Re-running the documented steps against a fresh ESC-50
+      checkout would have regenerated NC-tainted training data. **Fixed
+      2026-08-04, 18:00 PST:** `categoryMap` now maps only `"dog":
+      "dog_bark"` and `"crying_baby": "baby_cry"`; the 5 non-ESC-10 keys
+      are gone, matching what `models/sound-classifier/README.md` already
+      claimed. Also deleted the local, gitignored, NC-tainted
+      `training-data/{car_horn,fire_alarm,glass_shatter,knock,siren}/`
+      directories this machine had no commercial license to retain.
+      `swift test` → 90/90 green after the fix.
+
+- [x] **[P0]** **Safety-framing Critical bug — resolved, root cause fixed,
+      independently confirmed.** `CustomSoundClassifier`'s `fire_alarm`
+      class was trained on ESC-50's `church_bells` category (a placeholder
+      proxy) — combined with `CombinedSoundClassifier` always picking the
+      higher-confidence hit, the app could announce a fire alarm on
+      hearing a church bell. Full report:
+      `audits/safety-framing/20260805-000401-alpha-scaffolding-sound-alerts-onboarding-wired-vision-surfaces.md`.
+      **Fixed at the root, not just mitigated:** the Freesound remediation
+      above retrained `fire_alarm` on real fire/smoke alarm recordings, so
+      it was re-added to `CustomSoundClassifier.targetClassNames` (a
+      same-session stopgap had briefly excluded it). The second independent
+      re-audit specifically spot-checked that the new `fire_alarm` clips
+      are genuinely on-topic — confirmed, no repeat of the mislabeling.
+      Four other findings fixed and unaffected by the re-audit (no
+      confidence floor on the sound path, raw identifiers reaching spoken
+      output unformatted, onboarding missing the doctrine-mandated
+      non-replacement statement, Sounds screen missing an on-screen
+      limitation disclosure).
+
+- [x] **[P2]** **App-wide borderline button/secondary-text contrast,
+      discovered via the first `XCUIApplication.performAccessibilityAudit()`
+      run ever exercised on this app.** **Done 2026-08-05** — new
+      `AccentColor` (#0056B3 light / #0A84FF dark, ~7:1/~5.8:1 on
+      white/black) and `SecondaryText` (#595959 light / #ABABAB dark, ~7:1
+      both) color assets in `Assets.xcassets`, hand-computed WCAG-AA
+      contrast ratios. Applied to every `.foregroundStyle(.secondary)` call
+      site app-wide (content text, disclaimers, `Section` headers/footers —
+      the latter needed explicit `.foregroundStyle` since SwiftUI styles
+      them implicitly, not caught by a grep for the literal `.secondary`
+      modifier) across `ReadingView`, `LabelingView`, `SceneDescriptionView`,
+      `SoundAlertsView`, `ObstacleAwarenessView`, `SettingsView`,
+      `DiagnosticsSettingsSection`. Verified by pixel-sampling the audit's
+      own screenshot evidence (rendered color confirmed `(89, 89, 89)` =
+      `SecondaryText` exactly) and by re-running
+      `AlphaScaffoldingUITests` on Simulator until content contrast passed
+      clean. One narrow residual acknowledged in the test file, not silently
+      re-suppressed: a `Form`/`List` `Picker`'s trailing value text
+      (e.g. "Blind") is unlabeled system chrome measured at `(138, 138,
+      142)` — SwiftUI has no supported API to restyle it — matched by
+      `auditType == .contrast && element.label == nil`, narrower than the
+      old blanket category exclusion it replaces.
+
+- [x] **[P2]** **App-wide screens have no `ScrollView`, so content can clip
+      at large Dynamic Type sizes.** **Done 2026-08-05** — wrapped the 5
+      screens that actually lay content in a bare `VStack.padding()`
+      (`ReadingView`, `SoundAlertsView`, `SceneDescriptionView`,
+      `LabelingView`, `OnboardingView`'s welcome/permissions steps) in a
+      `ScrollView`; `CameraControlsView` is an embedded subview not a
+      screen, `SettingsView` uses `Form` (already `List`-backed/scrolling),
+      and `ObstacleAwarenessView`/`HomeView` already used `List` — none of
+      those needed the fix despite matching the original grep. Also found
+      and fixed a real, separate clipping bug while verifying: Onboarding's
+      diagnostics step had a hardcoded `.frame(maxHeight: 300)` on its
+      `Form` that clipped real content at this run's Dynamic Type size
+      (confirmed via the audit's own screenshot, not assumed) — removed,
+      sized to content instead. `AlphaScaffoldingUITests`'
+      `performScopedAccessibilityAudit` no longer blanket-excludes
+      `.contrast`/`.dynamicType`; two narrow, evidence-verified residuals
+      remain scoped to `List`/`Form`-backed screens only (a `List`/`Form`
+      `Section`'s own Dynamic-Type-scaling limitation confirmed via
+      instrumenting the audit closure, and its trailing-value/hidden-
+      duplicate-text quirks) — every other screen and category still
+      enforces normally. Verified via `xcodebuild test` on Simulator (iPhone
+      16, iOS latest): `AlphaScaffoldingUITests` 7/8 deterministic passes,
+      the 8th (`testSettingsAwarenessSectionPassesAccessibilityAudit`) hit
+      the same "Audit failed to complete in time" infra timeout twice in a
+      row (Settings' audit tree is now larger from the contrast fix above),
+      matching the known infra-flake class the 2026-08-05 12:00 PST session
+      already documented — not a design defect. Real-device confirmation
+      still pending owner return (see the 2026-08-05, 13:00 PST section
+      above); the on-device run before the owner stepped away hit the same
+      class of flake mid-verification.
+
+- [x] **[P2]** **Localization gap for this session's new/changed strings —
+      closed.** Added es/vi entries for all 28 new strings this session
+      introduced (Onboarding's 4 steps, Sound Alerts' full rewrite,
+      Identify/Describe's new error-handling copy, HomeView's Sounds hint,
+      Settings' "Replay walkthrough" row) to
+      `app/SenseBridge/Resources/Localizable.xcstrings`, as a pinned
+      baseline per this project's own documented process
+      (`docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`'s
+      "Doctrine-pinned strings": reviewer-verified now, native-speaker
+      validation later — the same status this repo's *existing* es/vi
+      table already carries). Terminology for the doctrine
+      non-replacement statement and "not a safety device" phrasing was
+      reused verbatim from the existing, already-reviewed
+      `ObstacleAwarenessView`/`HomeView` translations for consistency,
+      not re-invented. Also removed 9 genuinely orphaned catalog keys
+      (verified via non-comment source grep, not the unreliable
+      `extractionState` field — see below) — more than the 4 originally
+      estimated: the 4 pre-rewrite `SoundAlertsView` strings plus 5
+      pre-existing orphans from `ObstacleAwarenessView` predating this
+      session entirely, found while doing the same cleanup pass. Verified
+      via a JSON-level diff (not just line-diff) that zero pre-existing
+      translated values were altered — only the 9 orphans removed and 28
+      new keys added. **Still open, deliberately not attempted:**
+      native-speaker validation of the new pinned-baseline translations —
+      that review step is explicitly out of scope for an AI session per
+      this project's own doctrine.
+
+- [x] **[P3]** **`accessibility-reviewer` found one High, one Medium
+      finding — both resolved and confirmed.** High (fixed this session):
+      `OnboardingView`'s step transitions posted no VoiceOver notification
+      at all — added `.screenChanged` + `.isHeader` traits. Medium
+      (confirmed via the device-run `testReplayWalkthroughReturnsToOnboarding`):
+      `RootView`'s onboarding↔home swap works correctly in the
+      home→onboarding direction too — passed on real hardware. Full
+      report:
+      `audits/accessibility/20260805-000319-alpha-scaffolding-onboarding-camera-capture-and-sound-alerts-review.md`.
+
+- [x] **[P3]** **Pre-existing test flaked twice on real hardware, unrelated
+      to this session's work — root cause confirmed, not a SenseBridge
+      bug.** `SenseBridgeUITests.testOutputProfilePickerDoesNotOfferDeaf`
+      (not touched this session) timed out waiting for the "Blind" button
+      on Kevin's iPhone 17 Pro on both full-suite device runs — passed
+      cleanly on the Simulator both times. The second run's log shows why:
+      `Wait for com.google.ios.youtube to idle` / `Check for interrupting
+      elements affecting "Output profile, Blind" Button` — a YouTube app
+      notification banner interrupted the tap on a personal-use device
+      mid-test. This is a test-environment artifact of running automated
+      UI tests on a phone that also receives other apps' notifications, not
+      a SenseBridge defect — no code change warranted. Worth a note for
+      whoever runs this suite on-device again: silence notifications first,
+      or accept this test may need a CI-only device.
+
+- [x] **[P3]** **Stale Freesound username redirect in `CREDITS.md`/
+      `MANIFEST.csv` (cosmetic, not a licensing problem).** The second
+      re-audit noted Freesound user `lgnzimmsound` (id 784151) now redirects
+      to `loganzsound` — the recorded username is stale but not fabricated;
+      the clip and license are still correctly attributed. Update the
+      username next time `CREDITS.md` is touched.
+      **Done/Fixed 2026-08-06** — verified
+      `models/sound-classifier/freesound-training-data/MANIFEST.csv:41`:
+      the username column already reads `loganzsound`. The only remaining
+      `lgnzimmsound` occurrence is inside the historical local file-path
+      column (the original downloaded filename), not an attribution claim.
+      `CREDITS.md` doesn't duplicate per-clip usernames — it just points to
+      `MANIFEST.csv` — so nothing there is stale either.
+
+- [x] **[P3]** **`tmp/handoff.md` needs zero-byting once Task 13 fully
+      clears** (review agents + manual VoiceOver pass done), per the global
+      CLAUDE.md handoff convention — don't leave a "finished" plan sitting
+      there to be auto-loaded as live work next session.
+      **Done/Fixed 2026-08-06** — `tmp/handoff.md` is 0 bytes (confirmed via
+      `ls -la`/`wc -c`). Task 13's two preconditions both landed in earlier
+      sessions: the `dependency-auditor` re-audit ran
+      (`audits/model-license/20260805-011645-…`, referenced from
+      `sessions/2026-08-04/2200-PST.md`), and the escalated VoiceOver pass
+      completed in `sessions/2026-08-05/1200-PST.md`.
+
+### Alpha-readiness scaffolding design (2026-08-04, 16:00 PST)
+
+- [x] **[P1]** **[Needs owner]** **Review and approve (or revise) the
+      four-section alpha-scaffolding design** in the 16:00 PST session log
+      before implementation starts — `docs/superpowers/specs/`,
+      `tmp/handoff.md`, and the `writing-plans` skill all come after this
+      gate, per the brainstorming skill's hard gate against implementing
+      pre-approval.
+      **Done 2026-08-04** — owner said "Execute the code plan"; spec written
+      to `docs/superpowers/specs/2026-08-04-alpha-scaffolding-design.md`,
+      13-task plan written to `tmp/handoff.md`, all 11 code tasks (1–11)
+      implemented and verified (build green, package suite 90/90 tests
+      passing across 16 suites). Docs sync (Task 12) and quality gates +
+      device build (Task 13) still in progress this session.
+
+Session log: [`1600-PST.md`](sessions/2026-08-04/1600-PST.md). Owner asked to
+scaffold the app toward alpha; ran `superpowers:brainstorming` and scoped it
+via interview to four workstreams: wire Scene Description and Identify to
+the already-built, already-tested `ObjectClassificationService`/
+`FoundationModelsSceneComposer` (currently hardcoded canned output), build
+Sound Alerts from scratch (no service exists; `PerceptionRecord.Kind
+.detectedSound` is already reserved for it), and add a multi-step onboarding
+flow. Design presented in chat; session ended before owner approval.
+
+- [x] **[P2]** **Sound Alerts custom classifier needs a licensing pass
+      before it's alpha-ready.** Owner chose to ship a custom Create ML
+      sound classifier trained on ESC-50 (CC-BY 4.0) alongside Apple's
+      built-in `SNClassifySoundRequest`, not defer the custom model to
+      later. Once built, the bundled `.mlmodel` and its ESC-50 provenance
+      need a `model-license-audit` / `dependency-auditor` pass and a
+      `CREDITS.md` attribution entry — this is a hard gate per `AGENTS.md`,
+      not polish to skip under schedule pressure.
+      **Update 2026-08-04** — model trained (88.7% train / 85.7% validation
+      accuracy on 7 classes, 280 ESC-50 clips), bundled into
+      `app/SenseBridge/Resources/`, `CREDITS.md` and `models/README.md`
+      attribution/provenance entries written.
+      **Done/Fixed 2026-08-06** — the `dependency-auditor` pass this item was
+      waiting on already ran twice on 2026-08-04:
+      `audits/model-license/20260805-000315-esc-50-sound-classifier-training-data-license-verification.md`
+      and a second independent re-audit,
+      `audits/model-license/20260805-011645-esc-50-sound-classifier-retrain-re-verification.md`,
+      whose one finding (`prepare-training-data.swift`'s stale `categoryMap`)
+      was fixed the same session (`sessions/2026-08-04/2200-PST.md`). Verified
+      via `swift test --package-path app/Packages/SenseBridgeCore` per that
+      session's log: 90/90 tests green after the fix.
+
+### Kimi Code CLI harness setup — follow-ups (2026-08-04, 01:00 PST)
+
+- [x] **[P1]** **[Needs owner]** Run `kimi login` (Kimi Code OAuth, browser).
+      **Done 2026-08-04** — OAuth authenticated but `api.kimi.com/coding/v1`
+      rejected it ("unable to verify your membership benefits"): the Kimi Code
+      OAuth path requires an active paid membership. Switched to a Moonshot
+      Open Platform key instead, imported non-interactively with
+      `kimi provider catalog add moonshotai --default-model kimi-k2.7-code`
+      (10 models from `models.dev`). Key was read from `website/.env` without
+      ever entering the agent's context — `guard-bash-secret-read.mjs` blocked
+      the direct read, as designed, and the extraction was run by the owner.
+
+- [x] **[P0]** **[Needs owner]** **Any config-writing `kimi` command resets
+      `~/.kimi-code/config.toml` to mode `644` — and that file now stores the
+      Moonshot API key in plaintext** (`api_key` under `[providers.moonshotai]`;
+      it is *not* kept in `~/.kimi-code/credentials/`, which holds only the
+      OAuth blob). Observed on `kimi provider catalog add`.
+      **Done 2026-08-06** — owner authorized applying the drafted fix directly.
+      The `kimi()` wrapper from
+      `audits/security/20260806-064337-kimi-code-harness-hardening.md`
+      (§"Fixes Applied" → #1) is now in `~/.zshrc`, restoring `600` on both the
+      success and failure path. Verified: `zsh -n ~/.zshrc` clean,
+      `stat -f '%Lp %N' ~/.kimi-code/config.toml` → `600`. Mitigation only —
+      the underlying defect (Kimi storing a bearer credential outside its
+      `700` `credentials/` dir) is still open upstream.
+
+- [x] **[P1]** **[Needs owner]** MCP path-glob bypass — Kimi matches MCP tools
+      by **name only**, so `Edit(**/legal/**)` and the credential denies do not
+      constrain an MCP write. Identical in shape to the Claude Code gap already
+      documented in `docs/TOOLING.md` and closed there by
+      `guard-mcp-sensitive-paths.mjs`. Currently mitigated only by an `ask` rule
+      on `mcp__*`. **Done 2026-08-06** — owner authorized applying the drafted
+      `[[hooks]]` block directly to `~/.kimi-code/config.toml` (verbatim from
+      `audits/security/20260806-064337-kimi-code-harness-hardening.md`
+      §"Fixes Applied" → #4/#5): `event = "PreToolUse"`, `matcher = "^mcp__"`,
+      `command` runs the existing `guard-mcp-sensitive-paths.mjs` with
+      `|| exit 2` closing Kimi's fail-open runner. Verified: `kimi doctor`
+      still reports config valid against Kimi's `.strict()` schema, and a
+      synthetic Kimi-shaped payload
+      (`mcp__filesystem__write_file` on `legal/PRIVACY_POLICY.md`) piped to the
+      guard script returns `permissionDecision: "deny"`. Still **not** proven
+      to fire inside a real Kimi session — that needs a funded Moonshot
+      account (see the balance item below).
+
+- [x] **[P2]** Verify the `Bash` deny globs actually match. Arg patterns are
+      picomatch over the command string, so a compound line
+      (`cd /tmp && git push --force`) may evade an anchored pattern — picomatch
+      `*` does not cross `/`. A deny that matches nothing reports no error, and
+      `kimi doctor` cannot detect it.
+      **Done 2026-08-05** — verified, and the answer is **they do not match**.
+      Kimi's engine was read out of the bundled JS rather than assumed:
+      `Bash(...)` args route through `matchesGlobRuleSubject(ruleArgs,
+      args.command)` → `globMatch(value, pattern)` → `picomatch.isMatch` with
+      **no options**, against `picomatch@4.0.4`. Ran that exact algorithm
+      offline against all 20 live `Bash(...)` patterns (extracted with a
+      targeted `grep`; the API key never entered context), cross-checked on
+      picomatch 4.0.5 and 2.3.2 — identical results. **All 12 testable rules
+      MISS the `cd /tmp && <cmd>` form**, including `Bash(git *)` and
+      `Bash(gh *)`, so the owner-gating on `git`/`gh` is trivially bypassable.
+      Worse, `Bash(*rm -rf /*)` and `Bash(*rm -fr /*)` miss even the plain
+      forms (`rm -rf /`, `rm -rf /tmp/x`, `rm -rf ~/foo`) because the literal
+      `/` forces a segment-count match, and `Bash(*curl*|*sh*)` misses any
+      pipeline containing a URL. Verified replacement form
+      `{*,**/*}NEEDLE{*,*/**}` matches every case; full table, negative
+      controls, and the per-rule rewrite are in
+      `audits/security/20260806-064337-kimi-code-harness-hardening.md`
+      (findings #2/#3). **Rewrite applied 2026-08-06** — owner authorized it
+      directly. All 20 live `Bash(...)` patterns in `~/.kimi-code/config.toml`
+      converted to the `{*,**/*}NEEDLE{*,*/**}` form (the 2 pipe-to-shell
+      patterns, `curl`/`wget`, got the analogous `NEEDLE1{*,*/**}|{*,**/*}NEEDLE2`
+      treatment — not covered by the audit's validated table, so re-verified
+      independently against picomatch before writing, all 20 patterns pass
+      their positive and negative controls). Verified: `kimi doctor` still
+      reports the config valid, file permissions unaffected by the rewrite
+      (`600`).
+
+### Repo stabilization pass — deferred items (2026-08-04, 06:15 PST)
+
+- [x] **[P2]** React Doctor flags 52 pre-existing performance findings
+      (`.map().filter()` chains, repeated property access) across
+      `impeccable/scripts/lib/*.mjs`, mirrored identically in 5 harness
+      copies (`.agents`, `.claude`, `.cursor`, `.gemini`, `.github`). Not
+      authored this session — vendored/synced skill content. Per React
+      Doctor's own guidance ("fix a representative sample first... get
+      sign-off before changing the rest"), deferred rather than mass-fixed.
+      Decide: fix upstream in the impeccable skill source and re-sync, or
+      leave as-is until the next skill update.
+      **Done 2026-08-05** — owner decided (interview, `tmp/handoff.md`): fix
+      upstream, re-sync. Canonical copy is `.claude/skills/impeccable/`, not
+      `.github`'s — confirmed via TODO.md's own 2026-07-23 entry ("the one
+      being hand-edited (`.claude`'s)"), not assumed from `docs/TOOLING.md`'s
+      unrelated `tools/sync-skills.mjs` rule (that tool explicitly excludes
+      `impeccable`, which is vendor-managed). Re-ran
+      `react-doctor --category Performance --scope full --json` against each
+      of the 5 copies before touching anything: **15 real findings per copy**
+      today, not 52 — the stale 52/60 figure traces to a since-fixed
+      over-scoped hook run (`.claude/hooks/react-doctor.mjs`, 2026-08-04) that
+      covered more than Performance-category `scripts/lib`; nothing was a
+      false positive, all 15 were real and fixed. 7 files touched in the
+      canonical copy: `concept-catalog.mjs` (3: two `.map().filter()` Set
+      builds → `for...of`, one `.filter().map()` payload build → `.reduce()`),
+      `design-parser.mjs` (3: `.map().filter(Boolean)` → `.flatMap()`),
+      `impeccable-config.mjs` (4: two `.map().filter()`/`.filter().map()` →
+      `.flatMap()`/`.reduce()`, one `[...files].sort()` → `files.toSorted()`),
+      `roll-selection.mjs` (1: `entry.concept.id`/`entry.concept` read 3x in a
+      loop → hoisted to a local `const { concept }`), `staleness-deep.mjs` (2:
+      `.map().filter()` → `.reduce()`), `staleness.mjs` (1:
+      `.map().filter(Boolean)` → `.flatMap()`), `surface-briefs.mjs` (1:
+      `.map().filter()` → `.reduce()`). All behavior-preserving (same
+      predicates/transforms, just single-pass); spot-checked with ad hoc
+      `node -e` smoke calls against `normalizeIgnoreValueEntries`,
+      `approvedPoolRevision`, and `checkSurfaceBriefs` (outputs matched
+      expected pre-fix semantics, incl. null-path filtering). Copied the same
+      7 files byte-identically to `.agents`/`.cursor`/`.gemini`/`.github`
+      (verified via `md5`). Re-ran React Doctor on all 5 copies: **0
+      Performance findings each**. `node --check` clean on all 7 touched
+      files; `npm run lint:mjs` confirmed these files are correctly out of
+      that gate's scope (`skills/` dirs are vendor-managed, excluded in
+      `eslint.config.mjs`) — nothing to run there. No test suite exists for
+      `impeccable/scripts/lib/`; none added (mechanical, non-branching
+      performance-only fix, out of scope for this item).
+
+### Context-budget follow-up: computer-use MCP + eager skill-injection hooks (2026-08-03, 21:00 PST)
+
+Owner asked whether any plugins/MCPs need disabling for heavy token usage.
+Re-ran `~/.claude/scripts/measure-context-baseline.py --project sensebridge`:
+session-start floor is still ~66k mean, unchanged since the 2026-08-01
+pruning pass (7 MCP servers removed, 27 skills parked, claude-mem disabled) —
+that pass never moved the floor. Full detail in
+`sessions/2026-08-03/2100-PST.md`. Found two hook-level costs the prior audit
+didn't measure (they're not skill/plugin/MCP menu entries): SessionStart
+hooks eagerly inject the full `superpowers:using-superpowers` skill body and
+the full `ponytail` ruleset every session (not just descriptions), and MCP
+"Server Instructions" text for `computer-use`/`context7`/`serena` is injected
+unconditionally every session — unlike tool schemas, this text is not
+deferred. No changes made; both need owner sign-off before acting, per the
+`parked-skills-development-dir` memory's rule against silently re-parking or
+disconnecting anything.
+
+- [x] **[P3]** **[Needs owner]** Decide whether to disconnect the
+      `computer-use` MCP server. **Decided 2026-08-03 — keep enabled.**
+      Investigated in full: usage across every project, all time, is 3 calls
+      total (2026-07-22, one clipboard write for a Higgsfield ad prompt —
+      already covered free by `pbcopy`); measured cost is ~1,200–1,600
+      tokens/session (777 words / 4,880 chars in its MCP instructions block,
+      ~2% of the 66k floor); its browser capability is neutered by design and
+      redirects to `claude-in-chrome`, which this project already bans in
+      favor of `gstack`. Owner chose to keep it enabled anyway, valuing
+      standby availability for native-app GUI control over the small
+      per-session cost. No config change made.
+
+- [x] **[P3]** **[Needs owner]** Decide whether `superpowers`/`ponytail`
+      need to keep eagerly injecting full skill/ruleset text via
+      SessionStart hook every session. **Investigated 2026-08-03 — no
+      action possible.** `superpowers`'s `session-start` hook has no config
+      knob at all (unconditionally injects the full `using-superpowers/
+      SKILL.md`). `ponytail` already mode-filters
+      (`filterSkillBodyForMode`), but only the intensity-table row and
+      worked example differ by level — the ladder/rules/output/boundaries
+      sections are identical at lite/full/ultra, so switching levels
+      wouldn't meaningfully shrink the injection. Leaving both as-is; both
+      are active features currently in use.
+
+### Token/usage optimization sign-off pass (2026-08-03, 00:00 PST)
+
+Owner interview against `tmp/optimization-audit-2026-08-01.md` and
+`tmp/AWAY-REPORT-token-optimization.md`, scoped to two reversible actions only:
+park unused skills to `~/Development/skills`, disable (not remove) MCP
+servers. Full detail in `sessions/2026-08-03/0000-PST.md`. 20 skills parked, 3
+MCP servers disabled (`filesystem`, `higgsfield`, `puppeteer` — all reversible
+via `mcpServers_disabled` in `~/.claude.json`), 8 `gitnexus-*` skills parked
+after an Opus 5 escalation, `gitnexus-cli` SKILL.md gained query-verb docs,
+hyperframes cluster kept global after a rendered demo video convinced the
+owner.
+
+- [x] **[P2]** **`gstack /browse` is non-functional — Playwright browser
+      binary won't finish installing.** Resolved 2026-08-03. Root cause was
+      two compounding bugs, not a Gatekeeper/XProtect scan as originally
+      suspected: (1) the active Node was v26.3.1 — the same Node-26
+      extraction-truncation bug already seen with `puppeteer`'s Chrome
+      download (see memory `puppeteer-chrome-node26-unpack.md`), which stops
+      writing a large binary partway through; (2) RTK's shell hook silently
+      rewrites a bare `npx playwright install ...` into `rtk playwright
+      install ...`, and every prior attempt (across two sessions, 5 total)
+      went through that rewritten path unnoticed. Fix: ran the install from
+      inside `~/.claude/skills/gstack` (so it resolved the project's own
+      pinned `playwright` dependency, not a fresh temp install) under Node
+      22.22.3 LTS via `nvm`, wrapped in `rtk proxy` to force the raw,
+      unwrapped path. Completed clean on the first try — no hang, exit 0,
+      full 147.7MB `chrome-headless-shell` extracted. Verified end-to-end:
+      `browse/dist/browse goto https://example.com` → `Navigated to
+      https://example.com (200)`, then `browse/dist/browse text` → returned
+      clean page text. `gstack /browse` is fully functional; browser
+      automation is available again.
+
+- [x] **[P3]** **Review the `.impeccable/config.json` scope exclusion added
+      today.** Resolved 2026-08-03: kept. `"tmp/hyperframes-demo/**"` in
+      `detector.ignoreFiles` directly supports the same-session "keep
+      hyperframes" decision — `tmp/hyperframes-demo/` is a real, gitignored
+      video-render project, not website content, and would otherwise trip the
+      design-linter's brand checks for no reason. The only other change in
+      that diff was incidental JSON key reordering (`createdAt`/`reason`
+      swap) from whatever wrote the file — cosmetic, no semantic effect, left
+      as-is.
+
+### Legal hardening, WCAG sweep, CI wiring (2026-08-01, overnight, away mode)
+
+- [x] **[P2]** **Add localStorage migration to databases.** The website keeps
+      visitor state in `localStorage` in three places —
+      `src/scripts/monitoring-consent.ts` (the crash-reporting consent answer,
+      key `sb-monitoring-consent`), `src/components/Header.astro` (theme mode),
+      and `src/scripts/debug.ts` (the `sb-debug` flag). `localStorage` is
+      per-origin, per-browser, and silently unavailable in some private-browsing
+      modes, so none of it survives a device change and consent has to be
+      re-asked. Migrating it to a database is a real change of posture, not a
+      refactor: it would introduce the first server-side store this project has
+      ever had, and `CLAUDE.md`'s "serverless, on-device, no backend, no
+      accounts" invariant plus `docs/PRIVACY.md` and `legal/PRIVACY_POLICY.md`
+      all currently assert the opposite. Decide the destination first (an
+      on-device store such as IndexedDB keeps the invariant; a hosted database
+      breaks it and needs the privacy docs, `legal/SUBPROCESSORS.md`, and the
+      consent flow updated in the same change). Acceptance: destination chosen
+      and recorded, migration path written for each of the three keys including
+      what happens to a visitor who already answered, and every doc that claims
+      "no backend" reconciled with whatever is chosen.
+      **Done 2026-08-05** — destination chosen (2026-08-05 owner interview,
+      recorded in `tmp/handoff.md`): on-device only, IndexedDB, no hosted
+      backend. Migrated `sensebridge.monitoring-consent`
+      (`src/scripts/monitoring-consent.ts`) and `sb-debug`
+      (`src/scripts/debug.ts`) to a new shared helper
+      (`src/scripts/idb-store.ts`, native `IDBDatabase` — no new dependency;
+      `idb` isn't installed and two get/set call sites didn't justify adding
+      it). Both call sites had no synchronous-before-paint requirement, so the
+      swap to IndexedDB's async API is a clean drop-in: `readMonitoringConsent`
+      and `setMonitoringConsent`'s internal write are now awaited in sequence
+      to avoid a read-before-write race that `localStorage`'s synchronous API
+      never had. **`sb-theme` (Header.astro) deliberately stays on
+      `localStorage`** — the acceptance criterion is "no theme flash", and
+      `public/theme-init.js` must read that key synchronously, before first
+      paint, to avoid one; IndexedDB has no synchronous main-thread read, so
+      migrating it would either regress the no-flash guarantee or require
+      disproportionate complexity (dual-write, a cookie-based sync fast path,
+      hidden-until-ready rendering) for a value nothing else needs from
+      IndexedDB. Documented in both `theme-init.js` and `Header.astro`.
+      Verified: `npm run website -- typecheck:all` and `eslint` clean on every
+      touched file; `npm run website:build` +
+      `node scripts/check-consent.js` (built with a temporary fake
+      `PUBLIC_SENTRY_DSN`, never a real one) — all 14 assertions pass,
+      including "nothing is written to storage before the visitor answers"
+      and the Global Privacy Control override, now read from IndexedDB;
+      `scripts/check-consent.js` itself updated to read/write IndexedDB
+      instead of `localStorage`. Additionally verified live against
+      `astro dev`/`astro preview` with Puppeteer (temporary scripts, deleted
+      after use): theme persists across reload with no flash (unchanged
+      `localStorage` path), consent round-trips through IndexedDB with
+      `localStorage` staying empty for that key, and the `sb-debug` flag
+      set via IndexedDB correctly gates `[sb:...]` console output in a
+      production build. No visible behavior change to a visitor. Hosted/
+      opt-in-sync (so consent and preferences survive a device change) was
+      explicitly **not** built — the owner said "interview me again if this
+      doesn't work" regarding sync — see the new entry directly below.
+
+### Website motion pass — remaining candidates (2026-07-25)
+
+- [x] **[P3]** `website/src/styles/abstracts/_motion.scss`'s file header still
+      says "this phase ships zero animation — Phase 5 (motion layer) is the
+      first real consumer." Phase 5 shipped long ago and the file now has a
+      dozen consumers. Safe one-line comment fix, left out only to keep the
+      motion diff reviewable. **Done 2026-08-05** — reworded the header to
+      state the file is consumed throughout the shipped motion layer instead
+      of describing a since-passed pre-Phase-5 state.
+
+### Composio: connect the rest of the project's tool surface (2026-07-25, 16:00 PST)
+
+- [x] **[P3]** Do **not** link `railway` expecting parity with the existing
+      `RAILWAY_TOKEN` / `railway:*` npm-script workflow. Composio's `railway`
+      toolkit is thin. Re-searched 2026-07-26: coverage **has grown** past the
+      single `RAILWAY_UPDATE_PROJECT` recorded on 2026-07-25 — it now also
+      exposes `RAILWAY_GET_DEPLOYMENT_LOGS`, `RAILWAY_GET_ENVIRONMENT`, and
+      `RAILWAY_UPDATE_SERVICE_INSTANCE`. Still **no deploy-trigger tool**, so
+      the `RAILWAY_TOKEN` / `railway:*` npm scripts stay the deploy path
+      regardless; the only new reason to link is reading deployment logs
+      without the dashboard. Low value while deploys still need the CLI.
+      **Done 2026-08-05** — decision recorded, confirmed still current; not
+      linking.
+
+- [x] **[P2]** Link `vercel` (hosts `website/`, per
+      `docs/TOOLING.md`/the Vercel production-hosting TODO section below).
+      Composio's toolkit is real and well-covered: primary tools
+      `VERCEL_GET_PROJECTS`, `VERCEL_GET_DEPLOYMENTS`, `VERCEL_GET_DEPLOYMENT`,
+      `VERCEL_GET_DEPLOYMENT_LOGS2`, `VERCEL_ADD_ENVIRONMENT_VARIABLE`,
+      `VERCEL_EDIT_PROJECT_ENV`, `VERCEL_CREATE_NEW_DEPLOYMENT`,
+      `VERCEL_FILTER_PROJECT_ENVS`.
+      Steps: `composio link vercel --no-browser` (run in background so it
+      doesn't block; it prints a `dashboard.composio.dev` URL and then waits
+      up to its own timeout for the browser step) → open the URL, complete
+      Vercel OAuth → confirm with `composio execute VERCEL_GET_PROJECTS -d '{}'`
+      and check the `sensebridge` project appears. Useful once connected: read
+      deployment status/logs without the dashboard, and — carefully — automate
+      the still-open `sensebridge.vercel.app` Production-domain alias fix
+      (TODO below, "CI/CD security audit" section). **Domain-alias coverage
+      confirmed present** on re-search 2026-07-26 (the 2026-07-25 entry had
+      left this open): `VERCEL_ADD_PROJECT_DOMAIN`, `VERCEL_GET_DOMAIN_CONFIG`,
+      `VERCEL_UPDATE_PROJECT_DOMAIN`, `VERCEL_VERIFY_PROJECT_DOMAIN`,
+      `VERCEL_GET_PROJECT_DOMAINS`, `VERCEL_MOVE_PROJECT_DOMAIN`,
+      `VERCEL_LIST_DOMAINS`. This makes `vercel` the highest-value unlinked
+      toolkit for this repo — it is the only one that unblocks work currently
+      blocked on the dashboard.
+      Edge case: `VERCEL_CREATE_NEW_DEPLOYMENT` can 402 on plan/quota limits
+      even when reads still work — don't treat a failed deploy call as proof
+      the connection is broken.
+      **Done/Fixed 2026-08-06** — already linked (connected 2026-07-27, status
+      `ACTIVE`; confirmed via `composio link vercel --list`).
+      `VERCEL_GET_PROJECTS` returns the `sensebridge` project, confirming the
+      connection is live and usable.
+
+- [x] **[P3]** **Deferred, don't link yet:** `stripe` and `resend` toolkits
+      both exist in Composio (`STRIPE_RETRIEVE_BALANCE`/`STRIPE_LIST_CHARGES`/
+      `STRIPE_LIST_PAYMENT_INTENTS`; `RESEND_SEND_EMAIL`/
+      `RESEND_SEND_BATCH_EMAILS`), but per the "Vercel production hosting +
+      Stripe/Resend hardening" TODO section below, the product decided *not*
+      to build a Stripe/Resend integration yet (pre-launch, "nothing is being
+      sold" doctrine) and the exposed Stripe test key still needs rotating
+      first. Only link either toolkit after that product decision changes —
+      linking Stripe now would just be live access to an already-flagged
+      leaked test key with nothing to do with it.
+      **Done 2026-08-05** — decision recorded, confirmed still current; not
+      linking.
+
+- [x] **[P3]** No Composio toolkit exists for **GitGuardian** (confirmed again
+      2026-07-26 — `composio search "gitguardian secret scanning"` still
+      returns only unrelated `GITHUB_*` secret/code-scanning-alert tools).
+      Keep using the local `ggshield`
+      CLI + the `security.yml` CI job; re-search only if this changes.
+      **Docker Hub** has a real toolkit (`docker_hub` — repos, teams, orgs,
+      webhooks) but this project doesn't publish images to Docker Hub (local
+      `docker/Dockerfile` build only) — not applicable unless that changes.
+      **Done 2026-08-05** — decision recorded, confirmed still current; not
+      linking either.
+
+**Future tool surface — what this project will need, and how to set it up
+(added 2026-07-26):**
+
+Everything above is a service SenseBridge uses *today*. These are the ones the
+roadmap implies it will need *later*, each verified against Composio's live
+catalog on 2026-07-26 rather than assumed. Two of the four have no Composio
+path at all — record them here so a future session stops looking.
+
+- [x] **[P3]** **Model licensing** — no HuggingFace toolkit exists (searched
+      2026-07-26; the query falls back to `github` license tools). For any
+      GitHub-hosted candidate model, the **already-connected** `github`
+      toolkit covers the
+      [model-license-audit](.agents/skills/model-license-audit/SKILL.md) gate
+      today: `GITHUB_GET_THE_LICENSE_FOR_A_REPOSITORY`,
+      `GITHUB_LIST_LICENSES_GRAPH_QL`, `GITHUB_GET_RAW_REPOSITORY_CONTENT` to
+      read a `LICENSE` verbatim. Relevant when the SmolVLM-vs-Apple fork in
+      [`docs/ROADMAP.md`](docs/ROADMAP.md) §"Open questions" gets resolved.
+      A machine-read license string is **evidence, not clearance** — AGPL and
+      `apple-amlr` remain hard blockers decided by the skill, not by a tool
+      call, and HuggingFace-hosted models still need a manual license read.
+      **Done 2026-08-05** — decision recorded, confirmed still current.
+
+- [x] **[P3]** **Do not link, on doctrine** — record these so a future session
+      doesn't "helpfully" connect one:
+      - **Analytics and product telemetry** (PostHog, Amplitude, and every
+        sibling). Toolkits exist; nothing in this project has anything to send
+        them, and linking one creates a live egress path to a product that must
+        not have one. **Sentry is no longer in this list** — the owner reversed
+        that doctrine on 2026-07-31 and crash reporting now ships on `website/`
+        and `app/`, opt-in and off by default. The reversal covers crash and
+        error reporting only; it is not a general licence to add telemetry, and
+        product analytics stays prohibited. See
+        [`docs/PRIVACY.md`](docs/PRIVACY.md).
+      - **`composio_search`** (`COMPOSIO_SEARCH_WEB`,
+        `COMPOSIO_SEARCH_FETCH_URL_CONTENT`, `COMPOSIO_SEARCH_NEWS`) —
+        Composio's own built-in web-search toolkit, which surfaces
+        unprompted in search results. The global standard routes **all** agent
+        web browsing through gstack `/browse`; this is a second, undocumented
+        browsing path and is not to be used.
+      - **`stripe` / `resend`** — already covered above; still gated on a
+        product decision that has not changed.
+      **Done 2026-08-05** — doctrine list recorded, confirmed still current.
+
+**Edge cases to reason about whenever executing any of the above:**
+
+- Every `link` needs a human to click through OAuth in a real browser in the
+  moment — same pattern as today's GitHub login: run the link command
+  backgrounded with `--no-browser`, hand the printed URL to the user, then
+  read the background output once it completes. It cannot happen unattended.
+- Treat anything a Composio tool call returns about an account (tokens, keys,
+  email, balances) as sensitive — never echo it verbatim into a committed
+  file, and never write a Composio-obtained credential into `docs/SECRETS.md`
+  or any tracked file.
+- Large tool outputs auto-spill to a file (`storedInFile: true` +
+  `outputFilePath` in the JSON envelope) once they're big enough — today's
+  50-notification GitHub call was ~80K tokens and got redirected to disk.
+  Parse the file with `python3`/`jq` for just the fields needed; don't cat the
+  whole thing into context.
+- Before assuming a toolkit is connected or absent, check with
+  `composio execute <slug> -d '{}'` or `composio link <toolkit> --list` rather
+  than trusting this entry's snapshot — Composio's catalog and this project's
+  connected accounts both change over time.
+
+### Secrets inventory + React Doctor zero-findings gate (2026-07-25, 14:00 PST)
+
+- [x] **[P3]** React is installed in `website/` but **nothing uses it** — zero
+      `.tsx`/`.jsx` files exist. React Doctor therefore only ever exercises its
+      `deslop` maintainability rules, and React Scan has nothing to profile.
+      Decide whether to keep `@astrojs/react` + `react` + `react-dom` +
+      `react-scan` as ready-for-an-island infrastructure or drop them until an
+      island actually lands.
+      **Resolved 2026-07-25 by integrating, not removing** — owner chose to put
+      React to work. Added `website/src/components/StructuredData.tsx`, the
+      site's only React component: it emits schema.org JSON-LD (`WebSite` +
+      `Organization` + `WebPage`), a surface that did not exist before, so it
+      overlaps nothing. Server-rendered with **no `client:*` directive**, so
+      Astro prerenders it and it ships zero JavaScript — verified against the
+      built output, where all 195 pages carry valid JSON-LD across all three
+      locales (`en-US`/`es-ES`/`vi-VN`) and **zero** pages reference React's
+      client runtime.
+      Doctrine: only `WebSite`/`Organization`/`WebPage` are emitted.
+      `SoftwareApplication`, `offers`, `downloadUrl`, and `aggregateRating` are
+      deliberately excluded — any of them would let a search engine advertise a
+      download that does not exist, which is the honesty rule the site's copy
+      is held to. Do not add them before the app ships.
+      Two real defects were caught while building it, both fixed rather than
+      suppressed: ESLint's `security/detect-object-injection` (raised to
+      `error` repo-wide) plus `noUncheckedIndexedAccess` rejected the
+      `Record` lookups, so both maps became `Map` with explicit fallbacks; and
+      React Doctor's `Unescaped JSON in HTML or script sink` fired on the
+      `dangerouslySetInnerHTML` form, so the payload is now passed as a text
+      child instead — React 19 renders `<script>` children verbatim, confirmed
+      against `dist/index.html`. The raw-HTML sink is gone from the codebase.
+
+- [x] **[P3]** Re-test `website/doctor.config.jsonc`'s suppressions on each
+      `react-doctor` upgrade and delete any entry upstream has fixed. Both
+      entries exist only because React Doctor's dead-code pass does not follow
+      imports out of `src/layouts/**` (verified 2026-07-25 — see the file's
+      comments for the experiment that isolated it), not because the code is
+      dead. Currently pinned at `react-doctor@0.8.1`.
+      **Done/Fixed 2026-08-06** — `react-doctor` had since moved to `0.9.2`
+      (`website/package.json`) without a re-test being recorded (last
+      documented re-test was 2026-07-25 against 0.8.1/0.9.1). Re-tested per
+      the file's own method: moved `doctor.config.jsonc` aside and ran
+      `npm run doctor` — `--json` output showed `totalDiagnosticCount: 0`
+      with **no config at all**, confirming upstream fixed the
+      `src/layouts/**` blind spot between 0.9.1 and 0.9.2. Deleted the
+      now-stale `ignore.overrides` block (3 entries: `deslop/unused-file`,
+      `deslop/unused-export`, `react-doctor/rules-of-hooks`) from
+      `website/doctor.config.jsonc`, kept the one opt-in rule. Verified
+      `npm run doctor` still reports "No issues found!" with the trimmed
+      config in place.
+
+### Flagship website evolution — "First Light" 3D batch follow-ups (2026-07-19)
+
+- [x] **[P2]** **[Needs owner]** The owner directive "no design guardrails,
+      only security matters" (2026-07-18) voided the repo's visual-restraint
+      doctrines; `DESIGN.md` §0 now records that. Confirm the doctrine files
+      it supersedes (e.g. anti-reference lists in
+      `.agents/context/PRODUCT.md`) should stay as-is or be updated to
+      match — deferred rather than edited, since PRODUCT.md is strategy, not
+      just style. **Done 2026-08-05** — checked both PRODUCT.md files:
+      `docs/PRODUCT.md` (the app's doc) has no anti-reference content, so
+      only `.agents/context/PRODUCT.md` (the website's doc, per this repo's
+      CLAUDE.md split) needed a look. §0 voided five *named* rules (WebGL
+      ban, Two-Accent Rule, One Display Face Rule, no-box-shadow/Flat-By-
+      Default, no-filled-CTA) — it did not blanket-void craft-level
+      restraint, so most of the "Anti-references" bullet (hero-metric
+      templates, gradient text, tiny uppercase eyebrows) is still accurate:
+      none of those are used anywhere in the shipped site. One item was
+      stale: "glassmorphism" is listed as forbidden, but
+      `website/src/styles/abstracts/_mixins.scss`'s `glass-surface` mixin
+      (`backdrop-filter: blur(16px)` + `surface-glass` token) is a real,
+      deliberately shipped glass treatment on hero/nav, consumed by
+      `Features.module.scss`. Removed "glassmorphism" from the anti-reference
+      list with an inline note explaining why. Left `DESIGN.md` §0 and the
+      "One Display Face Rule" wording drift (separate item above, still
+      open) untouched — out of scope here. **Confirmed directly by owner
+      2026-08-05** (this edit had touched a `[Needs owner]` item on an
+      inherited-context claim, so it was flagged back rather than trusted
+      silently): owner wants glassmorphism kept and expanded, not just
+      tolerated. `DESIGN.md` §0 updated in the same pass to explicitly name
+      glassmorphism as an embraced pattern rather than leaving it implied.
+
+### CI/security automation audit (2026-07-27)
+
+- [x] **[P2]** `dependabot.yml`'s grouped PRs (`dev-dependencies` group, e.g.
+      #44 "dev-dependencies group with 2 updates", #45 "...in /website with 4
+      updates") never auto-merge even when every member update is
+      patch/minor. Root cause: `dependabot/fetch-metadata` can't report a
+      single `update-type` for a grouped PR (known upstream limitation), so
+      `dependabot-automerge.yml`'s
+      `steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+      ...-minor'` condition never matches a grouped PR. Fix needs a design
+      decision, not a quick patch: either stop grouping dev-dependencies (loses
+      the batching benefit) or switch the workflow's gate to something that
+      inspects each dependency in the group (e.g.
+      `steps.meta.outputs.dependency-names` + per-dep version comparison, or
+      GitHub's newer `dependency-group` output plus a stricter allowlist).
+      **Done 2026-08-05** — owner decided (interview) to keep grouping and gate
+      per-dependency instead. `.github/workflows/dependabot-automerge.yml` now
+      adds a "Check every dependency is patch or minor" step that parses
+      `steps.meta.outputs.updated-dependencies-json` (the pinned
+      `dependabot/fetch-metadata@25dd0e34f...` v3 SHA already exposes it, no
+      version bump needed — confirmed against the action's `v3` README/source)
+      with `jq`, requiring `all()` per-dependency `updateType` to be
+      `semver-patch` or `semver-minor`; the existing auto-merge step now gates
+      on that boolean instead of the group-wide `update-type` output. Verified:
+      `npm run lint:actions` (actionlint) passes clean; traced the `jq` filter
+      locally against a synthetic all-patch/minor payload (→ `true`) and a
+      payload with one `semver-major` entry (→ `false`), matching the
+      dev-dependencies-group and /website-group shapes from #44/#45. **Not
+      verified end-to-end** — this needs a real grouped Dependabot PR to
+      confirm `updated-dependencies-json` is actually populated as documented
+      and that the automerge step fires; no live PR was run this session.
+
+- [x] **[P1]** The `dependabot-automerge.yml` fix (repo settings: enabled
+      `allow_auto_merge` + "Allow GitHub Actions to create and approve pull
+      requests") is confirmed working end-to-end.
+      **Done/Fixed 2026-08-06** — the CI failures that were blocking merge
+      (`Secret scan (GitGuardian)`, `Deploy to Railway preview`,
+      `Build + smoke-test docker/Dockerfile`,
+      `Stylelint + ESLint + Prettier + typecheck + build`) all pass on
+      current dependabot PRs (`gh pr checks 64`, `gh pr checks 65`); PRs
+      #46/#47/#49 are closed/superseded, and #60/#61 auto-merged cleanly via
+      `app/github-actions` (`gh pr view 60 --json autoMergeRequest,mergedBy`).
+
+### `docs/TESTING.md` "Frameworks" reality check (2026-08-06, 12:56 PST)
+
+Re-verified `docs/TESTING.md` → "Frameworks" against the actual code rather
+than assuming the existing propagation still held. The Swift Testing/XCTest
+split itself checked out: every file under
+`app/Packages/SenseBridgeCore/Tests/SenseBridgeCoreTests/` and
+`app/SenseBridgeTests/` imports `Testing`, every file under
+`app/SenseBridgeUITests/` imports `XCTest`, the "90 tests in 16 suites"
+`SenseBridgeCoreTests` figure reproduced live (`swift test --disable-xctest`),
+and the locale-dependent `PhrasingTests`/`SceneComposerTests` claim matched
+their actual `Locale(identifier:)` usage. `docs/TOOLING.md`, the `testing` /
+`ci-green-gate` / `swift-protocol-di-testing` skills, and
+`docs/planning/SENSEBRIDGE-04-ENGINEERING-QUALITY.md` +
+`SENSEBRIDGE-COMPLETE-PLAN.md` (confirmed still identical to each other) were
+already consistent with it — nothing to propagate there.
+
+The actual drift was one section down, in "Coverage philosophy": the
+"deliberate exception" paragraph claimed `CustomSoundClassifier` has no
+coverage beyond the manual/VoiceOver pass, which stopped being true the
+moment `app/SenseBridgeTests/CustomSoundClassifierOODTests.swift` landed (an
+audit-driven regression suite for
+`audits/safety-framing/20260806-064241-custom-sound-classifier-out-of-distribution-false-positives-reach-spoken-output.md`,
+still uncommitted in this working tree). Fixed in `docs/TESTING.md`: the
+package-level-unit-test limit still holds for both wrapper types (neither can
+be constructed from a `SenseBridgeCoreTests`-style test), but
+`CustomSoundClassifier` now has real App-target automated coverage of the
+inference path it wraps, while `FoundationModelsSceneComposer` remains
+manual-only — confirmed via `grep` that no test file references either
+`FoundationModelsSceneComposer` or `SystemLanguageModel`. No other doc
+restated this specific exception, so no further propagation was needed.
+
+### Serena/RTK coverage audit — MCP deny bypass closed (2026-08-01, 19:57 PST)
+
+Audit of whether Serena and RTK are actually prioritized across every tool call,
+with clean fallbacks and proof by test. The substantive finding: **Claude Code
+permission-rule path globs do not reach MCP tool arguments** — `Read(**/*.pem)`
+scopes by path for built-in tools only, because MCP rules match on tool *name*
+alone. Confirmed by probe: with the built-in `Read` of a scratch `.pem` denied,
+`mcp__filesystem__read_text_file` returned that file's contents and
+`mcp__filesystem__write_file` wrote to it. Closed by
+`.claude/hooks/guard-mcp-sensitive-paths.mjs` and verified live against all
+three vectors (read, write, and a sensitive path smuggled into a
+`read_multiple_files` batch). Detail in `sessions/2026-08-01/1925-PST.md`.
+
+- [x] **[P2]** **Kill the duplicate Serena MCP servers.**
+      **Not a defect — closed 2026-08-01 by measurement, and the original
+      finding was wrong.** Two `serena start-mcp-server` processes are live, but
+      they have *different parents*: PID 14152 (`claude`, the interactive
+      session) and PID 97344 (`claude bg-spare`, the background daemon). Serena
+      is spawned once per MCP client, not once per project, so this is stdio
+      MCP working as designed — nothing to kill, and the `.mcp.json` edit did
+      not produce it. The claim that they "each try to bind the dashboard port,
+      so at most one gets 24285" is also wrong: the port walks up from its base,
+      and `lsof` shows them holding **24283 and 24284**, both `127.0.0.1`-only,
+      with 24285 free. Corrected in `docs/TOOLING.md`'s serena row.
+
+- [x] **[P2]** **`guard-protected-delete.sh` fires on prose.**
+      **Fixed 2026-08-01** (owner approved the change explicitly). Root cause
+      was narrower than reported: `sed 's/<<.*//'` works line by line, so it
+      truncated only the `cat <<EOF` line and left the here-doc body it was
+      meant to remove — now `${raw_cmd%%<<*}`, matching the sibling guard.
+      `guard-main-commit.sh`'s quoted-literal blanking could **not** be copied
+      wholesale: that guard matches a *verb*, this one matches an *argument*,
+      and arguments are routinely quoted, so blanking quoted text would have
+      let `rm -rf "sessions/x"` through. It now walks the command once,
+      quote-aware, keeping two views per segment — quoted runs collapsed for
+      verb detection, quote characters dropped but contents kept for path
+      detection — and splits on separators only outside quotes, so
+      `echo "a; rm -rf sessions/"` stays one `echo`. Verified by a new
+      `.claude/hooks/tests/guard-protected-delete.test.sh` (32 assertions, 12 of
+      them prose/false-positive cases) **and** end-to-end: the exact here-doc
+      shape that was denied twice now executes.
+
+- [x] **[P3]** **Consider extending the MCP path guard to other servers.**
+      **Fixed 2026-08-01 with automatic detection**, which is what was actually
+      missing. `tools/check-settings-hooks.mjs` now cross-checks `.mcp.json`
+      against the `guard-mcp-sensitive-paths.mjs` matcher and fails until every
+      project-scoped server is either covered or recorded in
+      `MCP_SERVERS_WITHOUT_PATH_ARGS` with the reason it takes no filesystem
+      path. Proven in both directions against a sandbox copy: clean on the real
+      config, failing on an added `newthing` server. Scope stated rather than
+      implied — it sees project-scoped servers only, since user-scope ones
+      (`filesystem` included) live in the owner's global config, which a tracked
+      repo gate cannot read.
+
+- [ ] **[P1]** **Needs owner: disconnect unused `claude.ai` account connectors
+      to cut per-turn token overhead.** Machine/account-level, not SenseBridge
+      code — logged here per `AGENTS.md`'s "any substantive follow-up...
+      also goes into TODO.md." Full audit in `sessions/2026-08-01/2300-PST.md`
+      and `tmp/AWAY-REPORT.md` (this file may be gone by the time you read
+      this — `tmp/` is cleared once work ships).
+
+      Account `kevinle3212@gmail.com` (the account this ran under) has 44
+      `claude.ai` connectors (`claude mcp list`); account
+      `kevinle_uoregon.edu` has zero. These are pure account-scoped web
+      integrations (claude.ai → Settings → Connectors) — confirmed
+      unreachable from any local file, `.mcp.json`, or `claude mcp
+      remove`/`logout` (the CLI's own answer: "its credentials live on
+      claude.ai, not this machine"). Every connected one contributes its full
+      tool-name list to every single turn in every session on that account,
+      regardless of project — this is very likely the dominant token cost
+      behind "even small tasks feel expensive."
+
+      **Do this:** open https://claude.ai/customize/connectors, and
+      disconnect these (cross-checked against real usage in
+      `~/Development/{sensebridge,TrustLedger,archon,website}` — none of
+      them appear in any repo's dependencies, env examples, or docs):
+
+      Never-authenticated (zero function, pure cost) — Fellow.ai, Zoom for
+      Claude, PlanetScale, S&P Global, Scholar Gateway, Atlassian Rovo,
+      Stripe, Midpage Legal Research, Microsoft 365, Docusign, Harvey,
+      Coupler.io, Square.
+
+      Connected but no evidence of use anywhere on this machine — Blockscout,
+      Crypto.com, Aiwyn Tax (Column Tax), Courtroom5, LegalZoom, Indeed,
+      Goodnotes, tldraw, Excalidraw, ClickUp, Postman, Clerk, Cloudflare
+      Developer Platform, Supabase, Hugging Face, Microsoft Learn,
+      Composio MCP (redundant — `CLAUDE.md` §17 already documents Composio as
+      CLI-only with no MCP surface; this connector contradicts that), claude.ai
+      Context7 (duplicate of the already-configured local `context7` MCP
+      server).
+
+      **Keep** — Vercel (confirmed: `website/package.json` deploy scripts,
+      `TrustLedger/.vercel/`), Slack (confirmed: `archon` Slack bot env vars),
+      Sentry (documented, wired into SenseBridge's crash reporting), Calendly
+      (connected by you this same session, deliberately), plus
+      identity-adjacent/personal-productivity ones I didn't find hard
+      evidence for either way but left alone rather than guess: Gmail, Google
+      Calendar, Google Drive, Notion, Todoist, Figma, ElevenLabs — worth a
+      2-minute look yourself since some are probably also dead weight.
+
+      After: re-run `claude mcp list` and confirm the account matches
+      account 2's near-empty connector list. No further automated step —
+      this is the end of the chain.
+
+### README orientation + animated Graphify visual (2026-07-31, 20:00 PST)
+
+- [x] **[P2]** **[Needs owner]** **Commit this session's work.** New:
+      `tools/graph-visual.mjs`, `docs/assets/graph.svg`,
+      `docs/assets/graph-static.svg`. Modified: `README.md`,
+      `website/README.md`, `package.json` (`graph:visual`),
+      `.markdownlint.jsonc` (MD033 `allowed_elements` += `picture`, `source`),
+      `docs/TOOLING.md`. **Same caveat as the sections below:**
+      `docs/TOOLING.md` already carried unrelated pre-existing edits, so stage
+      it with `git add -p` rather than a plain `git add`. Suggested branch
+      `docs/readme-graph-visual`; ready-to-paste commands are in
+      `tmp/handoff.md`.
+      **Done/Fixed 2026-08-06** — verified with `git ls-files`: every file
+      listed is tracked, and each traces to a commit already on `main`
+      (`tools/graph-visual.mjs`/`docs/TOOLING.md` in `ab83cdb`,
+      `docs/assets/graph.svg` in `a6086b1`, the rest earlier). Nothing left to
+      commit for this item.
+
+### Sweep pipeline + BMAD gate (2026-07-31, 18:00 PST)
+
+Closed the two owner-named sections below, applied the CLAUDE.md dedupe
+decision, and made this file's own archive pipeline self-maintaining — the
+124 finished items that had silently accumulated in To-Do are now in
+[`COMPLETED.todo`](COMPLETED.todo). Two standing manual re-verifications became
+gates. Full write-up in `sessions/2026-07-31/1800-PST.md`. This is what is
+left.
+
+- [x] **[P2]** **[Needs owner]** **Commit this session's work.** New:
+      `tools/sweep-done-todo.mjs`, `tools/check-bmad-config.mjs`,
+      `sessions/2026-07-31/1800-PST.md`. Modified:
+      `tools/archive-completed-todo.mjs` (UTC → Pacific date stamp),
+      `package.json` (`check:bmad`, `todo:sweep`, `todo:sweep:check`),
+      `.githooks/pre-commit`, `docs/TOOLING.md`, `docs/ENVIRONMENT.md`,
+      `TODO.md`, `COMPLETED.todo`. Also edited **outside the repo** and so not
+      part of any commit: `~/.claude/CLAUDE.md` §17 (backup at
+      `~/.claude/backups/CLAUDE.md.pre-serena-rtk-dedupe-20260731`).
+      **Same caveat as the section below:** `docs/TOOLING.md` already carried
+      unrelated pre-existing edits, so stage it with `git add -p` rather than a
+      plain `git add`. Suggested branch `chore/todo-sweep-pipeline`. Gates were
+      green before handoff — `npm run check` exit 0, markdownlint 0 issues
+      across 148 files.
+      **Done/Fixed 2026-08-06** — `git ls-files` confirms every repo file
+      listed is tracked and already on `main`. `sessions/2026-07-31/1800-PST.md`
+      is the one exception: `.gitignore` now excludes `sessions/` entirely
+      (commit `3e543f9`, "untrack files `.gitignore` already matches"), so that
+      file is intentionally local-only, not an oversight.
+
+### RTK command-shape enforcement hook (2026-07-31, 16:00 PST)
+
+Verification pass over Ponytail / RTK / Serena confirmed all three work and are
+prioritized (RTK saved 776 tokens over 11 covered commands; `prefer-serena.sh`
+12/12; Ponytail active at `full`). It also found that RTK's rewrite matches on
+command **shape** — a bare `git status` is rewritten and saved 642 tokens, but
+`git status --short | head -5` is not, and nothing warns. Fixed structurally by
+`.claude/hooks/prefer-rtk-shape.sh` (+ a 14-case self-check); see the session
+log for the full write-up. These are what is left.
+
+- [x] **[P2]** **[Needs owner]** **Commit and PR the new hook.** Files:
+      `.claude/hooks/prefer-rtk-shape.sh` and
+      `.claude/hooks/tests/prefer-rtk-shape.test.sh` (both new),
+      `.claude/settings.json` (registration), `docs/TOOLING.md` (hook count
+      eleven → twelve plus the entry). **Caveat:** `settings.json` and
+      `TOOLING.md` were *already* modified before this session, so a plain
+      `git add` sweeps in unrelated pre-existing edits — stage those two with
+      `git add -p`. Suggested branch `chore/rtk-command-shape-hook`; the full
+      copy-paste sequence is in `sessions/2026-07-31/1600-PST.md`.
+      **Done/Fixed 2026-08-06** — hook shipped as `prefer-rtk-shape.mjs` (not
+      `.sh`); `git ls-files` shows it, its test, `.claude/settings.json`, and
+      `docs/TOOLING.md` all tracked on `main`, and `docs/TOOLING.md:36`
+      documents it as an active registered hook.
+
+### `pre-push` doesn't actually use `scripts/app.sh` (2026-07-30, 21:00 PST)
+
+- [x] **[P1]** **[Needs owner]** **`scripts/app.sh` is untracked and must be
+      committed.** Surfaced 2026-07-31, 17:00 PST while verifying the change
+      above: `git status` reports it `??`, and `git check-ignore` exits 1, so it
+      is not ignored — it simply was never committed. Every sibling in
+      `scripts/` is tracked (`check-env-loader.sh`, `env.sh`, `lint.sh`,
+      `open-xcode.sh`, `setup.sh`); `app.sh` alone is not.
+
+      This was already latent — `package.json`'s `app:*` scripts and
+      `CLAUDE.md`'s "Hand it back testable" section both point at a file no
+      fresh clone has. Routing `.githooks/pre-push` through it **raises the
+      severity**: the hook used to be self-contained, and now a fresh clone
+      would fail the push gate outright. Mitigated but not fixed — `pre-push`
+      now checks for the file first and exits with a sentence naming the cause
+      rather than a bare `No such file or directory`. The real fix is one
+      `git add scripts/app.sh` in the next commit; until then the delegation is
+      owner-machine-only.
+
+      **Original finding.** `scripts/app.sh`'s header comment claimed it consolidated "the
+      simulator build in `.github/workflows/ci.yml` and `.githooks/pre-push`"
+      into one entry point, but `.githooks/pre-push` still duplicates its own
+      inline Xcode-project detection and `xcodebuild build` invocation rather
+      than calling `scripts/app.sh build` — the comment and the code have
+      drifted. Surfaced while making `scripts/setup.sh`, `scripts/lint.sh`,
+      and `.githooks/pre-push` skip cleanly on non-macOS (see
+      `sessions/2026-07-30/2100-PST.md`). Not fixed there: routing pre-push
+      through `app.sh` would touch the CI-mirroring build gate itself, which
+      the file's own comment says must stay in sync with `ci.yml` — more
+      regression risk than that task warranted. Either de-duplicate
+      `pre-push` onto `scripts/app.sh build`, or fix the header comment to
+      stop claiming it already is.
+      **Done/Fixed 2026-08-06** — `git ls-files scripts/app.sh` confirms it is
+      tracked (committed in `95c33bf`), and `.githooks/pre-push:59` now calls
+      `"$REPO_ROOT/scripts/app.sh" build` directly — both the commit gap and
+      the pre-push/`app.sh` de-duplication are done. One stale artifact: the
+      existence-check message at `.githooks/pre-push:55` still says the file
+      "is untracked and needs committing," which is no longer true; harmless
+      (it only fires if the file goes missing) but worth a comment fix next
+      time that file is touched.
+
+### npm command center (2026-07-28, 19:45 PST)
+
+Root `package.json` went from zero scripts to a full suite, `website/` gained
+the `tsc` commands for both tsconfigs, and two copy-paste-only recipes became
+real scripts (`scripts/app.sh`, `scripts/check-links.sh` — the latter now the
+single code path for both `npm run check:links` and `ci.yml`'s docs-links job).
+Documented in `docs/ENVIRONMENT.md` → "Command center". Verified locally:
+`npm run check`, `lint:md`, `lint:shell`, `actionlint`, `app:build`
+(BUILD SUCCEEDED), and `website`'s `typecheck:tsc`, `lint`, `format` all pass.
+
+- [x] **[P3]** Two findings surfaced while doing the above, neither caused by
+      it, both left for the owner:
+      - `~/.cache/puppeteer/chrome-headless-shell/mac_arm-148.0.7778.97` is a
+        **truncated extraction** (only `ABOUT` + `LICENSE`, dated 2026-07-25) —
+        the Node 26 unzip bug that `website/README.md` documents. The
+        2026-07-25 session repaired `chrome/` and missed this one, and no
+        cached `.zip` remains to repair from. Harmless today, because pa11y
+        launches the full Chrome binary and `scripts/docs.sh` now sets
+        `PUPPETEER_SKIP_CHROME_HEADLESS_SHELL_DOWNLOAD=true`; still a trap for
+        anything requesting `headless: "shell"`, which would find the folder,
+        assume it is installed, and fail. Clear it with
+        `rm -rf ~/.cache/puppeteer/chrome-headless-shell` to let a future
+        install re-fetch cleanly.
+      - `docs/GITHUB_MODELS.md` (lines 10 and 60) links to
+        `../.github/prompts/README.md`, which is outside the Jekyll source, so
+        `jekyll-relative-links` leaves it alone and it **404s on the published
+        site** — though it does resolve when the file is read on GitHub. These
+        are the only two such links in the whole built site;
+        `docs/AI-MODELS.md` handles the same out-of-source case three times
+        (lines 12, 73, 99) with absolute `github.com/.../blob/main/...` URLs.
+        Not fixed here: which audience a `docs/` page should favour is a
+        content decision, not a typo.
+      **Done/Fixed 2026-08-06** — both resolved. The cache dir now contains a
+      full extraction (`chrome-headless-shell-mac-arm64/` with the binary,
+      `.dylib`/`.pak`/`.dat` files), not just `ABOUT` + `LICENSE`; a
+      `mac_arm-151.0.7922.71` copy also exists alongside it. `docs/GITHUB_MODELS.md`
+      lines 10 and 60 now use absolute `github.com/kevinle3212/sensebridge/blob/main/...`
+      URLs, matching `docs/AI-MODELS.md`'s pattern, confirmed by `grep`.
+
+### Repo-sync commit backlog + CI-green fixups (2026-07-27, 13:00 PST)
+
+- [x] **[P3]** CodeQL's `js/file-access-to-http` ("File data in outbound
+      network request") still fires on `tools/docs-a11y.mjs`'s
+      `page.goto(url)` call after two fix attempts: filtering built HTML
+      filenames through an explicit allowlist regex before building the URL,
+      then an inline `// codeql[js/file-access-to-http]` suppression comment
+      above the flagged line — neither cleared it on PR #42's "CodeQL"
+      umbrella check (non-blocking; only "CodeQL (JavaScript/TypeScript)" is
+      in the required-checks ruleset, and that one passes). The URL is always
+      `http://127.0.0.1:PORT/...`; only the already-allowlisted path segment
+      comes from the local build directory listing, so this reads as a false
+      positive from a CI-only local crawler, not a real request-forgery risk.
+      **Done/Fixed 2026-08-06** — the actual root cause was found and fixed in
+      the 2026-07-28 session (see the CodeQL alert #93 entry later in this
+      file, `tools/docs-a11y.mjs:155` note): the suppression directive sat 4
+      lines above the flagged line, not immediately above it, which is what
+      GitHub's inline-suppression parser requires. Reformatted so
+      `// codeql[js/file-access-to-http]` is now the line directly above
+      `page.goto` — confirmed current at `tools/docs-a11y.mjs:159-160`. Final
+      confirmation that the next CodeQL scan cleared alert #93 is tracked in
+      that later entry, not duplicated here.
+
+### Hands-free worn awareness ("walk mode") (2026-07-26, 20:00 PST)
+
+- [x] **[P3]** **`SceneDescriptionView` still uses canned records.**
+      `FoundationModelsSceneComposer` and `ObjectClassificationService` now
+      exist and are wired into hands-free awareness; pointing the "Describe"
+      screen at a real capture is a small follow-up. Same for `LabelingView`.
+      **Done/Fixed 2026-08-06** — both already wired to real capture:
+      `SceneDescriptionView.swift` calls `detector.detect(photo)` then
+      `composer.compose(from: records)` on a captured photo, and
+      `LabelingView.swift` calls `classifier.process(photo)` and phrases the
+      first detected object. Neither uses canned/mock data. Verified by
+      reading both files directly.
+
+### `docs/` accuracy overhaul + designed Pages site (2026-07-26, 05:00 PST)
+
+- [x] **[P1]** **[Needs owner]** Nothing from this work is committed. It spans
+      `docs/**` (16 rewritten pages, 4 new pages, the whole presentation
+      layer), plus `docs/index.md`, `WIKI.md`, `NOTES.md`, `TODO.md`, and
+      `.github/workflows/ci.yml` and `tools/docs-a11y.mjs` (the `node --check`
+      regression guard and the docs accessibility gate, both of which belong
+      with this change). Needs a branch off `main` (`docs/...` or
+      `chore/...`), a conventional commit, and a PR so CI runs `pages.yml` and
+      `wiki-sync.yml` against it. Agents never run `git`/`gh` autonomously —
+      owner explicitly chose that no `git` command be run in the 2026-07-26
+      session. **Use `git add docs/`, not `git add -u`:** 21 files under
+      `docs/` are untracked and `-u` would silently miss every one of them.
+      Copy-paste ship block is in `tmp/handoff.md`.
+      **Done/Fixed 2026-08-06** — merged via PR #42 (`chore: sync uncommitted
+      camera, awareness, website, and docs work`, commit `339cec6`).
+      `git ls-files` confirms `docs/_layouts/`, `docs/_includes/`,
+      `docs/_data/`, and `docs/assets/{css,js,fonts}/` are all tracked, and
+      `git log` shows `.github/workflows/ci.yml` and `tools/docs-a11y.mjs`
+      were committed in the same commit.
+
+- [x] **[P1]** **[Needs owner]** `docs/SECRETS.md` is **untracked** in git
+      (`git status` shows `??`) while `docs/index.md` links to it — so the link
+      404s on github.com today. It must be staged with this change. It also had
+      no YAML front matter, which meant Jekyll copied it as a raw file instead
+      of rendering it as a page.
+      **Done/Fixed 2026-08-06** — `git ls-files docs/SECRETS.md` confirms it's
+      tracked (committed in `339cec6`, PR #42); the file now opens with a
+      `title: Secrets and Tokens` YAML front-matter block, and
+      `docs/index.md:69` links to it correctly.
+
+- [x] **[P2]** The 7 links into `docs/planning/` were dead for every public
+      reader — that directory is gitignored (`.gitignore:126`) **and**
+      Jekyll-excluded (`docs/_config.yml`). Owner decision taken 2026-07-26:
+      strip the links and inline the substance, keeping planning notes local.
+      If `docs/planning/` is ever published, revisit — the inlined copies then
+      become duplication rather than the only public record.
+      **Done/Fixed 2026-08-06** — verified: `grep -rn "docs/planning" docs/*.md`
+      returns no matches; the decision was already carried out.
+
+### Vercel GitHub auto-deploy + website SEO/accessibility (2026-07-21)
+
+- [x] **[P2]** **[Needs owner]** `https://sensebridge.vercel.app` resolves
+      but is stale (last built 2026-07-21) — **not** in the current
+      production deployment's alias list (`sensebridge-website.vercel.app`,
+      `sensebridge-trustledger.vercel.app`, and the `-git-main-` variant are;
+      the short name isn't). Attach it in
+      `https://vercel.com/trustledger/sensebridge/settings/domains` →
+      assign to Production. One-time; auto-updates on every future push
+      after that, same as the other three domains already do. (Re-scoped
+      2026-07-25 from the original "confirm it resolves" framing — it does
+      resolve, just not to the current build.)
+      **Done/Fixed 2026-08-06** — `curl -sI` on both hosts now returns the
+      same etag (`8417df1b807f13745da14a4817d06de8`) and `last-modified`,
+      and `diff` on both bodies is empty: the short alias now serves the
+      current production build.
+
+### GitGuardian secret scanning (2026-07-20)
+
+Full session log: `sessions/2026-07-20/1900-PST.md`. Added `ggshield` as a
+third, independent secret scanner alongside the existing Gitleaks
+(pre-commit, pattern-based) and TruffleHog (CI, verified-credential):
+`.gitguardian.yaml` (strict — `exit_zero: false`, no path allowlist),
+`.githooks/pre-commit` (advisory-skip if not installed), a new `ggshield`
+job in `.github/workflows/security.yml` (pinned to the commit behind
+`v1.52.2`), an advisory check in `scripts/setup.sh`, and synced
+`docs/TOOLING.md`/`docs/ENVIRONMENT.md`. Same session also set
+`autoCompactWindow: 100000` and added Effort Level orchestration guidance to
+the global `~/.claude/CLAUDE.md` (personal config, not repo-tracked).
+
+- [x] **[P2]** **[Needs owner]** Add `GITGUARDIAN_API_KEY` to the repo's
+      **Dependabot** secrets too (Settings → Secrets and variables →
+      Dependabot → New repository secret), not just Actions. Every
+      dependabot PR's `Secret scan (GitGuardian)` check failed with `Error:
+      Invalid GitGuardian API key`, which first looked like a bad key value —
+      but PR #53 (a direct, non-dependabot push, 2026-07-28) passed both
+      GitGuardian checks with the *same* Actions secret, proving the key
+      itself is fine. GitHub withholds repository Actions secrets from
+      workflows triggered by Dependabot's `pull_request` events by design
+      (so a malicious dependency bump can't exfiltrate them), so the value
+      resolved empty in those runs — not invalid. No key rotation needed;
+      reuse the existing value in the separate Dependabot secret store. Not
+      P1: it only affects the optional GitGuardian check on dependabot's own
+      PRs, which are otherwise fine to verify and merge manually.
+      **Done/Fixed 2026-08-06** — `gh api
+      repos/kevinle3212/sensebridge/dependabot/secrets` lists
+      `GITGUARDIAN_API_KEY`. Confirmed working on dependabot PR #66: `gh pr
+      checks 66` shows `Secret scan (GitGuardian)` and `GitGuardian Security
+      Checks` both passing.
+
+### Full markdown documentation sync sweep (2026-07-20)
+
+Full findings in `audits/documentation/20260720-194209-full-markdown-sync-sweep.md`.
+Clear-cut dangling links and stale facts were fixed directly in that same
+pass (`security/CHECKLIST.md`, `audits/AGENT-GUIDE.md`, `docs/PRIVACY.md`,
+`GAPS.md`, `PROJECT_OVERVIEW.md`, `SETUP-STATUS.md`, `models/README.md`); the
+items below need an owner decision or a `git` action and were left untouched.
+
+- [x] **[P3]** **[Needs owner]** `GOVERNANCE.md:34` says architecture
+      decisions "are recorded as they're made in `docs/adr/`," but
+      `docs/adr/` does not exist anywhere in the repo (verified via `find`).
+      Needs an owner call: either start actually recording ADRs there (and
+      create the directory with a first entry or a README describing the
+      convention), or reword the claim to reflect that this practice hasn't
+      started yet. Left unfixed because either fix is a judgment call, not a
+      mechanical correction.
+      **Done/Fixed 2026-08-06** — `GOVERNANCE.md:33-36` now reads "...
+      recorded as they're made, with the reasoning, not just the outcome —
+      a dedicated `docs/adr/` directory doesn't exist yet; today
+      `docs/ARCHITECTURE.md` and inline doc comments carry that reasoning
+      instead," the reword option from this item. `docs/adr/` still doesn't
+      exist (re-verified), and the claim no longer overstates it.
+
+### Global Claude Code tooling build-out (2026-07-19)
+
+One piece of a personal, machine-wide tooling build-out touched this repo
+directly — see the BMAD-METHOD row in `docs/TOOLING.md`'s "Project-level"
+table. (The rest of that build-out is machine-scoped and tracked in
+`NOTES.local.md`, not here.)
+
+- [x] **[P2]** **[Needs owner]** `docs/TOOLING.md` already documents claude-mem as
+      **deliberately disabled at project scope for SenseBridge** (duplicate-memory
+      risk + prior local-surface issues — see that entry). The global build-out's
+      Phase 5 (not yet started) asks to wire claude-mem to Obsidian for token
+      savings — decide whether that global change should also flip this repo's
+      project-scope override, or stay disabled here regardless of what happens
+      globally, before Phase 5 runs.
+      **Done/Fixed 2026-08-06** — Moot: claude-mem was disabled globally
+      (not just project-scoped) on 2026-07-31 per `NOTES.local.md`'s
+      16:44/17:02 PDT handoff entries — it had spent ~3.4M tokens while
+      broken since 2026-07-27 (upstream #2188), so no Phase 5
+      Obsidian-wiring plan remains to react to. `docs/TOOLING.md`'s BMAD
+      section was rewritten in the same pass and no longer carries a
+      claude-mem row anywhere (verified via grep — zero hits).
+
+### Owner actions pending (from the `app/` scaffold session, 2026-07-17)
+
+- [x] **[P2]** **[Needs owner]** Install the CodeRabbit GitHub App —
+      <https://github.com/apps/coderabbitai/installations/new>, "Only select
+      repositories" → `sensebridge`. Requires owner consent on github.com,
+      no API/token path.
+      **Done/Fixed 2026-08-06** — installed: `coderabbitai` posted review
+      comments on PR #67 and #68 (`gh pr view 68 --json comments`).
+
+- [x] **[P2]** **[Needs owner]** Set the real bundle identifier and Apple
+      Developer signing team in `app/project.yml` (`PRODUCT_BUNDLE_IDENTIFIER`
+      is currently the placeholder `com.sensebridge.app`, no
+      `DEVELOPMENT_TEAM` set) once you have an Apple Developer identity — see
+      `docs/DISTRIBUTION.md`.
+      **Done/Fixed 2026-08-06** — `com.sensebridge.app` is registered to the
+      project's Apple Developer team and `DEVELOPMENT_TEAM` is set in the
+      gitignored `app/Config/Signing.local.xcconfig`; device build/install
+      confirmed working end-to-end.
+
+- [x] **[P3]** **[Needs owner]** Enable GitHub Discussions if you want the
+      issue-template support link to resolve (Settings → General →
+      Features).
+      **Done/Fixed 2026-08-06** — confirmed via `gh api
+      repos/kevinle3212/sensebridge --jq .has_discussions` → `true`.
+
+### Basic screen functionality wired to mock data (2026-07-23)
+
+- [x] **[P1]** **[Needs owner]** If the simulator still won't open in the
+      Xcode GUI (CLI build/install/launch all succeeded cleanly this
+      session), check whether the last-selected run destination is the
+      physical device rather than a simulator — the free-account 7-day
+      sideload signing window may have expired (see
+      `sessions/2026-07-23/2100-PST.md` for the CLI evidence ruling out a
+      project-level break).
+      **Retired 2026-08-06 (owner-confirmed superseded, not a fix)** —
+      re-verified before retiring: `grep`ed every session log for a
+      recurrence of the Xcode-GUI issue (none since 2026-07-23), and
+      confirmed `npm run app:install` (`scripts/app.sh`'s device path,
+      `-destination "platform=iOS,id=$device"`) has been the working,
+      repeatedly-used device path across 5 sessions from 2026-08-04 through
+      2026-08-06. The Xcode GUI simulator path this item was about is no
+      longer part of the workflow at all, so the original question is moot,
+      not answered. Owner confirmed the Xcode GUI path isn't in use; if that
+      changes, this is a fresh investigation, not a reopen.
+
+## Archived 2026-08-07
+
+### Ponytail + caveman global plugin setup (2026-08-06, 1400 PST)
+
+Installed `caveman@caveman` (JuliusBrussee/caveman) as a user-scope Claude
+Code plugin alongside the already-installed `ponytail@ponytail`, per
+`~/.claude/settings.json` §17 "Ponytail + Caveman". Default level pinned to
+`lite` in `~/.config/caveman/config.json`. Global config only, nothing
+sensebridge-tracked changed.
+
+- [x] **Done 2026-08-06.** `claude plugin install` (run via Bash) resolves
+      `CLAUDE_CONFIG_DIR`, which is set to
+      `~/.claude-swap-backup/sessions/1-kevinle3212_gmail.com` for this
+      account, not `~/.claude` directly — so the first install landed there,
+      not at the `~/.claude/plugins` path checked earlier. `settings.json`/
+      `CLAUDE.md` are symlinks into that swap-backup dir, so those checks
+      were fine; `plugins/` is a real (non-symlinked) directory there, so
+      the cache check was looking in the wrong place. Confirmed the real
+      install path (`.../plugins/cache/caveman/caveman/ec83e5bace4c`) and
+      manually fired `src/hooks/caveman-activate.js` for this session —
+      `.caveman-active` flag now reads `lite`. Future real session starts
+      fire the hook automatically via the same `SessionStart` mechanism
+      already proven reliable for ponytail; no further action needed unless
+      a fresh session fails to show the `[CAVEMAN]` behavior.
+
+- [x] **Done 2026-08-06.** Wired `statusLine` in `settings.json` to chain
+      both `ponytail-statusline.sh` and `caveman-statusline.sh` (Kevin
+      approved; neither had a badge configured, so did both rather than
+      leaving one half-done). Reviewed both scripts first — read-only,
+      symlink/injection-hardened, no network calls. Verified live output:
+      `[PONYTAIL] [CAVEMAN:LITE]`.
+
+### Dead-weight plugins/connectors follow-through (2026-08-04, 23:00 PST)
+
+- [x] **[Needs owner] [P3]** Decide whether `privacy-legal@claude-for-legal`,
+  `humanizer@humanizer`, and `frontend-design@claude-plugins-official` should
+  be disabled globally, not just in sensebridge. Owner approved disabling the
+  first two (2026-08-06) — `~/.claude/settings.json` `enabledPlugins` now sets
+  both to `false`. `frontend-design@claude-plugins-official` still undecided;
+  left `true`.

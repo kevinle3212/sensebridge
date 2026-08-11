@@ -2,7 +2,7 @@
 name: documentation-reviewer
 description: Owns documentation accuracy and keeping docs in sync with behavior. Use after any change to behavior, build steps, models, or workflows, and before merging doc-only changes.
 tools: Read, Grep, Glob, Bash, Edit, Skill
-model: sonnet
+model: claude-sonnet-5
 color: cyan
 ---
 

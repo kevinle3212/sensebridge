@@ -1,13 +1,11 @@
 ---
 /** Renders the honesty-over-hype disclaimer note shown near the page footer. */
 import styles from "./Disclaimer.module.scss";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 ---
 
-<aside class={styles.disclaimer} role="note" aria-label={t.disclaimer.ariaLabel}>
+<aside class={styles.disclaimer} role="note" aria-label={m.disclaimer_aria_label()}>
   <div class="wrap">
-    <p class={styles.text}>{t.disclaimer.text}</p>
+    <p class={styles.text}>{m.disclaimer_text()}</p>
   </div>
 </aside>

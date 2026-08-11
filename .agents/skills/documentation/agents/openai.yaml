@@ -1,0 +1,4 @@
+interface:
+  display_name: "Documentation"
+  short_description: "behaviour, build steps, models, permissions, or workflows"
+  default_prompt: "Use $documentation when behaviour, build steps, models, permissions, or workflows change and the docs must stay accurate."

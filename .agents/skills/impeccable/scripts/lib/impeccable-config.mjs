@@ -156,7 +156,10 @@ function normalizeDetectionConfigForWrite(config) {
     }));
   }
   if (Array.isArray(config?.ignoreFiles)) {
-    out.ignoreFiles = uniqueStrings(config.ignoreFiles.flatMap(v => typeof v === 'string' && v.trim() ? [v.trim()] : []));
+    out.ignoreFiles = uniqueStrings(config.ignoreFiles.reduce((acc, v) => {
+      if (typeof v === 'string' && v.trim()) acc.push(v.trim());
+      return acc;
+    }, []));
   }
   out.ignoreValues = normalizeIgnoreValueEntries(config?.ignoreValues || []);
   if (config?.advisoryRules === 'include' || config?.advisoryRules === 'exclude') {
@@ -354,7 +357,10 @@ export function normalizeIgnoreValueEntries(entries) {
     const normalized = { rule, value };
     const files = uniqueStrings([
       ...(typeof entry.file === 'string' && entry.file.trim() ? [entry.file.trim()] : []),
-      ...(Array.isArray(entry.files) ? entry.files.flatMap(v => typeof v === 'string' && v.trim() ? [v.trim()] : []) : []),
+      ...(Array.isArray(entry.files) ? entry.files.reduce((acc, v) => {
+        if (typeof v === 'string' && v.trim()) acc.push(v.trim());
+        return acc;
+      }, []) : []),
     ]);
     if (files.length > 0) normalized.files = files;
     // Key order is rule, value, files, createdAt, reason and must stay that way:

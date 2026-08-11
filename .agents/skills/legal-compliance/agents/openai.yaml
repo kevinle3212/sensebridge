@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legal Compliance"
+  short_description: "a change touches privacy, data handling, permissions,"
+  default_prompt: "Use $legal-compliance when a change touches privacy, data handling, permissions, biometric or camera capture, spoken safety-adjacent output, App Store positioning, or the legal/ documents."

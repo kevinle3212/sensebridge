@@ -22,7 +22,7 @@ struct HomeView: View {
                     .accessibilityHint("Gives cautious alerts about what may be nearby. Not a safety device.")
                 NavigationLink("Sounds") { SoundAlertsView() }
                     .accessibilityLabel("Sound alerts")
-                    .accessibilityHint("Announces recognized sounds nearby.")
+                    .accessibilityHint("Announces recognized sounds nearby. Not a safety device.")
                 NavigationLink("Settings") { SettingsView() }
                     .accessibilityLabel("Settings")
                     .accessibilityHint("Opens display language settings.")

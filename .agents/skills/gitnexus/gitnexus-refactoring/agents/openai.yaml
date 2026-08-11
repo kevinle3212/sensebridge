@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gitnexus Refactoring"
+  short_description: "the user wants to rename, extract, split, move, or"
+  default_prompt: "Use $gitnexus-refactoring when the user wants to rename, extract, split, move, or restructure code safely."

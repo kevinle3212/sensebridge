@@ -1,0 +1,4 @@
+interface:
+  display_name: "CI Green Gate"
+  short_description: "merging, releasing, or cutting a beta build"
+  default_prompt: "Use $ci-green-gate before merging, releasing, or cutting a beta build."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Help"
+  short_description: "Analyzes current state and user query to answer BMad"
+  default_prompt: "Use $bmad-help when user asks for help, bmad help, what to do next, or what to start with in BMad."

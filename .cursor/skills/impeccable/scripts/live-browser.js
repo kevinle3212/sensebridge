@@ -3766,7 +3766,10 @@
     const container = copyEditContainerContext(contextElement);
     if (container) for (const op of ops) op.container = container;
     try {
-      const res = await fetch('http://localhost:' + PORT + '/manual-edit-stash', {
+      // Token in the query string as well as the body: the URL token is what
+      // authorizes the CORS preflight when the page runs on a non-loopback
+      // dev host (ddev, Valet), since the preflight carries no request body.
+      const res = await fetch('http://localhost:' + PORT + '/manual-edit-stash?token=' + encodeURIComponent(TOKEN), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -7150,7 +7153,10 @@
       console.debug('[impeccable] Dropped optional live event:', err);
       return null;
     }
-    const doSend = () => fetch('http://localhost:' + PORT + '/events', {
+    // Token in the query string as well as the body: the URL token is what
+    // authorizes the CORS preflight when the page runs on a non-loopback
+    // dev host (ddev, Valet), since the preflight carries no request body.
+    const doSend = () => fetch('http://localhost:' + PORT + '/events?token=' + encodeURIComponent(TOKEN), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(msg),
@@ -11969,7 +11975,9 @@ void main() {
       rules: [
         ...(md.colors?.rules || []).map((r) => ({ ...r, section: 'colors' })),
         ...(md.typography?.rules || []).map((r) => ({ ...r, section: 'typography' })),
+        ...(md.layout?.rules || []).map((r) => ({ ...r, section: 'layout' })),
         ...(md.elevation?.rules || []).map((r) => ({ ...r, section: 'elevation' })),
+        ...(md.shapes?.rules || []).map((r) => ({ ...r, section: 'shapes' })),
       ],
       dos: md.dosDonts?.dos || [],
       donts: md.dosDonts?.donts || [],

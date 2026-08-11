@@ -1,0 +1,4 @@
+interface:
+  display_name: "Capitalization"
+  short_description: "writing or reviewing any heading, title, label, button,"
+  default_prompt: "Use $capitalization when writing or reviewing any heading, title, label, button, status chip, or full-sentence copy — determines whether it takes Title Case or sentence case, and how to apply each correctly."

@@ -106,6 +106,12 @@ no-box-shadow/Flat-By-Default rule, and the no-filled-CTA rule are **no longer
 constraints**. What ships is governed by craft, not by those rules — this doc
 describes the system actually built under that directive.
 
+**Glassmorphism is an embraced pattern, not an anti-reference (owner
+confirmed 2026-08-05).** `glass-surface` (§0's `glass-slate` token, backdrop
+blur) already ships on hero/nav; treat it, and further translucency/motion
+built on it, as in line with this doctrine — `PRODUCT.md`'s anti-reference
+list has been updated to match.
+
 Three bars did **not** move and never will without an explicit owner decision:
 
 - **Honesty.** Pre-launch is stated plainly; nothing implies a download

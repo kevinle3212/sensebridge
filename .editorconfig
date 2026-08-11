@@ -16,8 +16,10 @@ insert_final_newline = true
 [{.mcp.json,.cursor/mcp.json,.copilot/mcp-config.json,.windsurf/mcp_config.json,.vscode/mcp.json}]
 indent_style = tab
 
-# Shell scripts, git hooks, and standalone utility scripts (no Prettier
-# coverage — that's scoped to website/, see docs/TOOLING.md) are tab-indented
-# throughout the repo; pin it so the editor's indentation guides match.
-[{*.sh,.githooks/*,tools/*.mjs,tools/*.js}]
+# Shell scripts and git hooks are tab-indented throughout the repo; pin it so
+# the editor's indentation guides match. `tools/*.mjs`/`.claude/hooks/*.mjs`
+# used to be listed here too, but they were actually space-indented in
+# practice — now that prettier.config.mjs covers them (2-space, its
+# default), this block is scoped to the shell files it's actually true for.
+[{*.sh,.githooks/*}]
 indent_style = tab

@@ -50,9 +50,10 @@ distribution to *other people's* phones works, see
    scripts/setup.sh
    ```
 
-   Checks your toolchain and enables the repo's git hooks (secret scanning,
-   lint, commit-message and workflow-file checks) — only relevant if you
-   plan to contribute code, not to just run the app.
+   Checks your toolchain, offers to install anything missing via Homebrew,
+   and enables the repo's git hooks (secret scanning, lint, commit-message
+   and workflow-file checks) — only relevant if you plan to contribute code,
+   not to just run the app.
 
 That's it — the app should now be on your phone. Turn on **VoiceOver**
 (Settings → Accessibility → VoiceOver, or triple-click the side button if

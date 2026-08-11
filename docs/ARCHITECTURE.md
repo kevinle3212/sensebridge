@@ -190,6 +190,24 @@ Foundation Models requires Apple Intelligence (iPhone 15 Pro+); implement
 availability checks and a graceful fallback (label lists instead of composed
 sentences) for unsupported devices.
 
+### Sound Alerts data flow
+
+One capture per tap, like Reading/Identify/Describe, not a continuous loop
+like hands-free awareness: `MicrophoneSensingSource.record(duration:)`
+captures a few seconds of audio as WAV `Data`, held in memory and deleted
+from its temporary file before the call returns — nothing is ever persisted.
+That `Data` feeds two independent `SoundService` implementations at once —
+`BuiltInSoundClassifier` (Apple's on-device `SNClassifySoundRequest`
+taxonomy) and `CustomSoundClassifier` (a bundled Create ML model trained on
+a filtered ESC-50 subset, see [AI-MODELS.md](AI-MODELS.md) and
+[`models/sound-classifier/README.md`](../models/sound-classifier/README.md))
+— run concurrently, both filtered to the same curated class list.
+`CombinedSoundClassifier` keeps whichever produced the single
+highest-confidence `.detectedSound` record, rather than treating one model
+as primary and the other as fallback: they were trained independently, so
+neither is inherently more trustworthy. `Phrasing` then hedges the result
+the same way every other feature's output is hedged.
+
 ## Mobile project shape
 
 The reasoning core lives in a separate SwiftPM package, not inside the app

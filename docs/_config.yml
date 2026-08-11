@@ -14,12 +14,6 @@ baseurl: /sensebridge
 plugins:
   - jekyll-seo-tag
 
-# Planning docs are historical/internal working notes, not curated
-# documentation — kept out of the published site, matching the curation in
-# ../WIKI.md, which doesn't list them either.
-exclude:
-  - planning
-
 # Every markdown page uses the custom "Signal Path" layout; individual pages
 # don't need their own `layout:` front matter key.
 defaults:

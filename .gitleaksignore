@@ -7,3 +7,4 @@
 # Prefer fixing or scoping the pattern in .gitleaks.toml over ignoring a
 # specific line — this file is for genuine one-off false positives only.
 _bmad/_config/files-manifest.csv:generic-api-key:47
+.agents/skill-lock.json:generic-api-key:138

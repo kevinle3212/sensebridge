@@ -3,6 +3,13 @@ name: Dependabot auto-merge
 # Auto-approve and enable auto-merge for Dependabot patch and minor updates once
 # required checks pass. Major updates are left for manual review. Requires
 # "Allow auto-merge" enabled in repository settings and branch protection on main.
+#
+# dependabot.yml groups dev-dependencies into a single PR per ecosystem, and
+# fetch-metadata's top-level `update-type` output can't represent a grouped
+# PR's highest bump reliably (known upstream limitation). Instead we read
+# `updated-dependencies-json` (per-dependency `updateType`, added to cover
+# this exact case) and require every dependency in the PR/group to be
+# patch/minor before approving.
 
 on: pull_request_target
 
@@ -20,8 +27,19 @@ jobs:
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check every dependency is patch or minor
+        id: gate
+        env:
+          DEPENDENCIES_JSON: ${{ steps.meta.outputs.updated-dependencies-json }}
+        run: |
+          if [ -z "$DEPENDENCIES_JSON" ]; then
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          eligible=$(jq '[.[] | (.updateType == "version-update:semver-patch" or .updateType == "version-update:semver-minor")] | all' <<< "$DEPENDENCIES_JSON")
+          echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
       - name: Enable auto-merge for patch and minor updates
-        if: steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor'
+        if: steps.gate.outputs.eligible == 'true'
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --squash "$PR_URL"

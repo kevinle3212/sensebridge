@@ -24,6 +24,29 @@ Apple's frameworks is recorded with its license in
 attention here (two of the strongest-looking candidate models, Ultralytics
 YOLO and Apple FastVLM, are license traps this project deliberately avoids).
 
+The Sound Alerts feature's custom classifier
+(`app/SenseBridge/Resources/SenseBridgeSoundClassifier.mlmodel`) is trained
+in-house via Create ML — no third-party weights — on individually
+license-verified clips from [Freesound](https://freesound.org/) (`dog_bark`
+and `baby_cry` come from the CC BY 3.0-licensed
+[ESC-10](https://github.com/karoldvl/ESC-50#esc-10) subset of
+[ESC-50](https://github.com/karoldvl/ESC-50) by Karol J. Piczak; the other
+five classes were sourced clip-by-clip directly from Freesound, each
+verified against its own license page rather than trusted from a
+compilation's blanket claim — see
+[`models/sound-classifier/README.md`](models/sound-classifier/README.md) for
+why). The full per-clip record (author, license, source URL) is
+[`models/sound-classifier/freesound-training-data/MANIFEST.csv`](models/sound-classifier/freesound-training-data/MANIFEST.csv).
+Most clips are [CC0](https://creativecommons.org/publicdomain/zero/1.0/) (no
+attribution required); two require it under
+[CC BY 3.0](https://creativecommons.org/licenses/by/3.0/):
+
+- "Car Horn Honk" by [etcd_09](https://freesound.org/people/etcd_09/sounds/435497/)
+- "sim police siren.wav" by [THE_bizniss](https://freesound.org/people/THE_bizniss/sounds/58375/)
+
+No modifications were made to any clip beyond format conversion for
+training.
+
 The marketing site's pre-rendered "natural voice" narration
 (`website/public/audio/main.mp3`) was generated with
 [elevenlabs.io](https://elevenlabs.io), using the "Janet" voice from its Voice
@@ -69,10 +92,11 @@ integrations (IndexNow, DataForSEO, Google APIs) and Playwright scripts were
 deliberately excluded; see the adaptation header in `seo-technical` and
 [`docs/TOOLING.md`](docs/TOOLING.md).
 
-- [`.claude/skills/seo-schema`](.claude/skills/seo-schema/SKILL.md) (mirrored
-  to all five harness skill dirs via `tools/sync-skills.mjs`)
-- [`.claude/skills/seo-technical`](.claude/skills/seo-technical/SKILL.md)
-  (mirrored the same way)
+- [`.agents/skills/seo-schema`](.agents/skills/seo-schema/SKILL.md) (canonical,
+  shared across harnesses via `.agents/manifest.json`;
+  `.claude/skills/seo-schema` is a symlink to it)
+- [`.agents/skills/seo-technical`](.agents/skills/seo-technical/SKILL.md)
+  (same setup)
 
 The Swift skills and review agents below were adapted from
 [ECC](https://github.com/affaan-m/ecc) (v2.0.0, commit `ed38744`), which is MIT

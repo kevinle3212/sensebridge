@@ -1,0 +1,4 @@
+interface:
+  display_name: "Swift Protocol DI Testing"
+  short_description: "making Swift code testable"
+  default_prompt: "Use $swift-protocol-di-testing when making Swift code testable — abstract external dependencies behind small, focused protocols and inject mocks, so tests are deterministic and run without I/O or hardware."

@@ -7,9 +7,7 @@
 import styles from "./Accessibility.module.scss";
 import ReadAloud from "./ReadAloud.astro";
 import SpineNode from "./SpineNode.astro";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 ---
 
 <section
@@ -22,10 +20,10 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
        Spine"). -->
   <SpineNode top="4rem" />
   <div class="wrap section-columns">
-    <h2 id="accessibility-heading" class="section-heading">{t.accessibility.heading}</h2>
+    <h2 id="accessibility-heading" class="section-heading">{m.accessibility_heading()}</h2>
     <div>
-      <p class={styles.body} data-reveal-item>{t.accessibility.body}</p>
-      <p class={styles["lead-in"]} data-reveal-item>{t.accessibility.leadIn}</p>
+      <p class={styles.body} data-reveal-item>{m.accessibility_body()}</p>
+      <p class={styles["lead-in"]} data-reveal-item>{m.accessibility_lead_in()}</p>
       <ReadAloud />
     </div>
   </div>

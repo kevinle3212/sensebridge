@@ -7,6 +7,7 @@
 // for this file (it runs before Vite's env handling). See scripts/load-env.js.
 import "./scripts/load-env.js";
 import { fileURLToPath } from "node:url";
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
@@ -87,10 +88,14 @@ export default defineConfig({
         ]
       : []),
   ],
-  // Built-in i18n routing (no new dependency, per the language-support
-  // design spec): default locale "en" is unprefixed at "/" (Astro's default
-  // routing.prefixDefaultLocale: false), "es"/"vi" are prefixed at "/es/"
-  // and "/vi/". See src/i18n/ for the dictionaries this drives.
+  // Built-in i18n routing: default locale "en" is unprefixed at "/" (Astro's
+  // default routing.prefixDefaultLocale: false), "es"/"vi" are prefixed at
+  // "/es/" and "/vi/". Translated strings live in Paraglide's message
+  // catalogs (messages/*.json, compiled to src/paraglide/ by the vite
+  // plugin below) — revisited 2026-08-07 from the hand-rolled
+  // src/i18n/*.ts dictionaries this repo started with; see
+  // docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md Unit C for
+  // why.
   i18n: {
     defaultLocale: "en",
     locales: ["en", "es", "vi"],
@@ -126,6 +131,19 @@ export default defineConfig({
       __SENTRY_DEBUG__: "false",
       __SENTRY_TRACING__: "false",
     },
+    plugins: [
+      // Compiles messages/*.json into tree-shakable message functions at
+      // src/paraglide/. `strategy` matches this site's own SSG routing above
+      // rather than Paraglide's own URL-pattern config: src/middleware.ts sets
+      // the locale explicitly per Astro's Static Site Generation guide, since
+      // a static render has no request to read a locale from.
+      paraglideVitePlugin({
+        project: "./project.inlang",
+        outdir: "./src/paraglide",
+        emitTsDeclarations: true,
+        strategy: ["url", "globalVariable", "baseLocale"],
+      }),
+    ],
     resolve: {
       alias: {
         "@styles": fileURLToPath(new URL("./src/styles", import.meta.url)),

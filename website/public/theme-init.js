@@ -6,6 +6,13 @@
 //
 // External (not inline) so the site's CSP can be script-src 'self' with no
 // 'unsafe-inline' or per-script hash — see vercel.json.
+//
+// `sb-theme` deliberately stays on `localStorage` rather than moving to
+// IndexedDB with the site's other client storage (see idb-store.ts,
+// monitoring-consent.ts, debug.ts): this script must read it synchronously,
+// before first paint, to avoid a flash of the wrong theme, and IndexedDB has
+// no synchronous main-thread read. See TODO.md's "Add localStorage migration
+// to databases" entry.
 (() => {
   const STORAGE_KEY = "sb-theme";
   const media = window.matchMedia("(prefers-color-scheme: dark)");

@@ -39,6 +39,13 @@ public struct Settings: Sendable, Equatable, Codable {
     /// preferences type; a `Bool` is not a framework dependency, so the
     /// protocol-seams invariant is untouched.
     public var crashReportingEnabled: Bool
+    /// Whether the user has completed (or explicitly skipped) the first-run
+    /// onboarding flow. `false` for a brand-new install (`init()`'s
+    /// default); a missing key on *decode* means a settings blob already
+    /// existed before this field did, which only a pre-existing install
+    /// upgrading into this build can be true of — see `SettingsTests
+    /// .decodingSettingsPersistedBeforeOnboardingExistedYieldsCompleted`.
+    public var hasCompletedOnboarding: Bool
 
     public init(
         outputProfile: OutputProfile = .blind,
@@ -53,7 +60,8 @@ public struct Settings: Sendable, Equatable, Codable {
         torchDefaultOn: Bool = false,
         narrationIntervalSeconds: Double = 6,
         awarenessAlertDistanceMeters: Double = 1.5,
-        crashReportingEnabled: Bool = false
+        crashReportingEnabled: Bool = false,
+        hasCompletedOnboarding: Bool = false
     ) {
         self.outputProfile = outputProfile
         self.speechRate = speechRate
@@ -68,13 +76,14 @@ public struct Settings: Sendable, Equatable, Codable {
         self.narrationIntervalSeconds = narrationIntervalSeconds
         self.awarenessAlertDistanceMeters = awarenessAlertDistanceMeters
         self.crashReportingEnabled = crashReportingEnabled
+        self.hasCompletedOnboarding = hasCompletedOnboarding
     }
 
     private enum CodingKeys: String, CodingKey {
         case outputProfile, speechRate, cloudReasoningEnabled, language
         case speechPitch, speechVolume, hapticsEnabled, hapticIntensity, preferredLens, torchDefaultOn
         case narrationIntervalSeconds, awarenessAlertDistanceMeters
-        case crashReportingEnabled
+        case crashReportingEnabled, hasCompletedOnboarding
     }
 
     /// Custom decode so settings persisted before each field below existed
@@ -106,6 +115,9 @@ public struct Settings: Sendable, Equatable, Codable {
         crashReportingEnabled = try container.decodeIfPresent(
             Bool.self, forKey: .crashReportingEnabled
         ) ?? false
+        hasCompletedOnboarding = try container.decodeIfPresent(
+            Bool.self, forKey: .hasCompletedOnboarding
+        ) ?? true
     }
 }
 

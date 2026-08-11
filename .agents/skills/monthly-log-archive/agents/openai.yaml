@@ -1,0 +1,4 @@
+interface:
+  display_name: "Monthly Log Archive"
+  short_description: "Use at the start of any session where today's local date is"
+  default_prompt: "Use $monthly-log-archive for its listed purpose."

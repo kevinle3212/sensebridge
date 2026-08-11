@@ -11,9 +11,26 @@ struct SenseBridgeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
                 .environment(environment)
                 .environment(\.locale, environment.settings.language.locale ?? .autoupdatingCurrent)
+        }
+    }
+}
+
+/// Branches between the first-run walkthrough and the home list. A separate
+/// view (rather than an `if` inline in `SenseBridgeApp.body`) so it can read
+/// `environment.settings.hasCompletedOnboarding` reactively — `@State` in
+/// the App type itself doesn't re-render `body` when a nested `@Observable`
+/// property changes.
+private struct RootView: View {
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        if environment.settings.hasCompletedOnboarding {
+            HomeView()
+        } else {
+            OnboardingView()
         }
     }
 }

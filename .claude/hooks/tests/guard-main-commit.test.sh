@@ -13,13 +13,16 @@ set -uo pipefail
 HOOK="$(cd "$(dirname "$0")/.." && pwd)/guard-main-commit.sh"
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 
-# The guard is a no-op off main, which would turn every "denied" case into a
-# false pass. Skip rather than lie about coverage.
+# Cases that lean on the *session's* repo are a no-op off main, which would turn
+# every "denied" case into a false pass. They are skipped rather than lying
+# about coverage. The scratch-repo cases at the bottom bring their own branch
+# state and always run — they are the regression tests that matter most, and
+# gating the whole file on this repo's branch meant they vanished on any working
+# branch, which is nearly always.
 branch=$(git -C "$ROOT" branch --show-current 2>/dev/null || true)
-if [ "$branch" != "main" ]; then
-  echo "guard-main-commit: SKIPPED — HEAD is on '$branch', guard only acts on main"
-  exit 0
-fi
+SESSION_REPO_ON_MAIN=$([ "$branch" = "main" ] && echo yes || echo no)
+[ "$SESSION_REPO_ON_MAIN" = yes ] ||
+  echo "guard-main-commit: session-repo cases SKIPPED — HEAD is on '$branch'"
 
 # Built at run time so this file never contains a literal `git commit` — the
 # very string the sibling guards scan for.
@@ -39,8 +42,13 @@ decision() {
   printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecision // "allow"'
 }
 
+# Asserts one case. A trailing "session-repo" marks a case whose expectation
+# only holds while this repo is on main; those are skipped elsewhere.
 check() {
   local name=$1 want=$2 cmd=$3 got
+  if [ "${4:-}" = "session-repo" ] && [ "$SESSION_REPO_ON_MAIN" != yes ]; then
+    return
+  fi
   got=$(decision "$cmd")
   if [ "$got" = "$want" ]; then
     pass=$((pass + 1))
@@ -51,10 +59,10 @@ check() {
 }
 
 # --- real commits must be denied -------------------------------------------
-check "bare commit"                deny  "git $VERB -m x"
-check "commit with a quoted message" deny "git $VERB -m \"fix: a thing\""
-check "commit later in a chain"    deny  "git add -A && git $VERB -m x"
-check "commit through sh -c"       deny  "sh -c \"git $VERB -m x\""
+check "bare commit"                deny  "git $VERB -m x"                       session-repo
+check "commit with a quoted message" deny "git $VERB -m \"fix: a thing\""       session-repo
+check "commit later in a chain"    deny  "git add -A && git $VERB -m x"         session-repo
+check "commit through sh -c"       deny  "sh -c \"git $VERB -m x\""             session-repo
 
 # --- mentions are data, not commands ---------------------------------------
 check "verb inside a double-quoted echo" allow "echo \"then run: git $VERB -m x\""
@@ -64,6 +72,49 @@ check "verb inside a heredoc body"       allow "$(printf 'cat <<EOF\ngit %s -m x
 # --- unrelated commands pass through ---------------------------------------
 check "read-only git"    allow "git status --porcelain"
 check "no git at all"    allow "npm run build"
+
+# --- the guard must read the repo the command targets, not the session's ----
+#
+# Both halves of this bit for real on 2026-08-10. `git -C <path> commit` carries
+# no literal "git commit" and skipped the guard outright, while `cd <path> &&
+# git commit` was denied on *this* repo's branch — refusing a commit to a
+# clean feature branch in another repo because sensebridge was on main.
+#
+# Real throwaway repos, because the whole defect was about resolving a branch
+# from the wrong directory; a fixture that only pretends to be a repo would pass
+# against the buggy version too.
+SCRATCH=$(cd "$(mktemp -d)" && pwd -P)
+trap 'rm -rf "$SCRATCH"' EXIT INT TERM
+
+# One repo on main, one on a feature branch, each with a commit so HEAD is born.
+for repo in on-main on-branch; do
+  git init -q "$SCRATCH/$repo"
+  git -C "$SCRATCH/$repo" -c user.email=t@t -c user.name=t \
+    "$VERB" -q --allow-empty -m "chore: seed" 2>/dev/null
+  git -C "$SCRATCH/$repo" branch -M main
+done
+git -C "$SCRATCH/on-branch" checkout -q -b feat/thing
+
+check "-C into a repo on main"        deny  "git -C $SCRATCH/on-main $VERB -m \"fix: x\""
+check "-C into a repo on a branch"    allow "git -C $SCRATCH/on-branch $VERB -m \"fix: x\""
+check "cd into a repo on main"        deny  "cd $SCRATCH/on-main && git $VERB -m \"fix: x\""
+check "cd into a repo on a branch"    allow "cd $SCRATCH/on-branch && git $VERB -m \"fix: x\""
+check "cd separated by a semicolon"   deny  "cd $SCRATCH/on-main; git $VERB -m \"fix: x\""
+check "cd with a quoted path"         deny  "cd \"$SCRATCH/on-main\" && git $VERB -m \"fix: x\""
+check "cd inside a subshell"          deny  "(cd $SCRATCH/on-main && git $VERB -m \"fix: x\")"
+check "--git-dir into a repo on main" deny  "git --git-dir=$SCRATCH/on-main/.git --work-tree=$SCRATCH/on-main $VERB -m \"fix: x\""
+
+# A quote is a boundary before `cd` too. Anchoring only on shell operators
+# missed every `sh -c "cd <path> && ..."` shape: the quote after `-c` is not an
+# operator, so the target fell back to the session cwd and the commit was judged
+# against the wrong repo — the same false denial the `cd` handling was added to
+# fix, reached by a different shape. Both polarities are pinned, because reading
+# the wrong repo can deny a legal commit as easily as it can permit a bad one.
+check "sh -c into a repo on main"        deny  "sh -c \"cd $SCRATCH/on-main && git $VERB -m x\""
+check "sh -c into a repo on a branch"    allow "sh -c \"cd $SCRATCH/on-branch && git $VERB -m x\""
+check "sh -c single-quoted, on main"     deny  "sh -c 'cd $SCRATCH/on-main && git $VERB -m x'"
+check "bash -c into a repo on a branch"  allow "bash -c \"cd $SCRATCH/on-branch && git $VERB -m x\""
+check "sh -c with -C into a repo on main" deny "sh -c \"git -C $SCRATCH/on-main $VERB -m x\""
 
 echo "guard-main-commit: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]

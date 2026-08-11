@@ -14,8 +14,9 @@
 import { getRelativeLocaleUrl } from "astro:i18n";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import CowHoleIllustration from "./CowHoleIllustration.astro";
-import { useTranslations, type Locale } from "../i18n";
-import { findStatus, statusClass } from "../data/http-status";
+import { m } from "../paraglide/messages.js";
+import type { Locale } from "../paraglide/runtime.js";
+import { findStatus, statusClass, type StatusClass } from "../data/http-status";
 
 interface Props {
   /** The HTTP status code this page represents. */
@@ -24,7 +25,6 @@ interface Props {
 }
 
 const { code, locale = (Astro.currentLocale ?? "en") as Locale } = Astro.props;
-const t = useTranslations(locale);
 
 const phrase = findStatus(code)?.phrase ?? "";
 
@@ -32,13 +32,44 @@ const phrase = findStatus(code)?.phrase ?? "";
 // class. Keyed by code rather than by a chain of conditionals so adding another
 // bespoke entry is a one-line change.
 const bespokeCopy: Partial<Record<number, { heading: string; body: string }>> = {
-  400: t.errorPages.badRequest,
-  404: t.errorPages.notFound,
-  500: t.errorPages.serverError,
+  400: {
+    heading: m.error_pages_bad_request_heading({}, { locale }),
+    body: m.error_pages_bad_request_body({}, { locale }),
+  },
+  404: {
+    heading: m.error_pages_not_found_heading({}, { locale }),
+    body: m.error_pages_not_found_body({}, { locale }),
+  },
+  500: {
+    heading: m.error_pages_server_error_heading({}, { locale }),
+    body: m.error_pages_server_error_body({}, { locale }),
+  },
 };
-const copy = bespokeCopy[code] ?? t.errorPages.classes[statusClass(code)];
+const classCopy: Record<StatusClass, { heading: string; body: string }> = {
+  informational: {
+    heading: m.error_pages_class_informational_heading({}, { locale }),
+    body: m.error_pages_class_informational_body({}, { locale }),
+  },
+  success: {
+    heading: m.error_pages_class_success_heading({}, { locale }),
+    body: m.error_pages_class_success_body({}, { locale }),
+  },
+  redirect: {
+    heading: m.error_pages_class_redirect_heading({}, { locale }),
+    body: m.error_pages_class_redirect_body({}, { locale }),
+  },
+  client: {
+    heading: m.error_pages_class_client_heading({}, { locale }),
+    body: m.error_pages_class_client_body({}, { locale }),
+  },
+  server: {
+    heading: m.error_pages_class_server_heading({}, { locale }),
+    body: m.error_pages_class_server_body({}, { locale }),
+  },
+};
+const copy = bespokeCopy[code] ?? classCopy[statusClass(code)];
 
-const label = t.errorPages.statusLabel.replace("{code}", String(code)).replace("{phrase}", phrase);
+const label = m.error_pages_status_label({ code, phrase }, { locale });
 ---
 
 <BaseLayout title={label} noindex ambient={false} pageLoader={false}>
@@ -48,7 +79,9 @@ const label = t.errorPages.statusLabel.replace("{code}", String(code)).replace("
       <p class="status-label">{label}</p>
       <h1>{copy.heading}</h1>
       <p class="body">{copy.body}</p>
-      <a class="back-home" href={getRelativeLocaleUrl(locale, "/")}>{t.errorPages.backHome}</a>
+      <a class="back-home" href={getRelativeLocaleUrl(locale, "/")}
+        >{m.error_pages_back_home({}, { locale })}</a
+      >
     </div>
   </section>
 </BaseLayout>

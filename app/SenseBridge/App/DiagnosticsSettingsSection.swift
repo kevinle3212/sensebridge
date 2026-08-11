@@ -36,6 +36,7 @@ struct DiagnosticsSettingsSection: View {
             }
         } header: {
             Text("Diagnostics")
+                .foregroundStyle(Color("SecondaryText"))
         } footer: {
             // The whole disclosure, in the place the choice is made. A
             // privacy policy a blind user has to leave the app to find is
@@ -50,6 +51,7 @@ struct DiagnosticsSettingsSection: View {
                 stops immediately.
                 """
             )
+            .foregroundStyle(Color("SecondaryText"))
         }
     }
 
@@ -63,7 +65,11 @@ struct DiagnosticsSettingsSection: View {
             Text(text)
                 .font(.callout)
         } icon: {
+            // Without an explicit scalable font, SF Symbols render at a fixed
+            // point size and don't grow with the paired text at larger
+            // Dynamic Type sizes.
             Image(systemName: "exclamationmark.triangle.fill")
+                .font(.callout)
                 .foregroundStyle(.orange)
                 .accessibilityHidden(true)
         }

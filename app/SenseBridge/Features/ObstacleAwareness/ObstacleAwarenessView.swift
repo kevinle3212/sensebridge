@@ -85,11 +85,11 @@ struct ObstacleAwarenessView: View {
     // MARK: - Hands-free
 
     private var handsFreeSection: some View {
-        Section("Hands-free") {
+        Section {
             if AmbientAwarenessSession.isSupported {
                 Text(handsFreeLimits)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color("SecondaryText"))
                 Button(session.status == .running ? "Stop hands-free awareness" : "Start hands-free awareness") {
                     Task {
                         if session.status == .running {
@@ -118,11 +118,11 @@ struct ObstacleAwarenessView: View {
                     .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                     Text(highlightLegend)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color("SecondaryText"))
                 } else {
                     Text(previewPending)
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color("SecondaryText"))
                 }
                 // Which composer is running changes how the output sounds. Left
                 // unsaid, a user cannot tell the simpler mode from a fault.
@@ -133,7 +133,7 @@ struct ObstacleAwarenessView: View {
                     out as a plain list of what was recognized.
                     """)
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color("SecondaryText"))
             } else {
                 // Named as unavailable rather than hidden, per AGENTS.md
                 // doctrine 4: an absent control teaches the user nothing.
@@ -142,26 +142,29 @@ struct ObstacleAwarenessView: View {
                 This device does not have one, so it is not available here.
                 """)
                 .font(.footnote)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color("SecondaryText"))
             }
             if case let .unavailable(reason) = session.status {
                 Text(reason)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color("SecondaryText"))
             }
             if let narration = session.lastNarration {
                 Text(narration)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color("SecondaryText"))
                     .accessibilityLabel("Last heard: \(narration)")
             }
+        } header: {
+            Text("Hands-free")
+                .foregroundStyle(Color("SecondaryText"))
         }
     }
 
     // MARK: - Single check
 
     private var singleCheckSection: some View {
-        Section("One reading") {
+        Section {
             // Labelled as a single check, not "Start awareness". One tap is one
             // evaluation of one depth sample; a user who believes continuous
             // monitoring is running would read the silence between taps as
@@ -203,8 +206,11 @@ struct ObstacleAwarenessView: View {
             if let lastResult {
                 Text(lastResult)
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color("SecondaryText"))
             }
+        } header: {
+            Text("One reading")
+                .foregroundStyle(Color("SecondaryText"))
         }
     }
 }

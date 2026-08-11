@@ -12,16 +12,23 @@
  * until the visitor uses the control on /privacy, which means there is no
  * consent to ask for on arrival — the strictest reading of GDPR/ePrivacy and
  * the least intrusive design at the same time. See docs/PRIVACY.md.
+ *
+ * Persists to IndexedDB (via `./idb-store`), not `localStorage` — this value
+ * is never needed before first paint, so the async read costs nothing
+ * visible. See `docs/PRIVACY.md` and TODO.md's "Add localStorage migration to
+ * databases" entry for why: on-device only, no hosted store.
  */
+
+import { idbGet, idbSet } from "./idb-store";
 
 /** Whether the visitor has answered, and how. Absent storage means "unset". */
 export type MonitoringConsent = "granted" | "denied" | "unset";
 
 /**
- * `localStorage` key holding the visitor's answer.
+ * IndexedDB key holding the visitor's answer.
  *
- * Namespaced because `localStorage` is shared per-origin. Versionless on
- * purpose: if what is collected ever changes, the honest move is a new key so
+ * Namespaced because the store is shared per-origin. Versionless on purpose:
+ * if what is collected ever changes, the honest move is a new key so
  * previously granted consent does not silently carry over to a wider scope.
  */
 export const MONITORING_CONSENT_KEY = "sensebridge.monitoring-consent";
@@ -61,19 +68,12 @@ export function isGlobalPrivacyControlEnabled(): boolean {
  * consent. A GPC signal outranks anything in storage, including a previously
  * granted consent, so turning GPC on retroactively switches monitoring off.
  */
-export function readMonitoringConsent(): MonitoringConsent {
+export async function readMonitoringConsent(): Promise<MonitoringConsent> {
   if (isGlobalPrivacyControlEnabled()) {
     return "denied";
   }
-  try {
-    const stored = window.localStorage.getItem(MONITORING_CONSENT_KEY);
-    return stored === "granted" || stored === "denied" ? stored : "unset";
-  } catch {
-    // Safari in private mode, and any browser with site data blocked, throws on
-    // `localStorage` access. Unreadable storage is treated as no consent, which
-    // is the safe direction to fail in.
-    return "unset";
-  }
+  const stored = await idbGet(MONITORING_CONSENT_KEY);
+  return stored === "granted" || stored === "denied" ? stored : "unset";
 }
 
 /**
@@ -82,29 +82,49 @@ export function readMonitoringConsent(): MonitoringConsent {
  *
  * A stored `"denied"` is not tracking: it is the only way to remember that the
  * question was answered, and it is what the visitor asked for.
+ *
+ * Stays a synchronous `void` function like its `localStorage` predecessor —
+ * callers (e.g. the click handler in `MonitoringConsent.astro`) don't need to
+ * await it — but awaits the write internally before applying/broadcasting the
+ * new consent, so a fast reload can't race an in-flight IndexedDB write and
+ * read back the stale value.
+ *
+ * Applies `consent` itself, in memory, rather than re-reading storage —
+ * persistence and application are independent concerns. `idbSet` fails open
+ * (private mode, quota, an unsupported browser), so a write can silently not
+ * persist; re-deriving the decision from storage would then make an explicit
+ * click inert, which is worse than the theatre this control already avoids
+ * elsewhere. A choice the visitor just made takes effect now regardless of
+ * whether it survives a reload.
+ *
+ * The dispatch is in a `finally`: `applyConsent`'s dynamic `import("./monitoring")`
+ * can itself reject (a chunk failing to load), and the event is what the
+ * rendered control listens for to know the request finished — without a
+ * guaranteed dispatch, a click during that failure would leave the control
+ * waiting forever instead of settling back to an answerable state.
  */
 export function setMonitoringConsent(consent: "granted" | "denied"): void {
-  try {
-    window.localStorage.setItem(MONITORING_CONSENT_KEY, consent);
-  } catch {
-    // Storage refused. The choice still applies for this page — it just will
-    // not survive a reload, which is the browser's decision, not ours.
-  }
-  void applyMonitoringConsent();
-  window.dispatchEvent(
-    new CustomEvent<MonitoringConsent>(MONITORING_CONSENT_EVENT, { detail: consent }),
-  );
+  void (async () => {
+    await idbSet(MONITORING_CONSENT_KEY, consent);
+    try {
+      await applyConsent(consent);
+    } finally {
+      window.dispatchEvent(
+        new CustomEvent<MonitoringConsent>(MONITORING_CONSENT_EVENT, { detail: consent }),
+      );
+    }
+  })();
 }
 
 /**
- * Starts or stops monitoring to match the stored answer.
+ * Starts or stops monitoring to match `consent`.
  *
  * Returns without importing anything in the common case — no consent, nothing
  * loaded — so a visitor who never opts in pays nothing for this module beyond
- * one `localStorage` read.
+ * one IndexedDB read.
  */
-export async function applyMonitoringConsent(): Promise<void> {
-  const granted = readMonitoringConsent() === "granted";
+async function applyConsent(consent: MonitoringConsent): Promise<void> {
+  const granted = consent === "granted";
   if (!granted && !monitoringLoaded) {
     return;
   }
@@ -115,4 +135,15 @@ export async function applyMonitoringConsent(): Promise<void> {
   } else {
     monitoring.stopMonitoring();
   }
+}
+
+/**
+ * Starts or stops monitoring to match the *stored* answer, for restoring a
+ * previously granted choice (e.g. on page load, once something calls this).
+ * Returns the resolved consent so callers can reflect it.
+ */
+export async function applyMonitoringConsent(): Promise<MonitoringConsent> {
+  const consent = await readMonitoringConsent();
+  await applyConsent(consent);
+  return consent;
 }

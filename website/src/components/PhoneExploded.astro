@@ -4,9 +4,7 @@
  * blocks describing the device's sensing/haptic layers.
  */
 import styles from "./PhoneExploded.module.scss";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 
 // Static fallback diagram's haptic dot grid (front face, Taptic Engine),
 // coordinates only — same computed-array-in-frontmatter pattern as
@@ -15,13 +13,31 @@ const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
 const hapticDotColumns = [90, 104, 118, 132];
 const hapticDotRows = [195, 209, 223];
 const hapticDots = hapticDotRows.flatMap((y) => hapticDotColumns.map((x) => ({ x, y })));
+
+const annotations = [
+  {
+    label: m.phone_annotation_1_label(),
+    title: m.phone_annotation_1_title(),
+    body: m.phone_annotation_1_body(),
+  },
+  {
+    label: m.phone_annotation_2_label(),
+    title: m.phone_annotation_2_title(),
+    body: m.phone_annotation_2_body(),
+  },
+  {
+    label: m.phone_annotation_3_label(),
+    title: m.phone_annotation_3_title(),
+    body: m.phone_annotation_3_body(),
+  },
+];
 ---
 
 <section id="device" class={styles.device} aria-labelledby="device-title">
   <div class="wrap">
-    <h2 id="device-title">{t.phone.heading}</h2>
-    <p class={styles.lede} data-reveal-item>{t.phone.lede}</p>
-    <p class="visually-hidden">{t.phone.diagramDescription}</p>
+    <h2 id="device-title">{m.phone_heading()}</h2>
+    <p class={styles.lede} data-reveal-item>{m.phone_lede()}</p>
+    <p class="visually-hidden">{m.phone_diagram_description()}</p>
 
     <!-- Scrollytelling track: the sticky stage (a) pulls apart as the three
          real, non-hidden annotation blocks (b) scroll past — see
@@ -57,7 +73,7 @@ const hapticDots = hapticDotRows.flatMap((y) => hapticDotColumns.map((x) => ({ x
       </div>
 
       {
-        t.phone.annotations.map((annotation) => (
+        annotations.map((annotation) => (
           <div class={styles.annotation} data-reveal-block>
             <p class={styles.label}>{annotation.label}</p>
             <h3>{annotation.title}</h3>

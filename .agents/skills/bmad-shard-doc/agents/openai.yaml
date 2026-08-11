@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Shard Doc"
+  short_description: "Splits large markdown documents into smaller, organized"
+  default_prompt: "Use $bmad-shard-doc for its listed purpose."

@@ -14,9 +14,7 @@
  * page.
  */
 import styles from "./MonitoringConsent.module.scss";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 
 // Gated on the same variable as the integration in astro.config.mjs, so the
 // control and the SDK can never disagree about whether monitoring exists.
@@ -34,17 +32,17 @@ const isConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
         aria-checked="false"
         class={styles.control}
         data-monitoring-toggle
-        data-state-on={t.monitoring.stateOn}
-        data-state-off={t.monitoring.stateOff}
+        data-state-on={m.monitoring_state_on()}
+        data-state-off={m.monitoring_state_off()}
         hidden
       >
         <span class={styles.copy}>
-          <span class={styles.label}>{t.monitoring.controlLabel}</span>
+          <span class={styles.label}>{m.monitoring_control_label()}</span>
           {/* Hidden from assistive tech: `aria-checked` already carries the
               state, and announcing "off" twice per activation is noise. This
               span exists so a sighted user gets the same information. */}
           <span class={styles.state} data-monitoring-state aria-hidden="true">
-            {t.monitoring.stateOff}
+            {m.monitoring_state_off()}
           </span>
         </span>
         <span class={styles.track} aria-hidden="true">
@@ -52,7 +50,7 @@ const isConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
         </span>
       </button>
       <noscript>
-        <p class={styles.note}>{t.monitoring.noScript}</p>
+        <p class={styles.note}>{m.monitoring_no_script()}</p>
       </noscript>
       {/* Replaces the switch entirely when the browser sends a Global Privacy
           Control signal. Offering a switch that GPC would immediately override
@@ -60,7 +58,7 @@ const isConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
           honour. Revealed by the script, which is the only thing that can read
           the signal. */}
       <p class={styles.note} data-monitoring-gpc hidden>
-        {t.monitoring.globalPrivacyControl}
+        {m.monitoring_global_privacy_control()}
       </p>
     </div>
   )
@@ -104,10 +102,21 @@ const isConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
       note.hidden = false;
     }
   } else {
-    render(readMonitoringConsent());
+    render(await readMonitoringConsent());
+
+    // `setMonitoringConsent` is fire-and-forget (IndexedDB write, possibly a
+    // dynamic import of the Sentry chunk on first activation), and
+    // `aria-checked` only reflects the answer once that round trip's event
+    // arrives. Without this guard, a second click inside that window would
+    // read the still-stale attribute and resend the same value instead of
+    // toggling it — `monitoring-consent.ts` guarantees the event always
+    // fires (even on failure), so this can never get stuck true.
+    let pending = false;
 
     for (const control of controls) {
       control.addEventListener("click", () => {
+        if (pending) return;
+        pending = true;
         // Read from the DOM, not from a captured variable: the control's own
         // `aria-checked` is the single source of truth that `render` maintains.
         const granted = control.getAttribute("aria-checked") === "true";
@@ -116,6 +125,7 @@ const isConfigured = Boolean(import.meta.env.PUBLIC_SENTRY_DSN?.trim());
     }
 
     window.addEventListener(MONITORING_CONSENT_EVENT, (event) => {
+      pending = false;
       render((event as CustomEvent<MonitoringConsent>).detail);
     });
   }

@@ -18,7 +18,7 @@
  * failure the site's copy rules forbid. Do not add them until the app ships.
  */
 
-import type { Locale } from "../i18n";
+import type { Locale } from "../paraglide/runtime.js";
 
 /**
  * Maps this site's locale codes to the BCP-47 tags schema.org consumers expect.

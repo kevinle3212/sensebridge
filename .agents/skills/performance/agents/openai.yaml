@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance"
+  short_description: "changing the perception, reasoning, or output pipeline, or"
+  default_prompt: "Use $performance when changing the perception, reasoning, or output pipeline, or when latency, battery, or thermal behaviour could regress."

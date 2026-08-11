@@ -65,13 +65,43 @@ Invariant preserved: **no language ever gets an unhedged assertion**, including
 
 - `astro.config`: `i18n { defaultLocale: "en", locales: ["en","es","vi"] }` →
   `/`, `/es/`, `/vi/`.
-- Copy extracted from components into `src/i18n/{en,es,vi}.ts`; components
-  receive strings via a small `t()` helper on `Astro.currentLocale`.
+- ~~Copy extracted from components into `src/i18n/{en,es,vi}.ts`; components
+  receive strings via a small `t()` helper on `Astro.currentLocale`.~~
+  Superseded 2026-08-07 — see below.
 - `BaseLayout`: per-locale `lang` attribute, `hreflang` alternate links.
 - Header language switcher: keyboard- and screen-reader-accessible, current
   language indicated non-visually too (site doctrine: screen-reader-first,
   honesty over hype — translated copy must not drift from safety framing).
 - Verification: `astro build` + `astro check` green; all three routes render.
+
+### 2026-08-07 update — Paraglide replaces the hand-rolled `t()` dictionaries
+
+The 2026-07-19 "no new dependencies" call above (website half only — the
+app's Apple String Catalogs are unaffected and correct as-is) is revisited.
+The hand-rolled `src/i18n/{en,es,vi}.ts` dictionaries and the `Translations`
+interface are replaced by [`@inlang/paraglide-js`](https://paraglidejs.com):
+flat message catalogs in `messages/{en,es,vi}.json`, compiled to typed
+message functions in `src/paraglide/` (generated, gitignored). Why revisit
+a decision made to avoid exactly this dependency:
+
+- **Real interpolation.** `errorPages.statusLabel`'s `{code}`/`{phrase}`
+  placeholders were substituted with `.replace()`; ICU-style message params
+  now do the same job as a first-class feature, and the same mechanism covers
+  plurals if a future string ever needs one — the hand-rolled version had
+  none.
+- **Translator/TMS-tool compatibility.** Flat JSON key-value catalogs are the
+  format translation tooling (Crowdin, Phrase, Lokalise, etc.) already
+  expects, unlike a hand-rolled `.ts` module a translator can't open directly.
+- **Type safety carries forward unchanged.** A missing key in one locale was
+  a compile error before and still is — Paraglide's generated functions are
+  fully typed per message, so this property was not traded away to gain the
+  other two.
+
+Everything else Unit C decided stands: same routing, same `BaseLayout`/header
+integration, same verification bar. `docs/superpowers/specs/` is a decision
+log, not living documentation — the struck-through bullet above records what
+was decided in 2026-07-19; `website/README.md`'s Internationalization section
+is the current description of how the site's i18n actually works.
 
 ## Review gates
 

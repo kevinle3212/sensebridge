@@ -1,8 +1,7 @@
-// Motion tokens (durations + easings) and the reduced-motion gate. No
-// component styles use these yet — this phase ships zero animation (see
+// Motion tokens (durations + easings) and the reduced-motion gate (see
 // docs/SAFETY-FRAMING.md-adjacent motion doctrine: every transition must live
-// behind `prefers-reduced-motion`). Phase 5 (motion layer) is the first real
-// consumer.
+// behind `prefers-reduced-motion`). Consumed throughout the motion layer
+// shipped in Phase 5.
 @use "sass:map";
 
 $duration: (

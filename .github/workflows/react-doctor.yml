@@ -53,3 +53,11 @@ jobs:
           # sending diagnostics off-device — see docs/PRIVACY.md).
           # Known-false-positive suppressions live in website/doctor.config.jsonc.
           blocking: warning
+          # Pinned, not `latest`: 0.9.11's oxlint-output parser throws
+          # (`TypeError: Cannot read properties of undefined (reading 'match')`
+          # in parseRuleCode) on this repo's lint output, which the action
+          # reports as an incomplete check and fails the PR gate regardless of
+          # `blocking` -- not a real finding, an upstream regression. Matches
+          # the version already vetted in website/package.json's devDependency
+          # pin. Bump both together once the upstream bug is confirmed fixed.
+          version: "0.9.2"

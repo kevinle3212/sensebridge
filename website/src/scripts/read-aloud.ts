@@ -17,7 +17,7 @@
 // unsupported/unavailable options never show a dead control. Starting one
 // stops the other.
 import { debugLog } from "./debug";
-import { useTranslations } from "../i18n";
+import { m } from "../paraglide/messages.js";
 
 type StopFn = (message?: string) => void;
 
@@ -30,7 +30,9 @@ export {};
     return;
   }
 
-  const t = useTranslations(document.documentElement.lang);
+  // Paraglide's `url` strategy resolves the active locale from the page's
+  // own URL in the browser (see src/middleware.ts), so no explicit locale
+  // lookup is needed here the way `useTranslations` used to require one.
 
   const announce = (message: string): void => {
     status.textContent = message;
@@ -55,8 +57,8 @@ export {};
   setupNaturalVoice();
 
   function setupDeviceVoice(mainElement: HTMLElement): void {
-    const IDLE_LABEL = t.readAloud.deviceIdleLabel;
-    const STOP_LABEL = t.readAloud.stopLabel;
+    const IDLE_LABEL = m.read_aloud_device_idle_label();
+    const STOP_LABEL = m.read_aloud_stop_label();
 
     const toggleButton = document.getElementById("read-aloud-toggle");
     const label = toggleButton?.querySelector(".read-aloud__label");
@@ -95,19 +97,19 @@ export {};
       utterance.onend = () => {
         setIdle();
         clearActive(stop);
-        announce(t.readAloud.finishedReading);
+        announce(m.read_aloud_finished_reading());
       };
       utterance.onerror = () => {
         setIdle();
         clearActive(stop);
-        announce(t.readAloud.readingStopped);
+        announce(m.read_aloud_reading_stopped());
       };
 
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
       label.textContent = STOP_LABEL;
       toggleButton.setAttribute("aria-pressed", "true");
-      announce(t.readAloud.readingPage);
+      announce(m.read_aloud_reading_page());
     };
 
     setIdle();
@@ -115,7 +117,7 @@ export {};
 
     toggleButton.addEventListener("click", () => {
       if (window.speechSynthesis.speaking) {
-        stop(t.readAloud.stopped);
+        stop(m.read_aloud_stopped());
       } else {
         start();
       }
@@ -135,8 +137,8 @@ export {};
   }
 
   function setupNaturalVoice(): void {
-    const IDLE_LABEL = t.readAloud.naturalIdleLabel;
-    const STOP_LABEL = t.readAloud.stopLabel;
+    const IDLE_LABEL = m.read_aloud_natural_idle_label();
+    const STOP_LABEL = m.read_aloud_stop_label();
 
     const toggleButton = document.getElementById("read-aloud-natural-toggle");
     const label = toggleButton?.querySelector(".read-aloud-natural__label");
@@ -169,17 +171,17 @@ export {};
       void audio.play().catch(() => {
         setIdle();
         clearActive(stop);
-        announce(t.readAloud.naturalPlaybackError);
+        announce(m.read_aloud_natural_playback_error());
       });
       label.textContent = STOP_LABEL;
       toggleButton.setAttribute("aria-pressed", "true");
-      announce(t.readAloud.readingPageNatural);
+      announce(m.read_aloud_reading_page_natural());
     };
 
     audio.addEventListener("ended", () => {
       setIdle();
       clearActive(stop);
-      announce(t.readAloud.finishedReading);
+      announce(m.read_aloud_finished_reading());
     });
 
     // /audio/main.mp3 only exists once scripts/generate-audio.js has been
@@ -205,7 +207,7 @@ export {};
 
     toggleButton.addEventListener("click", () => {
       if (!audio.paused) {
-        stop(t.readAloud.stopped);
+        stop(m.read_aloud_stopped());
       } else {
         start();
       }

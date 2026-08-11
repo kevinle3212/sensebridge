@@ -1,0 +1,4 @@
+interface:
+  display_name: "Upgrade Stripe"
+  short_description: "Guide for upgrading Stripe API versions and SDKs"
+  default_prompt: "Use $upgrade-stripe for its listed purpose."

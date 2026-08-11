@@ -5,24 +5,30 @@
  */
 import styles from "./Features.module.scss";
 import SpineNode from "./SpineNode.astro";
-import { useTranslations, type Locale } from "../i18n";
+import { m } from "../paraglide/messages.js";
 
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+const items = [
+  m.features_item_1(),
+  m.features_item_2(),
+  m.features_item_3(),
+  m.features_item_4(),
+  m.features_item_5(),
+];
 ---
 
 <section id="features" class={styles.features} aria-labelledby="features-heading" data-stage>
   <!-- Signal Spine's "reasoning" stage marker (DESIGN.md "Signal Spine"). -->
   <SpineNode top="4rem" />
   <div class="wrap section-columns">
-    <h2 id="features-heading" class="section-heading">{t.features.heading}</h2>
+    <h2 id="features-heading" class="section-heading">{m.features_heading()}</h2>
     <div class={styles.content}>
-      <p class={styles.intro} data-reveal-item>{t.features.intro}</p>
+      <p class={styles.intro} data-reveal-item>{m.features_intro()}</p>
       <!-- `role="list"` is required alongside the cards' `list-style: none`:
            Safari strips list semantics from a styled list, so VoiceOver would
            otherwise stop announcing "list, 5 items". See eslint.config.mjs for
            why the redundant-roles rule permits this. -->
       <ul class={styles.list} role="list" data-feature-list>
-        {t.features.items.map((item) => <li data-reveal-item>{item}</li>)}
+        {items.map((item) => <li data-reveal-item>{item}</li>)}
       </ul>
     </div>
   </div>

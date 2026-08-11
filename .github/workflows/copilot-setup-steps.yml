@@ -4,10 +4,12 @@
 # `npm install` from scratch.
 #
 # Copilot's coding agent runs on a Linux (ubuntu-latest-class) environment, not
-# macOS — it can prep the website/ Node toolchain here, but it cannot run
-# Xcode or build the iOS app (app/), which needs a Mac. State that plainly
-# rather than implying full-repo agent coverage: assign Copilot issues/PRs
-# scoped to website/, docs, or CI config, not app/ Swift changes.
+# macOS — it can prep the root and website/ Node toolchains here (eslint,
+# prettier, markdownlint-cli2, commitlint at root; Stylelint/ESLint/Prettier/
+# Astro in website/), but it cannot run Xcode or build the iOS app (app/),
+# which needs a Mac. State that plainly rather than implying full-repo agent
+# coverage: assign Copilot issues/PRs scoped to website/, docs, root tooling,
+# or CI config, not app/ Swift changes.
 
 name: "Copilot Setup Steps"
 
@@ -33,7 +35,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: website/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            website/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
 
       - name: Install website dependencies
         run: npm ci

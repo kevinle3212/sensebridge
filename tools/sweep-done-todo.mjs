@@ -25,23 +25,23 @@
  * No dependencies — stdlib only, matching the rest of tools/*.mjs.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from "node:fs";
 
 /** The working TODO file this script rewrites. */
-const TODO_PATH = 'TODO.md';
+const TODO_PATH = "TODO.md";
 
 /** Heading that opens the region holding open work. */
-const TODO_HEADING = '## To-Do';
+const TODO_HEADING = "## To-Do";
 
 /** Heading that ends the To-Do region (sections after it are left alone). */
-const IN_PROGRESS_HEADING = '## In Progress';
+const IN_PROGRESS_HEADING = "## In Progress";
 
 /** Heading that finished items are appended under. */
-const COMPLETED_HEADING = '## Completed';
+const COMPLETED_HEADING = "## Completed";
 
 /** Placeholder the archive tool writes when it empties `## Completed`. */
 const PLACEHOLDER =
-  '*Nothing archived since the last sweep — see [`COMPLETED.todo`](COMPLETED.todo) for history.*';
+  "*Nothing archived since the last sweep — see [`COMPLETED.todo`](COMPLETED.todo) for history.*";
 
 /** Matches a top-level list item, ticked or not. Indented items are continuations. */
 const BULLET = /^- \[([ x])\] /;
@@ -63,7 +63,7 @@ function splitSection(lines) {
   for (const line of lines) {
     const match = BULLET.exec(line);
     if (match !== null) {
-      bullets.push({ done: match[1] === 'x', lines: [line] });
+      bullets.push({ done: match[1] === "x", lines: [line] });
     } else if (bullets.length > 0) {
       bullets[bullets.length - 1].lines.push(line);
     } else {
@@ -85,7 +85,7 @@ function splitIntoSections(lines) {
   const sections = [{ heading: null, body: [] }];
 
   for (const line of lines) {
-    if (line.startsWith('### ')) {
+    if (line.startsWith("### ")) {
       sections.push({ heading: line, body: [] });
     } else {
       sections[sections.length - 1].body.push(line);
@@ -108,7 +108,7 @@ function splitIntoSections(lines) {
  */
 function collapseBlanks(lines) {
   return lines.filter(
-    (line, index) => line.trim() !== '' || (index > 0 && lines[index - 1].trim() !== ''),
+    (line, index) => line.trim() !== "" || (index > 0 && lines[index - 1].trim() !== ""),
   );
 }
 
@@ -116,8 +116,8 @@ function collapseBlanks(lines) {
 function trimBlanks(lines) {
   let start = 0;
   let end = lines.length;
-  while (start < end && lines[start].trim() === '') start += 1;
-  while (end > start && lines[end - 1].trim() === '') end -= 1;
+  while (start < end && lines[start].trim() === "") start += 1;
+  while (end > start && lines[end - 1].trim() === "") end -= 1;
   return lines.slice(start, end);
 }
 
@@ -137,9 +137,9 @@ function requireHeading(lines, heading) {
   return index;
 }
 
-const checkOnly = process.argv.includes('--check');
-const original = readFileSync(TODO_PATH, 'utf8');
-const lines = original.split('\n');
+const checkOnly = process.argv.includes("--check");
+const original = readFileSync(TODO_PATH, "utf8");
+const lines = original.split("\n");
 
 const todoIndex = requireHeading(lines, TODO_HEADING);
 const inProgressIndex = requireHeading(lines, IN_PROGRESS_HEADING);
@@ -170,24 +170,24 @@ for (const { heading, body } of sections) {
     // Carry the preamble across only when the whole section is retiring;
     // otherwise it stays with the open items it still describes.
     const carriesPreamble = open.length === 0 && heading !== null;
-    if (heading !== null) harvested.push(heading, '');
+    if (heading !== null) harvested.push(heading, "");
     if (carriesPreamble) {
       const kept = trimBlanks(preamble);
-      if (kept.length > 0) harvested.push(...kept, '');
+      if (kept.length > 0) harvested.push(...kept, "");
     }
-    for (const bullet of done) harvested.push(...trimBlanks(bullet.lines), '');
+    for (const bullet of done) harvested.push(...trimBlanks(bullet.lines), "");
   }
 
   if (open.length === 0) continue;
 
-  if (heading !== null) keptRegion.push(heading, '');
+  if (heading !== null) keptRegion.push(heading, "");
   const keptPreamble = trimBlanks(preamble);
-  if (keptPreamble.length > 0) keptRegion.push(...keptPreamble, '');
-  for (const bullet of open) keptRegion.push(...trimBlanks(bullet.lines), '');
+  if (keptPreamble.length > 0) keptRegion.push(...keptPreamble, "");
+  for (const bullet of open) keptRegion.push(...trimBlanks(bullet.lines), "");
 }
 
 if (movedCount === 0) {
-  console.log('sweep-done-todo: nothing to sweep (To-Do holds only open items).');
+  console.log("sweep-done-todo: nothing to sweep (To-Do holds only open items).");
   process.exit(0);
 }
 
@@ -218,7 +218,7 @@ function splitHarvested(src) {
   const lead = [];
   const sections = [];
   for (const line of src) {
-    if (line.startsWith('### ')) sections.push({ heading: line, body: [] });
+    if (line.startsWith("### ")) sections.push({ heading: line, body: [] });
     else if (sections.length > 0) sections[sections.length - 1].body.push(line);
     else lead.push(line);
   }
@@ -241,34 +241,29 @@ for (const section of harvestedSections) {
     freshSections.push(section);
     continue;
   }
-  mergedCompleted.splice(existingAt + 1, 0, '', ...trimBlanks(section.body));
+  mergedCompleted.splice(existingAt + 1, 0, "", ...trimBlanks(section.body));
 }
 
 const harvestedOut = [
   ...lead,
-  ...freshSections.flatMap((section) => [
-    section.heading,
-    '',
-    ...trimBlanks(section.body),
-    '',
-  ]),
+  ...freshSections.flatMap((section) => [section.heading, "", ...trimBlanks(section.body), ""]),
 ];
 
 const rebuilt = [
   ...lines.slice(0, todoIndex + 1),
-  '',
+  "",
   ...trimBlanks(keptRegion),
-  '',
+  "",
   ...trimBlanks(tail.slice(0, completedOffset)),
-  '',
+  "",
   COMPLETED_HEADING,
-  '',
+  "",
   ...trimBlanks(harvestedOut),
-  ...(mergedCompleted.length > 0 ? ['', ...mergedCompleted] : []),
-  '',
+  ...(mergedCompleted.length > 0 ? ["", ...mergedCompleted] : []),
+  "",
 ];
 
-writeFileSync(TODO_PATH, collapseBlanks(rebuilt).join('\n'));
+writeFileSync(TODO_PATH, collapseBlanks(rebuilt).join("\n"));
 console.log(
   `sweep-done-todo: moved ${movedCount} finished item(s) to "${COMPLETED_HEADING}"; ` +
     `${keptCount} open item(s) remain in To-Do.`,

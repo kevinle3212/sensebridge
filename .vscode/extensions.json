@@ -2,12 +2,18 @@
   "recommendations": [
     "swiftlang.swift-vscode",
     "stylelint.vscode-stylelint",
+    "dbaeumer.vscode-eslint",
+    "astro-build.astro-vscode",
     "esbenp.prettier-vscode",
     "davidanson.vscode-markdownlint",
     "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+    "mikestead.dotenv",
     "editorconfig.editorconfig",
     "github.vscode-github-actions",
     "eamodio.gitlens",
+    "gruntfuggly.todo-tree",
+    "wayou.vscode-todo-highlight",
     "continue.continue",
     "wakatime.vscode-wakatime"
   ],
@@ -16,6 +22,7 @@
     "ms-vscode.vscode-typescript-tslint-plugin",
     "vknabel.vscode-swiftformat",
     "vknabel.vscode-swiftlint",
-    "sswg.swift-lang"
+    "sswg.swift-lang",
+    "rvest.vs-code-prettier-eslint"
   ]
 }

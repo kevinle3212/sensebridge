@@ -4,6 +4,7 @@ alwaysApply: true
 ---
 
 All conventions for this repository live in `AGENTS.md` (doctrines, coding
-rules, quality gates) and `AGENT-CONTEXT.md` (current repo state — the Swift
-app is not scaffolded yet; do not assume code exists). Follow them exactly.
+rules, quality gates) and `AGENT-CONTEXT.md` (current repo state — `app/` has
+an early scaffold but no distributable build; never assume more exists than
+that file describes). Follow them exactly.
 Never edit `legal/` without owner approval. Never commit to `main`.

@@ -1,18 +1,16 @@
 ---
 import styles from "./SpatialFuture.module.scss";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 ---
 
 <section id="future" class={styles.future} aria-labelledby="future-title">
   <div class={`wrap ${styles.inner}`}>
     <div class={styles.copy}>
-      <p class={styles.kicker} data-reveal-item>{t.future.kicker}</p>
-      <h2 id="future-title" data-reveal-item>{t.future.heading}</h2>
-      <p class={styles.lede} data-reveal-item>{t.future.lede}</p>
-      <p class={styles.body} data-reveal-item>{t.future.body}</p>
-      <p class="visually-hidden">{t.future.illustrationDescription}</p>
+      <p class={styles.kicker} data-reveal-item>{m.future_kicker()}</p>
+      <h2 id="future-title" data-reveal-item>{m.future_heading()}</h2>
+      <p class={styles.lede} data-reveal-item>{m.future_lede()}</p>
+      <p class={styles.body} data-reveal-item>{m.future_body()}</p>
+      <p class="visually-hidden">{m.future_illustration_description()}</p>
     </div>
     <div class={styles.stage} data-scene="glasses" aria-hidden="true">
       <!-- Static line-art wireframe-glasses diagram: same fallback/scene-active

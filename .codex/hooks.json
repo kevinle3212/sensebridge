@@ -7,6 +7,36 @@
           {
             "type": "command",
             "command": "serena-hooks remind --client=codex"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" bash-secret",
+            "timeout": 5,
+            "statusMessage": "Checking Bash secret-read guard"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" main-commit",
+            "timeout": 5,
+            "statusMessage": "Checking branch guard"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" destructive-git",
+            "timeout": 5,
+            "statusMessage": "Checking destructive git guard"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" protected-delete",
+            "timeout": 5,
+            "statusMessage": "Checking protected-path delete guard"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" rtk-shape",
+            "timeout": 10,
+            "statusMessage": "Applying RTK to shapes its own hook skips"
           }
         ]
       },
@@ -16,6 +46,56 @@
           {
             "type": "command",
             "command": "serena-hooks auto-approve --client=codex"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__filesystem__.*|mcp__serena__replace_content|mcp__serena__replace_symbol_body|mcp__serena__insert_before_symbol|mcp__serena__insert_after_symbol|mcp__serena__safe_delete_symbol|mcp__serena__rename_symbol",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" mcp-sensitive",
+            "timeout": 5,
+            "statusMessage": "Checking MCP path guard"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__serena__replace_content|mcp__serena__replace_symbol_body|mcp__serena__insert_before_symbol|mcp__serena__insert_after_symbol|mcp__serena__safe_delete_symbol|mcp__serena__rename_symbol",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" serena-legal",
+            "timeout": 5,
+            "statusMessage": "Checking Serena legal/ guard"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|mcp__serena__read_file|mcp__filesystem__read_text_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" cap-read",
+            "timeout": 5,
+            "statusMessage": "Checking read size cap"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" dup-read",
+            "timeout": 5,
+            "statusMessage": "Checking for duplicate read"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write|apply_patch|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" prefer-serena",
+            "timeout": 5,
+            "statusMessage": "Checking for a Serena alternative"
           }
         ]
       }
@@ -49,6 +129,28 @@
             "statusMessage": "Design deep pass"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" session-log",
+            "timeout": 10,
+            "statusMessage": "Checking session log"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" handoff",
+            "timeout": 10,
+            "statusMessage": "Checking handoff plan is cleared"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" device-install",
+            "timeout": 10,
+            "statusMessage": "Checking app/ changes reached the device"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -60,6 +162,24 @@
             "command": "[ ! -f \".agents/skills/impeccable/scripts/hook.mjs\" ] || node \".agents/skills/impeccable/scripts/hook.mjs\"",
             "timeout": 5,
             "statusMessage": "Checking UI changes"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" md-links",
+            "timeout": 10,
+            "statusMessage": "Checking Markdown links"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" device-install-edit",
+            "timeout": 5,
+            "statusMessage": "Recording app/ code change"
+          },
+          {
+            "type": "command",
+            "command": "\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.codex/hooks/dispatch.sh\" react-doctor",
+            "timeout": 15,
+            "statusMessage": "React Doctor check"
           }
         ]
       }

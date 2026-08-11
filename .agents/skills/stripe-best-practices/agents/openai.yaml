@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stripe Best Practices"
+  short_description: "Guides Stripe integration decisions across API selection"
+  default_prompt: "Use $stripe-best-practices when building, modifying, or reviewing any Stripe integration, including accepting payments, building marketplaces, integrating Stripe, processing payments, setting up subscriptions, collecting sales tax, VAT, or GST, creating connected accounts, or implementing secure key handling."

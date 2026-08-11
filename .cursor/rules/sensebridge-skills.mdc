@@ -1,0 +1,9 @@
+---
+description: Route specialized work to the canonical SenseBridge skills.
+alwaysApply: true
+---
+
+Read `.agents/manifest.json` before Swift concurrency, accessibility, safety
+framing, security, dependency or model-license audit, BMAD planning, website
+design or SEO, Stripe, testing, or maintenance work. Load exactly one matching
+skill from `.agents/skills/`; this adapter contains no independent policy.

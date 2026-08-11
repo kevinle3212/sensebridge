@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Refresh"
+  short_description: "a reviewer needs to persist findings"
+  default_prompt: "Use $audit-refresh when a reviewer needs to persist findings."

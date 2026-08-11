@@ -34,11 +34,40 @@ import { isAbsolute, relative, resolve } from "node:path";
  * routed around instead of fixed.
  */
 const READER_VERBS = new Set([
-	"cat", "bat", "head", "tail", "less", "more", "nl", "tac",
-	"strings", "xxd", "od", "hexdump", "base64", "shasum", "md5",
-	"grep", "egrep", "fgrep", "rg", "ag", "ack",
-	"cp", "scp", "rsync", "tee", "open", "pbcopy", "code",
-	"awk", "cut", "sort", "uniq", "wc", "diff",
+  "cat",
+  "bat",
+  "head",
+  "tail",
+  "less",
+  "more",
+  "nl",
+  "tac",
+  "strings",
+  "xxd",
+  "od",
+  "hexdump",
+  "base64",
+  "shasum",
+  "md5",
+  "grep",
+  "egrep",
+  "fgrep",
+  "rg",
+  "ag",
+  "ack",
+  "cp",
+  "scp",
+  "rsync",
+  "tee",
+  "open",
+  "pbcopy",
+  "code",
+  "awk",
+  "cut",
+  "sort",
+  "uniq",
+  "wc",
+  "diff",
 ]);
 
 /**
@@ -49,7 +78,17 @@ const READER_VERBS = new Set([
  * foo .env` entirely — i.e. it would be blind on the repo's normal path.
  */
 const WRAPPER_PREFIXES = new Set([
-	"rtk", "proxy", "sudo", "command", "time", "nohup", "nice", "env", "xargs", "builtin", "exec",
+  "rtk",
+  "proxy",
+  "sudo",
+  "command",
+  "time",
+  "nohup",
+  "nice",
+  "env",
+  "xargs",
+  "builtin",
+  "exec",
 ]);
 
 /** Project root; hook cwd is not guaranteed, so prefer the harness variable. */
@@ -63,17 +102,17 @@ const PROJECT_DIR = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
  * @returns {never}
  */
 function decide(decision, reason) {
-	if (decision === "allow") process.exit(0);
-	process.stdout.write(
-		JSON.stringify({
-			hookSpecificOutput: {
-				hookEventName: "PreToolUse",
-				permissionDecision: decision,
-				permissionDecisionReason: reason,
-			},
-		}),
-	);
-	process.exit(0);
+  if (decision === "allow") process.exit(0);
+  process.stdout.write(
+    JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: decision,
+        permissionDecisionReason: reason,
+      },
+    }),
+  );
+  process.exit(0);
 }
 
 /**
@@ -82,9 +121,9 @@ function decide(decision, reason) {
  * @returns {Promise<string>} Raw payload, empty when nothing was piped.
  */
 async function readStdin() {
-	const chunks = [];
-	for await (const chunk of process.stdin) chunks.push(chunk);
-	return Buffer.concat(chunks).toString("utf8");
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 /**
@@ -99,7 +138,7 @@ async function readStdin() {
  * @returns {string[]} Segments, in order.
  */
 function segments(command) {
-	return command.split(/\|\||&&|[;|\n]/);
+  return command.split(/\|\||&&|[;|\n]/);
 }
 
 /**
@@ -109,7 +148,7 @@ function segments(command) {
  * @returns {string} Bare token, possibly empty.
  */
 function unquote(token) {
-	return token.replace(/^[<>]+/, "").replace(/^["']|["']$/g, "");
+  return token.replace(/^[<>]+/, "").replace(/^["']|["']$/g, "");
 }
 
 /**
@@ -123,12 +162,12 @@ function unquote(token) {
  * @returns {boolean}
  */
 function isSensitiveToken(token) {
-	if (token === "") return false;
-	const absolute = isAbsolute(token) ? token : resolve(PROJECT_DIR, token);
-	const rel = relative(PROJECT_DIR, absolute);
-	const inRepo = rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
-	if (inRepo && nameCheckExempt.has(rel)) return false;
-	return isSensitiveByName(inRepo ? rel : token);
+  if (token === "") return false;
+  const absolute = isAbsolute(token) ? token : resolve(PROJECT_DIR, token);
+  const rel = relative(PROJECT_DIR, absolute);
+  const inRepo = rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+  if (inRepo && nameCheckExempt.has(rel)) return false;
+  return isSensitiveByName(inRepo ? rel : token);
 }
 
 const raw = await readStdin();
@@ -141,52 +180,55 @@ const raw = await readStdin();
 // down to protect a boundary this hook already admits it cannot hold.
 let command;
 try {
-	command = JSON.parse(raw)?.tool_input?.command;
+  command = JSON.parse(raw)?.tool_input?.command;
 } catch {
-	decide("allow");
+  decide("allow");
 }
 if (typeof command !== "string" || command === "") decide("allow");
 
 for (const segment of segments(command)) {
-	const tokens = segment.trim().split(/\s+/).filter(Boolean);
-	if (tokens.length === 0) continue;
+  const tokens = segment.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) continue;
 
-	// Peel wrappers (and any `VAR=value` assignments) to find the real verb.
-	let index = 0;
-	while (
-		index < tokens.length &&
-		(WRAPPER_PREFIXES.has(unquote(tokens[index])) || /^[A-Za-z_]\w*=/.test(tokens[index]))
-	) {
-		index += 1;
-	}
+  // Peel wrappers (and any `VAR=value` assignments) to find the real verb.
+  let index = 0;
+  while (
+    index < tokens.length &&
+    (WRAPPER_PREFIXES.has(unquote(tokens[index])) || /^[A-Za-z_]\w*=/.test(tokens[index]))
+  ) {
+    index += 1;
+  }
 
-	const verb = unquote(tokens[index] ?? "").split("/").pop() ?? "";
-	const args = tokens.slice(index + 1);
+  const verb =
+    unquote(tokens[index] ?? "")
+      .split("/")
+      .pop() ?? "";
+  const args = tokens.slice(index + 1);
 
-	// An input redirect reads the file whatever the verb is (`while read line;
-	// do …; done < .env`), so it is checked independently of READER_VERBS.
-	// Matched on the raw segment rather than on tokens because the shell
-	// accepts `<.env` and `< .env` alike, and the spaced form splits into a
-	// bare `<` whose own text says nothing.
-	const redirectTarget = /<\s*([^\s<>|&]+)/.exec(segment)?.[1];
-	const redirected = redirectTarget !== undefined && isSensitiveToken(unquote(redirectTarget));
-	const isReader = READER_VERBS.has(verb);
-	if (!isReader && !redirected) continue;
+  // An input redirect reads the file whatever the verb is (`while read line;
+  // do …; done < .env`), so it is checked independently of READER_VERBS.
+  // Matched on the raw segment rather than on tokens because the shell
+  // accepts `<.env` and `< .env` alike, and the spaced form splits into a
+  // bare `<` whose own text says nothing.
+  const redirectTarget = /<\s*([^\s<>|&]+)/.exec(segment)?.[1];
+  const redirected = redirectTarget !== undefined && isSensitiveToken(unquote(redirectTarget));
+  const isReader = READER_VERBS.has(verb);
+  if (!isReader && !redirected) continue;
 
-	const hit = redirected ? unquote(redirectTarget) : args.map(unquote).find(isSensitiveToken);
-	if (hit === undefined) continue;
+  const hit = redirected ? unquote(redirectTarget) : args.map(unquote).find(isSensitiveToken);
+  if (hit === undefined) continue;
 
-	decide(
-		"deny",
-		`Blocked: this command reads ${hit}, which is credential or signing ` +
-			`material. The Read/Grep(**/*.pem, **/.env, ...) deny rules in ` +
-			`settings.json cover the built-in tools only — Bash arguments are not ` +
-			`path-scoped, so this hook mirrors them. Note it is best-effort and ` +
-			`bypassable by design: it catches the accident, not a determined ` +
-			`read. Secrets belong in the Keychain (on-device) or GitHub Actions ` +
-			`secrets (CI), never on disk here — see docs/ENVIRONMENT.md. If you ` +
-			`genuinely need this file, ask the user.`,
-	);
+  decide(
+    "deny",
+    `Blocked: this command reads ${hit}, which is credential or signing ` +
+      "material. The Read/Grep(**/*.pem, **/.env, ...) deny rules in " +
+      "settings.json cover the built-in tools only — Bash arguments are not " +
+      "path-scoped, so this hook mirrors them. Note it is best-effort and " +
+      "bypassable by design: it catches the accident, not a determined " +
+      "read. Secrets belong in the Keychain (on-device) or GitHub Actions " +
+      "secrets (CI), never on disk here — see docs/ENVIRONMENT.md. If you " +
+      "genuinely need this file, ask the user.",
+  );
 }
 
 decide("allow");

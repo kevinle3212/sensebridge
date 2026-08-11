@@ -63,8 +63,23 @@ import { readFileSync } from "node:fs";
  *  they are the filter, not the leak — and rewriting `| head -5` to
  *  `| rtk read -5` would be actively wrong, since `rtk read` wants a file. */
 const CONSUMERS = new Set([
-  "head", "tail", "wc", "sed", "awk", "sort", "uniq", "cut", "tr", "jq",
-  "less", "cat", "xargs", "tee", "column", "grep", "rg",
+  "head",
+  "tail",
+  "wc",
+  "sed",
+  "awk",
+  "sort",
+  "uniq",
+  "cut",
+  "tr",
+  "jq",
+  "less",
+  "cat",
+  "xargs",
+  "tee",
+  "column",
+  "grep",
+  "rg",
 ]);
 
 /** Extensions whose consumers parse bytes rather than read prose. RTK's
@@ -79,7 +94,8 @@ const CONSUMERS = new Set([
 const TEMP_SUFFIX = String.raw`(?:\.(?:new|tmp|temp|bak|backup|orig|old|part|partial|swp|save|\d+))*`;
 const RAW_FIDELITY = new RegExp(
   String.raw`\.(patch|diff|json|jsonl|ndjson|lock|sql|csv|tsv|xml|ya?ml|toml|tar|t?gz|zip|bin|pdf|png|jpe?g|svg|ics|pem|key)` +
-    TEMP_SUFFIX + "$",
+    TEMP_SUFFIX +
+    "$",
   "i",
 );
 
@@ -119,10 +135,10 @@ function maskHeredocs(cmd) {
   while ((m = opener.exec(cmd)) !== null) {
     const [, dash, , delim] = m;
     const firstNewline = cmd.indexOf("\n", m.index + m[0].length);
-    if (firstNewline === -1) break;                 // no body on this line
+    if (firstNewline === -1) break; // no body on this line
     const bodyStart = firstNewline + 1;
     let end = cmd.length;
-    for (let lineStart = bodyStart; lineStart <= cmd.length; ) {
+    for (let lineStart = bodyStart; lineStart <= cmd.length;) {
       let lineEnd = cmd.indexOf("\n", lineStart);
       const atEof = lineEnd === -1;
       if (atEof) lineEnd = cmd.length;
@@ -132,23 +148,51 @@ function maskHeredocs(cmd) {
         end = atEof ? cmd.length : lineEnd + 1;
         break;
       }
-      if (atEof) break;                             // unterminated: mask to EOF
+      if (atEof) break; // unterminated: mask to EOF
       lineStart = lineEnd + 1;
     }
     for (let k = bodyStart; k < end; k++) if (chars[k] !== "\n") chars[k] = " ";
-    opener.lastIndex = end;                         // skip `<<` inside the body
+    opener.lastIndex = end; // skip `<<` inside the body
   }
   return chars.join("");
 }
 
 /** Words that delegate to another command, so a command word follows them. */
 const WRAPPERS = new Set([
-  "eval", "xargs", "time", "command", "sh", "bash", "zsh",
-  "do", "then", "else", "elif", "while", "until", "if", "!",
+  "eval",
+  "xargs",
+  "time",
+  "command",
+  "sh",
+  "bash",
+  "zsh",
+  "do",
+  "then",
+  "else",
+  "elif",
+  "while",
+  "until",
+  "if",
+  "!",
 ]);
 
 const QUOTES = new Set(['"', "'"]);
-const WORD_BREAK = new Set([" ", "\t", "\n", "|", "&", ";", "<", ">", "(", ")", "`", '"', "'", "$"]);
+const WORD_BREAK = new Set([
+  " ",
+  "\t",
+  "\n",
+  "|",
+  "&",
+  ";",
+  "<",
+  ">",
+  "(",
+  ")",
+  "`",
+  '"',
+  "'",
+  "$",
+]);
 
 /** True when a redirect operator starts at `k`, including an fd prefix such as
  *  the `2>` in `npm run build 2>&1` — the `2` belongs to the operator, not to
@@ -183,8 +227,14 @@ function scan(cmd) {
     for (let k = from; k < cmd.length; k++) {
       const c = cmd[k];
       if (closer && !s && !d && c === closer) return k;
-      if (c === "'" && !d) { s = !s; continue; }
-      if (c === '"' && !s) { d = !d; continue; }
+      if (c === "'" && !d) {
+        s = !s;
+        continue;
+      }
+      if (c === '"' && !s) {
+        d = !d;
+        continue;
+      }
       if (s || d) continue;
       if ("|&;()`\n".includes(c) || redirectAt(cmd, k)) return k;
     }
@@ -195,14 +245,27 @@ function scan(cmd) {
     const c = cmd[i];
 
     if (c === "'" && !inDouble) {
-      if (expectCommand) { i++; continue; }   // opening quote of a delegated command
-      inSingle = !inSingle; i++; continue;
+      if (expectCommand) {
+        i++;
+        continue;
+      } // opening quote of a delegated command
+      inSingle = !inSingle;
+      i++;
+      continue;
     }
     if (c === '"' && !inSingle) {
-      if (expectCommand) { i++; continue; }
-      inDouble = !inDouble; i++; continue;
+      if (expectCommand) {
+        i++;
+        continue;
+      }
+      inDouble = !inDouble;
+      i++;
+      continue;
     }
-    if (inSingle) { i++; continue; }
+    if (inSingle) {
+      i++;
+      continue;
+    }
 
     // `${VAR}` is parameter expansion, not a command — skip it whole so its
     // brace never reads as syntax.
@@ -213,27 +276,58 @@ function scan(cmd) {
     }
     // Command substitution starts a command even inside double quotes.
     if (c === "$" && cmd[i + 1] === "(") {
-      sawLeak = true; i += 2; expectCommand = true; afterPipe = false; continue;
+      sawLeak = true;
+      i += 2;
+      expectCommand = true;
+      afterPipe = false;
+      continue;
     }
     if (c === "`") {
-      sawLeak = true; i++; expectCommand = true; afterPipe = false; continue;
+      sawLeak = true;
+      i++;
+      expectCommand = true;
+      afterPipe = false;
+      continue;
     }
-    if (inDouble && !expectCommand) { i++; continue; }
+    if (inDouble && !expectCommand) {
+      i++;
+      continue;
+    }
 
     if (redirectAt(cmd, i)) {
       sawLeak = true;
       while (i < cmd.length && cmd[i] !== ">" && cmd[i] !== "<") i++;
       while (i < cmd.length && (cmd[i] === ">" || cmd[i] === "<")) i++;
-      expectCommand = false; afterPipe = false;
+      expectCommand = false;
+      afterPipe = false;
       continue;
     }
     if (c === "|") {
-      if (cmd[i + 1] === "|") { i += 2; afterPipe = false; }   // chain, not a pipe
-      else { i++; sawLeak = true; afterPipe = true; }
-      expectCommand = true; continue;
+      if (cmd[i + 1] === "|") {
+        i += 2;
+        afterPipe = false;
+      } // chain, not a pipe
+      else {
+        i++;
+        sawLeak = true;
+        afterPipe = true;
+      }
+      expectCommand = true;
+      continue;
     }
-    if (c === "&") { i += cmd[i + 1] === "&" ? 2 : 1; expectCommand = true; afterPipe = false; continue; }
-    if (c === "(") { sawLeak = true; i++; expectCommand = true; afterPipe = false; continue; }
+    if (c === "&") {
+      i += cmd[i + 1] === "&" ? 2 : 1;
+      expectCommand = true;
+      afterPipe = false;
+      continue;
+    }
+    if (c === "(") {
+      sawLeak = true;
+      i++;
+      expectCommand = true;
+      afterPipe = false;
+      continue;
+    }
     // A newline is a leaking shape. RTK's own hook rewrites only the FIRST line
     // of a multi-line command — `ls -la\ngrep foo src` came back as `rtk ls -la`
     // with `grep` untouched — and rewrites nothing at all when line 1 is a
@@ -241,31 +335,71 @@ function scan(cmd) {
     // opened 72% of this repo's multi-line Bash calls (1,298 of 1,810 measured
     // 2026-08-01). `;` and `&&` do NOT have this problem: RTK rewrites every
     // segment there, so only `\n` sets the flag.
-    if (c === "\n") { sawLeak = true; i++; expectCommand = true; afterPipe = false; continue; }
-    if (c === ")" || c === ";") { i++; expectCommand = true; afterPipe = false; continue; }
-    if (c === " " || c === "\t") { i++; continue; }
+    if (c === "\n") {
+      sawLeak = true;
+      i++;
+      expectCommand = true;
+      afterPipe = false;
+      continue;
+    }
+    if (c === ")" || c === ";") {
+      i++;
+      expectCommand = true;
+      afterPipe = false;
+      continue;
+    }
+    if (c === " " || c === "\t") {
+      i++;
+      continue;
+    }
 
     let j = i;
     while (j < cmd.length && !WORD_BREAK.has(cmd[j])) j++;
-    if (j === i) { i++; continue; }
+    if (j === i) {
+      i++;
+      continue;
+    }
     const word = cmd.slice(i, j);
 
-    if (!expectCommand) { i = j; continue; }
+    if (!expectCommand) {
+      i = j;
+      continue;
+    }
 
     // `FOO=1 git status` and the `x=` of `x=$(git status)` keep the command
     // position open rather than consuming it.
-    if (/^[A-Za-z_][A-Za-z0-9_]*=$|^[A-Za-z_][A-Za-z0-9_]*=\S*$/.test(word)) { i = j; continue; }
-    if (word.startsWith("-")) { i = j; continue; }            // `-c` of `sh -c`
+    if (/^[A-Za-z_][A-Za-z0-9_]*=$|^[A-Za-z_][A-Za-z0-9_]*=\S*$/.test(word)) {
+      i = j;
+      continue;
+    }
+    if (word.startsWith("-")) {
+      i = j;
+      continue;
+    } // `-c` of `sh -c`
 
     const head = word.split("/").pop();
-    if (head === "rtk") { i = j; expectCommand = false; continue; }
+    if (head === "rtk") {
+      i = j;
+      expectCommand = false;
+      continue;
+    }
     // A loop body is a shape RTK skips; `for`'s next word is the loop
     // variable, not a command, so the position closes here and reopens at `do`.
-    if (head === "for") { sawLeak = true; i = j; expectCommand = false; continue; }
-    if (head === "while" || head === "until") { sawLeak = true; i = j; continue; }
+    if (head === "for") {
+      sawLeak = true;
+      i = j;
+      expectCommand = false;
+      continue;
+    }
+    if (head === "while" || head === "until") {
+      sawLeak = true;
+      i = j;
+      continue;
+    }
     if (WRAPPERS.has(head)) {
       if (head === "eval" || head === "sh" || head === "bash" || head === "zsh") sawLeak = true;
-      i = j; continue;                                        // command word still to come
+      i = j;
+      continue; // command word still to come
     }
 
     const closer = QUOTES.has(cmd[i - 1]) ? cmd[i - 1] : null;
@@ -296,7 +430,11 @@ function rtkRewrite(segment, cwd) {
 
 const raw = readFileSync(0, "utf8");
 let payload;
-try { payload = JSON.parse(raw); } catch { process.exit(0); }
+try {
+  payload = JSON.parse(raw);
+} catch {
+  process.exit(0);
+}
 if (payload?.tool_name !== "Bash") process.exit(0);
 
 const command = payload?.tool_input?.command;
@@ -326,13 +464,15 @@ for (const p of [...positions].reverse()) {
 
 if (!changed) process.exit(0);
 
-process.stdout.write(JSON.stringify({
-  hookSpecificOutput: {
-    hookEventName: "PreToolUse",
-    permissionDecisionReason:
-      `RTK shape-gap auto-rewrite: ${changed} command(s) RTK's own hook skipped because the line ` +
-      `uses a pipe, redirect, loop, substitution, subshell, or eval. Compaction is lossy — use ` +
-      `'rtk proxy <cmd>' if this call needs raw output.`,
-    updatedInput: { command: result },
-  },
-}));
+process.stdout.write(
+  JSON.stringify({
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecisionReason:
+        `RTK shape-gap auto-rewrite: ${changed} command(s) RTK's own hook skipped because the line ` +
+        "uses a pipe, redirect, loop, substitution, subshell, or eval. Compaction is lossy — use " +
+        "'rtk proxy <cmd>' if this call needs raw output.",
+      updatedInput: { command: result },
+    },
+  }),
+);

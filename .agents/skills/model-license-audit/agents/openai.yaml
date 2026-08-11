@@ -1,0 +1,4 @@
+interface:
+  display_name: "Model License Audit"
+  short_description: "adding, updating, or shipping any AI model or dependency"
+  default_prompt: "Use $model-license-audit before adding, updating, or shipping any AI model or dependency."

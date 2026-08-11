@@ -19,10 +19,10 @@
  * Wired into .githooks/pre-commit and `npm run check`.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from "node:fs";
 
 /** The skill level both files must agree on. */
-const EXPECTED = 'expert';
+const EXPECTED = "expert";
 
 /**
  * The two files carrying `user_skill_level`, with the syntax each uses.
@@ -32,13 +32,13 @@ const EXPECTED = 'expert';
  */
 const TARGETS = [
   {
-    path: '_bmad/bmm/config.yaml',
+    path: "_bmad/bmm/config.yaml",
     pattern: /^user_skill_level:\s*["']?([\w-]+)["']?\s*$/m,
     syntax: `user_skill_level: ${EXPECTED}`,
     installerOwned: true,
   },
   {
-    path: '_bmad/custom/config.user.toml',
+    path: "_bmad/custom/config.user.toml",
     pattern: /^user_skill_level\s*=\s*["']([\w-]+)["']\s*$/m,
     syntax: `user_skill_level = "${EXPECTED}"`,
     installerOwned: false,
@@ -61,7 +61,7 @@ for (const { path, pattern, syntax, installerOwned } of TARGETS) {
   }
 
   checked++;
-  const match = readFileSync(path, 'utf8').match(pattern);
+  const match = readFileSync(path, "utf8").match(pattern);
   if (match === null) {
     problems.push(`${path} declares no \`user_skill_level\` — add \`${syntax}\`.`);
     continue;
@@ -69,14 +69,16 @@ for (const { path, pattern, syntax, installerOwned } of TARGETS) {
 
   if (match[1] !== EXPECTED) {
     const cause = installerOwned
-      ? ' — this file is installer-generated, so a `npx bmad-method install` run almost certainly reset it'
-      : '';
-    problems.push(`${path} sets \`user_skill_level\` to "${match[1]}", expected "${EXPECTED}"${cause}.`);
+      ? " — this file is installer-generated, so a `npx bmad-method install` run almost certainly reset it"
+      : "";
+    problems.push(
+      `${path} sets \`user_skill_level\` to "${match[1]}", expected "${EXPECTED}"${cause}.`,
+    );
   }
 }
 
 if (problems.length > 0) {
-  console.error('check-bmad-config: FAILED\n');
+  console.error("check-bmad-config: FAILED\n");
   for (const p of problems) console.error(`  - ${p}`);
   console.error('\nBoth files must agree; see TODO.md → "Token/usage audit + BMAD adoption".');
   process.exit(1);

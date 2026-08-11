@@ -28,7 +28,10 @@ test` runs the whole reasoning core headless, off-device.
   `AmbientSensingSource` (ARKit `sceneDepth` for hands-free awareness — iOS
   only, and deliberately *not* a `SensingSource`: it is pull-based, because a
   60 fps push stream feeding a consumer that wants two frames a second exists
-  only to be discarded).
+  only to be discarded), `MicrophoneSensingSource` (one-shot `AVAudioEngine`
+  capture as WAV `Data` for Sound Alerts — not a continuous stream, and not
+  `SensingSource`-conformant for the same reason `AmbientSensingSource`
+  isn't: its shape doesn't fit that protocol's streaming contract).
 - **`Sources/SenseBridgeCore/Perception/`** — `PerceptionService` (the
   protocol), `PerceptionRecord` (the structured-fact type that crosses into
   Reasoning), `OCRService` (Vision-based OCR),
@@ -37,7 +40,14 @@ test` runs the whole reasoning core headless, off-device.
   of a depth frame, plus ground-plane rejection, testable with no LiDAR
   attached), `DepthGeometry` (pure projection of a depth sample onto gravity,
   so "is this the floor" is measured from `ARCamera.transform` rather than
-  guessed from a fixed rectangle).
+  guessed from a fixed rectangle), `SoundService` (protocol),
+  `SoundClassificationRunner` (shared `SNClassifySoundRequest`/
+  `SNAudioFileAnalyzer` plumbing — `public` so the App-layer
+  `CustomSoundClassifier` can use it too, not just this package's own
+  `BuiltInSoundClassifier`), `BuiltInSoundClassifier` (Apple's on-device
+  sound taxonomy, curated to a fixed class allowlist),
+  `CombinedSoundClassifier` (runs two `SoundService`s concurrently, keeps the
+  higher-confidence hit).
 - **`Sources/SenseBridgeCore/Reasoning/`** — `SceneComposer` (protocol +
   `LabelListSceneComposer` fallback), `AwarenessEngine` (depth-threshold
   hysteresis, reporting alert/clear *transitions*), `NarrationThrottle`
@@ -80,21 +90,21 @@ contract every consumer above it depends on.
   `CameraControlsView.swift` (lens/zoom/torch controls), shared by every
   capture feature.
 - **`Features/Reading/`** — `ReadingView.swift`: captures a photo and reads
-  aloud recognized text. The one feature with a real end-to-end perception
-  path (`CameraSource` → `OCRService` → `Phrasing`).
-- **`Features/Labeling/`** — `LabelingView.swift`: identifies an object.
-  Currently hedges a canned detection through the real
-  `Phrasing`/`RenderTarget` pipeline — no `DetectionService`/camera capture
-  wired in yet (see the file's own `ponytail:` comment).
-- **`Features/SceneDescription/`** — `SceneDescriptionView.swift`: composes
-  a scene description via `LabelListSceneComposer` against canned detection
-  records. `FoundationModelsSceneComposer.swift` is the real
+  aloud recognized text. Real end-to-end perception path
+  (`CameraSource` → `OCRService` → `Phrasing`).
+- **`Features/Labeling/`** — `LabelingView.swift`: captures a photo and
+  identifies the main object via `CameraSource` →
+  `ObjectClassificationService.process(_:)` → `Phrasing`. Real end-to-end,
+  matching `ReadingView`'s shape.
+- **`Features/SceneDescription/`** — `SceneDescriptionView.swift`: captures a
+  photo, runs `ObjectClassificationService.detect(_:)`, and composes a scene
+  description via `FoundationModelsSceneComposer.swift` — the real
   `SceneComposer`, backed by `SystemLanguageModel`; it lives in the App layer
   because `SenseBridgeCore` deliberately does not depend on Foundation Models,
   and it falls back to `LabelListSceneComposer` whenever the model is
   unavailable. **The model returns a noun phrase, never a sentence** — the
   hedge is applied afterwards by `Phrasing`, so it cannot be lost to a model
-  change. Currently consumed by hands-free awareness, not yet by this screen.
+  change.
 - **`Features/ObstacleAwareness/`** — two modes on one screen.
   `AmbientAwarenessSession.swift` is the **hands-free** pipeline: a continuous
   loop over `AmbientSensingSource` (ARKit LiDAR) →
@@ -104,10 +114,24 @@ contract every consumer above it depends on.
   app; every other feature is one capture per tap. `ObstacleAwarenessView.swift`
   hosts it, and still offers the original **one-reading** check, which feeds
   mock depth through the same `AwarenessEngine` + `Phrasing` + `RenderTarget`.
-- **`Features/SoundAlerts/`** — `SoundAlertsView.swift`: same pattern — a
-  canned detection through the real output pipeline, no microphone capture
-  yet.
-- **`Resources/`** — `InfoPlist.xcstrings` (permission usage descriptions).
+- **`Features/SoundAlerts/`** — `SoundAlertsView.swift`: one tap records a
+  few seconds of audio via `MicrophoneSensingSource.record(duration:)`, run
+  through `CombinedSoundClassifier` (`BuiltInSoundClassifier`'s Apple
+  taxonomy + `CustomSoundClassifier`'s bundled Create ML model, whichever
+  produces the higher-confidence hit), then `Phrasing`. Real end-to-end, the
+  same one-capture-per-tap shape as every other feature except hands-free
+  awareness — see `docs/ARCHITECTURE.md`'s "Sound Alerts data flow".
+  `CustomSoundClassifier.swift` lives in the App layer, not the package, for
+  the same `SenseBridgeCore`-can't-depend-on-it reason as
+  `FoundationModelsSceneComposer` — its bundled `.mlmodel`'s Xcode-generated
+  Swift wrapper only exists in the App target's compiled output.
+- **`Features/Onboarding/`** — `OnboardingView.swift`: first-run walkthrough
+  (welcome → camera/mic permission priming → crash-reporting opt-in, reusing
+  `DiagnosticsSettingsSection` rather than duplicating its copy), gated by
+  `Settings.hasCompletedOnboarding` and replayable from Settings.
+- **`Resources/`** — `InfoPlist.xcstrings` (permission usage descriptions),
+  `SenseBridgeSoundClassifier.mlmodel` (bundled Create ML sound classifier —
+  see `models/sound-classifier/README.md`).
 
 A change here implies: it's SwiftUI/UIKit-facing, it needs a VoiceOver pass
 if it touches UI, and it should route through `AppEnvironment.output`

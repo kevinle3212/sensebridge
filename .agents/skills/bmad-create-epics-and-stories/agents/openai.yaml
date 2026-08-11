@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Create Epics And Stories"
+  short_description: "Break requirements into epics and user stories"
+  default_prompt: "Use $bmad-create-epics-and-stories for its listed purpose."

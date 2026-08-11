@@ -10,16 +10,18 @@
  *
  * The two documents are kept deliberately consistent: this page is the reader's
  * version, the file in `legal/` is the complete one, and neither may claim a
- * check the other does not. Content lives in `src/i18n/*.ts` under
- * `accessibilityPage` so a missing translation is a compile error rather than a
- * locale quietly serving English.
+ * check the other does not. Content lives in Paraglide's message catalogs
+ * under the `accessibility_page_*` keys, so a missing translation is a
+ * compile error rather than a locale quietly serving English.
  */
 import styles from "./PrivacyPage.module.scss";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { defaultLocale, useTranslations, type Locale } from "../i18n";
+import { m } from "../paraglide/messages.js";
+import { baseLocale, type Locale } from "../paraglide/runtime.js";
+import { getAccessibilitySections } from "../i18n/accessibility-sections";
 
 const locale = (Astro.currentLocale ?? "en") as Locale;
-const t = useTranslations(locale);
+const sections = getAccessibilitySections();
 
 /**
  * The date this statement last changed, as an ISO date so `<time datetime>` is
@@ -34,12 +36,12 @@ const updatedLabel = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).form
   new Date(`${UPDATED}T00:00:00Z`),
 );
 
-const showAuthoritative = locale !== defaultLocale;
+const showAuthoritative = locale !== baseLocale;
 ---
 
 <BaseLayout
-  title={t.accessibilityPage.title}
-  description={t.accessibilityPage.description}
+  title={m.accessibility_page_title()}
+  description={m.accessibility_page_description()}
   ambient={false}
   pageLoader={false}
 >
@@ -50,16 +52,16 @@ const showAuthoritative = locale !== defaultLocale;
   }
   <article class={styles.notice}>
     <div class="wrap">
-      <h1 class={styles.heading}>{t.accessibilityPage.heading}</h1>
-      <p class={styles.lede}>{t.accessibilityPage.lede}</p>
+      <h1 class={styles.heading}>{m.accessibility_page_heading()}</h1>
+      <p class={styles.lede}>{m.accessibility_page_lede()}</p>
       <p class={styles.meta}>
-        {t.accessibilityPage.updated}
+        {m.accessibility_page_updated()}
         <time datetime={UPDATED}>{updatedLabel}</time>
       </p>
-      {showAuthoritative && <p class={styles.meta}>{t.accessibilityPage.authoritative}</p>}
+      {showAuthoritative && <p class={styles.meta}>{m.accessibility_page_authoritative()}</p>}
 
       {
-        t.accessibilityPage.sections.map((section) => (
+        sections.map((section) => (
           <section class={styles.section}>
             <h2 class={styles["section-heading"]}>{section.heading}</h2>
             {section.body.map((paragraph) => (

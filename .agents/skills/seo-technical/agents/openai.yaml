@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO Technical"
+  short_description: "Technical SEO audit across 9 categories: crawlability,"
+  default_prompt: "Use $seo-technical when user says 'technical SEO', 'crawl issues', 'robots."

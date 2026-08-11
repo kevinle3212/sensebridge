@@ -1,202 +1,86 @@
 # CLAUDE.md — SenseBridge
 
-Project rules only. Personal preferences (communication style, simplicity,
-surgical changes, git permission rules, tooling) live in the root global
-`~/.claude/CLAUDE.md` and are never repeated here — a rule stated twice drifts
-into two rules. When this file and the global file conflict, this file wins for
-SenseBridge work.
+The Claude Code layer only. Project doctrine, quality gates, coding conventions,
+session logs, and docs sync are cross-harness and live in
+[`AGENTS.md`](AGENTS.md) — **read it first**. Personal preferences live in
+`~/.claude/CLAUDE.md`. Nothing is restated here that either file already owns.
 
-## Orientation (read before exploring)
+Rules a machine can check are enforced by hooks, not prose. The rule ↔ hook map
+is [`docs/TOOLING.md`](docs/TOOLING.md#rules-enforced-mechanically--the-claudemd--hook-map);
+`tools/check-settings-hooks.mjs` fails the build if a hook goes missing.
 
-- What the product is, and the four doctrines that constrain every change:
-  [`AGENTS.md`](AGENTS.md). Read it first.
-- Product and scope: [`docs/PRODUCT.md`](docs/PRODUCT.md). Architecture:
+## Orientation
+
+- Doctrine and gates: [`AGENTS.md`](AGENTS.md).
+- Product: [`docs/PRODUCT.md`](docs/PRODUCT.md) · Architecture:
   [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-- Setup and toolchain: [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md). Testing:
+- Setup: [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) · Testing:
   [`docs/TESTING.md`](docs/TESTING.md).
-
-## Design context — website/
-
-`website/` is a separate design surface from the app: brand register, web
-platform, pre-launch (no CTA implies a download exists yet). Full context in
-[`.agents/context/PRODUCT.md`](.agents/context/PRODUCT.md) and
-[`.agents/context/DESIGN.md`](.agents/context/DESIGN.md) — they live there, not
-in `website/`, because that is where the `impeccable` skill reads them from (see
-[`docs/TOOLING.md`](docs/TOOLING.md) → "Impeccable project root"); do not
-confuse them with [`docs/PRODUCT.md`](docs/PRODUCT.md), which is the **app's**
-product doc. Four principles govern the site: honesty
-over hype (never imply the app is available, never break safety-framing),
-screen-reader-first as a first-class requirement (not an afterthought),
-restraint over conversion pressure (nothing is being sold), and transparency
-about pre-launch status.
-
-## Architecture invariants
-
-- **Serverless, on-device.** There is no backend, no accounts, and no telemetry
-  by default. Do not introduce a network round-trip for perception or reasoning;
-  anything leaving the device needs explicit, revocable user consent and a
-  privacy-doc update. See [`docs/PRIVACY.md`](docs/PRIVACY.md).
-- **Crash reporting is the one sanctioned exception, and it is opt-in.**
-  Sentry ships on `app/` and `website/` (owner decision, 2026-07-31, reversing
-  the previous no-crash-reporting stance). It is off until the user turns it
-  on, it carries diagnostics only — never camera frames, recognized text,
-  audio, location, or identity — and on the website the SDK is not even
-  downloaded before consent. The exception covers **crash and error reporting
-  only**: product analytics, session replay, and usage telemetry remain
-  prohibited, and widening what is collected requires updating
-  [`docs/PRIVACY.md`](docs/PRIVACY.md), [`legal/PRIVACY_POLICY.md`](legal/PRIVACY_POLICY.md),
-  and the site's `/privacy` notice in the same change. Mechanism:
-  `app/SenseBridge/App/CrashReporting.swift` and
-  `website/src/scripts/monitoring-consent.ts`.
-- **Protocol seams.** The pipeline is `SensingSource` → perception services →
-  Reasoning → `RenderTarget`. Dependencies point inward; reasoning logic stays
-  pure and framework-independent. Never couple reasoning to a specific capture or
-  render framework. See the [api-design](.agents/skills/api-design/SKILL.md) skill.
-- **Awareness, not safety.** Every spoken/caption/haptic string hedges and never
-  asserts unearned certainty. This is the highest-severity review surface —
-  route such changes through the
-  [safety-framing-reviewer](.agents/agents/safety-framing-reviewer.md). See
-  [`docs/SAFETY-FRAMING.md`](docs/SAFETY-FRAMING.md).
-- **Main thread stays free.** No perception or model inference on the main
-  thread; the UI must stay responsive to VoiceOver during processing. See the
-  [swift-concurrency-6-2](.agents/skills/swift-concurrency-6-2/SKILL.md) skill
-  for the mechanism.
-
-## Quality gates (blocking)
-
-Clear the [ci-green-gate](.agents/skills/ci-green-gate/SKILL.md) before any PR:
-
-- Build (`xcodebuild build`, and `swift build` where a package target exists).
-- Tests pass (unit / integration / e2e / AI-eval per
-  [`docs/TESTING.md`](docs/TESTING.md) — e2e floor: three per feature, happy
-  path / error / edge case).
-- **Zero unlabeled elements** on every screen + a VoiceOver pass on changed UI.
-  This is a hard gate, not a percentage.
-- Safety-framing review for any physical-world output.
-- Model-license clearance — AGPL and Apple's `apple-amlr` are hard blockers.
-
-CI cannot prove on-device latency/battery/thermal or blind-tester validation.
-State plainly which gates a machine verified and which still need device and
-human validation; never let a green pipeline imply the app was validated by the
-people it is for.
+- `website/CLAUDE.md` carries the site's design doctrine and loads itself
+  whenever a session touches `website/`.
 
 ## Hand it back testable
 
 A change the owner cannot try is not finished. Green gates prove the code
 compiles; they prove nothing about the thing they actually asked for.
 
-- **After any change to `app/` code, rebuild for the device and install it**,
-  then say so. Do this unprompted, as the last step before reporting — not only
-  when asked. Doc-only and comment-only changes are exempt.
-- **A simulator build does not count as testable.** ARKit, LiDAR depth, Apple
-  Intelligence, haptics, and the camera all produce nothing in a simulator, so
-  most of this app cannot run there. Build for the device even when the
-  simulator build already passed — signing and arm64 are only exercised on the
-  device destination.
-- The command is `npm run app:install` (`scripts/app.sh install`). It resolves
-  the attached device at run time rather than hardcoding a UDID — personal
-  Apple identifiers stay out of tracked files, the same reason the team ID
-  lives in the gitignored `Config/Signing.local.xcconfig`. `npm run` lists the
-  rest of the suite; see
-  [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md#command-center).
-- The phone must be unlocked or the developer disk image will not mount; say
+- After any change to `app/` code, rebuild for the device and install it with
+  `npm run app:install`, unprompted, as the last step before reporting. A Stop
+  hook blocks the turn until that happens. Doc-only and comment-only changes are
+  exempt and clear it with `touch tmp/.last-app-install`.
+- **A simulator build does not count.** ARKit, LiDAR depth, Apple Intelligence,
+  haptics, and the camera produce nothing there, and only the device destination
+  exercises signing and arm64 — build for the device even when the simulator
+  build already passed.
+- The phone must be unlocked or the developer disk image will not mount. Say
   that rather than reporting a bare failure.
 - Installing to the owner's own device is **not** owner-gated — unlike every
   `git`/`gh` command, which still is.
-- **Never start a long-running local server unless explicitly asked.** That
-  covers `npm run dev`, `astro preview`, and anything else that holds a port —
-  in `website/` and everywhere else. Build (`npm run build`) to verify, then
-  hand over the command to run rather than running it. A server started
-  unasked outlives the turn, holds a port, and is invisible to someone who
-  never asked for it.
+- `npm run` lists the rest of the suite; see
+  [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md#command-center).
 
-## Skills and agents (use, don't reinvent)
+## Tool priority — Serena, then RTK, then defaults
 
-- Skills: `.agents/skills/*` and `.claude/skills/audit-refresh`. Invoke the
-  matching skill before hand-rolling a workflow. After repo changes, run the
-  [update-context](.agents/skills/update-context/SKILL.md) skill to keep docs and
-  agent instructions current.
-- Review agents: `.agents/agents/*`. Dependency and vulnerability reviews use
-  [dependency-auditor](.agents/agents/dependency-auditor.md).
-- Audits are append-only via `audits/scripts/new-audit.sh`; read
-  [`audits/AGENT-GUIDE.md`](audits/AGENT-GUIDE.md) first. Report findings — don't
-  silently fix during an audit.
-- **Serena and RTK are the priority tools for this repo, in this order —
-  fall back to default `Read`/`Grep`/`Glob`/`Bash` only once both are ruled
-  out for the operation at hand:**
-  1. **Serena's symbol tools** (`find_symbol`, `get_symbols_overview`,
-     `find_referencing_symbols`, `replace_symbol_body`, …) for anything
-     touching a code file — navigation, reading, or editing. Reach for these
-     before `Read`/`Grep`/`Edit` on any code file, every time.
-  2. **RTK** for shell operations (`git`/`gh`/`grep`/`ls`/`find`/`diff`/
-     test-runners/package managers; `npm test` is outside its covered set).
-     Two `PreToolUse` hooks wrap `Bash` calls in `rtk` before they run:
-     RTK's own global hook, which matches on command **shape** and silently
-     skips pipes, redirects, loop bodies, substitutions, subshells, and
-     `eval`/`sh -c`; and `.claude/hooks/prefer-rtk-shape.mjs`, which closes
-     exactly that gap. Both are automatic — the rule you must apply by hand
-     is the escape hatch: **compaction is lossy**, so when a call needs raw
-     fidelity (a patch file, a value captured into a variable, a `grep` that
-     must see every line), write it as `rtk proxy <cmd>`, which executes
-     unfiltered and is never rewritten. Mechanism and shape matrix live in
-     [`docs/TOOLING.md`](docs/TOOLING.md)'s RTK row and the hook's own header.
-  3. **Default `Read`/`Grep`/`Glob`/`Bash`** for what's left: prose/config
-     with no code symbols (docs, `TODO.md`, JSON/YAML — Serena's `languages:`
-     deliberately excludes these; see `.serena/project.yml`'s comments for
-     why a language server buys nothing on config-shaped files), or shell
-     operations outside RTK's covered command set. Among defaults, prefer the
-     narrower call first — `Grep`/`Glob` (targeted match) before a full
-     `Read`, before raw `Bash cat`/`find`/`ls` — each step down trades a
-     smaller, filtered result for a larger, unfiltered one. Serena's
-     `search_for_pattern` is also a legitimate option here even for
-     non-code files (context-line search, project-scoped) — it just isn't a
-     symbol tool, so it doesn't imply reaching for a language server.
+Hooks route the first two tiers (`prefer-serena.sh`, `prefer-rtk-shape.mjs`).
+What you must apply by hand is the judgment they cannot:
 
-  Both are wired (`.mcp.json` + per-harness configs; RTK's global hook) to
-  cut token spend, so leaving them installed but routing around them defeats
-  the point. They cover different layers — RTK compacts shell output, Serena
-  replaces code-file navigation — so using both together is additive, not
-  redundant. **Say which tier served a non-trivial action.** Serena calls
-  already surface as their own tool name in the transcript, but RTK's
-  rewrite is silent by design — call it out in your one-line update (e.g.
-  "RTK-covered, hook compacted it") or it's invisible.
+1. **Serena's symbol tools** for anything touching a code file.
+2. **RTK** for shell operations. Its compaction is lossy and fails *silently* —
+   write `rtk proxy <cmd>` whenever a call needs raw fidelity (a patch file, a
+   value captured into a variable, a search that must see every line).
+3. **Defaults** for the rest, narrowest first: `Grep`/`Glob` before `Read`,
+   before raw `Bash`.
 
-## Legal and licensing
+**Say which tier served a non-trivial action.** Serena calls surface as their own
+tool name; RTK's rewrite is silent by design, so name it or it is invisible.
+Mechanism and shape matrix: [`docs/TOOLING.md`](docs/TOOLING.md).
 
-Never edit anything under [`legal/`](legal) (privacy policy, terms, disclaimer)
-without explicit owner approval. Model and dependency licenses are gated by the
-[model-license-audit](.agents/skills/model-license-audit/SKILL.md) skill; the
-[legal-compliance](.agents/skills/legal-compliance/SKILL.md) skill flags when a
-change needs legal review.
+## Skills and agents
 
-## Branching and committing
+`.agents/skills/*` is one canonical tree shared by every harness.
+`.agents/manifest.json` registers each skill, `.agents/skill-lock.json` hash-locks
+the bodies, and `node tools/skill-lock.mjs` (`check:skills` / `sync:skills`)
+verifies or regenerates the lock. After repo changes, run
+[update-context](.agents/skills/update-context/SKILL.md).
 
-- Never commit to `main`; branch as `feat/...`, `fix/...`, `chore/...`.
-- Conventional commit headers `type(scope): subject`.
-- Keep `main` deployable; prefer a PR so CI runs.
-- **No worktrees unless explicitly requested.** Work directly in the actual
-  checkout on a branch. Create a git worktree only when the user says
-  "worktree" (or the harness mandates isolation, e.g. background jobs) — and
-  say so when that happens.
+`impeccable` is the one vendor-managed skill, excluded from the lock hash because
+`npx impeccable update` owns its churn — never hand-edit it, your changes will be
+overwritten.
 
-## Session logs
+## Harness parity — what is specific here
 
-Full rule in [`AGENTS.md`](AGENTS.md#session-logs) — log every substantive
-session under `sessions/<YYYY-MM-DD>/<HHMM>-PST.md` (gitignored, hour-bucketed,
-Pacific time) and carry any substantive follow-up into [`TODO.md`](TODO.md) in
-the same change per [`AGENTS.md`](AGENTS.md#when-you-cant-do-something).
+`.codex/hooks/dispatch.sh` `exec`s the same `.claude/hooks/*` scripts Claude Code
+runs. Codex's `Stop` hook expects `{"continue": true|false}`, not Claude's
+`decision: block` schema, so those three gates run as a passthrough there — see
+the comment block atop `dispatch.sh`. `limit-agent-fanout.sh` is the one
+Claude-only hook. MCP servers are declared per-harness in each one's native
+config (`.cursor/mcp.json`, `.gemini/settings.json`, `.vscode/mcp.json`);
+Antigravity has no per-project MCP surface, noted in
+[`.agents/rules/skills.md`](.agents/rules/skills.md) rather than faked here.
 
-## Session hygiene
+## Branching
 
-Before ending a session, sweep back over what surfaced — stale references,
-minor config drift, an obviously-safe fix noticed in passing but not yet
-applied — and close what's safe to close, per the global `CLAUDE.md`'s
-Opportunistic Fixes bar ("safe to fix now → fix it"). A session should not
-end with fixable loose ends it could have closed itself; reserve
-[`TODO.md`](TODO.md) for items that are genuinely risky, large, or need a
-decision only the owner can make.
-
-## Docs sync (per change)
-
-Full rule in [`AGENTS.md`](AGENTS.md#docs-sync-per-change) — update the nearest
-authoritative doc in the same change and purge stale references everywhere.
+Branch names and commit headers are hook-checked. What is not: keep `main`
+deployable, prefer a PR so CI runs, and **use no worktrees unless explicitly
+requested** — work in the actual checkout on a branch, and say so if the harness
+mandates isolation (e.g. background jobs).
