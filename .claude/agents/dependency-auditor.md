@@ -2,7 +2,7 @@
 name: dependency-auditor
 description: Owns SwiftPM package freshness, vulnerabilities, provenance, and bundled-model/dependency licensing. Use for any new dependency or bundled model — AGPL and apple-amlr are hard blockers.
 tools: Read, Grep, Glob, Bash, Edit, Skill
-model: sonnet
+model: claude-sonnet-5
 color: purple
 ---
 

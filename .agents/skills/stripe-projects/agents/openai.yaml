@@ -1,0 +1,4 @@
+interface:
+  display_name: "Stripe Projects"
+  short_description: "the user wants to provision infrastructure or third-party"
+  default_prompt: "Use $stripe-projects when the user wants to provision infrastructure or third-party services using Stripe Projects."

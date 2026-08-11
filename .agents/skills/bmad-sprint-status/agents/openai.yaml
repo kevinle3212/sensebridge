@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Sprint Status"
+  short_description: "Summarize sprint status and surface risks"
+  default_prompt: "Use $bmad-sprint-status for its listed purpose."

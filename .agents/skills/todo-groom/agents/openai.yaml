@@ -1,0 +1,4 @@
+interface:
+  display_name: "TODO Groom"
+  short_description: "Verify TODO.md items against repo state and report"
+  default_prompt: "Use $todo-groom to re-ground TODO.md against the current repo state."

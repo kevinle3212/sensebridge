@@ -1,0 +1,4 @@
+interface:
+  display_name: "API Design"
+  short_description: "designing internal module boundaries"
+  default_prompt: "Use $api-design when designing internal module boundaries — SensingSource, perception services, the Reasoning layer, and RenderTarget output abstractions."

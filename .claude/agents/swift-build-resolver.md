@@ -2,7 +2,7 @@
 name: swift-build-resolver
 description: Resolves Swift/Xcode build, compilation, and dependency failures with minimal, surgical changes. Use when swift build or xcodebuild fails.
 tools: Read, Grep, Glob, Bash, Edit
-model: sonnet
+model: claude-sonnet-5
 color: blue
 ---
 

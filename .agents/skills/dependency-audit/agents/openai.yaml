@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dependency Audit"
+  short_description: "adding or updating a SwiftPM dependency or bundled model"
+  default_prompt: "Use $dependency-audit when adding or updating a SwiftPM dependency or bundled model."

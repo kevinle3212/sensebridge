@@ -66,7 +66,7 @@ check whether re-casing it would change what a human or tool needs to type to
 invoke/reference it — if yes, it's strict; leave it alone.
 
 **Named exception — numbered top-level chapters.** In `CLAUDE.md`/
-`CLAUDE.template.md` and `docs/planning/*` (the project's planning series)
+`CLAUDE.template.md` and `deprecated/planning/*` (the project's former planning series)
 (`## 1. Executive Review`, `## 19. Open Source Strategy`, ...), a
 plain-numbered `##` heading functions as a chapter title, not a narrative
 sub-heading — Title Case, same as an H1. This

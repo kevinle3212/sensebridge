@@ -1,0 +1,4 @@
+interface:
+  display_name: "Concurrency Safety"
+  short_description: "a change touches shared mutable state accessed from more"
+  default_prompt: "Use $concurrency-safety when a change touches shared mutable state accessed from more than one execution context, a retry loop, or a call to a rate-limited API — in website/ or any product code."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Testing"
+  short_description: "adding or changing tests, or before a beta build"
+  default_prompt: "Use $testing when adding or changing tests, or before a beta build."

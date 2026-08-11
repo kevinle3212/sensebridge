@@ -2,7 +2,7 @@
 name: swift-reviewer
 description: Reviews Swift changes for safety, idiomatic patterns, concurrency correctness, and performance. Use for all Swift code changes; language-level review only, stacks with the doctrinal reviewers.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: claude-sonnet-5
 color: green
 ---
 

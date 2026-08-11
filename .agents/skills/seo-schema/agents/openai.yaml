@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO Schema"
+  short_description: "Detect, validate, and generate Schema"
+  default_prompt: "Use $seo-schema when user says 'schema', 'structured data', 'rich results', 'JSON-LD', or 'markup'."

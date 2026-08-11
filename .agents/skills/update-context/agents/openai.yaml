@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Context"
+  short_description: "Keep docs, comments, agent instructions, and visible"
+  default_prompt: "Use $update-context for its listed purpose."

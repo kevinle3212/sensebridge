@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Forge Idea"
+  short_description: "Pressure-test an idea through persona-driven interrogation"
+  default_prompt: "Use $bmad-forge-idea when the user says 'forge an idea', 'pressure-test this idea', 'stress-test my thinking', or 'harden this idea'."

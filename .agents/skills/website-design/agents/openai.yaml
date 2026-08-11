@@ -1,0 +1,4 @@
+interface:
+  display_name: "Website Design"
+  short_description: "any visual or UX design work on the public marketing site"
+  default_prompt: "Use $website-design for any visual or UX design work on the public marketing site under website/ — layout, typography, color, hierarchy, motion, copy, components, responsive behavior, or a design review."

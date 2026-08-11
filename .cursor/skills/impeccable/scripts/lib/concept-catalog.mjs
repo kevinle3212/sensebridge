@@ -50,9 +50,36 @@ export function normalizeConceptForm(value) {
     .trim();
 }
 
-export function validateConceptEntry(concept, { existingForms = new Map() } = {}) {
+export function validateConceptEntry(concept, { existingForms = new Map(), axes = null } = {}) {
   const errors = [];
   const id = concept?.id || '(unknown)';
+
+  // Recorded aesthetic axis values. Optional, and absent means the value is
+  // inferred from the system rules instead. Some axes cannot be inferred at all:
+  // depth's keyword probe matched worlds that said "no cast shadow anywhere",
+  // and motion and colour strategy describe properties the rules never state, so
+  // a wave that assigns those has to record them or the assignment is lost.
+  // Validated against the axes definition when the caller supplies it, because a
+  // typo would read as "unrecorded" and silently fall back to a probe that is
+  // known not to work.
+  if (concept?.axes !== undefined && concept.axes !== null) {
+    if (typeof concept.axes !== 'object' || Array.isArray(concept.axes)) {
+      errors.push(`concept ${id} axes must be an object of axis id to value id`);
+    } else if (axes) {
+      const byId = new Map((axes.axes || []).map(axis => [axis.id, axis]));
+      for (const [axisId, valueId] of Object.entries(concept.axes)) {
+        const axis = byId.get(axisId);
+        if (!axis) {
+          errors.push(`concept ${id} names unknown axis "${axisId}"`);
+        } else if (!(axis.values || []).some(value => value.id === valueId)) {
+          errors.push(
+            `concept ${id} axis "${axisId}" has unknown value "${valueId}" `
+            + `(expected one of ${(axis.values || []).map(v => v.id).join(', ')})`
+          );
+        }
+      }
+    }
+  }
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(concept?.id || '')) {
     errors.push(`invalid concept id: ${String(concept?.id)}`);
   }
@@ -209,7 +236,10 @@ export function validateConceptCatalog(catalog, reviewData, {
       errors.push(`well ${well.id || '(unknown)'} needs a tier of ${WELL_TIERS.join(', ')}, got: ${String(well.tier)}`);
     }
   }
-  const tiersPresent = new Set((catalog?.wells || []).map(well => well.tier).filter(tier => WELL_TIERS.includes(tier)));
+  const tiersPresent = new Set();
+  for (const well of catalog?.wells || []) {
+    if (WELL_TIERS.includes(well.tier)) tiersPresent.add(well.tier);
+  }
   for (const tier of WELL_TIERS) {
     if ((catalog?.wells || []).length > 0 && !tiersPresent.has(tier)) {
       errors.push(`no well declares the ${tier} tier`);
@@ -321,12 +351,12 @@ export function validateConceptCatalog(catalog, reviewData, {
 
   const wellTierById = new Map((catalog?.wells || []).map(well => [well.id, well.tier]));
   const approved = concepts.filter(concept => reviewData?.reviews?.[concept.id]?.status === 'approved');
-  const approvedTiers = new Set(
-    (catalog?.families || [])
-      .filter(family => family.concepts?.some(concept => reviewData?.reviews?.[concept.id]?.status === 'approved'))
-      .map(family => wellTierById.get(family.well))
-      .filter(tier => WELL_TIERS.includes(tier))
-  );
+  const approvedTiers = new Set();
+  for (const family of catalog?.families || []) {
+    if (!family.concepts?.some(concept => reviewData?.reviews?.[concept.id]?.status === 'approved')) continue;
+    const tier = wellTierById.get(family.well);
+    if (WELL_TIERS.includes(tier)) approvedTiers.add(tier);
+  }
   if (requireApprovedMinimum && approved.length < 3) errors.push('at least three concepts must be approved');
   if (requireApprovedMinimum && approvedTiers.size < WELL_TIERS.length) {
     errors.push('approved concepts must cover every challenger tier');
@@ -348,8 +378,12 @@ export function validateConceptCatalog(catalog, reviewData, {
 
 export function approvedPoolRevision(concepts) {
   const payload = concepts
-    .filter(concept => concept.status === 'approved')
-    .map(concept => `${concept.familyId}:${concept.id}:${concept.strength}:${concept.form}:${concept.spark}:${JSON.stringify(concept.system)}:${concept.webLeverage}`)
+    .reduce((lines, concept) => {
+      if (concept.status === 'approved') {
+        lines.push(`${concept.familyId}:${concept.id}:${concept.strength}:${concept.form}:${concept.spark}:${JSON.stringify(concept.system)}:${concept.webLeverage}`);
+      }
+      return lines;
+    }, [])
     .sort()
     .join('\n');
   return crypto.createHash('sha256').update(payload).digest('hex').slice(0, 12);

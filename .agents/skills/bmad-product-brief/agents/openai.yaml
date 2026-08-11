@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Product Brief"
+  short_description: "Create, update, or validate a product brief"
+  default_prompt: "Use $bmad-product-brief when the user wants help producing, editing, or validating a brief."

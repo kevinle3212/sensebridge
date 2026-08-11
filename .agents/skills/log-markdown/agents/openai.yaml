@@ -1,0 +1,4 @@
+interface:
+  display_name: "Log Markdown"
+  short_description: "Format any file written under logs/ as readable ignored"
+  default_prompt: "Use $log-markdown for its listed purpose."

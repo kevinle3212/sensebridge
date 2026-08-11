@@ -365,7 +365,7 @@ export function checkSurfaceBriefs({ candidates = [], projectRoot }) {
   return [finding({
     id: 'surface-brief-orphaned',
     artifact: 'surface brief',
-    filePath: orphaned.map((brief) => brief.path).filter(Boolean).join(', ') || null,
+    filePath: orphaned.flatMap((brief) => (brief.path ? [brief.path] : [])).join(', ') || null,
     severity: 'mention',
     summary: `${orphaned.length} persisted surface brief(s) name a primary target that no longer exists: `
       + `${orphaned.map((brief) => `${brief.path} → ${brief.primaryTarget}`).join('; ')}.`,

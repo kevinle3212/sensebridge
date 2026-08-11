@@ -1,0 +1,4 @@
+interface:
+  display_name: "Council"
+  short_description: "approving an important or hard-to-reverse architectural"
+  default_prompt: "Use $council before approving an important or hard-to-reverse architectural decision — a new protocol seam or module boundary, a model/runtime choice, a dependency or MCP that changes the trust or privacy boundary, a change to the on-device/serverless posture, a safety-framing-relevant pipeline change, or any decision the author cannot cleanly undo later."

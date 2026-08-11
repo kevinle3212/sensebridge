@@ -25,6 +25,11 @@ graphify-out/** linguist-generated -diff
 website/package-lock.json linguist-generated -diff
 package-lock.json         linguist-generated -diff
 
+# Impeccable skill tooling — third-party skill scripts, not app source; their
+# JS/mjs volume was drowning out Swift in GitHub's language stats.
+.agents/skills/impeccable/** linguist-vendored
+.claude/skills/impeccable/** linguist-vendored
+
 # Binary — never diff or normalize.
 *.png  binary
 *.jpg  binary

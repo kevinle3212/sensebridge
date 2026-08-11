@@ -2,7 +2,7 @@
 name: performance-reviewer
 description: Owns on-device responsiveness, battery, and thermal behavior. Use after changes touching the perception/reasoning/output pipeline, camera/depth/inference paths, or main-thread work.
 tools: Read, Grep, Glob, Bash, Edit, Skill
-model: opus
+model: claude-opus-5
 color: orange
 ---
 

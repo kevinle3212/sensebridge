@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gitnexus CLI"
+  short_description: "the user needs to run GitNexus CLI commands like"
+  default_prompt: "Use $gitnexus-cli when the user needs to run GitNexus CLI commands like analyze/index a repo, check status, clean the index, generate a wiki, or list indexed repos."

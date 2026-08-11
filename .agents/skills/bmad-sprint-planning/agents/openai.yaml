@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Sprint Planning"
+  short_description: "Generate sprint status tracking from epics"
+  default_prompt: "Use $bmad-sprint-planning for its listed purpose."

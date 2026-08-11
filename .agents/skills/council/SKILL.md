@@ -89,7 +89,7 @@ actually touches, and say which you skipped and why.
    - **Blocked** — state the blocking objection(s) and the smallest change that
      would unblock.
 5. **Record.** For a decision worth remembering, persist the verdict and its
-   rationale via [audit-refresh](../../../.claude/skills/audit-refresh/SKILL.md)
+   rationale via [audit-refresh](../audit-refresh/SKILL.md)
    (category `general`, or the most specific matching category) so the reasoning
    survives, and capture durable lessons via the `vault-capture` skill.
 

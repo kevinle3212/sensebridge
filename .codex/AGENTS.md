@@ -20,13 +20,16 @@ Codex defaults live in `~/.codex/`.
   (`docs/SAFETY-FRAMING.md`) — route through the safety-framing-reviewer
   persona in `.agents/agents/`.
 - On-device by default: no backend, no telemetry, no network round-trip for
-  perception or reasoning (`docs/PRIVACY.md`).
+  perception or reasoning (`docs/PRIVACY.md`). Opt-in crash reporting is the
+  single sanctioned exception.
 - Zero unlabeled UI elements; VoiceOver pass on changed UI.
 - Never commit to `main`; conventional commit headers (enforced by
   `.githooks/commit-msg`). Never edit `legal/` without owner approval.
 - AGPL and Apple `apple-amlr` licenses are hard blockers for models and
   dependencies.
 - No secrets, tokens, or signing material in config files, prompts, or logs.
+- Never start a long-running local server (`npm run dev`, `astro preview`)
+  unless explicitly asked; build to verify, then hand over the command.
 
 ## Routing
 

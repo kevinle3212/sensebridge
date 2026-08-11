@@ -1,0 +1,4 @@
+interface:
+  display_name: "Accessibility"
+  short_description: "auditing or changing any screen, control, spoken output, or"
+  default_prompt: "Use $accessibility when auditing or changing any screen, control, spoken output, or navigation — the core quality bar for SenseBridge."

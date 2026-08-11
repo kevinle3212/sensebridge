@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lessons Learned"
+  short_description: "a mistake gets corrected or a problem takes substantial"
+  default_prompt: "Use $lessons-learned after a mistake gets corrected or a problem takes substantial debugging/back-and-forth to solve."

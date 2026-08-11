@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Review"
+  short_description: "SenseBridge-tuned security review layered on the built-in scan"
+  default_prompt: "Use $security-review for a SenseBridge-tuned security review of the current diff."

@@ -132,9 +132,11 @@ export function writeSurfaceBrief({
 }) {
   const normalizedPrimary = normalizeSurfaceTarget(primaryTarget, { projectRoot });
   if (!normalizedPrimary) throw new Error('surface brief requires a concrete project-relative primary target or URL');
-  const normalizedRelated = [...new Set(relatedTargets
-    .map((target) => normalizeSurfaceTarget(target, { projectRoot }))
-    .filter((target) => target && target !== normalizedPrimary))];
+  const normalizedRelated = [...new Set(relatedTargets.reduce((acc, target) => {
+    const normalized = normalizeSurfaceTarget(target, { projectRoot });
+    if (normalized && normalized !== normalizedPrimary) acc.push(normalized);
+    return acc;
+  }, []))];
   const slug = slugFromTarget(normalizedPrimary, { cwd: projectRoot });
   const filePath = surfaceBriefPathForTarget(normalizedPrimary, { projectRoot });
   fs.mkdirSync(path.dirname(filePath), { recursive: true });

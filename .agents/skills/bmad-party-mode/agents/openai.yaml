@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Party Mode"
+  short_description: "Orchestrates lively group discussions between installed"
+  default_prompt: "Use $bmad-party-mode when the user requests party mode, a roundtable, or multiple agent perspectives — or wants to create/configure a party, define personas, or build an AI focus-group panel."

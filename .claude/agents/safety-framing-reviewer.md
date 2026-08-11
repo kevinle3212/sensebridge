@@ -2,7 +2,7 @@
 name: safety-framing-reviewer
 description: Owns the awareness-not-safety doctrine. Use for any change touching spoken output, alerts, captions, haptics, or language describing the physical world — the highest-severity review surface in this repo.
 tools: Read, Grep, Glob, Bash, Edit, Skill
-model: opus
+model: claude-opus-5
 color: red
 ---
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "React Doctor"
+  short_description: "finishing a feature, fixing a bug, before committing React"
+  default_prompt: "Use $react-doctor when finishing a feature, fixing a bug, before committing React code, or when the user types `/doctor`, asks to scan, triage, or clean up React diagnostics."

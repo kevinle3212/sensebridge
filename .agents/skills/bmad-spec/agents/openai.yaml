@@ -1,0 +1,4 @@
+interface:
+  display_name: "BMAD Spec"
+  short_description: "Distill any intent input into the SPEC kernel + companions"
+  default_prompt: "Use $bmad-spec when the user says 'create a spec', 'distill this into a spec', 'validate this spec', or 'update the spec'."
