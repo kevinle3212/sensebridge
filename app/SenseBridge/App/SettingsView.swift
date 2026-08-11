@@ -12,7 +12,7 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Speech") {
+            Section {
                 sliderRow(
                     "Speech rate",
                     value: binding(\.speechRate),
@@ -46,6 +46,9 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityHint("Speaks a sample sentence using the current speech settings.")
+            } header: {
+                Text("Speech")
+                    .foregroundStyle(Color("SecondaryText"))
             }
             Section {
                 Toggle("Enable haptics", isOn: binding(\.hapticsEnabled))
@@ -71,8 +74,10 @@ struct SettingsView: View {
                 )
             } header: {
                 Text("Haptics")
+                    .foregroundStyle(Color("SecondaryText"))
             } footer: {
                 Text("Haptics are unavailable in the Simulator and feel different across devices.")
+                    .foregroundStyle(Color("SecondaryText"))
             }
             Section {
                 Picker("Preferred lens", selection: binding(\.preferredLens)) {
@@ -85,8 +90,10 @@ struct SettingsView: View {
                 Toggle("Torch on by default", isOn: binding(\.torchDefaultOn))
             } header: {
                 Text("Camera")
+                    .foregroundStyle(Color("SecondaryText"))
             } footer: {
                 Text("Not every device has every lens. This preference is applied only where the hardware supports it.")
+                    .foregroundStyle(Color("SecondaryText"))
             }
             AwarenessSettingsSection(
                 narrationIntervalSeconds: binding(\.narrationIntervalSeconds),
@@ -147,8 +154,9 @@ struct SettingsView: View {
                 }
             } header: {
                 Text("Output")
+                    .foregroundStyle(Color("SecondaryText"))
             }
-            Section("Language") {
+            Section {
                 Picker("Language", selection: binding(\.language)) {
                     ForEach(AppLanguage.allCases, id: \.self) { language in
                         Text(displayName(for: language))
@@ -156,6 +164,19 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityHint("Choose the app's display language.")
+            } header: {
+                Text("Language")
+                    .foregroundStyle(Color("SecondaryText"))
+            }
+            Section {
+                Button("Replay walkthrough") {
+                    environment.settings.hasCompletedOnboarding = false
+                    environment.save()
+                }
+                .accessibilityHint("Shows the first-run welcome and permission walkthrough again.")
+            } header: {
+                Text("Help")
+                    .foregroundStyle(Color("SecondaryText"))
             }
             DiagnosticsSettingsSection(crashReportingEnabled: binding(\.crashReportingEnabled))
         }
@@ -177,7 +198,11 @@ struct SettingsView: View {
             Text(text)
                 .font(.callout)
         } icon: {
+            // Without an explicit scalable font, SF Symbols render at a fixed
+            // point size and don't grow with the paired text at larger
+            // Dynamic Type sizes.
             Image(systemName: "exclamationmark.triangle.fill")
+                .font(.callout)
                 .foregroundStyle(.orange)
                 .accessibilityHidden(true)
         }
@@ -238,9 +263,17 @@ struct SettingsView: View {
             }
         )
     }
+}
 
+/// Picker labels.
+///
+/// An extension rather than more of the main body: these are pure
+/// value-to-label maps with no view state, and keeping them here holds
+/// `SettingsView` under the 200-line type-body limit without splitting the
+/// screen's actual layout across two files.
+extension SettingsView {
     /// Localized label shown in the language picker for `language`.
-    private func displayName(for language: AppLanguage) -> LocalizedStringKey {
+    func displayName(for language: AppLanguage) -> LocalizedStringKey {
         switch language {
         case .system: "System"
         case .en: "English"
@@ -252,7 +285,7 @@ struct SettingsView: View {
     /// Localized label shown in the lens picker for `lens`, matching
     /// `CameraControlsView.displayName(for:)` — duplicated rather than
     /// shared, since it's three one-word labels used from two views.
-    private func displayName(for lens: CameraLens) -> LocalizedStringKey {
+    func displayName(for lens: CameraLens) -> LocalizedStringKey {
         switch lens {
         case .ultraWide: "Ultra-wide"
         case .wide: "Wide"
@@ -261,135 +294,11 @@ struct SettingsView: View {
     }
 
     /// Localized label shown in the output profile picker for `profile`.
-    private func displayName(for profile: OutputProfile) -> LocalizedStringKey {
+    func displayName(for profile: OutputProfile) -> LocalizedStringKey {
         switch profile {
         case .blind: "Blind"
         case .deafBlind: "Deaf-blind"
         case .deaf: "Deaf"
         }
     }
-}
-
-/// A row naming an output profile the app intends to support but cannot
-/// deliver yet, with the reason.
-///
-/// Deliberately not a `Picker` entry: selecting it would deliver nothing, and
-/// a control that silently does nothing is worse than an absent one for a
-/// VoiceOver user — see AGENTS.md doctrine 4's first corollary. Listing it
-/// here instead satisfies the second: the option is named, and so is its
-/// absence.
-private struct UnavailableProfileRow: View {
-    /// The profile's display name, resolved by the caller so this view needs
-    /// no knowledge of `OutputProfile`.
-    let name: LocalizedStringKey
-    /// Why the profile can't be delivered.
-    let reason: LocalizedStringKey
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(name)
-            Text(reason)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        // Combined into one element with an explicit label: read separately,
-        // the name announces as if it were an available choice, and the
-        // caveat only arrives on the next swipe.
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("\(Text(name)), not yet available. \(Text(reason))"))
-    }
-}
-
-/// The two knobs that shape hands-free awareness.
-///
-/// A separate `View` rather than another section inlined into `SettingsView`
-/// for the same reason the generic `binding(_:)` helper exists there: this
-/// screen accumulates a section per subsystem, and `SettingsView`'s body had
-/// already reached its length budget. Both controls need a value formatter
-/// `sliderRow`'s percentage cannot provide, so the helper travels with them.
-private struct AwarenessSettingsSection: View {
-    @Binding var narrationIntervalSeconds: Double
-    @Binding var alertDistanceMeters: Double
-
-    var body: some View {
-        Section {
-            measuredSliderRow(
-                "Time between descriptions",
-                value: $narrationIntervalSeconds,
-                in: 3 ... 20,
-                format: { "\(Int($0.rounded())) seconds" },
-                hint: """
-                Sets how often hands-free awareness describes the surroundings. \
-                Alerts about something close by are not delayed by this.
-                """
-            )
-            measuredSliderRow(
-                "Alert distance",
-                value: $alertDistanceMeters,
-                in: 0.5 ... 4,
-                format: Self.distanceDescription,
-                hint: """
-                Sets how near something has to be before hands-free awareness \
-                mentions it.
-                """
-            )
-        } header: {
-            Text("Awareness")
-        } footer: {
-            // The right values depend on the mount angle and walking pace,
-            // which no default can know — so say that, rather than implying the
-            // shipped numbers were tuned for this user.
-            Text("""
-            These affect hands-free awareness. The best values depend on how you carry \
-            the phone and how fast you walk, so expect to adjust them. Awareness is \
-            not a safety or mobility feature.
-            """)
-        }
-    }
-
-    /// A labeled slider over a real-world quantity rather than a `0...1`
-    /// fraction.
-    ///
-    /// Distinct from `SettingsView.sliderRow` because that one announces a
-    /// percentage, and "40%" is meaningless for a distance or a duration —
-    /// VoiceOver has to say "1.5 metres", which is also the only form the user
-    /// can weigh against the room they are standing in.
-    private func measuredSliderRow(
-        _ title: LocalizedStringKey,
-        value: Binding<Double>,
-        in range: ClosedRange<Double>,
-        format: @escaping (Double) -> String,
-        hint: LocalizedStringKey
-    ) -> some View {
-        VStack(alignment: .leading) {
-            // Visible for sighted users, hidden from VoiceOver: the slider
-            // below already carries `title` as its label, and leaving both in
-            // the tree makes VoiceOver announce the name twice per row.
-            HStack {
-                Text(title)
-                Spacer()
-                Text(format(value.wrappedValue))
-                    .foregroundStyle(.secondary)
-            }
-            .accessibilityHidden(true)
-            Slider(value: value, in: range)
-                .accessibilityLabel(title)
-                .accessibilityValue(format(value.wrappedValue))
-                .accessibilityHint(hint)
-        }
-    }
-
-    /// Formats a distance in the reader's own units, so a US user reads feet
-    /// rather than a metric figure they have to convert while walking.
-    private static func distanceDescription(meters: Double) -> String {
-        let formatter = MeasurementFormatter()
-        formatter.unitOptions = .naturalScale
-        formatter.numberFormatter.maximumFractionDigits = 1
-        return formatter.string(from: Measurement(value: meters, unit: UnitLength.meters))
-    }
-}
-
-#Preview {
-    SettingsView()
-        .environment(AppEnvironment())
 }

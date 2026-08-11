@@ -32,8 +32,8 @@ public struct HapticEvent: Sendable, Equatable {
 /// tell "photo taken" from "error" by feel — nothing more. A real deaf-blind
 /// haptic vocabulary requires co-design with deaf-blind collaborators and is
 /// deliberately out of scope here; see
-/// docs/planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md:144. Do not extend
-/// this type to imply a vocabulary exists.
+/// deprecated/planning/SENSEBRIDGE-01-STRATEGY-AND-PRODUCT.md:144. Do not
+/// extend this type to imply a vocabulary exists.
 public struct HapticPattern: Sendable, Equatable {
     /// The events that make up this pattern, in playback order.
     public let events: [HapticEvent]

@@ -18,34 +18,36 @@ struct ReadingView: View {
     @State private var lastResult: String?
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Point the camera at text, then capture, to hear it read aloud.")
-                .font(.body)
-            CameraPreviewView(cameraSource: environment.camera.source)
-                .frame(height: 300)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                // A live camera feed has no accessible content of its own —
-                // the capture button below is how a VoiceOver user drives
-                // this screen, not the preview.
-                .accessibilityHidden(true)
-            CameraControlsView(camera: environment.camera)
-            Button("Capture") {
-                Task { await captureAndRead() }
+        ScrollView {
+            VStack(spacing: 16) {
+                Text("Point the camera at text, then capture, to hear it read aloud.")
+                    .font(.body)
+                CameraPreviewView(cameraSource: environment.camera.source)
+                    .frame(height: 300)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    // A live camera feed has no accessible content of its own —
+                    // the capture button below is how a VoiceOver user drives
+                    // this screen, not the preview.
+                    .accessibilityHidden(true)
+                CameraControlsView(camera: environment.camera)
+                Button("Capture") {
+                    Task { await captureAndRead() }
+                }
+                .disabled(environment.camera.isCapturing)
+                .accessibilityLabel("Capture document")
+                // Capture is asynchronous and the button disables itself while it
+                // runs. Without a value, a VoiceOver user gets a control that has
+                // simply gone dim with no explanation of why or for how long.
+                .accessibilityValue(environment.camera.isCapturing ? "Capturing" : "")
+                .accessibilityHint("Takes a photo and reads any text found aloud.")
+                if let lastResult {
+                    Text(lastResult)
+                        .font(.callout)
+                        .foregroundStyle(Color("SecondaryText"))
+                }
             }
-            .disabled(environment.camera.isCapturing)
-            .accessibilityLabel("Capture document")
-            // Capture is asynchronous and the button disables itself while it
-            // runs. Without a value, a VoiceOver user gets a control that has
-            // simply gone dim with no explanation of why or for how long.
-            .accessibilityValue(environment.camera.isCapturing ? "Capturing" : "")
-            .accessibilityHint("Takes a photo and reads any text found aloud.")
-            if let lastResult {
-                Text(lastResult)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
+            .padding()
         }
-        .padding()
         .navigationTitle("Read")
         .task { await startCameraIfNeeded() }
         .onDisappear { Task { await environment.camera.stop() } }

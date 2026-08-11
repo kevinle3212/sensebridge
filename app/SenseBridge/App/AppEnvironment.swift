@@ -31,11 +31,20 @@ final class AppEnvironment {
     /// launched under `-uiTestReset`.
     init(settingsStore: SettingsStore = UserDefaultsSettingsStore()) {
         self.settingsStore = settingsStore
-        // UI tests launch with `-uiTestReset` to start from a known
-        // (`.system`) state instead of whatever a previous test run
-        // persisted — never set outside a test target.
+        // UI tests launch with `-uiTestReset` to start from a known state
+        // instead of whatever a previous test run persisted — never set
+        // outside a test target. That known state defaults to
+        // onboarding-complete, since most UI tests exercise post-onboarding
+        // features and `Settings()`'s own default (`hasCompletedOnboarding:
+        // false`) would otherwise land every one of them on `OnboardingView`
+        // instead of `HomeView`. Tests that specifically cover onboarding
+        // pass `-uiTestShowOnboarding` too, to see it.
         if ProcessInfo.processInfo.arguments.contains("-uiTestReset") {
-            settingsStore.save(Settings())
+            var fresh = Settings()
+            if !ProcessInfo.processInfo.arguments.contains("-uiTestShowOnboarding") {
+                fresh.hasCompletedOnboarding = true
+            }
+            settingsStore.save(fresh)
         }
         let loaded = settingsStore.load()
         settings = loaded

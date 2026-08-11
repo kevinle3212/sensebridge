@@ -24,6 +24,29 @@
         }
       }
     },
+    "Announces recognized sounds nearby. Not a safety device." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Announces recognized sounds nearby. Not a safety device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anuncia los sonidos reconocidos cerca. No es un dispositivo de seguridad."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thông báo các âm thanh nhận dạng được ở gần. Đây không phải là thiết bị an toàn."
+          }
+        }
+      }
+    },
     "Awareness" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -47,48 +70,94 @@
         }
       }
     },
-    "Begins cautious alerts about what may be nearby. This is not a safety feature." : {
+    "Back" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Begins cautious alerts about what may be nearby. This is not a safety feature."
+            "value" : "Back"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comienza alertas cautelosas sobre lo que podría haber cerca. Esto no es una función de seguridad."
+            "value" : "Atrás"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bắt đầu cảnh báo thận trọng về những gì có thể ở gần. Đây không phải là tính năng an toàn."
+            "value" : "Quay lại"
           }
         }
       }
     },
-    "Begins listening for recognizable sounds nearby." : {
+    "Camera access is needed to describe the scene. Enable it in Settings." : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Begins listening for recognizable sounds nearby."
+            "value" : "Camera access is needed to describe the scene. Enable it in Settings."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Comienza a escuchar sonidos reconocibles cerca."
+            "value" : "Se necesita acceso a la cámara para describir la escena. Actívalo en Configuración."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bắt đầu lắng nghe các âm thanh có thể nhận dạng ở gần."
+            "value" : "Cần quyền truy cập camera để mô tả khung cảnh. Hãy bật quyền này trong Cài đặt."
+          }
+        }
+      }
+    },
+    "Camera access is needed to identify objects. Enable it in Settings." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera access is needed to identify objects. Enable it in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita acceso a la cámara para identificar objetos. Actívalo en Configuración."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần quyền truy cập camera để nhận diện đồ vật. Hãy bật quyền này trong Cài đặt."
+          }
+        }
+      }
+    },
+    "Camera and microphone" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera and microphone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cámara y micrófono"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camera và micrô"
           }
         }
       }
@@ -231,6 +300,29 @@
         }
       }
     },
+    "Completes setup and opens SenseBridge." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completes setup and opens SenseBridge."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completa la configuración y abre SenseBridge."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoàn tất thiết lập và mở SenseBridge."
+          }
+        }
+      }
+    },
     "Composes a hedged description of what the camera sees." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -250,6 +342,98 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Soạn một mô tả thận trọng về những gì camera nhìn thấy."
+          }
+        }
+      }
+    },
+    "Continues to the next step." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continues to the next step."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continúa al siguiente paso."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếp tục sang bước tiếp theo."
+          }
+        }
+      }
+    },
+    "Couldn't describe the photo. Try again." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't describe the photo. Try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo describir la foto. Inténtalo de nuevo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể mô tả ảnh. Hãy thử lại."
+          }
+        }
+      }
+    },
+    "Couldn't identify the photo. Try again." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't identify the photo. Try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo identificar la foto. Inténtalo de nuevo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể nhận diện ảnh. Hãy thử lại."
+          }
+        }
+      }
+    },
+    "Couldn't listen for sounds. Try again." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't listen for sounds. Try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo escuchar sonidos. Inténtalo de nuevo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể nghe âm thanh. Hãy thử lại."
           }
         }
       }
@@ -346,6 +530,29 @@
         }
       }
     },
+    "Finish" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finish"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoàn tất"
+          }
+        }
+      }
+    },
     "Gives cautious alerts about what may be nearby. Not a safety device." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -415,29 +622,6 @@
         }
       }
     },
-    "Important: obstacle awareness is not a safety or mobility device. It does not replace a cane, a guide dog, or orientation-and-mobility training." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Important: obstacle awareness is not a safety or mobility device. It does not replace a cane, a guide dog, or orientation-and-mobility training."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importante: la alerta de obstáculos no es un dispositivo de seguridad ni de movilidad. No reemplaza a un bastón, un perro guía ni el entrenamiento en orientación y movilidad."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quan trọng: cảnh báo chướng ngại vật không phải là thiết bị an toàn hay hỗ trợ di chuyển. Nó không thay thế gậy dò đường, chó dẫn đường hay việc huấn luyện định hướng và di chuyển."
-          }
-        }
-      }
-    },
     "Language" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -461,24 +645,209 @@
         }
       }
     },
-    "Listens for recognizable sounds nearby and announces them." : {
+    "Listen once" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Listens for recognizable sounds nearby and announces them."
+            "value" : "Listen once"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Escucha sonidos reconocibles cerca y los anuncia."
+            "value" : "Escuchar una vez"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lắng nghe các âm thanh có thể nhận dạng ở gần và thông báo chúng."
+            "value" : "Nghe một lần"
+          }
+        }
+      }
+    },
+    "Listen once for sounds" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listen once for sounds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escuchar sonidos una vez"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nghe âm thanh một lần"
+          }
+        }
+      }
+    },
+    "Listening" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listening"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escuchando"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang nghe"
+          }
+        }
+      }
+    },
+    "Listens once for a recognizable sound nearby and announces what it might be." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listens once for a recognizable sound nearby and announces what it might be."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escucha una vez en busca de un sonido reconocible cercano y anuncia qué podría ser."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lắng nghe một lần để tìm âm thanh có thể nhận biết ở gần và thông báo đó có thể là gì."
+          }
+        }
+      }
+    },
+    "Microphone access is needed to listen for sounds. Enable it in Settings." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone access is needed to listen for sounds. Enable it in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita acceso al micrófono para escuchar sonidos. Actívalo en Configuración."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần quyền truy cập micrô để nghe âm thanh. Hãy bật quyền này trong Cài đặt."
+          }
+        }
+      }
+    },
+    "Next" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiente"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếp theo"
+          }
+        }
+      }
+    },
+    "No camera is available on this device." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No camera is available on this device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay cámara disponible en este dispositivo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có camera khả dụng trên thiết bị này."
+          }
+        }
+      }
+    },
+    "No microphone is available on this device." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No microphone is available on this device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay micrófono disponible en este dispositivo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có micrô khả dụng trên thiết bị này."
+          }
+        }
+      }
+    },
+    "Not a substitute for hearing, and not a safety device. Do not rely on it to detect alarms or emergencies." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not a substitute for hearing, and not a safety device. Do not rely on it to detect alarms or emergencies."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sustituye la audición, y no es un dispositivo de seguridad. No confíes en él para detectar alarmas o emergencias."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đây không thể thay thế thính giác, và không phải là thiết bị an toàn. Đừng dựa vào nó để phát hiện báo động hay tình huống khẩn cấp."
           }
         }
       }
@@ -502,29 +871,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cảnh báo chướng ngại vật"
-          }
-        }
-      }
-    },
-    "Obstacle awareness is not a safety or mobility device. It does not replace a cane, a guide dog, or orientation-and-mobility training. It gives cautious, probabilistic alerts only." : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Obstacle awareness is not a safety or mobility device. It does not replace a cane, a guide dog, or orientation-and-mobility training. It gives cautious, probabilistic alerts only."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La alerta de obstáculos no es un dispositivo de seguridad ni de movilidad. No reemplaza a un bastón, un perro guía ni el entrenamiento en orientación y movilidad. Solo da alertas cautelosas y probabilísticas."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cảnh báo chướng ngại vật không phải là thiết bị an toàn hay hỗ trợ di chuyển. Nó không thay thế gậy dò đường, chó dẫn đường hay việc huấn luyện định hướng và di chuyển. Nó chỉ đưa ra cảnh báo thận trọng, mang tính xác suất."
           }
         }
       }
@@ -664,6 +1010,52 @@
         }
       }
     },
+    "Replay walkthrough" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replay walkthrough"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repetir recorrido"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xem lại hướng dẫn"
+          }
+        }
+      }
+    },
+    "Returns to the previous step." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Returns to the previous step."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve al paso anterior."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quay lại bước trước."
+          }
+        }
+      }
+    },
     "SenseBridge" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -687,6 +1079,75 @@
         }
       }
     },
+    "SenseBridge gives you spoken awareness of what's around you — reading text, identifying objects, describing scenes, and recognizing sounds. It runs entirely on your device." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge gives you spoken awareness of what's around you — reading text, identifying objects, describing scenes, and recognizing sounds. It runs entirely on your device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge te da conciencia hablada de lo que te rodea: lee texto, identifica objetos, describe escenas y reconoce sonidos. Funciona completamente en tu dispositivo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge mang lại cho bạn nhận thức bằng giọng nói về những gì xung quanh — đọc chữ, nhận diện đồ vật, mô tả khung cảnh và nhận biết âm thanh. Ứng dụng chạy hoàn toàn trên thiết bị của bạn."
+          }
+        }
+      }
+    },
+    "SenseBridge is not a mobility or safety device. It does not replace a cane, a guide dog, or orientation-and-mobility training." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge is not a mobility or safety device. It does not replace a cane, a guide dog, or orientation-and-mobility training."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge no es un dispositivo de movilidad ni de seguridad. No reemplaza a un bastón, un perro guía ni el entrenamiento en orientación y movilidad."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge không phải là thiết bị hỗ trợ di chuyển hay an toàn. Nó không thay thế gậy dò đường, chó dẫn đường hay việc huấn luyện định hướng và di chuyển."
+          }
+        }
+      }
+    },
+    "SenseBridge uses the camera to read text, identify objects, and describe scenes, and the microphone to recognize nearby sounds. What the camera and microphone capture stays on your device. This screen is about to ask the system for that permission — you can also grant it later in Settings." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge uses the camera to read text, identify objects, and describe scenes, and the microphone to recognize nearby sounds. What the camera and microphone capture stays on your device. This screen is about to ask the system for that permission — you can also grant it later in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge usa la cámara para leer texto, identificar objetos y describir escenas, y el micrófono para reconocer sonidos cercanos. Lo que la cámara y el micrófono capturan permanece en tu dispositivo. Esta pantalla está a punto de pedirle ese permiso al sistema; también puedes concederlo más tarde en Configuración."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge dùng camera để đọc chữ, nhận diện đồ vật và mô tả khung cảnh, và dùng micrô để nhận biết âm thanh xung quanh. Những gì camera và micrô ghi lại vẫn ở trên thiết bị của bạn. Màn hình này sắp yêu cầu hệ thống cấp quyền đó — bạn cũng có thể cấp quyền sau trong Cài đặt."
+          }
+        }
+      }
+    },
     "Settings" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -706,6 +1167,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cài đặt"
+          }
+        }
+      }
+    },
+    "Shows the first-run welcome and permission walkthrough again." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the first-run welcome and permission walkthrough again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra de nuevo la bienvenida y el recorrido de permisos de la primera vez."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiện lại màn hình chào mừng và hướng dẫn cấp quyền lần đầu."
           }
         }
       }
@@ -752,98 +1236,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Âm thanh"
-          }
-        }
-      }
-    },
-    "Start awareness" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start awareness"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar alerta"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bắt đầu cảnh báo"
-          }
-        }
-      }
-    },
-    "Start listening" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start listening"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Empezar a escuchar"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bắt đầu nghe"
-          }
-        }
-      }
-    },
-    "Start obstacle awareness" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start obstacle awareness"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar alerta de obstáculos"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bắt đầu cảnh báo chướng ngại vật"
-          }
-        }
-      }
-    },
-    "Start sound alerts" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start sound alerts"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar alertas de sonido"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bắt đầu cảnh báo âm thanh"
           }
         }
       }
@@ -940,6 +1332,29 @@
         }
       }
     },
+    "Takes one listen for a recognizable sound nearby. It does not keep listening." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takes one listen for a recognizable sound nearby. It does not keep listening."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escucha una vez en busca de un sonido reconocible cercano. No sigue escuchando."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nghe một lần để tìm âm thanh có thể nhận biết ở gần. Nó không tiếp tục nghe."
+          }
+        }
+      }
+    },
     "Tiếng Việt" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -959,6 +1374,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiếng Việt"
+          }
+        }
+      }
+    },
+    "Welcome to SenseBridge" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Welcome to SenseBridge"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bienvenido a SenseBridge"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chào mừng đến với SenseBridge"
           }
         }
       }

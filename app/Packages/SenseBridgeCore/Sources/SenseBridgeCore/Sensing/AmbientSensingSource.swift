@@ -63,7 +63,7 @@
     /// `ARSession` because it is the only API that hands back a camera frame and
     /// a registered `sceneDepth` map from one session — see
     /// docs/ARCHITECTURE.md "Sensing Layer" and the depth-capture module in
-    /// docs/planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md.
+    /// deprecated/planning/SENSEBRIDGE-02-FEATURES-AND-SCOPE.md.
     ///
     /// **Deliberately does not conform to `SensingSource`.** That protocol is
     /// push-based (`start()` returns a stream of everything captured), which is
