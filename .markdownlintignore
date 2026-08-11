@@ -47,6 +47,14 @@ graphify-out/
 # tools/sync-skills.mjs — same rationale as the other vendored skill trees.
 **/skills/react-doctor/**
 
+# Paraglide JS compiler output and the inlang project it compiles from. Both
+# READMEs are written by the tooling ("Auto-generated i18n message functions",
+# "Compiled from: ./project.inlang"), are untracked, and are rewritten on every
+# build — so a formatting fix could not survive, same as the vendored trees
+# above.
+website/src/paraglide/
+website/project.inlang/
+
 # Gitignored working files: hour-bucketed session logs and scratch output.
 # Neither ships, and both are rewritten constantly — the same reasoning that
 # exempts NOTES.local.md above.
