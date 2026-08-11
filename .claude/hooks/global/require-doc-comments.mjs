@@ -51,7 +51,10 @@ const DEDUPE_WINDOW_SECONDS = 60;
  * @returns {boolean} True when the caller should stay silent.
  */
 function alreadyReported(report) {
-  const marker = join(tmpdir(), `claude-doccomments-${createHash("sha256").update(report).digest("hex").slice(0, 32)}`);
+  const marker = join(
+    tmpdir(),
+    `claude-doccomments-${createHash("sha256").update(report).digest("hex").slice(0, 32)}`,
+  );
   try {
     const age = (Date.now() - statSync(marker).mtimeMs) / 1000;
     if (age < DEDUPE_WINDOW_SECONDS) return true;

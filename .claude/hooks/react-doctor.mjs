@@ -85,9 +85,9 @@ const shouldScan = (input) => {
 // this pin is read from can't be found or parsed. Same package, same
 // behavior — just skippable network I/O in the common case.
 const pinnedReactDoctorSpec = (websitePackageJsonPath) => {
-  const version = JSON.parse(readFileOrEmpty(websitePackageJsonPath) || "{}")
-    ?.devDependencies?.["react-doctor"]
-    ?.match(/\d+\.\d+\.\d+/)?.[0];
+  const version = JSON.parse(readFileOrEmpty(websitePackageJsonPath) || "{}")?.devDependencies?.[
+    "react-doctor"
+  ]?.match(/\d+\.\d+\.\d+/)?.[0];
   return version ? `react-doctor@${version}` : "react-doctor@latest";
 };
 

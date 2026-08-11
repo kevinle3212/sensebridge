@@ -69,7 +69,10 @@ for (const skill of manifest.skills ?? []) {
   // Most skills sit directly under canonical_root (.agents/skills/<name>/SKILL.md);
   // a few (gitnexus's sub-skills) nest one level deeper — either shape is fine as
   // long as the immediate parent directory matches the registered name.
-  if (!skill.path.startsWith(`${manifest.canonical_root}/`) || !skill.path.endsWith(`/${skill.name}/SKILL.md`)) {
+  if (
+    !skill.path.startsWith(`${manifest.canonical_root}/`) ||
+    !skill.path.endsWith(`/${skill.name}/SKILL.md`)
+  ) {
     throw new Error(`Non-canonical skill path for ${skill.name}`);
   }
   const body = await readFile(resolve(root, skill.path), "utf8");
@@ -95,12 +98,14 @@ for (const topLevel of nativeTopLevelDirs) {
     claudeReal = await realpath(claudePath);
   } catch {
     throw new Error(
-      `.claude/skills/${topLevel} is missing — Claude's native Skill tool can't discover this skill without it`
+      `.claude/skills/${topLevel} is missing — Claude's native Skill tool can't discover this skill without it`,
     );
   }
   canonicalReal = await realpath(canonicalPath);
   if (claudeReal !== canonicalReal) {
-    throw new Error(`.claude/skills/${topLevel} does not resolve to ${manifest.canonical_root}/${topLevel}`);
+    throw new Error(
+      `.claude/skills/${topLevel} does not resolve to ${manifest.canonical_root}/${topLevel}`,
+    );
   }
 }
 
@@ -120,14 +125,14 @@ const tracked = [
   ...personaFiles,
   resolve(root, ".agents/rules/skills.md"),
   resolve(root, ".agents/rules/precedence.md"),
-  ...adapterPaths.map((path) => resolve(root, path))
+  ...adapterPaths.map((path) => resolve(root, path)),
 ];
 const entries = Object.fromEntries(
   await Promise.all(
     [...new Set(tracked.map((path) => resolve(path)))]
       .sort()
-      .map(async (path) => [portablePath(path), await digest(path)])
-  )
+      .map(async (path) => [portablePath(path), await digest(path)]),
+  ),
 );
 const expected = `${JSON.stringify({ schema_version: 1, algorithm: "sha256", files: entries }, null, 2)}\n`;
 
@@ -139,9 +144,11 @@ if (print) {
 } else {
   const actual = await readFile(lockPath, "utf8").catch(() => "");
   if (actual !== expected) {
-    throw new Error("Canonical skills, personas, or adapters drifted; review changes and run npm run skills:sync");
+    throw new Error(
+      "Canonical skills, personas, or adapters drifted; review changes and run npm run skills:sync",
+    );
   }
   console.log(
-    `skill-lock: clean (${manifest.skills.length} skills, ${Object.keys(entries).length} files)`
+    `skill-lock: clean (${manifest.skills.length} skills, ${Object.keys(entries).length} files)`,
   );
 }
