@@ -2,6 +2,13 @@ import Foundation
 import Testing
 @testable import SenseBridgeCore
 
+// Serialized: Swift Testing parallelizes @Test functions within a suite by
+// default, and both tests here open a real AVAudioEngine capture on the same
+// input hardware. Two concurrent engine.start() calls contend for exclusive
+// audio device access -- observed as a ~325s stall on both tests rather than
+// a fast pass/fail, not a cancellation regression. Recording is exclusive
+// hardware, not parallelizable state.
+@Suite(.serialized)
 struct MicrophoneSensingSourceTests {
     @Test
     func recordingProducesNonEmptyWAVData() async throws {
