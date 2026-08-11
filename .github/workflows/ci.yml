@@ -50,7 +50,21 @@ jobs:
             dir="$(dirname "$manifest")"
             name="$(basename "$dir")"
             echo "== $dir =="
-            (cd "$dir" && xcodebuild test -scheme "$name" -destination 'platform=macOS' | xcpretty && exit "${PIPESTATUS[0]}")
+            # xcpretty's default formatter prints build phases and a final
+            # PASS/FAIL banner but no per-test detail at all -- a failure here
+            # was undiagnosable from the Actions log alone. `tee` keeps xcpretty's
+            # summary as the normal log while a raw copy survives on disk; it is
+            # only ever printed (which test failed, and why) when the run
+            # actually failed, so a passing run's log stays exactly as short.
+            (cd "$dir" && \
+              xcodebuild test -scheme "$name" -destination 'platform=macOS' 2>&1 | tee /tmp/xcodebuild-raw.log | xcpretty; \
+              status="${PIPESTATUS[0]}"; \
+              if [ "$status" -ne 0 ]; then \
+                echo "::group::Raw xcodebuild output (xcpretty suppresses per-test failure detail)"; \
+                cat /tmp/xcodebuild-raw.log; \
+                echo "::endgroup::"; \
+              fi; \
+              exit "$status")
           done
 
       - name: Detect project layout
