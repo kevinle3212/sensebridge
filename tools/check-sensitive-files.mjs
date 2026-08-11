@@ -17,7 +17,7 @@
 // tracked file (useful for a one-off repo-wide sweep).
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, realpathSync, statSync } from "node:fs";
+import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const SENSITIVE_EXTENSIONS = [
@@ -175,27 +175,44 @@ export function isSensitiveByName(path) {
  */
 export const nameCheckExempt = NAME_CHECK_EXEMPT;
 
+/**
+ * Scans a file's content for secret-shaped patterns, skipping anything over
+ * {@link MAX_SCAN_BYTES} or unreadable as text.
+ *
+ * @param {string} path File to scan.
+ * @returns {string[]} Labels of every pattern that matched, empty if none did
+ *   or the file could not be read.
+ */
 function scanContent(path) {
-  let size;
+  // Opened once and stat'd/read via that same descriptor rather than a
+  // path-based statSync followed by a separate readFileSync(path) -- two
+  // path lookups leave a window where the path could resolve to a different
+  // file by the second call (CodeQL js/file-system-race). fstatSync/read on
+  // an already-open fd always see the one file that was actually opened.
+  let fd;
   try {
-    size = statSync(path).size;
+    fd = openSync(path, "r");
   } catch {
-    return []; // deleted/renamed file, nothing to scan
+    return []; // deleted/renamed since the file list was built
   }
-  if (size > MAX_SCAN_BYTES) return [];
-
-  let text;
   try {
-    text = readFileSync(path, "utf8");
-  } catch {
-    return []; // binary or unreadable — extension check already covers signing formats
-  }
+    if (fstatSync(fd).size > MAX_SCAN_BYTES) return [];
 
-  const hits = [];
-  for (const [pattern, label] of SECRET_PATTERNS) {
-    if (pattern.test(text)) hits.push(label);
+    let text;
+    try {
+      text = readFileSync(fd, "utf8");
+    } catch {
+      return []; // binary or unreadable — extension check already covers signing formats
+    }
+
+    const hits = [];
+    for (const [pattern, label] of SECRET_PATTERNS) {
+      if (pattern.test(text)) hits.push(label);
+    }
+    return hits;
+  } finally {
+    closeSync(fd);
   }
-  return hits;
 }
 
 function main() {
