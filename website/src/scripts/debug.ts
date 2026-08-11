@@ -2,37 +2,39 @@
 // console.
 //
 // Always on under `astro dev`. In a production build it stays off until the
-// visitor opts in with `localStorage.setItem("sb-debug", "1")` and reloads —
-// which is the point: the questions worth logging ("why is nothing animating?",
-// "why is there no 3D?", "why did it load light instead of dark?") are usually
-// asked about the deployed site, not the dev server, and a dev-only gate would
-// be compiled out of the static build before it could answer any of them.
+// visitor opts in and reloads, which is the point: the questions worth
+// logging ("why is nothing animating?", "why is there no 3D?") are usually
+// asked about the deployed site, not the dev server, and a dev-only gate
+// would be compiled out of the static build before it could answer any of
+// them. The flag lives in IndexedDB — key "sb-debug" in the "kv" store of the
+// "sensebridge" database (see idb-store.ts) — set it via devtools' Application
+// > IndexedDB panel, or `indexedDB.open("sensebridge").onsuccess = (e) =>
+// e.target.result.transaction("kv", "readwrite").objectStore("kv").put("1",
+// "sb-debug")` in the console.
 //
-// The cost of keeping it in the production bundle is a handful of short strings
-// and one `localStorage` read at load. Nothing is logged, and no work is done
-// to build a log message, unless the flag is set.
-const STORAGE_KEY = "sb-debug";
+// Note: `public/theme-init.js` (the no-flash theme bootstrap that must run
+// synchronously, before this module or any bundle exists) keeps its own
+// duplicated, `localStorage`-backed copy of this flag for "why did it load
+// light instead of dark?" — see that file's own `debug()`. It is
+// deliberately not wired to this one.
+import { idbGet } from "./idb-store";
 
-/**
- * Reads the opt-in flag, treating unavailable storage as "off".
- *
- * Private-browsing modes and blocked third-party storage make `localStorage`
- * throw on access rather than return null, and a debug helper must never be
- * the thing that breaks the page it is there to explain.
- */
-function flagSet(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
+const STORAGE_KEY = "sb-debug";
 
 // Resolved once at load rather than per call, so a logger sitting in a scroll
 // or pointer path costs nothing after startup. Toggling the flag therefore
 // needs a reload — standard for a debug switch, and cheaper than re-reading
-// storage on every frame.
-const enabled = import.meta.env.DEV || flagSet();
+// storage on every frame. IndexedDB has no synchronous read, so `enabled`
+// starts as just the dev-mode check and flips true shortly after load if the
+// visitor opted in on a prior visit; this module logs nothing that gates a
+// visible result, so a debugLog() call in that brief window being dropped has
+// no user-facing effect.
+let enabled = import.meta.env.DEV;
+if (!enabled) {
+  void idbGet(STORAGE_KEY).then((stored) => {
+    enabled = stored === "1";
+  });
+}
 
 /**
  * Logs to the browser console under a `[sb:<scope>]` prefix when verbose

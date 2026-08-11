@@ -1,82 +1,23 @@
 {
   "$schema": "https://react.doctor/schema/config.json",
-  // Only suppressions live here. No lint rule is weakened: every security,
-  // bug, performance, and accessibility rule runs at its default severity,
-  // and CI blocks on warnings (see .github/workflows/react-doctor.yml).
-  "ignore": {
-    // React Doctor's dead-code pass (deslop) does not follow imports out of
-    // `src/layouts/**`. Anything reachable only through BaseLayout.astro
-    // therefore looks orphaned, even though Astro builds and ships it.
-    //
-    // Verified 2026-07-25 rather than assumed: temporarily adding
-    // `import Header from "../components/Header.astro"` to src/pages/index.astro
-    // cleared Header's `unused-file` finding immediately, while the existing
-    // BaseLayout.astro import (lines 3-4) never did. Components imported from
-    // `src/pages/**` and `src/components/**` resolve correctly — only the hop
-    // through `src/layouts/**` is invisible.
-    //
-    // These entries mark analyzer blind spots, NOT dead code. Do not delete
-    // the files. Re-test on each react-doctor upgrade and drop any entry that
-    // upstream has fixed.
-    //
-    // Last re-tested 2026-07-25 against 0.8.1 (installed) and 0.9.1 (latest on
-    // npm): with this file moved aside, both versions report all four findings,
-    // so nothing here is stale. With it in place both report zero, so the
-    // config is forward-compatible and the eventual 0.9.x bump needs no change
-    // here. Nothing to drop yet.
-    "overrides": [
-      {
-        // All four are imported by src/layouts/BaseLayout.astro and rendered
-        // there: <Header /> and <Footer /> in the body, <StructuredData /> in
-        // the head, <PageLoader /> behind the `pageLoader` prop (line 148).
-        // Same single cause — the analyzer never reads BaseLayout's import
-        // list — so they share one entry.
-        //
-        // PageLoader.astro added 2026-07-25: it is not merely reachable but
-        // demonstrably shipping — `npm run check:csp` asserts "the page-load
-        // sequence still runs" against the built `/`, which would fail if the
-        // component were absent.
-        "files": [
-          "src/components/Header.astro",
-          "src/components/Footer.astro",
-          "src/components/StructuredData.tsx",
-          "src/components/PageLoader.astro"
-        ],
-        "rules": ["deslop/unused-file"]
-      },
-      {
-        // `localeNames` is imported by src/components/Header.astro (line 9)
-        // and used at lines 47, 48, and 72. It only reads as unused because
-        // Header itself is unreachable to the analyzer, per the note above.
-        // Scoped to this one file and one rule, so a genuinely unused export
-        // elsewhere still fails CI.
-        "files": ["src/i18n/index.ts"],
-        "rules": ["deslop/unused-export"]
-      },
-      {
-        // `useTranslations` (src/i18n/index.ts) is a plain synchronous
-        // dictionary lookup — `isLocale(locale) ? translations[locale] :
-        // translations[defaultLocale]` — not a React hook. It is called at
-        // the top of Astro component frontmatter, which is Astro's own
-        // server-rendered setup scope, never a React render. React Doctor's
-        // rules-of-hooks rule pattern-matches the `use` prefix without
-        // framework awareness of `.astro` files, so every call site trips it.
-        //
-        // Verified 2026-08-04: the function's body (linked above) has no
-        // hook call, no conditional/loop-nested invocation, nothing
-        // rules-of-hooks actually protects against.
-        //
-        // All 16 `.astro` files under src/components/ and src/layouts/ call
-        // `useTranslations` and would trip this identically; these three are
-        // the ones this PR touches. A future PR editing any of the other 13
-        // will hit the same false positive and can extend this list.
-        "files": [
-          "src/components/AccessibilityPage.astro",
-          "src/components/MonitoringConsent.astro",
-          "src/components/PrivacyPage.astro"
-        ],
-        "rules": ["react-doctor/rules-of-hooks"]
-      }
-    ]
+  // Only suppressions live here, plus one opt-in rule below. No shipped
+  // rule is weakened: every security, bug, performance, and accessibility
+  // rule runs at its default severity, and CI blocks on warnings (see
+  // .github/workflows/react-doctor.yml).
+  "rules": {
+    // The one Security-category rule that ships off by default (opt-in,
+    // per `react-doctor rules explain react-doctor/no-danger`) — everything
+    // else in that category is on. Verified 2026-08-04: no
+    // `dangerouslySetInnerHTML`/`set:html` anywhere under website/src (see
+    // StructuredData.tsx's own comment on why it avoids that sink), so this
+    // adds defense-in-depth against a future raw-HTML sink without
+    // producing any current finding.
+    "react-doctor/no-danger": "error"
   }
+  // The `ignore.overrides` block that used to sit here (deslop/unused-file,
+  // deslop/unused-export, rules-of-hooks false positives on src/layouts/**
+  // and .astro `useTranslations` calls) was removed 2026-08-06: verified by
+  // moving this file aside and running `npm run doctor` — 0.9.2 reports zero
+  // findings with no config at all, so upstream fixed the layouts blind spot
+  // between 0.9.1 and 0.9.2. Re-add only if a real finding reappears.
 }

@@ -5,16 +5,14 @@
  */
 import styles from "./Hero.module.scss";
 import SpineNode from "./SpineNode.astro";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 
 // Split at build time so the visual word-by-word reveal (Phase 5) can
 // stagger each word independently. The visually-hidden span below carries
 // the real accessible text; the word spans live in an aria-hidden sibling,
 // so VoiceOver/NVDA still read the h1 as a single plain string — never the
 // duplicated/segmented markup.
-const heroHeading = t.hero.heading;
+const heroHeading = m.hero_heading();
 const heroWords = heroHeading.split(" ");
 ---
 
@@ -40,13 +38,13 @@ const heroWords = heroHeading.split(" ");
         </span>
       </h1>
       <p class={styles.lede} data-hero-reveal>
-        {t.hero.lede}
+        {m.hero_lede()}
       </p>
       <p class={styles.status} data-hero-reveal>
-        {t.hero.status}
+        {m.hero_status()}
       </p>
       <p class="visually-hidden">
-        {t.hero.visuallyHiddenDescription}
+        {m.hero_visually_hidden_description()}
       </p>
       <a
         class={styles.cta}
@@ -54,7 +52,7 @@ const heroWords = heroHeading.split(" ");
         data-magnetic
         href="https://github.com/kevinle3212/sensebridge"
       >
-        {t.hero.cta}
+        {m.hero_cta()}
       </a>
     </div>
     <!-- Cinematic hero visual (Phase 6): CSS/SVG only — no canvas, no

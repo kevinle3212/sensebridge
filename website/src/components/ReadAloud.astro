@@ -11,10 +11,10 @@
 // the first thing in the file, so a JSDoc block above it silently turns the
 // whole frontmatter into markup.
 import { hasNaturalVoice } from "../data/natural-voice";
-import { useTranslations, type Locale } from "../i18n";
+import { m } from "../paraglide/messages.js";
+import type { Locale } from "../paraglide/runtime.js";
 
 const locale = (Astro.currentLocale ?? "en") as Locale;
-const t = useTranslations(locale);
 
 // Checked at build time, rather than always rendering the src and letting
 // src/scripts/read-aloud.ts discover a 404 via the <audio> element's error
@@ -34,7 +34,7 @@ const naturalVoiceAvailable = hasNaturalVoice(locale);
     aria-pressed="false"
   >
     <span aria-hidden="true">🔊</span>
-    <span class="read-aloud__label">{t.readAloud.deviceIdleLabel}</span>
+    <span class="read-aloud__label">{m.read_aloud_device_idle_label({}, { locale })}</span>
   </button>
   {
     naturalVoiceAvailable && (
@@ -47,7 +47,9 @@ const naturalVoiceAvailable = hasNaturalVoice(locale);
           aria-pressed="false"
         >
           <span aria-hidden="true">🎙️</span>
-          <span class="read-aloud-natural__label">{t.readAloud.naturalIdleLabel}</span>
+          <span class="read-aloud-natural__label">
+            {m.read_aloud_natural_idle_label({}, { locale })}
+          </span>
         </button>
         <audio id="read-aloud-natural-audio" hidden preload="none" src="/audio/main.mp3" />
       </Fragment>

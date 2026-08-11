@@ -1,9 +1,7 @@
 ---
 import styles from "./SignalBridge.module.scss";
 import SpineNode from "./SpineNode.astro";
-import { useTranslations, type Locale } from "../i18n";
-
-const t = useTranslations((Astro.currentLocale ?? "en") as Locale);
+import { m } from "../paraglide/messages.js";
 
 // Suspender/cog joints along the deck, evenly spaced between the two
 // pylons. cableY is the straight-line interpolation between each pylon top
@@ -23,9 +21,9 @@ const deckY = 110;
   <SpineNode top="4rem" />
   <div class={`wrap ${styles["bridge-inner"]}`}>
     <div class={styles["bridge-copy"]}>
-      <h2 id="bridge-heading">{t.bridge.heading}</h2>
-      <p class={styles.body} data-reveal-item>{t.bridge.body}</p>
-      <p class={styles.supporting} data-reveal-item>{t.bridge.supporting}</p>
+      <h2 id="bridge-heading">{m.bridge_heading()}</h2>
+      <p class={styles.body} data-reveal-item>{m.bridge_body()}</p>
+      <p class={styles.supporting} data-reveal-item>{m.bridge_supporting()}</p>
     </div>
     <div class={styles["bridge-stage"]}>
       <!-- Signal Bridge visual (DESIGN.md → "Signal Bridge"): CSS/SVG line-art only, same
@@ -104,7 +102,7 @@ const deckY = 110;
         >
           <path d="M6 4 12 8 6 12 Z"></path>
         </svg>
-        <span class="visually-hidden">{t.bridge.replay}</span>
+        <span class="visually-hidden">{m.bridge_replay()}</span>
       </button>
     </div>
   </div>

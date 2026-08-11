@@ -4,7 +4,8 @@ import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import PageLoader from "../components/PageLoader.astro";
 import StructuredData from "../components/StructuredData.tsx";
-import { translations, useTranslations, type Locale } from "../i18n";
+import { m } from "../paraglide/messages.js";
+import { locales, type Locale } from "../paraglide/runtime.js";
 import "../styles/global/index.scss";
 
 interface Props {
@@ -44,12 +45,10 @@ interface Props {
 }
 
 const locale = (Astro.currentLocale ?? "en") as Locale;
-const t = useTranslations(locale);
-const locales = Object.keys(translations) as Locale[];
 
 const {
-  title = t.meta.title,
-  description = t.meta.description,
+  title = m.meta_title({}, { locale }),
+  description = m.meta_description({}, { locale }),
   noindex = false,
   ambient = true,
   pageLoader = true,
@@ -136,7 +135,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
          passes — the site's complete design with this absent is the static
          CSS/SVG background it already has. -->
     {ambient && <div class="ambient-scene" data-scene="ambient" aria-hidden="true"></div>}
-    <a class="skip-link" href="#main">{t.layout.skipLink}</a>
+    <a class="skip-link" href="#main">{m.layout_skip_link({}, { locale })}</a>
     <Header />
     <main id="main">
       <slot />
