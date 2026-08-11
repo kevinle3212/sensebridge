@@ -79,7 +79,7 @@
     "react-scan": "^0.5.7",
     "sass": "^1.101.7",
     "three": "0.182.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
