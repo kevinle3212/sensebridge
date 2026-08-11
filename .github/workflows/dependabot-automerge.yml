@@ -1,8 +1,7 @@
 name: Dependabot auto-merge
 
-# Auto-approve and enable auto-merge for Dependabot patch and minor updates once
-# required checks pass. Major updates are left for manual review. Requires
-# "Allow auto-merge" enabled in repository settings and branch protection on main.
+# Auto-approve and enable auto-merge for Dependabot updates that cannot reach a
+# user, once every required check passes. Everything else is left for review.
 #
 # dependabot.yml groups dev-dependencies into a single PR per ecosystem, and
 # fetch-metadata's top-level `update-type` output can't represent a grouped
@@ -10,6 +9,28 @@ name: Dependabot auto-merge
 # `updated-dependencies-json` (per-dependency `updateType`, added to cover
 # this exact case) and require every dependency in the PR/group to be
 # patch/minor before approving.
+#
+# That check alone isn't enough: it says nothing about which ecosystem is
+# safe to auto-merge at all.
+#
+#   - `swift` ships inside the app binary that blind and low-vision users rely
+#     on. A bad patch there is a field failure, not a red CI run, and CI cannot
+#     prove on-device behaviour (see AGENTS.md, "Quality gates"). Never
+#     auto-merged, at any semver level.
+#   - `docker` is the website's runtime base image. A base-image bump can change
+#     the TLS stack or the nginx user under the deployed site, and the check
+#     suite does not exercise the deployed container. Reviewed by a human.
+#   - npm at the repo root and in `website/` is devDependencies only -- linters,
+#     formatters, the Astro toolchain. A break shows up as a red build, never as
+#     shipped behaviour, so patch and minor auto-merge.
+#   - `github-actions` is CI-only and `dependabot.yml` groups `codeql-action/*`
+#     into a single PR, so the init/analyze pair can no longer split and
+#     deadlock. Patch and minor auto-merge.
+#
+# Majors are never auto-merged in any ecosystem.
+#
+# Requires "Allow auto-merge" in repository settings plus branch protection on
+# main, so `--auto` waits for the required checks rather than merging on sight.
 
 on: pull_request_target
 
@@ -28,7 +49,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check every dependency is patch or minor
-        id: gate
+        id: semver-gate
         env:
           DEPENDENCIES_JSON: ${{ steps.meta.outputs.updated-dependencies-json }}
         run: |
@@ -38,8 +59,25 @@ jobs:
           fi
           eligible=$(jq '[.[] | (.updateType == "version-update:semver-patch" or .updateType == "version-update:semver-minor")] | all' <<< "$DEPENDENCIES_JSON")
           echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
-      - name: Enable auto-merge for patch and minor updates
-        if: steps.gate.outputs.eligible == 'true'
+      - name: Check the ecosystem is safe to auto-merge
+        id: ecosystem-gate
+        env:
+          # fetch-metadata reports Dependabot's *internal* ecosystem name, which
+          # is not the key used in dependabot.yml: npm surfaces as
+          # `npm_and_yarn` and github-actions as `github_actions`. Both spellings
+          # are matched so a rename upstream degrades to "needs review" rather
+          # than silently never matching. Anything unlisted -- swift, docker, a
+          # future ecosystem -- falls through to eligible=false by construction.
+          ECOSYSTEM: ${{ steps.meta.outputs.package-ecosystem }}
+        run: |
+          set -euo pipefail
+          eligible=false
+          case "$ECOSYSTEM" in
+            npm|npm_and_yarn|github_actions|github-actions) eligible=true ;;
+          esac
+          echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
+      - name: Enable auto-merge
+        if: steps.semver-gate.outputs.eligible == 'true' && steps.ecosystem-gate.outputs.eligible == 'true'
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --squash "$PR_URL"
