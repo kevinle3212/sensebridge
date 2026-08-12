@@ -3,7 +3,7 @@ import Foundation
 /// Confidence bucket for a single perception, mapped to a hedge strength.
 /// There is no "certain" case — see docs/SAFETY-FRAMING.md: SenseBridge
 /// never asserts unearned certainty about the physical world.
-public enum Certainty: Sendable, Equatable {
+public enum Certainty: Sendable, Equatable, CaseIterable {
     case low, medium, high
 }
 
@@ -96,6 +96,37 @@ public struct Phrasing: Sendable {
         LocalizedCatalog.string("The nearest measured distance is further away now.", locale: locale)
     }
 
+    /// The three hedge templates, keyed by the certainty they apply to,
+    /// **without** the `%@` placeholder — the fragment form
+    /// `ReasoningOutputValidator` matches against a remote response to catch
+    /// a model that hedged on its own (which would otherwise get
+    /// double-hedged by `describe(subject:certainty:)`). Kept alongside
+    /// `hedgeTemplate(for:locale:)` rather than duplicated, so the two can
+    /// never drift — see docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md
+    /// "The output validator".
+    public static func hedgeFragments(locale: Locale) -> [String] {
+        Certainty.allCases.map { certainty in
+            hedgeTemplate(for: certainty, locale: locale)
+                .replacing(" %@.", with: "")
+                .replacing("%@.", with: "")
+        }
+    }
+
+    /// What to say when depth sensing ran and produced no usable reading —
+    /// distinct from `nothingRecognized(locale:)`, which is about
+    /// perception finding nothing. `DepthStatistics` treats `nil` as "could
+    /// not measure", never "the way is clear"; this string is the spoken
+    /// form of that distinction, for `ObstacleAwarenessView`'s one-shot
+    /// check.
+    public func couldNotMeasure(locale: Locale = .current) -> String {
+        LocalizedCatalog.string("Couldn't take a measurement. Try again.", locale: locale)
+    }
+
+    /// The localized format-string template for one certainty bucket, still
+    /// carrying its `%@` placeholder. The single source both
+    /// `describe(subject:certainty:)` and `hedgeFragments(locale:)` build
+    /// from, so the sentence form and the fragment form can never drift
+    /// apart.
     private static func hedgeTemplate(for certainty: Certainty, locale: Locale) -> String {
         let key = switch certainty {
         case .low: "there might be %@."

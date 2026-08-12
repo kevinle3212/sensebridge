@@ -81,4 +81,18 @@ struct PhrasingTests {
         #expect(phrase != "a chair.")
         #expect(!phrase.hasPrefix("a chair"))
     }
+
+    @Test func hedgeFragmentsCoversAllThreeCertaintyTemplatesInEnglish() {
+        let fragments = Phrasing.hedgeFragments(locale: Locale(identifier: "en"))
+        #expect(fragments.contains("there might be"))
+        #expect(fragments.contains("it looks like there's"))
+    }
+
+    @Test func couldNotMeasureIsDistinctFromNothingRecognized() {
+        let phrasing = Phrasing()
+        let couldNotMeasure = phrasing.couldNotMeasure(locale: Locale(identifier: "en"))
+        let nothingRecognized = phrasing.nothingRecognized(locale: Locale(identifier: "en"))
+        #expect(couldNotMeasure != nothingRecognized)
+        #expect(couldNotMeasure.lowercased().contains("measure"))
+    }
 }
