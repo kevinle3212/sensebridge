@@ -172,6 +172,131 @@ land.
       None of these can be checked from a machine; needs Kevin's own device
       pass.
 
+- [ ] **[P2]** **[Needs owner]** **`legal/PRIVACY_POLICY.md` and
+      `legal/SUBPROCESSORS.md` disclosure changes are uncommitted** — Kevin
+      applied the drafted Local/Cloud reasoning-backend disclosure himself
+      (agent was blocked from writing `legal/` by `.claude/settings.json`'s
+      `Edit(legal/**)` deny rule, by design), and the matching
+      `CHANGELOG.md` entry was added in the same working tree. "Which branch"
+      answered 2026-08-12: current branch, `feat/awareness-reasoning-tiers` —
+      still needs Kevin to actually run the commit (see `tmp/handoff-away.md`
+      for the exact command; agents don't run `git` autonomously).
+
+- [ ] **[P1]** **[Needs owner]** **Full-word distance units (2026-08-12,
+      overnight session) are implemented, tested, and installed on-device,
+      but uncommitted** — root cause + fix + regression test + verification
+      commands are all in `tmp/handoff-away.md`. Files: both
+      `MeasurementFormatter` call sites
+      (`AmbientAwarenessSession+Support.swift`,
+      `SettingsSections.swift`) now set `unitStyle = .long` instead of
+      defaulting to `.medium`'s abbreviation ("in"/"ft"), which is what a
+      synthesizer was reading literally. New test:
+      `app/SenseBridgeTests/AmbientAwarenessSessionSupportTests.swift`
+      (required manual `project.pbxproj` registration, also uncommitted).
+      **Still needs your ear on-device** — no CI substitute for confirming
+      the spoken result actually sounds right in your locale/accent.
+
+- [ ] **[P1]** **[Needs owner]** **Review the descriptive-voice /
+      more-comprehensive-AI plan and its execution (2026-08-12, overnight
+      session)** — per your "Opus 5 writes and reviews the plan, Sonnet 5
+      executes" instruction: an Opus 5 agent researched the composer
+      pipeline and wrote (then self-reviewed) a plan at
+      [`docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md`](docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md),
+      constrained to no new dependencies and no fine-tuning/dataset work
+      (those are the "Deferred to Kevin" items below, with options, not
+      built). All 10 of the plan's tasks were then executed inline this
+      session (task-by-task, verified against the plan's own acceptance
+      commands) — see `tmp/handoff-away.md` and the "Configurable
+      spoken-output verbosity" item above for what shipped. Uncommitted, same
+      as everything else tonight. **This is a genuinely large diff for an
+      unattended session to have produced** — worth a closer read than the
+      smaller items above before committing.
+
+- [ ] **[P2]** **[Needs owner]** **Real model/dataset work for more
+      comprehensive on-device descriptions** — deferred by design, not
+      built. Three options with tradeoffs are written out in
+      `docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md`'s
+      "Deferred to Kevin" §1: (A) stay on Apple Vision + Foundation Models
+      (recommended — zero license/bundle/maintenance cost), (B) train a
+      Core ML classifier with Create ML on a vetted dataset (this repo
+      already paid the license-audit cost once on the ESC-50 sound
+      compilation — see `audits/model-license/`), (C) bundle an open
+      vision-language model as the Local reasoning tier (blocked on a full
+      license audit — AGPL/`apple-amlr` are hard blockers per `AGENTS.md`
+      — plus gigabyte-scale bundle growth and thermal testing). Recommended:
+      A now, B only if field testers name specific missed object classes.
+
+- [ ] **[P3]** **Spatial phrasing ("toward the left of the camera's
+      view") — struck in self-review, not built.** The plan's own adversarial
+      pass killed this (finding R1): the chest-mount angle is uncalibrated,
+      so "left of the camera's view" is not reliably "left of you," and
+      `ReasoningOutputValidator.disallowedTerms` already bans "left"/"right"
+      for exactly this reason. Options in the plan's "Deferred to Kevin" §2.
+      Recommended: don't build until a blind tester asks for it.
+
+- [ ] **[P2]** **Decide the shipped default `SpokenDetail` value** — shipped
+      as `.standard` tonight (no behavior change for anyone who doesn't open
+      Settings). Options in the plan's "Deferred to Kevin" §3. Needs a device
+      listen at both `.standard` and `.detailed` before flipping the default
+      — see the P1 device-validation item above.
+
+- [ ] **[P3]** **Extend `SpokenPhrase`'s abbreviation table from real Vision
+      identifiers** — currently seeded from identifiers hand-verified during
+      planning (`tv`, `cd player`, `atm`, etc. — see
+      `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/SpokenPhrase.swift`),
+      not enumerated from the framework. Plan's "Deferred to Kevin" §4
+      recommends a `#if DEBUG` dump of the classifier's known identifiers run
+      once on device — ten minutes, converts a guess into a list.
+
+- [ ] **[P3]** **Fold recognized sounds/text into scene descriptions** —
+      genuinely more comprehensive, genuinely not attempted tonight.
+      `.detectedSound` is dropped by every composer; `OCRService` discards
+      Vision's per-observation confidence, so there's nothing to hedge from
+      without changing its return type first. Options in the plan's
+      "Deferred to Kevin" §5.
+
+- [ ] **[P3]** **`FoundationModelsSceneComposer`'s `@Guide` word-budget
+      literals are decoupled from the enforced ceiling at one label.**
+      Flagged by the safety-framing-reviewer sign-off on the descriptive-
+      voice plan (`audits/safety-framing/20260812-105707-...md`, non-
+      blocking — fails closed): `SceneSubject`/`DetailedSceneSubject`'s
+      `@Guide` descriptions say "twelve"/"twenty-four" words (compile-time
+      literals, required by the macro), but
+      `SpokenDetail.maximumPhraseWords(labelCount:)`'s actual enforcement at
+      `.detailed` with a single label computes 8 — so a guide-compliant
+      24-word reply gets rejected into the fallback more often than
+      intended at that specific input shape. Safe (never surfaces
+      unhedged/over-long text), just under-exercises the model path. Not
+      fixable without either a non-literal `@Guide` (macro doesn't support
+      it) or restructuring the guide to not encode a fixed number.
+
+- [ ] **[P3]** **Hedge templates render sentence-initial lowercase in the
+      caption channel** — correct for speech, wrong on screen (self-review
+      finding R9 in the descriptive-voice plan). Fixing it means re-pinning
+      doctrine strings in `en`/`es`/`vi`, so fold it into "Native-speaker
+      review of three new es/vi strings" below rather than a separate pass —
+      also worth having that reviewer's eyes on tonight's new
+      `DetailLevelSettingsSection` footer copy while they're in there, since
+      it's the same class of physical-world doctrine language.
+
+- [ ] **[P3]** **Two hook friction points found by tonight's safety-framing
+      review, worth a look but not urgent:** (1) `audits/scripts/new-audit.sh`
+      creates a report file, then `guard-protected-paths.sh` denies every
+      `Edit` to it as append-only — so the skill's own generate-then-fill
+      workflow can't use `Edit` to fill in the template it just generated;
+      the reviewer worked around it by appending instead, but the template
+      placeholders are still sitting above the real findings in
+      `audits/safety-framing/20260812-105707-...md`. (2) `away-guard.sh`
+      blocked an audit-report append because the report's *prose* quoted
+      version-control verbs inside a heredoc — no actual `git`/`gh` call was
+      involved, just words describing one. Both are minor tooling
+      false-positives, not correctness bugs in the review itself.
+
+- [ ] **[P2]** **[Needs owner]** **Push `feat/awareness-reasoning-tiers` and
+      open a PR** — 25+ commits ahead of `main` once the two items above are
+      committed; nothing pushed yet. Every `git`/`gh` command needs Kevin's
+      explicit per-command permission per `CLAUDE.md`.
+
 ### GitHub language stats + guard false positive (2026-08-11, 14:00 PST)
 
 Fixing the language bar (`.gitattributes` collapsed to one
@@ -281,23 +406,6 @@ numbered files (verified by header diff) and contributed no additional items.
       `GOVERNANCE.md` itself says biometric-data decisions are the
       maintainer's call, consulting counsel — this needs an explicit
       go/no-go before any code, not just an implementation ticket.
-
-- [ ] **[P3]** **Configurable spoken-output verbosity.** Source:
-      `SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md` "Open questions" #5 and
-      the identical open question in `docs/ROADMAP.md` today: "How much
-      verbosity do blind users actually want from spoken output? ...
-      verbosity should be configurable from the start rather than guessed
-      at." Current state: `Settings.swift` has `speechRate`, `speechPitch`,
-      and `speechVolume` (how fast/how it sounds) but nothing controlling how
-      much is said — no detail-level or description-length knob for
-      `SceneComposer`/`FoundationModelsSceneComposer` output. Since the
-      shipped `SceneDescription` feature already produces composed sentences
-      without this control, the "configurable from the start" bar in the
-      plan was missed for the feature as built. Not blocking — the plan
-      itself frames this as a tuning question only real testers can answer —
-      but worth having a setting to tune once field-testing (already tracked
-      via the "Discord" and "Recruiting field testers" items) produces
-      feedback, rather than adding it under pressure later.
 
 ### TODO.md verify/tighten pass — batches (2026-08-06)
 
@@ -2361,6 +2469,45 @@ remaining open items.
   summary counts match `grep -c '^- \[ \]' TODO.md`.
 
 ## Completed
+
+### Deferred from docs/planning/ (2026-08-07, 14:36 PST)
+
+- [x] **[P3]** **Configurable spoken-output verbosity.** Source:
+      `SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md` "Open questions" #5 and
+      the identical open question in `docs/ROADMAP.md` today: "How much
+      verbosity do blind users actually want from spoken output? ...
+      verbosity should be configurable from the start rather than guessed
+      at." Current state: `Settings.swift` has `speechRate`, `speechPitch`,
+      and `speechVolume` (how fast/how it sounds) but nothing controlling how
+      much is said — no detail-level or description-length knob for
+      `SceneComposer`/`FoundationModelsSceneComposer` output. Since the
+      shipped `SceneDescription` feature already produces composed sentences
+      without this control, the "configurable from the start" bar in the
+      plan was missed for the feature as built. Not blocking — the plan
+      itself frames this as a tuning question only real testers can answer —
+      but worth having a setting to tune once field-testing (already tracked
+      via the "Discord" and "Recruiting field testers" items) produces
+      feedback, rather than adding it under pressure later.
+      **Done 2026-08-12** — added `SpokenDetail` (`Brief`/`Standard`/
+      `Detailed`) per the Opus-5-reviewed plan at
+      [`docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md`](docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md):
+      scales `ObjectClassificationService.maximumLabels` and an input-scaled
+      phrase-word ceiling (enforced structurally in
+      `FoundationModelsSceneComposer` and by `ReasoningOutputValidator` on
+      every network composer) — never the detector's precision floor or
+      `Phrasing`'s hedge strength. New `DetailLevelSettingsSection` picker in
+      Settings, `en`/`es`/`vi` catalog strings. Also, independent of the
+      detail-level work: `LabelListSceneComposer` (the no-Apple-Intelligence
+      fallback) now groups descriptions by certainty bucket instead of
+      repeating one sentence per object.
+      Verified: package suite 162/162, `xcodebuild build`/`test` (device +
+      macOS scheme) all green, 3 new `DescriptionDetailUITests` e2e cases
+      pass on simulator, `swiftlint --strict`/`swiftformat --lint`/
+      `check-catalog-coverage` clean.
+      **Still open, tracked separately below**: whether a real on-device
+      model actually honors the `.detailed` word-budget hint (compile-only
+      proof, not behavioral), and whether `.detailed` sounds better or just
+      chattier — both need a device listen.
 
 ### GitHub language stats + guard false positive (2026-08-11, 14:00 PST)
 
