@@ -1,6 +1,50 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Cloud descriptions are working again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud descriptions are working again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las descripciones en la nube están funcionando de nuevo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mô tả trên đám mây đã hoạt động trở lại."
+          }
+        }
+      }
+    },
+    "Cloud descriptions aren't responding, so SenseBridge is continuing with on-device descriptions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud descriptions aren't responding, so SenseBridge is continuing with on-device descriptions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las descripciones en la nube no responden, así que SenseBridge continúa con descripciones en el dispositivo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mô tả trên đám mây không phản hồi, vì vậy SenseBridge tiếp tục dùng mô tả trên thiết bị."
+          }
+        }
+      }
+    },
     "Couldn't take a measurement. Try again.": {
       "localizations": {
         "en": {
