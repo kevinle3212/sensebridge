@@ -44,9 +44,11 @@ Sections are referenced by name, never by number — numbers rot on the first ed
 - Apply a final grammar, punctuation, and clarity pass to every prose change —
   comments, docs, UI copy, commit messages. Backtick-wrap code, paths, and
   identifiers.
-- Interview me in one round of high-signal questions when two readings of a
-  request would produce materially different work. Otherwise state the
-  assumption inline and proceed.
+- Interview me in one round of high-signal questions whenever you need context
+  you do not have — a missing constraint, an unstated preference, or two
+  readings of a request that would produce materially different work. Ask
+  before executing, not halfway through. Otherwise state the assumption inline
+  and proceed.
 
 ## Permission and approval
 

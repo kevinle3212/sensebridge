@@ -235,7 +235,10 @@ app/
                      PerceptionRecord (structured output type), DetectedObject
                      (a label with a bounding box, for the awareness preview's
                      outlines), DepthStatistics + DepthGeometry (pure depth
-                     reduction). Sound perception is not built yet
+                     reduction), SoundClassificationRunner (shared Sound
+                     Analysis plumbing), BuiltInSoundClassifier (Apple
+                     taxonomy), CombinedSoundClassifier (concurrent, keeps
+                     the highest-confidence hit)
       Reasoning/     SceneComposer (Foundation Models, 2-stage),
                      AwarenessEngine (thresholds/hysteresis), Phrasing
                      (hedging, awareness-not-safety), OutputProfile (blind/

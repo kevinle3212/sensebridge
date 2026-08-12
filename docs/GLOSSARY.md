@@ -80,12 +80,15 @@ injected once at launch. Owns the persisted `Settings`, the shared
 instances every feature renders through. Defined in
 `app/SenseBridge/App/AppEnvironment.swift`.
 
-**ARKit depth / LiDAR** — planned depth-sensing input for obstacle
-awareness, named in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) as a
-`SensingSource`. Not yet implemented: `ObstacleAwarenessView` currently
-feeds alternating mock depth readings through the real `AwarenessEngine` +
-`Phrasing` + `RenderTarget` pipeline while the real capture source is
-pending.
+**ARKit depth / LiDAR** — the depth-sensing input for obstacle awareness,
+named in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) as a `SensingSource` and
+implemented by `AmbientSensingSource` (compiled only where
+`canImport(ARKit) && os(iOS)` holds). Frames reduce through the pure
+`DepthGeometry`/`DepthStatistics` helpers, which are deliberately free of
+ARKit so the arithmetic is testable without a LiDAR device attached. The
+continuous path in `AmbientAwarenessSession` is live; the one-shot "check
+once" button in `ObstacleAwarenessView` still evaluates an alternating
+hard-coded depth value — see [`GAPS.md`](../GAPS.md) → "Application".
 
 **Awareness-not-safety** — the project's highest-priority doctrine:
 SenseBridge raises awareness of the environment and never claims to be a
@@ -208,11 +211,15 @@ sensor data (camera frame, depth map, audio buffer). `CameraSource` is the
 one concrete implementation today. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Sensing/SensingSource.swift`.
 
-**Sound Analysis** — Apple's on-device sound-classification framework,
-named in [`docs/AI-MODELS.md`](AI-MODELS.md) and
-[`docs/ARCHITECTURE.md`](ARCHITECTURE.md) as the planned perception source
-for sound alerts. Not yet implemented: `SoundAlertsView` currently renders a
-canned detection rather than capturing live audio.
+**Sound Analysis** — Apple's on-device sound-classification framework, and
+the perception source for sound alerts. One tap in `SoundAlertsView` records a
+few seconds through `MicrophoneSensingSource.record(duration:)`, then
+`CombinedSoundClassifier` runs `CustomSoundClassifier` (the bundled in-house
+Create ML model) and `BuiltInSoundClassifier` (Apple's taxonomy) concurrently
+on that one capture and keeps the single highest-confidence hit — deliberately
+not a primary/fallback ordering, since the two models are independently
+trained. Both reach the framework through the shared
+`SoundClassificationRunner` enum.
 
 **SpeechRenderTarget** — the `RenderTarget` actor that speaks a message via
 `AVSpeechSynthesizer`, configuring the shared audio session so speech isn't
@@ -220,12 +227,13 @@ silenced by the hardware mute switch. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Output/SpeechRenderTarget.swift`.
 
 **Apple Vision** — Apple's on-device computer-vision framework. `OCRService`
-uses `VNRecognizeTextRequest` for the Reading feature today; Vision object
-detection for the Identify/Describe features is named in
-[`docs/AI-MODELS.md`](AI-MODELS.md) but not yet implemented —
-`LabelingView` and `SceneDescriptionView` currently hedge a canned
-detection through the real `Phrasing`/`RenderTarget` pipeline. See
-`app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/OCRService.swift`.
+uses `VNRecognizeTextRequest` for the Reading feature;
+`ObjectClassificationService` covers the Identify and Describe features
+(whole-frame classification plus region-based detection, where objectness
+saliency proposes regions and each is classified on its own), feeding
+`LabelingView` and `SceneDescriptionView`. See
+`app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/OCRService.swift`
+and `.../Perception/ObjectClassificationService.swift`.
 
 **Two-stage scene pipeline** — Vision extracts structured labels/text from
 an image, then a `SceneComposer` composes a hedged sentence from those

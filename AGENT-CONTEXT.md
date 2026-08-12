@@ -28,28 +28,43 @@ What exists today:
   (`audits/`).
 - **Community scaffolding** — `CONTRIBUTING.md`, `SUPPORT.md`, `.github/`
   workflows and templates, `CREDITS.md`, `CHANGELOG.md`.
-- **An early `app/` scaffold.** A local Swift package
+- **An `app/` with five features on real perception.** A local Swift package
   (`app/Packages/SenseBridgeCore`) with the Sensing/Perception/Reasoning/
   Output/Storage/CloudOptional protocol seams and a hedged `Phrasing`/
   `AwarenessEngine`, plus an Xcode project (`app/SenseBridge.xcodeproj`,
   generated via `xcodegen` from `app/project.yml`) with app, unit-test, and
   UI-test targets. Builds and tests pass (`swift test`, `xcodebuild
-  build`/`test`, `swiftlint`, `swiftformat`, Semgrep `p/swift`). This is
-  scaffolding, not the product: real perception
-  (Vision, Sound Analysis, ARKit, Foundation Models) and most UI are still
-  unbuilt, and nothing has been distributed to TestFlight or the App Store.
+  build`/`test`, `swiftlint`, `swiftformat`, Semgrep `p/swift`). Live capture
+  is wired behind the seams, not canned: Reading (`CameraSource` +
+  `OCRService`, AVFoundation/Vision), Labeling (`ObjectClassificationService`,
+  Vision/Core ML), Scene Description (`FoundationModelsSceneComposer`,
+  Foundation Models), Obstacle Awareness (`AmbientSensingSource` +
+  `DepthGeometry`/`DepthStatistics`, ARKit LiDAR `sceneDepth`), and Sound
+  Alerts (`MicrophoneSensingSource` + `CombinedSoundClassifier`, which runs
+  `CustomSoundClassifier` and `BuiltInSoundClassifier` concurrently on one
+  capture — Sound Analysis/Core ML). Output goes through `SpeechRenderTarget`
+  and `HapticRenderTarget` (Core Haptics).
+- **One vendored model.** An in-house Create ML sound classifier over
+  per-clip-licence-verified training data, cleared by `model-license-audit` on
+  2026-08-05 and integrated into Sound Alerts. The `.mlmodel` ships from
+  `app/SenseBridge/Resources/`; `models/sound-classifier/` holds the training
+  data and retraining scripts.
 
 What does **not** exist yet — do not assume, reference as built, or fabricate:
 
-- **Real perception, reasoning, and feature UI.** The protocols exist; Vision
-  OCR/detection, Sound Analysis, ARKit depth, and the Foundation Models scene
-  composer are all still real feature work — see [`GAPS.md`](GAPS.md) →
-  "Not yet done" → "Application".
-- **A distributable build.** No TestFlight or App Store artifact exists; the
-  bundle ID and signing team in `app/project.yml` are placeholders.
-- **Bundled models.** `models/README.md` describes the intended approach;
-  no model is vendored yet. Any addition goes through the
-  [model-license-audit](.agents/skills/model-license-audit/SKILL.md) skill.
+- **A distributable build.** No TestFlight or App Store artifact exists, and
+  `DEVELOPMENT_TEAM` is unset in `project.pbxproj`. The bundle identifier is no
+  longer a bare placeholder — it is build-setting-driven
+  (`$(BUNDLE_ID_PREFIX:default=com.sensebridge).app`).
+- **Device-verified capture.** Lens switching, cross-lens zoom, torch, and
+  orientation-corrected capture compile but have been exercised only by the
+  compiler; none of them work in Simulator.
+- **A caption output channel.** There is no `CaptionRenderTarget`, so the deaf
+  output profile is listed in Settings as unavailable, with its reason, rather
+  than hidden (AGENTS.md doctrine 4).
+- **Further bundled models.** Any addition goes through the
+  [model-license-audit](.agents/skills/model-license-audit/SKILL.md) skill;
+  AGPL and `apple-amlr` are hard blockers.
 
 If a task assumes source that isn't here, say so plainly rather than inventing
 it.

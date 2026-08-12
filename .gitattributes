@@ -25,10 +25,13 @@ graphify-out/** linguist-generated -diff
 website/package-lock.json linguist-generated -diff
 package-lock.json         linguist-generated -diff
 
-# Impeccable skill tooling — third-party skill scripts, not app source; their
-# JS/mjs volume was drowning out Swift in GitHub's language stats.
-.agents/skills/impeccable/** linguist-vendored
-.claude/skills/impeccable/** linguist-vendored
+# Impeccable skill tooling — vendor-managed third-party scripts (`npx impeccable
+# update` owns them), not app source. Harness parity means the same 106-file tree
+# is checked in five times (.agents, .claude, .github, .gemini, .cursor), so its
+# 13.5 MB of `.mjs` drowns out every real language in GitHub's stats. One glob
+# covers every current and future harness copy — listing them individually is how
+# three of the five got missed.
+**/skills/impeccable/** linguist-vendored
 
 # Binary — never diff or normalize.
 *.png  binary

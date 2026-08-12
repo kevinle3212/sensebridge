@@ -110,6 +110,100 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ## To-Do
 
+### GitHub language stats + guard false positive (2026-08-11, 14:00 PST)
+
+Fixing the language bar (`.gitattributes` collapsed to one
+`**/skills/impeccable/**` glob, new `tools/check-linguist-vendored.mjs` gate
+wired into `npm run check`) surfaced two items that are not this agent's call:
+
+- [x] **[P2]** Stale "perception is unbuilt" claim purged from seven documents
+  on owner instruction. `PROJECT_OVERVIEW.md` (state section rewritten as a
+  feature/perception/framework table), `AGENT-CONTEXT.md` (both the "exists"
+  and "does not exist" lists), `MEMORY.md` (routing example), `GAPS.md` (two
+  entries moved to `## Resolved` with evidence; the one genuinely-open remnant
+  split out), `docs/GLOSSARY.md` (ARKit depth, Sound Analysis, Apple Vision),
+  `docs/ARCHITECTURE.md` (module tree), `docs/SECURITY-MODEL.md` (camera and
+  microphone permission justifications — the microphone row claimed "no
+  microphone-capture code exists yet", which was a privacy-doc inaccuracy).
+  `docs/CODE-MAP.md` was already accurate and needed no change. Verified by
+  reading each view's dependencies, not the prior docs. `npm run check` green.
+- [x] **[P3]** `~/.claude/hooks/guard-protected-paths.sh`
+  false-positived on **stderr** redirects. Both
+  `ls -d sessions/2026-08-11 2>/dev/null` and `ls ... 2>&1` were blocked as
+  "a truncating redirect into a protected tree" though neither writes anything;
+  cost three retries writing this session's own log. This is a security control,
+  so it must not be loosened to make a task easier — the narrow fix is to match
+  `>`/`>>` only when the redirect *target* resolves inside a protected tree,
+  rather than when a protected path appears anywhere on the command line. Owner
+  decides whether that narrowing is acceptable. Hook lives outside this repo
+  (`~/.claude/hooks/`), so it is owner-gated on that count too.
+
+  **2026-08-11: fixed on owner grant.** The first `Edit` was denied by the
+  Claude Code auto-mode classifier — correct behaviour for an edit to a security
+  hook — then applied after the owner granted it explicitly. The
+  truncating-redirect and `tee` rules now resolve the redirect **target** via
+  new `redirect_targets`/`tee_targets` helpers and test only that; an
+  unparseable target still denies, so the guard fails closed. Every other rule
+  (delete, move, truncate, git, `sed -i`) still judges the whole command.
+  `~/.claude/hooks/tests/guard-protected-paths.test.sh` gained the missing
+  coverage — its absence is why the defect shipped — including
+  `ls -la 2>/dev/null > audits/security/report.md`, which must still DENY
+  because the *real* redirect lands in `audits/`. Not a repo hook, so
+  `npm run check:hooks` reports no drift (still 4 shipped global hooks).
+
+  **Codex stop-time review then caught a fail-open in that narrowing**, valid
+  and fixed, and reproducing it exposed a second, larger hole that predates this
+  session:
+
+  1. *Quoted redirect targets.* `strip_quoted` blanked a quoted target before
+     the rule saw it, so `echo x > "sessions/…/log.md"` was allowed
+     (pre-existing) and `echo x > /tmp/a.txt 2> "sessions/err.log"` was allowed
+     (introduced by the narrowing — a benign visible target satisfied the check
+     while the protected one had vanished). Fixed with `unwrap_target_quotes()`,
+     which unwraps quotes only where they follow a redirect operator or `tee`,
+     so `echo "x > sessions/y"` stays allowed as data.
+  2. *`scratch_only` disabled the entire guard.* It was applied to the whole
+     command as an early `return 1`, so one scratch path cleared everything
+     beside it — `rm -rf /tmp/scratch ~/Vault` and `rm -rf audits/ /tmp/x` were
+     both **ALLOWED**. Its own comment said "every protected-looking path"; the
+     code meant "any". Split into `is_scratch_path()`/`is_protected_path()` and
+     `names_protected()` now tokenises and judges each path on its own.
+
+  The tokenising rewrite itself shipped a bug the suite caught immediately: a
+  bare `while IFS= read -r token` drops the final token, turning
+  `rm -rf ~/Vault` into an ALLOW. Fixed with `|| [ -n "$token" ]`, reason
+  commented inline.
+
+  **A second Codex round then caught multi-operand `tee`** — valid, and the
+  unquoted form was broken too, so the quoting was incidental. `tee` writes to
+  every file operand but `tee_targets` returned only the first, so
+  `tee /tmp/a.txt audits/general/report.md` truncated an audit report while
+  looking benign. `tee_targets()` now extracts the whole `tee` segment up to the
+  next pipeline or command separator and emits every operand;
+  `unwrap_target_quotes()` iterates to a fixpoint so each quoted operand is
+  exposed in turn. The `-a` gate is untouched, so appends stay allowed at any
+  operand count.
+
+  **A third Codex round caught the loop bound itself** — the constant 16-pass
+  cap I had added as paranoia was the fail-open: one pass unwraps one operand,
+  so a 17th quoted `tee` operand stayed wrapped, got blanked by `strip_quoted`,
+  and became invisible and writable. Verified by replaying the old loop over 25
+  quoted operands. The bound is now derived from the input's quote count, which
+  always suffices: every substitution removes exactly one quote pair, so a
+  changing pass strictly decreases the quote count and a non-changing pass
+  breaks — termination is by construction, and no constant is needed. Suite now
+  **64 cases, all passing**, with the new cases built programmatically (24
+  scratch operands plus one protected) so they scale past any constant a future
+  edit might reintroduce.
+
+- [ ] **[P3]** Two pre-existing `shellcheck -s sh` findings in
+  `~/.claude/hooks/guard-protected-paths.sh`, left alone deliberately:
+  SC2221/SC2222 on the delete-verb `case` (`*'rm -'*` is dead, `*'rm '*` already
+  covers it — both branches deny, so behaviour is identical) and SC2317 on an
+  unreachable trailing `exit 0`. Neither changes a verdict. Rewriting `case`
+  patterns in a destructive-action guard to silence a lint nit is not worth the
+  risk; fold it in only if that `case` is being touched for another reason.
+
 ### Deferred from docs/planning/ (2026-08-07, 14:36 PST)
 
 `docs/planning/` (the original 7-document pre-implementation strategy plan,
