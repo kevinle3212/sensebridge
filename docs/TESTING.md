@@ -69,7 +69,13 @@ string (e.g. `SenseBridgeCoreTests/PhrasingTests`,
 `SenseBridgeCoreTests/SceneComposerTests`) must be run via
 `xcodebuild test -scheme SenseBridgeCore -destination 'platform=macOS'`, not
 `swift test` — CI's package-test loop (`.github/workflows/ci.yml`) uses
-`xcodebuild test` for this reason.
+`xcodebuild test` for this reason. Run it from
+`app/Packages/SenseBridgeCore`, not `app/`: the umbrella Xcode project's
+auto-generated `SenseBridgeCore` scheme has no shared Test action
+(`TODO.md`'s 2026-08-11 entry), so the same command fails from `app/` with
+"Scheme SenseBridgeCore is not currently configured for the test action" —
+`ci.yml` avoids this by `cd`-ing into each package directory before running
+it.
 
 **On-device UI tests need `-allowProvisioningUpdates`.** The UI-test runner
 gets its own bundle identifier (`<prefix>.SenseBridgeUITests.xctrunner`) that

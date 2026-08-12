@@ -110,6 +110,46 @@ Everything still open falls into buckets a machine cannot close for you:
 
 ## To-Do
 
+### Awareness feature + reasoning-tier implementation (2026-08-11, 21:00 PST)
+
+Executing the approved, Opus-5-reviewed plan at
+[`docs/superpowers/plans/2026-08-11-awareness-ai-tiers-plan.md`](docs/superpowers/plans/2026-08-11-awareness-ai-tiers-plan.md)
+on `feat/awareness-reasoning-tiers` via `superpowers:subagent-driven-development`
+— one implementer + one reviewer subagent per task, progress tracked in
+`.superpowers/sdd/progress.md` (gitignored) and `tmp/handoff.md`. This entry
+covers findings surfaced mid-execution that aren't this plan's own scope;
+the plan's own Task 19 closes this TODO.md item out fully once all 23 tasks
+land.
+
+- [ ] **[P2]** **`xcodebuild test -scheme SenseBridgeCore -destination
+      'platform=macOS'` fails when run from `app/`** — `xcodebuild: error:
+      Scheme SenseBridgeCore is not currently configured for the test
+      action.` Reproduced directly (not just via subagent report). No shared
+      `SenseBridgeCore.xcscheme` exists under
+      `app/SenseBridge.xcodeproj/xcshareddata/xcschemes/` (only
+      `SenseBridge.xcscheme` does), so the SPM package's auto-generated
+      scheme has no Test action when accessed through the umbrella Xcode
+      project — even though `docs/TESTING.md` names this exact command as
+      the one CI itself uses (`.github/workflows/ci.yml`) for validating
+      String Catalog (`.xcstrings`) compilation, which bare `swift test`
+      cannot do. Workaround confirmed equivalent (real `xcodebuild`, not a
+      simulation): run the identical command from
+      `app/Packages/SenseBridgeCore` instead of `app/` — resolves the
+      package's own scheme, which does carry a Test action, and exercises
+      the same `SenseBridgeCoreTests` target and the same compiled resource
+      bundle. **Needs owner + Xcode GUI**: open the project, select the
+      SenseBridgeCore scheme, Product → Scheme → Edit Scheme, add a Test
+      action targeting `SenseBridgeCoreTests`, check "Shared," and commit
+      the resulting `xcshareddata/xcschemes/SenseBridgeCore.xcscheme` — a
+      CLI-only fix risks hand-authoring scheme XML that Xcode itself would
+      reject or silently ignore. **Confirmed not a CI risk**:
+      `.github/workflows/ci.yml:49-60` already `cd`s into each
+      `app/Packages/*` directory before running `xcodebuild test`, exactly
+      matching the working substitution above — CI was never affected. The
+      imprecision is only in `docs/TESTING.md`'s prose and this plan's own
+      task verification commands, both of which say `cd app &&` without
+      naming the package subdirectory CI actually uses.
+
 ### GitHub language stats + guard false positive (2026-08-11, 14:00 PST)
 
 Fixing the language bar (`.gitattributes` collapsed to one

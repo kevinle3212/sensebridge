@@ -533,10 +533,13 @@ matching the existing entry shape exactly (insert as a new key in the
 cd app/Packages/SenseBridgeCore && swift test --filter PhrasingTests
 ```
 
-Expected: PASS. Then also run the catalog-dependent check from `app/`:
+Expected: PASS. Then also run the catalog-dependent check from
+`app/Packages/SenseBridgeCore` (not `app/` — the umbrella Xcode project's
+auto-generated `SenseBridgeCore` scheme has no shared Test action; this is
+also the working directory `.github/workflows/ci.yml` uses):
 
 ```bash
-cd app && xcodebuild test -scheme SenseBridgeCore -destination 'platform=macOS' -only-testing:SenseBridgeCoreTests/PhrasingTests 2>&1 | tail -30
+cd app/Packages/SenseBridgeCore && xcodebuild test -scheme SenseBridgeCore -destination 'platform=macOS' -only-testing:SenseBridgeCoreTests/PhrasingTests 2>&1 | tail -30
 ```
 
 Expected: PASS (proves the new `.xcstrings` entry actually resolves through
@@ -3573,8 +3576,12 @@ Expected: all suites PASS, including every new one from Tasks 1-9.
 
 - [ ] **Step 2: Catalog-dependent tests under `xcodebuild`**
 
+Run from `app/Packages/SenseBridgeCore`, not `app/` — see Task 3's note and
+`TODO.md`'s 2026-08-11 entry on the missing `SenseBridgeCore.xcscheme` Test
+action; this also matches `.github/workflows/ci.yml`'s own working directory.
+
 ```bash
-cd app && xcodebuild test -scheme SenseBridgeCore -destination 'platform=macOS' 2>&1 | tail -60
+cd app/Packages/SenseBridgeCore && xcodebuild test -scheme SenseBridgeCore -destination 'platform=macOS' 2>&1 | tail -60
 ```
 
 Expected: PASS — confirms `Phrasing`/`ReasoningOutputValidator`'s catalog
