@@ -64,6 +64,7 @@ don't reach for it by default. See [ARCHITECTURE.md](ARCHITECTURE.md).
 | **Ultralytics YOLO (v8, v11, newer)** | **AGPL-3.0** | **Do not bundle** | Confirmed AGPL. Forces the entire project (code, configs, weights) to AGPL or an Enterprise License. Use Apple Vision detection instead. |
 | **Apple FastVLM** (0.5B / 1.5B / 7B) | **apple-amlr (non-commercial research only)** | **Do not bundle** | Confirmed across all variants (verified June 2026). Technically excellent, not usable in a shipping app. `apple-amlr` explicitly limits use to non-commercial research and excludes any commercial product or service. |
 | **Apple MobileCLIP** | **Ambiguous / mixed** | **Quarantine — research only, do not ship** | Apple's own repos mix a restrictive `apple-amlr` LICENSE file with a permissive Apple Sample Code License weights file and dual metadata tags (verified June 2026). Do not ship in anything you might monetize until Apple clarifies in writing. |
+| Anthropic / OpenAI / NVIDIA NIM (BYOK cloud reasoning) | Third-party service | **N/A — not a bundled model** | Opt-in only, disabled by default; the app calls the user's own account directly (BYOK), never a SenseBridge-run relay — no license-bundling question applies, since no model weights or SDK code ship in the app. The per-provider ToS-acceptance requirement lives in the app's consent UI (`ReasoningBackendSettingsView`), not in this checklist — see [PRIVACY.md](PRIVACY.md). |
 
 ## Adding a new model — checklist
 
@@ -88,7 +89,8 @@ don't reach for it by default. See [ARCHITECTURE.md](ARCHITECTURE.md).
   size for system-managed models (e.g. SpeechAnalyzer assets are downloaded
   and managed by the OS).
 - Everything above is on-device and private by default. The only path
-  off-device is the optional, opt-in cloud reasoning adapter — see
+  off-device is the opt-in Local (self-hosted) or Cloud (BYOK) reasoning
+  backend, each disabled until the user explicitly turns it on — see
   [PRIVACY.md](PRIVACY.md).
 - Published on-device latency figures (for FastVLM and others) come from
   secondary sources and different devices — benchmark on your own hardware,

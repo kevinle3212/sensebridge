@@ -124,12 +124,61 @@ and the page says why. `website/scripts/check-consent.js` drives a real browser
 and asserts all of this against the built site, so the claim is tested rather
 than asserted.
 
-## The optional cloud adapter (not built, opt-in when it exists)
+## Local and Cloud reasoning backends (opt-in, off by default)
 
-If a user ever enables an optional cloud-reasoning provider: explicit opt-in,
-clear disclosure of what's sent where, off by default, and any credential the
-user supplies is stored in their own Keychain — the project ships no cloud
-secrets of its own.
+Added 2026-08-11. Like crash reporting, this is deliberately one of the very
+few things in SenseBridge that can send anything off the device, and it is
+built so that it cannot happen by accident.
+
+**Two independent gates, both of which must pass, for either backend:**
+
+1. The user explicitly switched `Settings → Reasoning backend` away from
+   **On-Device** — the default and the fallback. Nothing leaves the device
+   until this happens.
+2. For **Cloud**, the user additionally acknowledged that specific provider's
+   own terms of service via a real `Toggle` (never a bare tap target),
+   re-shown every time they switch providers, since each provider has its
+   own terms. For **Local**, the equivalent acknowledgment covers sending
+   data to the address the user themselves entered.
+
+**What is sent, when both gates pass:** recognized object labels only —
+`PerceptionRecord.detectedObjectLabelsForNetwork()` is the one function that
+builds the network request payload, and it carries labels and nothing else.
+**What is never sent:** camera images, audio, depth data, or location, on
+either backend, under any circumstances.
+
+**Where it goes:**
+
+- **Local** — entirely the user's own choice: whatever address they typed
+  into Settings. SenseBridge has no visibility past that point, and says so
+  in the field's own accessibility hint.
+- **Cloud** — the provider the user selected (Anthropic, OpenAI, or NVIDIA
+  NIM), called directly with the user's own API key (BYOK). There is no
+  SenseBridge-run relay or backend in this path — see
+  [`docs/ARCHITECTURE.md`](ARCHITECTURE.md#backend-architecture-there-is-none-and-that-is-correct).
+
+**Credentials:** any API key or self-hosted token the user supplies is
+written only to Keychain (`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`,
+excluded from iCloud Keychain sync and encrypted backup), never
+`UserDefaults`, never a log. Switching away from a network backend does
+**not** delete a saved credential — removal is the user's own explicit
+choice, from a persistent "Remove" control in Settings, so turning a backend
+off and back on doesn't force re-entering a key.
+
+**What the app does if a network backend stops responding:** two consecutive
+failures fall back to on-device and announce it once; a later success
+announces recovery once. It never fails silently, and it never repeats the
+same announcement every cycle.
+
+Every third party that receives anything, what they get, where it lands, and
+how long they keep it belongs in
+[`legal/SUBPROCESSORS.md`](https://github.com/kevinle3212/sensebridge/blob/main/legal/SUBPROCESSORS.md) —
+Anthropic, OpenAI, and NVIDIA are pending addition there and in
+[`legal/PRIVACY_POLICY.md`](https://github.com/kevinle3212/sensebridge/blob/main/legal/PRIVACY_POLICY.md)
+as of this writing; a self-hosted Local endpoint is the user's own
+infrastructure, not a subprocessor. `legal/` edits need Kevin's explicit
+approval, so this doc names the gap rather than the file silently landing
+out of sync with what the app does.
 
 ## Secrets
 

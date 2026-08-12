@@ -83,7 +83,7 @@ Vanity metrics (stars, downloads) are not success here.
 | --- | --- |
 | Eyes-free task completion | A blind tester reads a document and identifies common objects unaided |
 | Repeat usage by real blind testers | At least 1–2 testers choosing to use it in real life |
-| On-device processing share | 100% of MVP features run with no network call |
+| On-device processing share | 100% of MVP features run with no network call by default; opt-in Local/Cloud reasoning backends and opt-in crash reporting are the only exceptions, both off until the user explicitly turns them on |
 | VoiceOver navigability | Every screen and control fully operable via VoiceOver |
 | Time-to-first-useful-output | Fast enough to feel responsive on the newest iPhone (benchmark on-device) |
 | Crash-free sessions | High enough that testers are not abandoning it |

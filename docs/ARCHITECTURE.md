@@ -55,8 +55,8 @@ SenseBridge App (native Swift / SwiftUI)
   encrypted enrollment store (later, on-device only)
 
   (Optional, opt-in only) ---------------------------------
-  Cloud Reasoning Adapter (disabled by default)
-  user-configured provider, explicit consent required
+  ReasoningComposerResolver: On-Device (default) | Local | Cloud (BYOK)
+  circuit-breaker fallback to on-device, disclosed once per trip/recovery
 ```
 
 **Data flow — "read this document":**
@@ -116,9 +116,19 @@ around something the app never names is a claim it cannot back (see
 - **Local Storage** — settings in UserDefaults, optional iCloud/CloudKit sync
   (free, preferences only), and later an encrypted on-device enrollment
   store. No server.
-- **Optional Cloud Reasoning Adapter** — disabled by default, opt-in only,
-  user-configured, so the "configurable provider" promise is real without
-  ever being required.
+- **`ReasoningComposerResolver`** — picks the active reasoning backend from
+  `Settings`: on-device (Foundation Models, default, free, private), a
+  self-hosted local endpoint, or opt-in Cloud BYOK (Anthropic, OpenAI, NVIDIA
+  NIM), all disabled by default and user-configured. Network composers'
+  output passes through `ReasoningOutputValidator` — a deterministic, local
+  gate, not a system-prompt request — before it ever reaches `Phrasing`,
+  since only Foundation Models' `@Generable` guided generation can enforce
+  hedged phrasing structurally. Two consecutive network failures trip a
+  circuit breaker that falls back to on-device and announces the fallback
+  once; a later success announces recovery once. Composition runs as a
+  tracked, cancellable child task so a slow network round-trip never blocks
+  the depth-sampling tick in `AmbientAwarenessSession`. See
+  [`docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md`](superpowers/specs/2026-08-11-awareness-ai-tiers-design.md).
 
 ## On-device AI pipeline
 
@@ -243,7 +253,12 @@ app/
                      AwarenessEngine (thresholds/hysteresis), Phrasing
                      (hedging, awareness-not-safety), OutputProfile (blind/
                      deaf/deaf-blind selection), AppLanguage (supported UI
-                     languages), LocalizedCatalog (String Catalog loader)
+                     languages), LocalizedCatalog (String Catalog loader),
+                     ReasoningComposerResolver + LiveNetworkComposerFactory
+                     (backend selection, circuit-breaker fallback),
+                     AnthropicSceneComposer + OpenAICompatibleSceneComposer
+                     (OpenAI/NIM/self-hosted), ReasoningOutputValidator,
+                     EndpointURLNormalizer — all opt-in, disabled by default
       Output/        RenderTarget protocol (OutputMessage + OutputSignal),
                      SpeechRenderTarget (AVSpeech + VoiceOver),
                      HapticRenderTarget (Core Haptics, UIFeedbackGenerator
@@ -254,7 +269,6 @@ app/
                      UserDefaultsSettingsStore. CloudSyncService (optional
                      CloudKit sync) and EnrollmentStore (encrypted,
                      on-device) are planned, not built yet
-      CloudOptional/ CloudReasoningAdapter (opt-in only, disabled by default)
       Resources/     Localizable.xcstrings
     Tests/SenseBridgeCoreTests/   mirrors Sources/ — see docs/TESTING.md
   SenseBridge/                    the app target
@@ -307,9 +321,12 @@ shell to this standard before adding any feature: if the empty app isn't
 cleanly VoiceOver-navigable, nothing built on top of it will be either. Full
 standard: [ACCESSIBILITY.md](ACCESSIBILITY.md).
 
-**Offline-first** — every feature must work with the network off; the only
-network-touching code is the optional cloud adapter, isolated behind a
-protocol so the rest of the app never assumes connectivity.
+**Offline-first** — every feature must work with the network off; on-device
+composition is always the default and the fallback. The only network-touching
+code is the opt-in Local/Cloud reasoning backends, isolated behind
+`NetworkComposerFactory`/`SceneComposer` so the rest of the app never assumes
+connectivity, and a circuit breaker returns every session to on-device after
+two consecutive failures.
 
 **Caching** — minimal by design. Perception results are transient, not
 persisted without reason. The one thing worth caching is the last in-session

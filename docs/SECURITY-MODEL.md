@@ -22,18 +22,39 @@ data to leak between accounts, because there are no accounts. What remains
 in scope is what's on the device itself, and what's used to build and ship
 it — both covered below.
 
-**The one outbound path.** Since 2026-07-31 the app links Sentry for crash
-reporting. It is off by default and starts only when the user switches on
-Settings → Diagnostics, so an install that has not been touched has exactly
-the surface described above. When it *is* on, the addition to the threat
-model is: a third-party SDK with signal and exception handlers installed, and
-an HTTPS egress to Sentry's ingest endpoint carrying stack traces, device
-model, and OS/app version. Breadcrumbs, screenshots, view hierarchies,
-network tracking, and method swizzling are all disabled in code, and
-`CrashReporting.scrub` strips user, request, server-name, and device-name
-fields before transmission. See
+**The outbound paths.** Two, both opt-in and off by default, so an install
+that has not been touched has exactly the surface described above.
+
+Since 2026-07-31 the app links Sentry for crash reporting, starting only when
+the user switches on Settings → Diagnostics. When it *is* on, the addition to
+the threat model is: a third-party SDK with signal and exception handlers
+installed, and an HTTPS egress to Sentry's ingest endpoint carrying stack
+traces, device model, and OS/app version. Breadcrumbs, screenshots, view
+hierarchies, network tracking, and method swizzling are all disabled in code,
+and `CrashReporting.scrub` strips user, request, server-name, and
+device-name fields before transmission. See
 [`docs/PRIVACY.md`](PRIVACY.md#crash-reporting-opt-in-off-by-default) and
 `app/SenseBridge/App/CrashReporting.swift`.
+
+Since 2026-08-11 the app also supports opt-in Local (self-hosted) or Cloud
+(BYOK: Anthropic, OpenAI, NVIDIA NIM) reasoning backends, starting only when
+the user explicitly switches `Settings → Reasoning backend` away from
+On-Device and, for Cloud, acknowledges that provider's own terms. The
+addition to the threat model when active: an HTTPS (or, for a Local endpoint
+the user points at their own LAN server, HTTP under a scoped
+`NSAllowsLocalNetworking` exception — never `NSAllowsArbitraryLoads`) egress
+carrying recognized object labels only, never camera images, audio, depth
+data, or location — `PerceptionRecord.detectedObjectLabelsForNetwork()` is
+the one function that builds that payload. `ReasoningOutputValidator`
+inspects every response before it can reach spoken output, rejecting
+anything that isn't a short, hedge-free noun phrase, so a compromised or
+malicious endpoint's reply is a rejected request, not spoken injected text.
+Credentials are Keychain-only
+(`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`, excluded from iCloud
+sync), never `UserDefaults` or a log. See
+[`docs/PRIVACY.md`](PRIVACY.md#local-and-cloud-reasoning-backends-opt-in-off-by-default)
+and
+[`docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md`](superpowers/specs/2026-08-11-awareness-ai-tiers-design.md).
 
 ## Trust boundaries
 
@@ -134,7 +155,7 @@ and the capture code that requests each one:
 
 | Permission | Usage description | Justification |
 | --- | --- | --- |
-| `NSCameraUsageDescription` | "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device." | Actively used by two paths, both on-device. `CameraSource` (`app/Packages/SenseBridgeCore/.../Sensing/CameraSource.swift`) requests camera authorization and drives the Read/Identify/Describe capture flows. `AmbientSensingSource` (`.../Sensing/AmbientSensingSource.swift`) runs an `ARWorldTrackingConfiguration` with `.sceneDepth` for Obstacle Awareness — `ARSession` is the only API returning a camera frame and a registered depth map from one session, and it consumes the same camera grant rather than a separate one. |
+| `NSCameraUsageDescription` | "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device." | Actively used by two paths, both on-device. `CameraSource` (`app/Packages/SenseBridgeCore/.../Sensing/CameraSource.swift`) requests camera authorization and drives the Read/Identify/Describe capture flows. `AmbientSensingSource` (`.../Sensing/AmbientSensingSource.swift`) runs an `ARWorldTrackingConfiguration` with `.sceneDepth` for Obstacle Awareness — `ARSession` is the only API returning a camera frame and a registered depth map from one session, and it consumes the same camera grant rather than a separate one. The camera image itself never leaves the device under any setting — the "Nothing leaves your device" claim above is about the frame, not about what's derived from it: since 2026-08-11 a user who opts into a Local/Cloud reasoning backend sends the object *labels* Vision recognized in that frame, never the frame. See the network-reasoning exception above. |
 | `NSMicrophoneUsageDescription` | "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device." | Actively used: `MicrophoneSensingSource` (`app/Packages/SenseBridgeCore/.../Sensing/MicrophoneSensingSource.swift`) requests microphone authorization and feeds `SoundAlertsView` through `CombinedSoundClassifier` (`CustomSoundClassifier` + `BuiltInSoundClassifier`, run concurrently on one capture). Classification is on-device; audio is captured per tap for a bounded duration, never streamed, written to disk, or transmitted. |
 
 No other `NS*UsageDescription` keys exist in the current build — no photo

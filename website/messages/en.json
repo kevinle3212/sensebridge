@@ -162,7 +162,7 @@
   "phone_annotation_1_body": "Light and depth enter here. The camera and LiDAR scanner sample the scene's shape so the app has something truthful to describe. In the architecture this is the SensingSource seam — the only door the world comes in through.",
   "phone_annotation_2_label": "02 · REASONING",
   "phone_annotation_2_title": "Neural Engine",
-  "phone_annotation_2_body": "On-device models turn pixels and depth into hedged, plain-language description. Perception and reasoning run entirely on the phone's own silicon — nothing is uploaded, nothing leaves your hand.",
+  "phone_annotation_2_body": "On-device models turn pixels and depth into hedged, plain-language description. Perception always runs on the phone's own silicon; reasoning does too by default, with an opt-in setting to use your own cloud or self-hosted AI instead — off until you turn it on.",
   "phone_annotation_3_label": "03 · RENDERING",
   "phone_annotation_3_title": "Speaker + Taptic Engine",
   "phone_annotation_3_body": "What the phone understands comes back as speech and gentle haptics — the RenderTarget seam. Always phrased as awareness, never as a promise of safety.",

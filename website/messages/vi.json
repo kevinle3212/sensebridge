@@ -162,7 +162,7 @@
   "phone_annotation_1_body": "Ánh sáng và độ sâu đi vào đây. Camera và máy quét LiDAR lấy mẫu hình dạng của cảnh vật để ứng dụng có điều gì đó chân thực để mô tả. Trong kiến trúc, đây là ranh giới SensingSource — cánh cửa duy nhất mà thế giới đi vào.",
   "phone_annotation_2_label": "02 · SUY LUẬN",
   "phone_annotation_2_title": "Neural Engine",
-  "phone_annotation_2_body": "Các mô hình trên thiết bị chuyển đổi pixel và độ sâu thành mô tả có rào chắn, bằng ngôn ngữ đơn giản. Nhận thức và suy luận chạy hoàn toàn trên chip của chính điện thoại — không có gì được tải lên, không có gì rời khỏi tay bạn.",
+  "phone_annotation_2_body": "Các mô hình trên thiết bị chuyển đổi pixel và độ sâu thành mô tả có rào chắn, bằng ngôn ngữ đơn giản. Nhận thức luôn chạy trên chip của chính điện thoại; suy luận cũng vậy theo mặc định, cùng với tùy chọn bật để dùng AI trên đám mây hoặc tự lưu trữ của riêng bạn — tắt cho đến khi bạn bật.",
   "phone_annotation_3_label": "03 · HIỂN THỊ",
   "phone_annotation_3_title": "Loa + Taptic Engine",
   "phone_annotation_3_body": "Những gì điện thoại hiểu được sẽ trở lại dưới dạng giọng nói và rung nhẹ — ranh giới RenderTarget. Luôn được diễn đạt như nhận thức, không bao giờ là lời hứa về an toàn.",
