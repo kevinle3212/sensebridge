@@ -180,14 +180,10 @@ public struct ObjectClassificationService: PerceptionService, Sendable {
     /// `Phrasing.describe(subject:certainty:)` renders "it looks like there's
     /// %@.", so the subject has to arrive article-first — the same shape the
     /// hand-written fixtures elsewhere in the codebase use ("a chair"). Vision
-    /// hands back bare, underscore-joined identifiers ("coffee_mug").
+    /// hands back bare, underscore-joined identifiers ("coffee_mug"). Forwards
+    /// to `SpokenPhrase`, the single implementation this and
+    /// `SoundClassificationRunner.subjectPhrase(for:)` both use.
     static func subjectPhrase(for identifier: String) -> String {
-        let words = identifier.replacing("_", with: " ")
-        guard let first = words.first else { return words }
-        // English-only, matching the limitation documented on the type. "an"
-        // before a written vowel is wrong for a handful of nouns ("a unicycle")
-        // and right for the overwhelming majority; the alternative is a
-        // per-identifier table for a label set that is itself untranslated.
-        return "aeiou".contains(first.lowercased()) ? "an \(words)" : "a \(words)"
+        SpokenPhrase.subject(for: identifier)
     }
 }

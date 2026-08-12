@@ -116,7 +116,11 @@ not a gap to backfill.
 
 That does not mean both are manual-only. `FoundationModelsSceneComposer` is
 manual-only: no automated test touches it or `SystemLanguageModel`, so its
-coverage is the manual/VoiceOver pass. `CustomSoundClassifier` is not — after
+coverage is the manual/VoiceOver pass — this covers the `SpokenDetail`-scaled
+word ceiling too: `xcodebuild build` proves the two `@Generable` guide structs
+and the structural length check compile, never that a real model actually
+respects the word-budget hint at `.detailed`, which needs a device listen (see
+`TODO.md`'s device-validation entry). `CustomSoundClassifier` is not — after
 an audit found
 non-alert audio (room hiss, white noise, a pure tone, a frequency sweep)
 scoring an alert class at 1.000 confidence and reaching spoken output (see

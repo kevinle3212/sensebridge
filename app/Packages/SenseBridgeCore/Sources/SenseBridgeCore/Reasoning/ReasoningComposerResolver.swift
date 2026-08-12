@@ -13,20 +13,43 @@ public struct ReasoningComposeResult: Sendable, Equatable {
     public let announcement: String?
 }
 
+/// Everything `NetworkComposerFactory.composer(backend:configuration:)` needs
+/// beyond `backend` itself, bundled into one value so the method stays under
+/// SwiftLint's parameter-count gate. Grouped rather than reduced: each field
+/// is still independently optional/required per backend, exactly as when
+/// they were separate parameters — see `composer(backend:configuration:)`.
+public struct NetworkComposerRequest: Sendable {
+    public let provider: CloudProvider?
+    public let endpointURL: String?
+    public let modelOverride: String?
+    public let credential: String?
+    /// Forwarded to the built composer so its output word ceiling matches
+    /// the user's `Settings.spokenDetail` — see `SpokenDetail`.
+    public let detail: SpokenDetail
+
+    public init(
+        provider: CloudProvider?, endpointURL: String?, modelOverride: String?,
+        credential: String?, detail: SpokenDetail
+    ) {
+        self.provider = provider
+        self.endpointURL = endpointURL
+        self.modelOverride = modelOverride
+        self.credential = credential
+        self.detail = detail
+    }
+}
+
 /// Builds a network `SceneComposer` for the given configuration, or `nil`
 /// when required configuration (a credential, a URL, a model name) is
 /// missing — which the resolver treats as "not configured," not "failing."
-/// `modelOverride` is a call-time parameter rather than something baked into
+/// `configuration` is a call-time parameter rather than something baked into
 /// the factory at construction, so one long-lived factory instance (built
 /// once per session/view) always sees the user's current `Settings` value
 /// instead of whatever was true when the factory was built.
 public protocol NetworkComposerFactory: Sendable {
-    /// Builds a composer for `backend`, or `nil` if the given configuration
-    /// isn't enough to construct one (missing credential, URL, or model).
-    func composer(
-        backend: ReasoningBackend, provider: CloudProvider?, endpointURL: String?,
-        modelOverride: String?, credential: String?
-    ) -> SceneComposer?
+    /// Builds a composer for `backend`, or `nil` if `configuration` isn't
+    /// enough to construct one (missing credential, URL, or model).
+    func composer(backend: ReasoningBackend, configuration: NetworkComposerRequest) -> SceneComposer?
 }
 
 /// The real factory, used everywhere outside tests. Builds a fresh composer
@@ -50,50 +73,51 @@ public struct LiveNetworkComposerFactory: NetworkComposerFactory {
     /// Routes to the composer type matching `backend`, or `nil` when the
     /// backend-specific required configuration (credential, URL, model) is
     /// absent. See `NetworkComposerFactory`'s doc comment for the contract.
-    public func composer(
-        backend: ReasoningBackend, provider: CloudProvider?, endpointURL: String?,
-        modelOverride: String?, credential: String?
-    ) -> SceneComposer? {
+    public func composer(backend: ReasoningBackend, configuration: NetworkComposerRequest) -> SceneComposer? {
         switch backend {
         case .onDevice:
             return nil
         case .cloud:
-            return cloudComposer(provider: provider, modelOverride: modelOverride, credential: credential)
+            return cloudComposer(configuration: configuration)
         case .localEndpoint:
-            guard let endpointURL, !endpointURL.isEmpty,
-                  let modelOverride, !modelOverride.isEmpty
+            guard let endpointURL = configuration.endpointURL, !endpointURL.isEmpty,
+                  let modelOverride = configuration.modelOverride, !modelOverride.isEmpty
             else { return nil }
             return try? OpenAICompatibleSceneComposer(
-                endpointURL: endpointURL, apiKey: credential, model: modelOverride, session: session, locale: locale
+                endpointURL: endpointURL, apiKey: configuration.credential, model: modelOverride, session: session,
+                locale: locale, detail: configuration.detail
             )
         }
     }
 
     /// Routes a `.cloud` request to the provider-specific composer. Split
-    /// out of `composer(backend:...)` to keep that switch's cases at one
-    /// nesting level (SwiftLint's `nesting` rule).
-    private func cloudComposer(
-        provider: CloudProvider?, modelOverride: String?, credential: String?
-    ) -> SceneComposer? {
-        switch provider {
+    /// out of `composer(backend:configuration:)` to keep that switch's cases
+    /// at one nesting level (SwiftLint's `nesting` rule).
+    private func cloudComposer(configuration: NetworkComposerRequest) -> SceneComposer? {
+        switch configuration.provider {
         case .anthropic:
-            guard let credential else { return nil }
-            return AnthropicSceneComposer(apiKey: credential, model: modelOverride, session: session, locale: locale)
+            guard let credential = configuration.credential else { return nil }
+            return AnthropicSceneComposer(
+                apiKey: credential, model: configuration.modelOverride, session: session,
+                locale: locale, detail: configuration.detail
+            )
         case .openai:
-            guard let credential else { return nil }
+            guard let credential = configuration.credential else { return nil }
             return try? OpenAICompatibleSceneComposer(
                 endpointURL: "https://api.openai.com/v1/chat/completions",
-                apiKey: credential, model: modelOverride ?? "gpt-4o-mini", session: session, locale: locale
+                apiKey: credential, model: configuration.modelOverride ?? "gpt-4o-mini", session: session,
+                locale: locale, detail: configuration.detail
             )
         case .nvidiaNIM:
             // No universal default model exists for NIM — the Settings UI
             // (Task 17) requires `reasoningModelOverride` before this
             // backend can be enabled; treat a missing model as
             // not-configured here too.
-            guard let modelOverride, !modelOverride.isEmpty else { return nil }
+            guard let modelOverride = configuration.modelOverride, !modelOverride.isEmpty else { return nil }
             return try? OpenAICompatibleSceneComposer(
                 endpointURL: "https://integrate.api.nvidia.com/v1/chat/completions",
-                apiKey: credential, model: modelOverride, session: session, locale: locale
+                apiKey: configuration.credential, model: modelOverride, session: session,
+                locale: locale, detail: configuration.detail
             )
         case nil:
             return nil
@@ -160,13 +184,14 @@ public final class ReasoningComposerResolver {
     ) async -> ReasoningComposeResult? {
         if settings.reasoningBackend.usesNetwork, shouldAttemptNetwork() {
             let credential = credential(for: settings)
-            if let composer = factory.composer(
-                backend: settings.reasoningBackend,
+            let request = NetworkComposerRequest(
                 provider: settings.cloudProvider,
                 endpointURL: settings.localEndpointURL,
                 modelOverride: settings.reasoningModelOverride,
-                credential: credential
-            ) {
+                credential: credential,
+                detail: settings.spokenDetail
+            )
+            if let composer = factory.composer(backend: settings.reasoningBackend, configuration: request) {
                 do {
                     let text = try await composer.compose(from: records)
                     let announcement = recoveryAnnouncementIfNeeded(locale: locale)

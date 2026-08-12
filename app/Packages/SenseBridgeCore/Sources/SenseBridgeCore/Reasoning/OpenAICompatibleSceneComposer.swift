@@ -55,9 +55,9 @@ public struct OpenAICompatibleSceneComposer: SceneComposer {
     private let apiKey: String?
     private let model: String
     private let session: URLSession
-    private let validator: ReasoningOutputValidator
     private let phrasing: Phrasing
     private let locale: Locale
+    private let detail: SpokenDetail
 
     /// Throws at construction, not at request time, if `endpointURL` fails
     /// `EndpointURLNormalizer` — a bad or credential-embedding URL must never
@@ -68,25 +68,27 @@ public struct OpenAICompatibleSceneComposer: SceneComposer {
     ///   - apiKey: The user's key, or `nil` for a self-hosted endpoint that needs none.
     ///   - model: The model identifier the target endpoint expects.
     ///   - session: Injected so tests can intercept requests via `StubURLProtocol`.
-    ///   - validator: The safety enforcement point every response passes through before `Phrasing`.
     ///   - phrasing: Wraps the validated phrase in a hedge template.
     ///   - locale: Drives both the requested response language and the hedge template chosen.
+    ///   - detail: How many words the validated phrase may run — see `SpokenDetail`.
+    ///     Not built into a stored `ReasoningOutputValidator` because the ceiling is
+    ///     scaled by the label count, which is only known inside `compose(from:)`.
     public init(
         endpointURL: String,
         apiKey: String?,
         model: String,
         session: URLSession,
-        validator: ReasoningOutputValidator = .init(),
         phrasing: Phrasing = .init(),
-        locale: Locale = .current
+        locale: Locale = .current,
+        detail: SpokenDetail = .standard
     ) throws {
         endpoint = try EndpointURLNormalizer.normalize(endpointURL)
         self.apiKey = apiKey
         self.model = model
         self.session = session
-        self.validator = validator
         self.phrasing = phrasing
         self.locale = locale
+        self.detail = detail
     }
 
     /// Sends the perceived object labels to the configured endpoint,
@@ -98,6 +100,7 @@ public struct OpenAICompatibleSceneComposer: SceneComposer {
     public func compose(from records: [PerceptionRecord]) async throws -> String {
         let labels = records.detectedObjectLabelsForNetwork()
         guard !labels.isEmpty else { return phrasing.nothingRecognized(locale: locale) }
+        let maximumWords = detail.maximumPhraseWords(labelCount: labels.count)
 
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
@@ -108,7 +111,7 @@ public struct OpenAICompatibleSceneComposer: SceneComposer {
         let body = Request(
             model: model,
             messages: [
-                RequestMessage(role: "system", content: Self.instructions(locale: locale)),
+                RequestMessage(role: "system", content: Self.instructions(locale: locale, maximumWords: maximumWords)),
                 RequestMessage(role: "user", content: "Labels: \(labels.joined(separator: ", "))")
             ],
             maxTokens: 40
@@ -128,6 +131,9 @@ public struct OpenAICompatibleSceneComposer: SceneComposer {
         else {
             throw ComposerError.malformedResponse
         }
+        // Built here, not stored: the ceiling is scaled by `labels.count`,
+        // which is only known once a request is actually being composed.
+        let validator = ReasoningOutputValidator(maximumWords: maximumWords)
         let validated = try validator.validate(text, locale: locale)
         let weakest = records.weakestDetectedObjectConfidence() ?? 0
         return phrasing.describe(
@@ -141,14 +147,18 @@ public struct OpenAICompatibleSceneComposer: SceneComposer {
     /// forced structured output, and with the validator as the real
     /// enforcement point, a provider ignoring this prompt degrades to
     /// "rejected and falls back," not "speaks an unhedged claim."
-    private static func instructions(locale: Locale) -> String {
+    ///
+    /// - Parameter maximumWords: Steers the model toward the ceiling
+    ///   `ReasoningOutputValidator` actually enforces — a hint, not a
+    ///   substitute for that enforcement.
+    private static func instructions(locale: Locale, maximumWords: Int) -> String {
         """
         You compress a list of detected object labels into one short noun phrase \
         for a blind user's screen reader. Name only objects present in the list. \
         Never add objects, never guess what the place is, never describe distance, \
         direction, movement, or safety, and never write a full sentence. Respond \
         only with the noun phrase, in the language identified by locale \
-        "\(locale.identifier)".
+        "\(locale.identifier)". Use at most \(maximumWords) words.
         """
     }
 }

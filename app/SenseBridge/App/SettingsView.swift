@@ -99,6 +99,7 @@ struct SettingsView: View {
                 narrationIntervalSeconds: binding(\.narrationIntervalSeconds),
                 alertDistanceMeters: binding(\.awarenessAlertDistanceMeters)
             )
+            DetailLevelSettingsSection(spokenDetail: binding(\.spokenDetail))
             ReasoningBackendSettingsView(
                 reasoningBackend: binding(\.reasoningBackend),
                 cloudProvider: binding(\.cloudProvider),

@@ -88,6 +88,33 @@ struct PhrasingTests {
         #expect(fragments.contains("it looks like there's"))
     }
 
+    /// The test that fails if a future change lets detail level reach into
+    /// hedging. `SpokenDetail` never touches `Phrasing` directly — it scales
+    /// how many labels a composer joins into `subject`, not the hedge that
+    /// wraps it — so this exercises the subject shape each level actually
+    /// produces (one label at `.concise`, several joined at `.detailed`)
+    /// against every certainty bucket, in every supported locale, and
+    /// confirms the hedge fragment is there regardless.
+    @Test(arguments: ["en", "es", "vi"])
+    func everyDetailLevelSubjectStaysHedgedAtEveryCertainty(localeIdentifier: String) {
+        let locale = Locale(identifier: localeIdentifier)
+        let subjectsByDetail: [SpokenDetail: String] = [
+            .concise: "a chair",
+            .standard: "a chair and a table",
+            .detailed: "a chair, a table, a lamp, and a doorway"
+        ]
+        let knownFragments = Phrasing.hedgeFragments(locale: locale)
+        for (_, subject) in subjectsByDetail {
+            for certainty in Certainty.allCases {
+                let phrase = Phrasing().describe(subject: subject, certainty: certainty, locale: locale)
+                #expect(
+                    knownFragments.contains { phrase.hasPrefix($0) },
+                    "\"\(phrase)\" must start with a known hedge fragment"
+                )
+            }
+        }
+    }
+
     @Test func couldNotMeasureIsDistinctFromNothingRecognized() {
         let phrasing = Phrasing()
         let couldNotMeasure = phrasing.couldNotMeasure(locale: Locale(identifier: "en"))

@@ -84,4 +84,29 @@ struct SettingsTests {
         let decoded = try JSONDecoder().decode(Settings.self, from: Data(unrecognizedBackendJSON.utf8))
         #expect(decoded.reasoningBackend == .onDevice)
     }
+
+    @Test func decodingSettingsPersistedBeforeSpokenDetailExistedYieldsStandard() throws {
+        let preSpokenDetailJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"reasoningBackend":"onDevice"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(preSpokenDetailJSON.utf8))
+        #expect(decoded.spokenDetail == .standard)
+    }
+
+    @Test func decodingUnrecognizedSpokenDetailFallsBackToStandardWithoutResettingOtherFields() throws {
+        let unrecognizedDetailJSON = """
+        {"outputProfile":"deaf","speechRate":0.7,"reasoningBackend":"onDevice","spokenDetail":"gigantic"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(unrecognizedDetailJSON.utf8))
+        #expect(decoded.spokenDetail == .standard)
+        #expect(decoded.outputProfile == .deaf)
+        #expect(decoded.speechRate == 0.7)
+    }
+
+    @Test func roundTripsDetailedSpokenDetailThroughJSON() throws {
+        let settings = Settings(spokenDetail: .detailed)
+        let data = try JSONEncoder().encode(settings)
+        let decoded = try JSONDecoder().decode(Settings.self, from: data)
+        #expect(decoded.spokenDetail == .detailed)
+    }
 }

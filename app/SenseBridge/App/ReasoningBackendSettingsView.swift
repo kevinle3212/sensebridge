@@ -228,10 +228,11 @@ private extension ReasoningBackendSettingsView {
         let session = URLSession(configuration: .ephemeral)
         let factory = LiveNetworkComposerFactory(session: session, requestTimeout: 8, locale: .current)
         let credential = credentialStore.credential(for: currentCredentialKey)
-        guard let composer = factory.composer(
-            backend: reasoningBackend, provider: cloudProvider, endpointURL: localEndpointURL,
-            modelOverride: reasoningModelOverride, credential: credential
-        ) else {
+        let request = NetworkComposerRequest(
+            provider: cloudProvider, endpointURL: localEndpointURL,
+            modelOverride: reasoningModelOverride, credential: credential, detail: .standard
+        )
+        guard let composer = factory.composer(backend: reasoningBackend, configuration: request) else {
             connectionTestResult = "Couldn't build a request — check the fields above."
             return
         }

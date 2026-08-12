@@ -25,11 +25,12 @@ private struct SucceedingComposer: SceneComposer {
 
 private final class StubFactory: NetworkComposerFactory, @unchecked Sendable {
     var next: SceneComposer?
-    func composer(
-        backend _: ReasoningBackend, provider _: CloudProvider?, endpointURL _: String?,
-        modelOverride _: String?, credential _: String?
-    ) -> SceneComposer? {
-        next
+    /// The `detail` the resolver most recently passed in — lets tests assert
+    /// it actually forwarded `settings.spokenDetail` rather than a default.
+    var lastDetail: SpokenDetail?
+    func composer(backend _: ReasoningBackend, configuration: NetworkComposerRequest) -> SceneComposer? {
+        lastDetail = configuration.detail
+        return next
     }
 }
 
@@ -90,6 +91,20 @@ struct ReasoningComposerResolverTests {
         #expect(result?.backendUsed == .cloud)
         #expect(result?.text == "network: ok")
         #expect(result?.announcement == nil)
+    }
+
+    @Test func forwardsSettingsSpokenDetailToTheFactory() async {
+        let factory = StubFactory()
+        factory.next = SucceedingComposer()
+        let store = StubCredentialStore()
+        store.save("sk-test", for: .anthropic)
+        let resolver = makeResolver(factory: factory, store: store)
+        var settings = Settings()
+        settings.reasoningBackend = .cloud
+        settings.cloudProvider = .anthropic
+        settings.spokenDetail = .detailed
+        _ = await resolver.compose(from: [], settings: settings, locale: .current, requestTimeout: 4)
+        #expect(factory.lastDetail == .detailed)
     }
 
     @Test func singleFailureFallsBackWithoutAnnouncing() async {
@@ -176,69 +191,76 @@ struct LiveNetworkComposerFactoryTests {
         requestTimeout: 4, locale: .current
     )
 
-    @Test func onDeviceAlwaysReturnsNil() {
-        let result = factory.composer(
-            backend: .onDevice, provider: nil, endpointURL: nil, modelOverride: nil, credential: nil
+    private func request(
+        provider: CloudProvider? = nil, endpointURL: String? = nil,
+        modelOverride: String? = nil, credential: String? = nil
+    ) -> NetworkComposerRequest {
+        NetworkComposerRequest(
+            provider: provider, endpointURL: endpointURL, modelOverride: modelOverride,
+            credential: credential, detail: .standard
         )
+    }
+
+    @Test func onDeviceAlwaysReturnsNil() {
+        let result = factory.composer(backend: .onDevice, configuration: request())
         #expect(result == nil)
     }
 
     @Test func cloudAnthropicWithNoCredentialReturnsNil() {
-        let result = factory.composer(
-            backend: .cloud, provider: .anthropic, endpointURL: nil, modelOverride: nil, credential: nil
-        )
+        let result = factory.composer(backend: .cloud, configuration: request(provider: .anthropic))
         #expect(result == nil)
     }
 
     @Test func cloudAnthropicWithCredentialReturnsAComposer() {
         let result = factory.composer(
-            backend: .cloud, provider: .anthropic, endpointURL: nil, modelOverride: nil, credential: "sk-ant-test"
+            backend: .cloud, configuration: request(provider: .anthropic, credential: "sk-ant-test")
         )
         #expect(result != nil)
     }
 
     @Test func cloudOpenAIWithCredentialReturnsAComposer() {
         let result = factory.composer(
-            backend: .cloud, provider: .openai, endpointURL: nil, modelOverride: nil, credential: "sk-test"
+            backend: .cloud, configuration: request(provider: .openai, credential: "sk-test")
         )
         #expect(result != nil)
     }
 
     @Test func cloudNIMWithNoModelReturnsNilEvenWithACredential() {
         let result = factory.composer(
-            backend: .cloud, provider: .nvidiaNIM, endpointURL: nil, modelOverride: nil, credential: "nvapi-test"
+            backend: .cloud, configuration: request(provider: .nvidiaNIM, credential: "nvapi-test")
         )
         #expect(result == nil)
     }
 
     @Test func cloudNIMWithModelReturnsAComposer() {
         let result = factory.composer(
-            backend: .cloud, provider: .nvidiaNIM, endpointURL: nil,
-            modelOverride: "meta/llama-3.1-8b-instruct", credential: "nvapi-test"
+            backend: .cloud,
+            configuration: request(
+                provider: .nvidiaNIM, modelOverride: "meta/llama-3.1-8b-instruct", credential: "nvapi-test"
+            )
         )
         #expect(result != nil)
     }
 
     @Test func localEndpointWithNoModelReturnsNil() {
         let result = factory.composer(
-            backend: .localEndpoint, provider: nil, endpointURL: "http://192.168.1.20:11434",
-            modelOverride: nil, credential: nil
+            backend: .localEndpoint, configuration: request(endpointURL: "http://192.168.1.20:11434")
         )
         #expect(result == nil)
     }
 
     @Test func localEndpointWithUrlAndModelReturnsAComposerEvenWithNoCredential() {
         let result = factory.composer(
-            backend: .localEndpoint, provider: nil, endpointURL: "http://192.168.1.20:11434",
-            modelOverride: "llama3.2", credential: nil
+            backend: .localEndpoint,
+            configuration: request(endpointURL: "http://192.168.1.20:11434", modelOverride: "llama3.2")
         )
         #expect(result != nil)
     }
 
     @Test func localEndpointWithEmbeddedCredentialsURLReturnsNilRatherThanThrowing() {
         let result = factory.composer(
-            backend: .localEndpoint, provider: nil, endpointURL: "http://user:pass@192.168.1.20:11434",
-            modelOverride: "llama3.2", credential: nil
+            backend: .localEndpoint,
+            configuration: request(endpointURL: "http://user:pass@192.168.1.20:11434", modelOverride: "llama3.2")
         )
         #expect(result == nil, "an invalid endpoint must degrade to not-configured, never propagate a throw")
     }

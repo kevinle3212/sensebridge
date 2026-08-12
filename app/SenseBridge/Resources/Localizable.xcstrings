@@ -162,6 +162,29 @@
         }
       }
     },
+    "Brief" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brief"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Breve"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ngắn gọn"
+          }
+        }
+      }
+    },
     "Bundled on-device model — not yet available. Needs a benchmarked model; tracked as a follow-up." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -622,6 +645,75 @@
         }
       }
     },
+    "Description detail" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Description detail"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nivel de detalle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mức độ chi tiết"
+          }
+        }
+      }
+    },
+    "Descriptions" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descriptions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descripciones"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mô tả"
+          }
+        }
+      }
+    },
+    "Detailed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detailed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detallado"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chi tiết"
+          }
+        }
+      }
+    },
     "Endpoint URL" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1032,6 +1124,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tên mô hình"
+          }
+        }
+      }
+    },
+    "More detail means SenseBridge names more of what it recognized, not that it is more sure about any of it. Every description is still a cautious guess, and SenseBridge still never says the way ahead is clear." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More detail means SenseBridge names more of what it recognized, not that it is more sure about any of it. Every description is still a cautious guess, and SenseBridge still never says the way ahead is clear."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más detalle significa que SenseBridge nombra más de lo que reconoció, no que esté más seguro de ello. Cada descripción sigue siendo una suposición cautelosa, y SenseBridge nunca dice que el camino esté despejado."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chi tiết hơn nghĩa là SenseBridge nêu tên nhiều thứ đã nhận diện hơn, chứ không phải chắc chắn hơn về điều đó. Mỗi mô tả vẫn là một phỏng đoán thận trọng, và SenseBridge không bao giờ nói rằng phía trước đã an toàn."
           }
         }
       }
@@ -1700,6 +1815,29 @@
         }
       }
     },
+    "Sets how many things each description names and how much wording it uses." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sets how many things each description names and how much wording it uses."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define cuántas cosas nombra cada descripción y cuánto texto usa."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đặt số lượng vật được mô tả và lượng từ ngữ sử dụng trong mỗi lần mô tả."
+          }
+        }
+      }
+    },
     "Settings" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1788,6 +1926,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Âm thanh"
+          }
+        }
+      }
+    },
+    "Standard" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estándar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiêu chuẩn"
           }
         }
       }

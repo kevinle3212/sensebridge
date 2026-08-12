@@ -8,7 +8,6 @@ import UIKit
 /// docs/ARCHITECTURE.md "Navigation". The result is a best-guess label, not
 /// a guarantee of what the object is.
 struct LabelingView: View {
-    private let classifier: ObjectClassificationService = .init()
     /// Shared app state — the camera session and output targets live here so
     /// every feature drives the same instances rather than each standing up
     /// its own.
@@ -62,6 +61,9 @@ struct LabelingView: View {
 
     private func captureAndIdentify() async {
         do {
+            let classifier = ObjectClassificationService(
+                maximumLabels: environment.settings.spokenDetail.maximumLabels
+            )
             let photo = try await environment.camera.capturePhoto()
             let records = try await classifier.process(photo)
             let phrasing = Phrasing()

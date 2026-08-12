@@ -81,14 +81,13 @@ public enum SoundClassificationRunner {
     /// Turns a bare, underscore-joined Sound Analysis identifier
     /// ("fire_alarm") into the article-first noun phrase
     /// `Phrasing.describe(subject:certainty:)` expects ("a fire alarm") —
-    /// mirrors `ObjectClassificationService.subjectPhrase(for:)` exactly, for
-    /// the same reason: without it, a VoiceOver user hears the raw identifier
-    /// read character-by-character, and the missing article breaks the
-    /// es/vi hedge templates, which assume this shape.
+    /// without it, a VoiceOver user hears the raw identifier read
+    /// character-by-character, and the missing article breaks the es/vi hedge
+    /// templates, which assume this shape. Forwards to `SpokenPhrase`, the
+    /// single implementation this and
+    /// `ObjectClassificationService.subjectPhrase(for:)` both use.
     static func subjectPhrase(for identifier: String) -> String {
-        let words = identifier.replacing("_", with: " ")
-        guard let first = words.first else { return words }
-        return "aeiou".contains(first.lowercased()) ? "an \(words)" : "a \(words)"
+        SpokenPhrase.subject(for: identifier)
     }
 
     /// Collects `SNClassificationResult`s off `SNAudioFileAnalyzer`'s

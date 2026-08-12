@@ -46,31 +46,33 @@ public struct AnthropicSceneComposer: SceneComposer {
     private let apiKey: String
     private let model: String
     private let session: URLSession
-    private let validator: ReasoningOutputValidator
     private let phrasing: Phrasing
     private let locale: Locale
+    private let detail: SpokenDetail
 
     /// - Parameters:
     ///   - apiKey: The user's own Anthropic API key (BYOK) — never persisted by this type.
     ///   - model: Overrides `defaultModel`; `nil` uses the pinned default.
     ///   - session: Injected so tests can intercept requests via `StubURLProtocol`.
-    ///   - validator: The safety enforcement point every response passes through before `Phrasing`.
     ///   - phrasing: Wraps the validated phrase in a hedge template.
     ///   - locale: Drives both the requested response language and the hedge template chosen.
+    ///   - detail: How many words the validated phrase may run — see `SpokenDetail`.
+    ///     Not built into a stored `ReasoningOutputValidator` because the ceiling is
+    ///     scaled by the label count, which is only known inside `compose(from:)`.
     public init(
         apiKey: String,
         model: String? = nil,
         session: URLSession,
-        validator: ReasoningOutputValidator = .init(),
         phrasing: Phrasing = .init(),
-        locale: Locale = .current
+        locale: Locale = .current,
+        detail: SpokenDetail = .standard
     ) {
         self.apiKey = apiKey
         self.model = model ?? Self.defaultModel
         self.session = session
-        self.validator = validator
         self.phrasing = phrasing
         self.locale = locale
+        self.detail = detail
     }
 
     /// Sends the perceived object labels to Anthropic, validates the reply
@@ -81,6 +83,7 @@ public struct AnthropicSceneComposer: SceneComposer {
     public func compose(from records: [PerceptionRecord]) async throws -> String {
         let labels = records.detectedObjectLabelsForNetwork()
         guard !labels.isEmpty else { return phrasing.nothingRecognized(locale: locale) }
+        let maximumWords = detail.maximumPhraseWords(labelCount: labels.count)
 
         var request = URLRequest(url: Self.endpoint)
         request.httpMethod = "POST"
@@ -90,7 +93,7 @@ public struct AnthropicSceneComposer: SceneComposer {
         let body = Request(
             model: model,
             maxTokens: 40,
-            system: Self.instructions(locale: locale),
+            system: Self.instructions(locale: locale, maximumWords: maximumWords),
             messages: [RequestMessage(role: "user", content: "Labels: \(labels.joined(separator: ", "))")]
         )
         let encoder = JSONEncoder()
@@ -106,6 +109,9 @@ public struct AnthropicSceneComposer: SceneComposer {
         else {
             throw ComposerError.malformedResponse
         }
+        // Built here, not stored: the ceiling is scaled by `labels.count`,
+        // which is only known once a request is actually being composed.
+        let validator = ReasoningOutputValidator(maximumWords: maximumWords)
         let validated = try validator.validate(text, locale: locale)
         let weakest = records.weakestDetectedObjectConfidence() ?? 0
         return phrasing.describe(
@@ -118,7 +124,11 @@ public struct AnthropicSceneComposer: SceneComposer {
     /// claim about distance, direction, danger, or safety. Also pins the
     /// response language, closing the same latent gap
     /// `FoundationModelsSceneComposer` had (see Task 13).
-    private static func instructions(locale: Locale) -> String {
+    ///
+    /// - Parameter maximumWords: Steers the model toward the ceiling
+    ///   `ReasoningOutputValidator` actually enforces — a hint, not a
+    ///   substitute for that enforcement.
+    private static func instructions(locale: Locale, maximumWords: Int) -> String {
         """
         You compress a list of detected object labels into one short noun phrase \
         for a blind user's screen reader. Name only objects present in the list. \
@@ -126,7 +136,7 @@ public struct AnthropicSceneComposer: SceneComposer {
         direction, movement, or safety, and never write a full sentence. Respond \
         only with the noun phrase, in the language identified by locale \
         "\(locale.identifier)". Another part of the app adds the wording around \
-        your phrase.
+        your phrase. Use at most \(maximumWords) words.
         """
     }
 }

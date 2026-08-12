@@ -25,7 +25,12 @@ public enum ReasoningOutputValidationError: Error, Sendable, Equatable {
 /// docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md
 /// "The output validator".
 public struct ReasoningOutputValidator: Sendable {
-    private static let maximumWords = 12
+    /// The word ceiling this validator enforces, supplied by the caller from
+    /// `SpokenDetail.maximumPhraseWords(labelCount:)`. A length allowance
+    /// only — every other rule below (numerals, punctuation, disallowed
+    /// terms, hedge fragments, language) applies unchanged regardless of
+    /// this value, so a higher ceiling never becomes a content allowance.
+    private let maximumWords: Int
 
     /// Distance/direction/safety/danger tokens a bare noun phrase
     /// ("a chair and a doorway") should never legitimately contain — if the
@@ -50,9 +55,12 @@ public struct ReasoningOutputValidator: Sendable {
         ]
     ]
 
-    // Empty but required: a public init is needed for cross-module init; nothing to initialize.
-    // swiftlint:disable:next no_empty_block
-    public init() {}
+    /// - Parameter maximumWords: The word ceiling to enforce — see this
+    ///   type's `maximumWords` doc comment. Defaults to the pre-`SpokenDetail`
+    ///   value so existing callers are unaffected.
+    public init(maximumWords: Int = 12) {
+        self.maximumWords = maximumWords
+    }
 
     /// Validates and trims `phrase`, throwing on the first rule it fails.
     /// The caller (a network `SceneComposer`) must treat any throw exactly
@@ -67,7 +75,7 @@ public struct ReasoningOutputValidator: Sendable {
             throw ReasoningOutputValidationError.containsSentencePunctuationOrNewline
         }
         let wordCount = trimmed.split(separator: " ").count
-        guard wordCount <= Self.maximumWords else {
+        guard wordCount <= maximumWords else {
             throw ReasoningOutputValidationError.tooLong(wordCount: wordCount)
         }
         guard trimmed.rangeOfCharacter(from: .decimalDigits) == nil else {

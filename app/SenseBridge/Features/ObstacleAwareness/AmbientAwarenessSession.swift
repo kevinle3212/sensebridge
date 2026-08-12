@@ -68,17 +68,22 @@ final class AmbientAwarenessSession {
     private static let sampleInterval: Duration = .milliseconds(750)
 
     private let source: AmbientSensingSource = .init()
-    private let classifier: ObjectClassificationService = .init()
-    private let phrasing: Phrasing = .init()
+    /// Not `private`: rebuilt by `configureReasoning(environment:)` in
+    /// `AmbientAwarenessSession+Support.swift`, a same-type extension in a
+    /// different file (split out purely for SwiftLint's `file_length` gate).
+    var classifier: ObjectClassificationService = .init()
+    let phrasing: Phrasing = .init()
 
-    private var resolver: ReasoningComposerResolver?
+    /// Not `private` — see `classifier`'s doc comment.
+    var resolver: ReasoningComposerResolver?
     private var engine: AwarenessEngine = .init()
     private var throttle: NarrationThrottle = .init()
     private var loopTask: Task<Void, Never>?
     private var compositionTask: Task<Void, Never>?
     private var backgroundObserver: NSObjectProtocol?
     private var lastDescribedAt: Date?
-    private var locale: Locale = .current
+    /// Not `private` — see `classifier`'s doc comment.
+    var locale: Locale = .current
 
     /// Whether this device can run hands-free awareness at all. Checked by the
     /// view before offering the control, so the app never presents a button
@@ -112,15 +117,7 @@ final class AmbientAwarenessSession {
         }
 
         locale = environment.settings.language.locale ?? .current
-        let onDevice = FoundationModelsSceneComposer(phrasing: phrasing, locale: locale)
-        let urlSession = Self.makeURLSession(requestTimeout: Self.networkRequestTimeout)
-        resolver = ReasoningComposerResolver(
-            onDeviceComposer: onDevice,
-            credentialStore: KeychainCredentialStore(),
-            factory: LiveNetworkComposerFactory(
-                session: urlSession, requestTimeout: Self.networkRequestTimeout, locale: locale
-            )
-        )
+        configureReasoning(environment: environment)
         resolver?.resetSession()
         engine = .alerting(withinMeters: environment.settings.awarenessAlertDistanceMeters)
         let interval = environment.settings.narrationIntervalSeconds

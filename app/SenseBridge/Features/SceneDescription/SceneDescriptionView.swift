@@ -8,8 +8,6 @@ import UIKit
 /// user reaches the action without swiping through decorative layout — see
 /// docs/ARCHITECTURE.md "Navigation".
 struct SceneDescriptionView: View {
-    private let detector: ObjectClassificationService = .init()
-    private let resolver: ReasoningComposerResolver
     /// Shared app state — renders through the same output targets every
     /// other feature uses, rather than standing up its own synthesizer.
     @Environment(AppEnvironment.self) private var environment
@@ -20,18 +18,21 @@ struct SceneDescriptionView: View {
     /// for the shorter hands-free figure and why it differs.
     private static let networkRequestTimeout: TimeInterval = 8
 
-    /// Builds a resolver scoped to this view instance — a single capture is
-    /// a single request, so unlike `AmbientAwarenessSession` there's no
-    /// session lifetime for a circuit breaker to matter within, and a fresh
-    /// resolver per instance is simpler than trying to share one.
-    init() {
+    /// Builds a resolver scoped to one capture rather than one view instance —
+    /// a single capture is a single request, so unlike `AmbientAwarenessSession`
+    /// there's no session lifetime for a circuit breaker to matter within, and
+    /// building it in `captureAndDescribe()` (rather than `init()`, where
+    /// `@Environment` isn't yet readable) means it always sees the detail
+    /// level current in Settings, not whatever was true when the view first
+    /// appeared.
+    private static func makeResolver(detail: SpokenDetail) -> ReasoningComposerResolver {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.waitsForConnectivity = false
         configuration.timeoutIntervalForRequest = Self.networkRequestTimeout
         configuration.allowsConstrainedNetworkAccess = false
         let urlSession = URLSession(configuration: configuration)
-        resolver = ReasoningComposerResolver(
-            onDeviceComposer: FoundationModelsSceneComposer(),
+        return ReasoningComposerResolver(
+            onDeviceComposer: FoundationModelsSceneComposer(detail: detail),
             credentialStore: KeychainCredentialStore(),
             factory: LiveNetworkComposerFactory(
                 session: urlSession, requestTimeout: Self.networkRequestTimeout, locale: .current
@@ -92,6 +93,9 @@ struct SceneDescriptionView: View {
     /// speaking *some* error.
     private func captureAndDescribe() async {
         do {
+            let detail = environment.settings.spokenDetail
+            let detector = ObjectClassificationService(maximumLabels: detail.maximumLabels)
+            let resolver = Self.makeResolver(detail: detail)
             let photo = try await environment.camera.capturePhoto()
             let objects = try await detector.detect(photo)
             let records = objects.map {

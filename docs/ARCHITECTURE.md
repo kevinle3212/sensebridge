@@ -159,6 +159,22 @@ the lowest confidence in the frame picks the `Certainty`, because a composed
 phrase naming several objects is only as good as its weakest member. A model
 regression can make the wording clumsy; it cannot make the app sound certain.
 
+### Description detail — `SpokenDetail`
+
+`Settings.spokenDetail` (`Brief`/`Standard`/`Detailed`) scales two numbers and
+nothing else: `ObjectClassificationService.maximumLabels` (how many objects a
+detection pass names) and `SpokenDetail.maximumPhraseWords(labelCount:)` (the
+composed phrase's word ceiling, enforced structurally in
+`FoundationModelsSceneComposer` and by `ReasoningOutputValidator` on every
+network composer). The detector's precision floor, `Phrasing`'s hedge
+templates, and `Phrasing.certainty(forConfidence:)`'s buckets are the same at
+every level — more detail means more of what was recognized gets named, never
+more certainty about any one of it. `LabelListSceneComposer` (the composer
+that runs whenever Apple Intelligence is unavailable — "the on-device default"
+at its worst) groups its output by certainty bucket rather than repeating one
+full hedged sentence per object, so the no-Apple-Intelligence path reads as
+prose rather than a stutter of identical templates.
+
 ### Hands-free awareness — the one continuous pipeline
 
 `AmbientAwarenessSession` (App layer) is the only loop in the app; every other

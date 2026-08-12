@@ -83,4 +83,36 @@ struct ReasoningOutputValidatorTests {
             try validator.validate("2 chairs", locale: en)
         }
     }
+
+    @Test func aTwentyWordPhraseIsRejectedAtTheDefaultCeilingButAcceptedAtARaisedOne() throws {
+        let words = ["a", "chair", "a", "table", "a", "lamp", "and", "a", "doorway"]
+        let twenty = (0 ..< 20).map { words[$0 % words.count] }.joined(separator: " ")
+        #expect(throws: (any Error).self) {
+            try validator.validate(twenty, locale: en)
+        }
+        let detailedValidator = ReasoningOutputValidator(maximumWords: 24)
+        let result = try detailedValidator.validate(twenty, locale: en)
+        #expect(result == twenty)
+    }
+
+    /// The ceiling is a length allowance, never a content allowance — a
+    /// raised word count must not let a disallowed term, a numeral, a hedge
+    /// fragment, or sentence punctuation through.
+    @Test func aRaisedCeilingStillRejectsDisallowedContent() {
+        let detailedValidator = ReasoningOutputValidator(maximumWords: 24)
+        let fillerWords = ["a", "chair", "a", "table", "a", "lamp", "and", "a", "doorway"]
+        let filler = (0 ..< 15).map { fillerWords[$0 % fillerWords.count] }.joined(separator: " ")
+        for phrase in [
+            "\(filler) meters away",
+            "\(filler) on your left",
+            "\(filler) is safe",
+            "\(filler) 2 more",
+            "\(filler).",
+            "it looks like there's \(filler)"
+        ] {
+            #expect(throws: (any Error).self, "\"\(phrase)\" should still be rejected at a raised ceiling") {
+                try detailedValidator.validate(phrase, locale: en)
+            }
+        }
+    }
 }

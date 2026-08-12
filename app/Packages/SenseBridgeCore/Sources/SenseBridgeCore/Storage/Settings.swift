@@ -45,6 +45,11 @@ public struct Settings: Sendable, Equatable, Codable {
     /// upgrading into this build can be true of — see `SettingsTests
     /// .decodingSettingsPersistedBeforeOnboardingExistedYieldsCompleted`.
     public var hasCompletedOnboarding: Bool
+    /// How many things a composed description names and how many words it
+    /// uses to do it. `.standard` until the user explicitly asks for more or
+    /// less — see `SpokenDetail`'s doc comment for why this never changes how
+    /// certain a description sounds, only how much it says.
+    public var spokenDetail: SpokenDetail
     /// Which reasoning backend composes scene descriptions. `.onDevice`
     /// until the user explicitly opts into a network path.
     public var reasoningBackend: ReasoningBackend
@@ -77,6 +82,7 @@ public struct Settings: Sendable, Equatable, Codable {
         awarenessAlertDistanceMeters: Double = 1.5,
         crashReportingEnabled: Bool = false,
         hasCompletedOnboarding: Bool = false,
+        spokenDetail: SpokenDetail = .standard,
         reasoningBackend: ReasoningBackend = .onDevice,
         cloudProvider: CloudProvider? = nil,
         localEndpointURL: String? = nil,
@@ -95,6 +101,7 @@ public struct Settings: Sendable, Equatable, Codable {
         self.awarenessAlertDistanceMeters = awarenessAlertDistanceMeters
         self.crashReportingEnabled = crashReportingEnabled
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.spokenDetail = spokenDetail
         self.reasoningBackend = reasoningBackend
         self.cloudProvider = cloudProvider
         self.localEndpointURL = localEndpointURL
@@ -105,7 +112,7 @@ public struct Settings: Sendable, Equatable, Codable {
         case outputProfile, speechRate, language
         case speechPitch, speechVolume, hapticsEnabled, hapticIntensity, preferredLens, torchDefaultOn
         case narrationIntervalSeconds, awarenessAlertDistanceMeters
-        case crashReportingEnabled, hasCompletedOnboarding
+        case crashReportingEnabled, hasCompletedOnboarding, spokenDetail
         case reasoningBackend, cloudProvider, localEndpointURL, reasoningModelOverride
     }
 
@@ -145,6 +152,8 @@ public struct Settings: Sendable, Equatable, Codable {
             Bool.self, forKey: .hasCompletedOnboarding
         ) ?? true
 
+        spokenDetail = try Self.decodeSpokenDetail(from: container)
+
         if let backendRaw = try container.decodeIfPresent(String.self, forKey: .reasoningBackend),
            let backend = ReasoningBackend(rawValue: backendRaw) {
             reasoningBackend = backend
@@ -171,6 +180,19 @@ public struct Settings: Sendable, Equatable, Codable {
     /// never appears in an encoded settings blob again.
     private enum LegacyCodingKeys: String, CodingKey {
         case cloudReasoningEnabled
+    }
+
+    /// Split out of `init(from:)` to keep it under SwiftLint's
+    /// `function_body_length` gate. Same never-fail shape as every other
+    /// field there: an absent or unrecognized value degrades to `.standard`
+    /// rather than failing the whole decode.
+    private static func decodeSpokenDetail(from container: KeyedDecodingContainer<CodingKeys>) throws -> SpokenDetail {
+        guard let raw = try container.decodeIfPresent(String.self, forKey: .spokenDetail),
+              let detail = SpokenDetail(rawValue: raw)
+        else {
+            return .standard
+        }
+        return detail
     }
 }
 
