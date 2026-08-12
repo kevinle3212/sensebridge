@@ -179,6 +179,24 @@
             isRunning = false
         }
 
+        /// Takes exactly one depth reading, for `ObstacleAwarenessView`'s
+        /// one-shot "Check once" — starts, waits for the first usable frame
+        /// (or `timeout`), reads it, and stops, rather than holding the
+        /// camera/display-awake assertion the continuous session does.
+        /// `nil` means a frame arrived but nothing was measurable — same
+        /// contract as `depthMeters(in:)`. Throws exactly like `start()`.
+        public func sampleOnce(timeout: Duration = .seconds(3)) async throws -> Double? {
+            try start()
+            defer { stop() }
+            let deadline = ContinuousClock.now.advanced(by: timeout)
+            while latestFrame() == nil {
+                guard ContinuousClock.now < deadline else { return nil }
+                try await Task.sleep(for: .milliseconds(50))
+            }
+            guard let frame = latestFrame() else { return nil }
+            return await depthMeters(in: frame)
+        }
+
         /// The most recent frame ARKit has produced, or `nil` before the first
         /// one arrives.
         ///
