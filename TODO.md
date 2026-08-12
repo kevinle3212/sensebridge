@@ -150,91 +150,33 @@ land.
       task verification commands, both of which say `cd app &&` without
       naming the package subdirectory CI actually uses.
 
+- [ ] **[P1]** **[Needs owner]** **Device-validate everything the reasoning-tier
+      plan's own spec names as explicitly unverifiable by a machine** — see
+      "What stays explicitly unverified after this session" in
+      [`docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md`](docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md).
+      Specifically: (1) whether `NSAllowsLocalNetworking` actually covers a
+      bare RFC1918 IP literal (`192.168.1.20`) versus only qualified/`.local`
+      addresses, and when the local-network permission prompt fires for a
+      direct `URLSession` connection (Task 18) — if it fails, restrict
+      self-hosted to `https://` only rather than reaching for
+      `NSAllowsArbitraryLoads`; (2) which cloud providers and self-hosted
+      servers (Ollama, LM Studio, vLLM) actually honor the compression-only
+      system prompt in practice versus relying on
+      `ReasoningOutputValidator` to catch drift; (3) real round-trip latency
+      for each network backend against the ~4s hands-free /~8s single-capture
+      timeouts; (4) VoiceOver *experience* — not just accessibility labels —
+      on `ReasoningBackendSettingsView`'s picker/toggle/paste-key flow,
+      including whether the "Test connection" round trip reads naturally
+      with VoiceOver mid-flight; (5) thermal/battery impact of hands-free
+      awareness running against a network composer versus on-device only.
+      None of these can be checked from a machine; needs Kevin's own device
+      pass.
+
 ### GitHub language stats + guard false positive (2026-08-11, 14:00 PST)
 
 Fixing the language bar (`.gitattributes` collapsed to one
 `**/skills/impeccable/**` glob, new `tools/check-linguist-vendored.mjs` gate
 wired into `npm run check`) surfaced two items that are not this agent's call:
-
-- [x] **[P2]** Stale "perception is unbuilt" claim purged from seven documents
-  on owner instruction. `PROJECT_OVERVIEW.md` (state section rewritten as a
-  feature/perception/framework table), `AGENT-CONTEXT.md` (both the "exists"
-  and "does not exist" lists), `MEMORY.md` (routing example), `GAPS.md` (two
-  entries moved to `## Resolved` with evidence; the one genuinely-open remnant
-  split out), `docs/GLOSSARY.md` (ARKit depth, Sound Analysis, Apple Vision),
-  `docs/ARCHITECTURE.md` (module tree), `docs/SECURITY-MODEL.md` (camera and
-  microphone permission justifications — the microphone row claimed "no
-  microphone-capture code exists yet", which was a privacy-doc inaccuracy).
-  `docs/CODE-MAP.md` was already accurate and needed no change. Verified by
-  reading each view's dependencies, not the prior docs. `npm run check` green.
-- [x] **[P3]** `~/.claude/hooks/guard-protected-paths.sh`
-  false-positived on **stderr** redirects. Both
-  `ls -d sessions/2026-08-11 2>/dev/null` and `ls ... 2>&1` were blocked as
-  "a truncating redirect into a protected tree" though neither writes anything;
-  cost three retries writing this session's own log. This is a security control,
-  so it must not be loosened to make a task easier — the narrow fix is to match
-  `>`/`>>` only when the redirect *target* resolves inside a protected tree,
-  rather than when a protected path appears anywhere on the command line. Owner
-  decides whether that narrowing is acceptable. Hook lives outside this repo
-  (`~/.claude/hooks/`), so it is owner-gated on that count too.
-
-  **2026-08-11: fixed on owner grant.** The first `Edit` was denied by the
-  Claude Code auto-mode classifier — correct behaviour for an edit to a security
-  hook — then applied after the owner granted it explicitly. The
-  truncating-redirect and `tee` rules now resolve the redirect **target** via
-  new `redirect_targets`/`tee_targets` helpers and test only that; an
-  unparseable target still denies, so the guard fails closed. Every other rule
-  (delete, move, truncate, git, `sed -i`) still judges the whole command.
-  `~/.claude/hooks/tests/guard-protected-paths.test.sh` gained the missing
-  coverage — its absence is why the defect shipped — including
-  `ls -la 2>/dev/null > audits/security/report.md`, which must still DENY
-  because the *real* redirect lands in `audits/`. Not a repo hook, so
-  `npm run check:hooks` reports no drift (still 4 shipped global hooks).
-
-  **Codex stop-time review then caught a fail-open in that narrowing**, valid
-  and fixed, and reproducing it exposed a second, larger hole that predates this
-  session:
-
-  1. *Quoted redirect targets.* `strip_quoted` blanked a quoted target before
-     the rule saw it, so `echo x > "sessions/…/log.md"` was allowed
-     (pre-existing) and `echo x > /tmp/a.txt 2> "sessions/err.log"` was allowed
-     (introduced by the narrowing — a benign visible target satisfied the check
-     while the protected one had vanished). Fixed with `unwrap_target_quotes()`,
-     which unwraps quotes only where they follow a redirect operator or `tee`,
-     so `echo "x > sessions/y"` stays allowed as data.
-  2. *`scratch_only` disabled the entire guard.* It was applied to the whole
-     command as an early `return 1`, so one scratch path cleared everything
-     beside it — `rm -rf /tmp/scratch ~/Vault` and `rm -rf audits/ /tmp/x` were
-     both **ALLOWED**. Its own comment said "every protected-looking path"; the
-     code meant "any". Split into `is_scratch_path()`/`is_protected_path()` and
-     `names_protected()` now tokenises and judges each path on its own.
-
-  The tokenising rewrite itself shipped a bug the suite caught immediately: a
-  bare `while IFS= read -r token` drops the final token, turning
-  `rm -rf ~/Vault` into an ALLOW. Fixed with `|| [ -n "$token" ]`, reason
-  commented inline.
-
-  **A second Codex round then caught multi-operand `tee`** — valid, and the
-  unquoted form was broken too, so the quoting was incidental. `tee` writes to
-  every file operand but `tee_targets` returned only the first, so
-  `tee /tmp/a.txt audits/general/report.md` truncated an audit report while
-  looking benign. `tee_targets()` now extracts the whole `tee` segment up to the
-  next pipeline or command separator and emits every operand;
-  `unwrap_target_quotes()` iterates to a fixpoint so each quoted operand is
-  exposed in turn. The `-a` gate is untouched, so appends stay allowed at any
-  operand count.
-
-  **A third Codex round caught the loop bound itself** — the constant 16-pass
-  cap I had added as paranoia was the fail-open: one pass unwraps one operand,
-  so a 17th quoted `tee` operand stayed wrapped, got blanked by `strip_quoted`,
-  and became invisible and writable. Verified by replaying the old loop over 25
-  quoted operands. The bound is now derived from the input's quote count, which
-  always suffices: every substitution removes exactly one quote pair, so a
-  changing pass strictly decreases the quote count and a non-changing pass
-  breaks — termination is by construction, and no constant is needed. Suite now
-  **64 cases, all passing**, with the new cases built programmatically (24
-  scratch operands plus one protected) so they scale past any constant a future
-  edit might reintroduce.
 
 - [ ] **[P3]** Two pre-existing `shellcheck -s sh` findings in
   `~/.claude/hooks/guard-protected-paths.sh`, left alone deliberately:
@@ -514,86 +456,6 @@ generated `project.pbxproj`), regenerated via `xcodegen generate`, verified:
       (2026-08-04, 17:00 PST — "Nothing from this implementation is
       committed yet"). No separate branch/commit needed — just make sure
       this fix is included when that diff is reviewed and committed.
-
-### Reasoning backend: on-device tiers + opt-in cloud AI (2026-08-04, 23:30 PST)
-
-Two-round interview with the owner on SenseBridge's reasoning step. Round 1
-weighed local AI (Ollama), cloud AI, or the "basic" AI already in use, or a
-hybrid — prompted by Foundation Models' hardware gap. Round 2: owner confirmed
-they want an **opt-in, opt-out-anytime cloud AI tier** in addition to the
-on-device path (motivation: both the device-gap fallback and a quality
-upgrade), with data kept minimal + encrypted + a user-facing prompt, BYOK
-billing, and Anthropic/OpenAI/NVIDIA NIM as candidate providers. Current state:
-`docs/ARCHITECTURE.md` already names Foundation Models
-(`SystemLanguageModel`/`LanguageModelSession`) as the reasoning engine — free,
-on-device, license-clean, text-only — but it requires Apple Intelligence
-(iPhone 15 Pro+), and the doc's own fallback note ("implement availability
-checks and a graceful fallback — label lists instead of composed sentences")
-isn't built yet.
-
-- [ ] **[P2]** **[Needs owner]** **Decide and scope the three-tier reasoning
-      strategy.** Recommended shape, synthesized from the interview: **(1)
-      Foundation Models** on-device where supported (default, free, private) →
-      **(2) deterministic label-list composition** on-device where unsupported
-      or cloud is declined (default, no AI, no network — the fallback
-      `docs/ARCHITECTURE.md` already calls for) → **(3) opt-in Cloud AI**, any
-      device, only once the user turns it on and supplies their own key. Cloud
-      is always a layer on top of the free default, never a replacement — so
-      declining consent never leaves a user with nothing. Design constraints
-      from the interview:
-      - **Data minimization**: send only already-derived text (recognized
-        labels/OCR/transcribed speech) as the prompt — never raw camera
-        frames, depth data, or audio waveforms.
-      - **Transport/storage**: TLS in transit (already required by `CLAUDE.md`
-        §10); API key in Keychain, never UserDefaults/plaintext/logs.
-      - **Consent UX**: default OFF; one-time explicit opt-in screen naming
-        exactly what leaves the device; a persistent Settings toggle to turn
-        it off anytime (the owner's "opt-in and opt-out whenever they decide"
-        requirement); an always-on VoiceOver/caption cue *while* a cloud
-        round-trip is actually in flight, so it's never silent — not a
-        blocking per-request confirmation dialog, which would break the
-        real-time accessibility flow this app exists for.
-      - **Third-party terms acceptance**: because this is BYOK, the opt-in
-        screen sends data straight to Anthropic/OpenAI/NVIDIA under *their*
-        ToS and privacy policy, not SenseBridge's — the SenseBridge-side
-        consent toggle alone doesn't cover that. The one-time opt-in screen
-        needs an explicit acknowledgment (checkbox or equivalent, not
-        pre-checked) that the user has read and agrees to the selected
-        provider's terms, with a link to that provider's current ToS/privacy
-        page, before the toggle can be turned on. Re-prompt if the user
-        switches providers, since each has its own terms.
-      - **Access model**: BYOK confirmed by owner — user supplies their own
-        Anthropic/OpenAI/NVIDIA API key; the app calls the provider directly.
-        Zero cost to SenseBridge, no SenseBridge-run backend — matches the
-        existing "no backend" invariant exactly (a metered relay was
-        considered and rejected because it would stand up the app's first
-        real server).
-      - **Providers**: build a provider-agnostic interface (fits the existing
-        `SensingSource → perception → Reasoning → RenderTarget` protocol-seam
-        architecture). Anthropic and OpenAI both fit BYOK cleanly and can ship
-        first. NVIDIA NIM is normally an enterprise self-hosted endpoint, not
-        a consumer API key — it needs its own "point at your own endpoint" UX
-        before it's a real candidate, not just a key field; scope that
-        separately or defer it.
-      - **Safety-framing**: a cloud-composed sentence must pass the same
-        hedged-language doctrine (`docs/SAFETY-FRAMING.md`) as the on-device
-        output — needs a per-provider system-prompt constraint, and review by
-        the `safety-framing-reviewer` agent before it ships. This is the
-        highest-severity review surface in the repo; do not skip it because
-        the composition moved off-device.
-      - **Docs/legal**: this widens what leaves the device, so it needs
-        `docs/PRIVACY.md`, `legal/PRIVACY_POLICY.md`, and the website's
-        `/privacy` notice updated in the same change — same precedent as the
-        Sentry opt-in rollout. `legal/` edits need explicit owner approval
-        per `CLAUDE.md`; an agent should draft, not commit, those changes.
-      This whole shape fits the architecture invariant's own consent-based
-      exception clause (`CLAUDE.md` — "anything leaving the device needs
-      explicit, revocable consent and a privacy-doc update") — it is
-      compatible with doctrine, not a violation, as long as it's built to that
-      bar. Acceptance: owner confirms the tier order and provider launch list,
-      then it becomes a scoped implementation ticket — plan with Opus 5
-      (architecture/security-adjacent), execute with Sonnet 5, per `CLAUDE.md`
-      §3.
 
 ### Dead-weight plugins/connectors follow-through (2026-08-04, 23:00 PST)
 
@@ -2500,4 +2362,188 @@ remaining open items.
 
 ## Completed
 
-*Nothing archived since the last sweep — see [`COMPLETED.todo`](COMPLETED.todo) for history.*
+### GitHub language stats + guard false positive (2026-08-11, 14:00 PST)
+
+- [x] **[P2]** Stale "perception is unbuilt" claim purged from seven documents
+  on owner instruction. `PROJECT_OVERVIEW.md` (state section rewritten as a
+  feature/perception/framework table), `AGENT-CONTEXT.md` (both the "exists"
+  and "does not exist" lists), `MEMORY.md` (routing example), `GAPS.md` (two
+  entries moved to `## Resolved` with evidence; the one genuinely-open remnant
+  split out), `docs/GLOSSARY.md` (ARKit depth, Sound Analysis, Apple Vision),
+  `docs/ARCHITECTURE.md` (module tree), `docs/SECURITY-MODEL.md` (camera and
+  microphone permission justifications — the microphone row claimed "no
+  microphone-capture code exists yet", which was a privacy-doc inaccuracy).
+  `docs/CODE-MAP.md` was already accurate and needed no change. Verified by
+  reading each view's dependencies, not the prior docs. `npm run check` green.
+
+- [x] **[P3]** `~/.claude/hooks/guard-protected-paths.sh`
+  false-positived on **stderr** redirects. Both
+  `ls -d sessions/2026-08-11 2>/dev/null` and `ls ... 2>&1` were blocked as
+  "a truncating redirect into a protected tree" though neither writes anything;
+  cost three retries writing this session's own log. This is a security control,
+  so it must not be loosened to make a task easier — the narrow fix is to match
+  `>`/`>>` only when the redirect *target* resolves inside a protected tree,
+  rather than when a protected path appears anywhere on the command line. Owner
+  decides whether that narrowing is acceptable. Hook lives outside this repo
+  (`~/.claude/hooks/`), so it is owner-gated on that count too.
+
+  **2026-08-11: fixed on owner grant.** The first `Edit` was denied by the
+  Claude Code auto-mode classifier — correct behaviour for an edit to a security
+  hook — then applied after the owner granted it explicitly. The
+  truncating-redirect and `tee` rules now resolve the redirect **target** via
+  new `redirect_targets`/`tee_targets` helpers and test only that; an
+  unparseable target still denies, so the guard fails closed. Every other rule
+  (delete, move, truncate, git, `sed -i`) still judges the whole command.
+  `~/.claude/hooks/tests/guard-protected-paths.test.sh` gained the missing
+  coverage — its absence is why the defect shipped — including
+  `ls -la 2>/dev/null > audits/security/report.md`, which must still DENY
+  because the *real* redirect lands in `audits/`. Not a repo hook, so
+  `npm run check:hooks` reports no drift (still 4 shipped global hooks).
+
+  **Codex stop-time review then caught a fail-open in that narrowing**, valid
+  and fixed, and reproducing it exposed a second, larger hole that predates this
+  session:
+
+  1. *Quoted redirect targets.* `strip_quoted` blanked a quoted target before
+     the rule saw it, so `echo x > "sessions/…/log.md"` was allowed
+     (pre-existing) and `echo x > /tmp/a.txt 2> "sessions/err.log"` was allowed
+     (introduced by the narrowing — a benign visible target satisfied the check
+     while the protected one had vanished). Fixed with `unwrap_target_quotes()`,
+     which unwraps quotes only where they follow a redirect operator or `tee`,
+     so `echo "x > sessions/y"` stays allowed as data.
+  2. *`scratch_only` disabled the entire guard.* It was applied to the whole
+     command as an early `return 1`, so one scratch path cleared everything
+     beside it — `rm -rf /tmp/scratch ~/Vault` and `rm -rf audits/ /tmp/x` were
+     both **ALLOWED**. Its own comment said "every protected-looking path"; the
+     code meant "any". Split into `is_scratch_path()`/`is_protected_path()` and
+     `names_protected()` now tokenises and judges each path on its own.
+
+  The tokenising rewrite itself shipped a bug the suite caught immediately: a
+  bare `while IFS= read -r token` drops the final token, turning
+  `rm -rf ~/Vault` into an ALLOW. Fixed with `|| [ -n "$token" ]`, reason
+  commented inline.
+
+  **A second Codex round then caught multi-operand `tee`** — valid, and the
+  unquoted form was broken too, so the quoting was incidental. `tee` writes to
+  every file operand but `tee_targets` returned only the first, so
+  `tee /tmp/a.txt audits/general/report.md` truncated an audit report while
+  looking benign. `tee_targets()` now extracts the whole `tee` segment up to the
+  next pipeline or command separator and emits every operand;
+  `unwrap_target_quotes()` iterates to a fixpoint so each quoted operand is
+  exposed in turn. The `-a` gate is untouched, so appends stay allowed at any
+  operand count.
+
+  **A third Codex round caught the loop bound itself** — the constant 16-pass
+  cap I had added as paranoia was the fail-open: one pass unwraps one operand,
+  so a 17th quoted `tee` operand stayed wrapped, got blanked by `strip_quoted`,
+  and became invisible and writable. Verified by replaying the old loop over 25
+  quoted operands. The bound is now derived from the input's quote count, which
+  always suffices: every substitution removes exactly one quote pair, so a
+  changing pass strictly decreases the quote count and a non-changing pass
+  breaks — termination is by construction, and no constant is needed. Suite now
+  **64 cases, all passing**, with the new cases built programmatically (24
+  scratch operands plus one protected) so they scale past any constant a future
+  edit might reintroduce.
+
+### Reasoning backend: on-device tiers + opt-in cloud AI (2026-08-04, 23:30 PST)
+
+Two-round interview with the owner on SenseBridge's reasoning step. Round 1
+weighed local AI (Ollama), cloud AI, or the "basic" AI already in use, or a
+hybrid — prompted by Foundation Models' hardware gap. Round 2: owner confirmed
+they want an **opt-in, opt-out-anytime cloud AI tier** in addition to the
+on-device path (motivation: both the device-gap fallback and a quality
+upgrade), with data kept minimal + encrypted + a user-facing prompt, BYOK
+billing, and Anthropic/OpenAI/NVIDIA NIM as candidate providers. Current state:
+`docs/ARCHITECTURE.md` already names Foundation Models
+(`SystemLanguageModel`/`LanguageModelSession`) as the reasoning engine — free,
+on-device, license-clean, text-only — but it requires Apple Intelligence
+(iPhone 15 Pro+), and the doc's own fallback note ("implement availability
+checks and a graceful fallback — label lists instead of composed sentences")
+isn't built yet.
+
+- [x] **[P2]** **[Needs owner]** **Decide and scope the three-tier reasoning
+      strategy.** Recommended shape, synthesized from the interview: **(1)
+      Foundation Models** on-device where supported (default, free, private) →
+      **(2) deterministic label-list composition** on-device where unsupported
+      or cloud is declined (default, no AI, no network — the fallback
+      `docs/ARCHITECTURE.md` already calls for) → **(3) opt-in Cloud AI**, any
+      device, only once the user turns it on and supplies their own key. Cloud
+      is always a layer on top of the free default, never a replacement — so
+      declining consent never leaves a user with nothing. Design constraints
+      from the interview:
+      - **Data minimization**: send only already-derived text (recognized
+        labels/OCR/transcribed speech) as the prompt — never raw camera
+        frames, depth data, or audio waveforms.
+      - **Transport/storage**: TLS in transit (already required by `CLAUDE.md`
+        §10); API key in Keychain, never UserDefaults/plaintext/logs.
+      - **Consent UX**: default OFF; one-time explicit opt-in screen naming
+        exactly what leaves the device; a persistent Settings toggle to turn
+        it off anytime (the owner's "opt-in and opt-out whenever they decide"
+        requirement); an always-on VoiceOver/caption cue *while* a cloud
+        round-trip is actually in flight, so it's never silent — not a
+        blocking per-request confirmation dialog, which would break the
+        real-time accessibility flow this app exists for.
+      - **Third-party terms acceptance**: because this is BYOK, the opt-in
+        screen sends data straight to Anthropic/OpenAI/NVIDIA under *their*
+        ToS and privacy policy, not SenseBridge's — the SenseBridge-side
+        consent toggle alone doesn't cover that. The one-time opt-in screen
+        needs an explicit acknowledgment (checkbox or equivalent, not
+        pre-checked) that the user has read and agrees to the selected
+        provider's terms, with a link to that provider's current ToS/privacy
+        page, before the toggle can be turned on. Re-prompt if the user
+        switches providers, since each has its own terms.
+      - **Access model**: BYOK confirmed by owner — user supplies their own
+        Anthropic/OpenAI/NVIDIA API key; the app calls the provider directly.
+        Zero cost to SenseBridge, no SenseBridge-run backend — matches the
+        existing "no backend" invariant exactly (a metered relay was
+        considered and rejected because it would stand up the app's first
+        real server).
+      - **Providers**: build a provider-agnostic interface (fits the existing
+        `SensingSource → perception → Reasoning → RenderTarget` protocol-seam
+        architecture). Anthropic and OpenAI both fit BYOK cleanly and can ship
+        first. NVIDIA NIM is normally an enterprise self-hosted endpoint, not
+        a consumer API key — it needs its own "point at your own endpoint" UX
+        before it's a real candidate, not just a key field; scope that
+        separately or defer it.
+      - **Safety-framing**: a cloud-composed sentence must pass the same
+        hedged-language doctrine (`docs/SAFETY-FRAMING.md`) as the on-device
+        output — needs a per-provider system-prompt constraint, and review by
+        the `safety-framing-reviewer` agent before it ships. This is the
+        highest-severity review surface in the repo; do not skip it because
+        the composition moved off-device.
+      - **Docs/legal**: this widens what leaves the device, so it needs
+        `docs/PRIVACY.md`, `legal/PRIVACY_POLICY.md`, and the website's
+        `/privacy` notice updated in the same change — same precedent as the
+        Sentry opt-in rollout. `legal/` edits need explicit owner approval
+        per `CLAUDE.md`; an agent should draft, not commit, those changes.
+      This whole shape fits the architecture invariant's own consent-based
+      exception clause (`CLAUDE.md` — "anything leaving the device needs
+      explicit, revocable consent and a privacy-doc update") — it is
+      compatible with doctrine, not a violation, as long as it's built to that
+      bar. Acceptance: owner confirms the tier order and provider launch list,
+      then it becomes a scoped implementation ticket — plan with Opus 5
+      (architecture/security-adjacent), execute with Sonnet 5, per `CLAUDE.md`
+      §3.
+      **Done 2026-08-11** — owner confirmed the tier order and provider
+      launch list (Anthropic, OpenAI, NVIDIA NIM) in the same session;
+      implemented on `feat/awareness-reasoning-tiers` via
+      [`docs/superpowers/plans/2026-08-11-awareness-ai-tiers-plan.md`](docs/superpowers/plans/2026-08-11-awareness-ai-tiers-plan.md)
+      (Opus-5-reviewed design at
+      [`docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md`](docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md)).
+      Every constraint above shipped: data minimization
+      (`PerceptionRecord.detectedObjectLabelsForNetwork()` sends labels only,
+      never frames/depth/audio), Keychain-only credentials
+      (`KeychainCredentialStore`,
+      `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`), default-off consent UI
+      with per-provider ToS re-acknowledgment on every switch
+      (`ReasoningBackendSettingsView`), safety-framing enforced at the
+      network boundary (`ReasoningOutputValidator`, not a system-prompt
+      request), and a circuit-breaker fallback that discloses degradation
+      exactly twice — trip, recovery, never per-tick
+      (`ReasoningComposerResolver`). Verified: package test suite green,
+      `xcodebuild build` green for every app-layer task landed so far.
+      **Explicitly not verified by this check** — device-only: whether
+      `NSAllowsLocalNetworking` actually covers a bare LAN IP (Task 18), the
+      "Check once"/hands-free real-depth tap-through (Tasks 14-15), and the
+      full device-install smoke pass (Task 22) — tracked in the new
+      device-validation item below, not claimed here.
