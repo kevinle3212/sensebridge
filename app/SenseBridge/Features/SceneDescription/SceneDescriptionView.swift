@@ -9,11 +9,35 @@ import UIKit
 /// docs/ARCHITECTURE.md "Navigation".
 struct SceneDescriptionView: View {
     private let detector: ObjectClassificationService = .init()
-    private let composer: FoundationModelsSceneComposer = .init()
+    private let resolver: ReasoningComposerResolver
     /// Shared app state — renders through the same output targets every
     /// other feature uses, rather than standing up its own synthesizer.
     @Environment(AppEnvironment.self) private var environment
     @State private var lastResult: String?
+
+    /// A single capture can afford a longer timeout than the hands-free
+    /// narration cadence — see `AmbientAwarenessSession.networkRequestTimeout`
+    /// for the shorter hands-free figure and why it differs.
+    private static let networkRequestTimeout: TimeInterval = 8
+
+    /// Builds a resolver scoped to this view instance — a single capture is
+    /// a single request, so unlike `AmbientAwarenessSession` there's no
+    /// session lifetime for a circuit breaker to matter within, and a fresh
+    /// resolver per instance is simpler than trying to share one.
+    init() {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.waitsForConnectivity = false
+        configuration.timeoutIntervalForRequest = Self.networkRequestTimeout
+        configuration.allowsConstrainedNetworkAccess = false
+        let urlSession = URLSession(configuration: configuration)
+        resolver = ReasoningComposerResolver(
+            onDeviceComposer: FoundationModelsSceneComposer(),
+            credentialStore: KeychainCredentialStore(),
+            factory: LiveNetworkComposerFactory(
+                session: urlSession, requestTimeout: Self.networkRequestTimeout, locale: .current
+            )
+        )
+    }
 
     var body: some View {
         ScrollView {
@@ -57,6 +81,15 @@ struct SceneDescriptionView: View {
         }
     }
 
+    /// Captures a photo, detects objects in it, and speaks a hedged
+    /// description composed through `resolver` (falling back to on-device
+    /// per its own contract). The resolver returning `nil` is unreachable
+    /// in normal operation — `FoundationModelsSceneComposer`'s on-device
+    /// fallback never throws — but is handled with a spoken error rather
+    /// than a silent skip: this is a one-shot action the user is actively
+    /// waiting on, not a continuous channel, so leaving a stale
+    /// `lastResult` on screen with no explanation would be worse than
+    /// speaking *some* error.
     private func captureAndDescribe() async {
         do {
             let photo = try await environment.camera.capturePhoto()
@@ -64,10 +97,23 @@ struct SceneDescriptionView: View {
             let records = objects.map {
                 PerceptionRecord(kind: .detectedObject(label: $0.label, confidence: $0.confidence), capturedAt: .now)
             }
-            let message = try await composer.compose(from: records)
-            lastResult = message
-            announceIfUnspoken(message, profile: environment.settings.outputProfile)
-            await environment.output.render(OutputMessage(text: message, signal: .resultReady))
+            guard let result = await resolver.compose(
+                from: records, settings: environment.settings, locale: .current,
+                requestTimeout: Self.networkRequestTimeout
+            ) else {
+                let spoken = message(for: CameraSource.CameraError.noCameraAvailable)
+                lastResult = spoken
+                announceIfUnspoken(spoken, profile: environment.settings.outputProfile)
+                await environment.output.render(OutputMessage(text: spoken, signal: .error))
+                return
+            }
+            if let announcement = result.announcement {
+                announceIfUnspoken(announcement, profile: environment.settings.outputProfile)
+                await environment.output.render(OutputMessage(text: announcement, signal: .error))
+            }
+            lastResult = result.text
+            announceIfUnspoken(result.text, profile: environment.settings.outputProfile)
+            await environment.output.render(OutputMessage(text: result.text, signal: .resultReady))
         } catch {
             let spoken = message(for: error)
             lastResult = spoken
