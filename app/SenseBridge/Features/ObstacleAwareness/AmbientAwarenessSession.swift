@@ -62,20 +62,6 @@ final class AmbientAwarenessSession {
     /// the app says.
     let preview: AwarenessPreviewFeed = .init()
 
-    /// Whether descriptions are being composed by the on-device language model
-    /// or read out as a plain list of labels.
-    ///
-    /// Surfaced rather than hidden: the two produce noticeably different
-    /// output, and a user who does not know which one they are hearing cannot
-    /// tell a degraded mode from a bug. See AGENTS.md doctrine 4.
-    ///
-    /// Computed, not stored. Apple Intelligence can be switched off in system
-    /// Settings, and the model can still be downloading, so a value captured
-    /// at init would go stale and claim a composer that is no longer in use.
-    var isUsingLanguageModel: Bool {
-        FoundationModelsSceneComposer.isModelAvailable
-    }
-
     /// How often depth is read. Fast enough to notice someone stepping in
     /// front of the user, slow enough not to hold the CPU at a walk's expense
     /// — the cost per tick is one pixel-buffer reduction, not a model run.
@@ -85,10 +71,11 @@ final class AmbientAwarenessSession {
     private let classifier: ObjectClassificationService = .init()
     private let phrasing: Phrasing = .init()
 
-    private var composer: FoundationModelsSceneComposer = .init()
+    private var resolver: ReasoningComposerResolver?
     private var engine: AwarenessEngine = .init()
     private var throttle: NarrationThrottle = .init()
     private var loopTask: Task<Void, Never>?
+    private var compositionTask: Task<Void, Never>?
     private var backgroundObserver: NSObjectProtocol?
     private var lastDescribedAt: Date?
     private var locale: Locale = .current
@@ -125,7 +112,16 @@ final class AmbientAwarenessSession {
         }
 
         locale = environment.settings.language.locale ?? .current
-        composer = FoundationModelsSceneComposer(phrasing: phrasing, locale: locale)
+        let onDevice = FoundationModelsSceneComposer(phrasing: phrasing, locale: locale)
+        let urlSession = Self.makeURLSession(requestTimeout: Self.networkRequestTimeout)
+        resolver = ReasoningComposerResolver(
+            onDeviceComposer: onDevice,
+            credentialStore: KeychainCredentialStore(),
+            factory: LiveNetworkComposerFactory(
+                session: urlSession, requestTimeout: Self.networkRequestTimeout, locale: locale
+            )
+        )
+        resolver?.resetSession()
         engine = .alerting(withinMeters: environment.settings.awarenessAlertDistanceMeters)
         let interval = environment.settings.narrationIntervalSeconds
         throttle = NarrationThrottle(
@@ -152,6 +148,8 @@ final class AmbientAwarenessSession {
     func stop() {
         loopTask?.cancel()
         loopTask = nil
+        compositionTask?.cancel()
+        compositionTask = nil
         source.stop()
         UIApplication.shared.isIdleTimerDisabled = false
         if let backgroundObserver {
@@ -162,6 +160,7 @@ final class AmbientAwarenessSession {
         // room's alert state and swallow the first real alert of the next run.
         engine.reset()
         throttle.reset()
+        resolver?.resetSession()
         lastDescribedAt = nil
         // The preview goes away with the session, and neither the last frame
         // nor its outlines may outlive the feed they came from.
@@ -190,7 +189,7 @@ final class AmbientAwarenessSession {
             await report(engine.evaluate(depthMeters: depthMeters), depthMeters: depthMeters, to: environment)
         }
         await updateDetections(in: frame)
-        await describeIfDue(frame, environment: environment)
+        describeIfDue(frame, environment: environment)
     }
 
     /// Re-runs object detection so the preview's outlines follow the scene.
@@ -250,54 +249,47 @@ final class AmbientAwarenessSession {
         }
     }
 
-    /// Classifies and narrates the scene, if enough time has passed and the
-    /// channel is free.
-    private func describeIfDue(_ frame: AmbientFrame, environment: AppEnvironment) async {
+    /// Classifies and narrates the scene, if enough time has passed, the
+    /// channel is free, and no composition is already in flight.
+    ///
+    /// Composition runs as a **tracked, single-flight, cancellable child
+    /// task** rather than being awaited inline — a network composer's
+    /// round-trip must never stall the 750ms depth-sampling tick this method
+    /// is called from, or hands-free awareness would stop noticing something
+    /// stepping in front of the user for however long the request takes. See
+    /// docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md
+    /// "Resolution, concurrency, and fallback".
+    private func describeIfDue(_ frame: AmbientFrame, environment: AppEnvironment) {
+        guard compositionTask == nil else { return } // single-flight: skip, don't queue
         let now = Date.now
         if let lastDescribedAt,
            now.timeIntervalSince(lastDescribedAt) < environment.settings.narrationIntervalSeconds {
             return
         }
-        // Skipped rather than queued while speech is in flight. `render`
-        // interrupts, which is right for a one-shot capture and wrong here —
-        // it would cut every sentence off with the next one.
-        if await environment.speech.isSpeaking {
-            return
-        }
-        // Stamped before the work, not after: classification plus a model run
-        // can outlast one tick, and stamping afterwards would let several ticks
-        // start overlapping generations.
         lastDescribedAt = now
+        let capturedAt = frame.capturedAt
+        let staleAfter = max(environment.settings.narrationIntervalSeconds * 2, 12)
+        let currentDetections = detectedObjects
 
-        let records: [PerceptionRecord]
-        if detectedObjects.isEmpty {
-            // Nothing stood out as a discrete object. That is the case a
-            // whole-frame pass handles well — a corridor, a wall, an open room
-            // — so fall back to it rather than going silent, which on this
-            // channel would read as "nothing is there".
-            do {
-                records = try await classifier.classify(frame.image, orientation: frame.orientation)
-            } catch {
-                // A single unclassifiable frame is routine. Announcing it would
-                // train the user to ignore this channel; the next tick retries.
-                return
-            }
-        } else {
-            records = detectedObjects.map {
-                PerceptionRecord(
-                    kind: .detectedObject(label: $0.label, confidence: $0.confidence),
-                    capturedAt: now
-                )
-            }
+        compositionTask = Task { [weak self] in
+            defer { self?.compositionTask = nil }
+            guard let self else { return }
+            guard let records = await records(for: frame, detections: currentDetections) else { return }
+            guard let resolver else { return }
+            guard let result = await resolver.compose(
+                from: records,
+                settings: environment.settings,
+                locale: locale,
+                requestTimeout: Self.networkRequestTimeout
+            ) else { return }
+            guard !Task.isCancelled, status == .running else { return }
+            // Staleness guard: a description of a frame captured this long
+            // ago is a statement about somewhere the user may have already
+            // walked away from — see the spec's non-blocking-composition
+            // section.
+            guard Date.now.timeIntervalSince(capturedAt) <= staleAfter else { return }
+            await deliverComposedResult(result, records: records, environment: environment)
         }
-        guard let text = try? await composer.compose(from: records) else { return }
-        guard throttle.shouldSpeak(text, at: Date.now) else { return }
-        await deliver(
-            text,
-            signal: records.isEmpty ? .nothingFound : .resultReady,
-            isUrgent: false,
-            to: environment
-        )
     }
 
     /// Renders `text` through every channel the user's profile prefers.
@@ -344,35 +336,63 @@ final class AmbientAwarenessSession {
     }
 }
 
-/// Turning machine facts — an error, a distance in metres — into the words the
-/// user actually hears.
-///
-/// Split off from the session body because none of it touches session state:
-/// these are pure functions of their arguments, and the loop above is long
-/// enough without them.
+/// Composition-pipeline helpers that touch session state (`classifier`,
+/// `throttle`, `deliver`), split out of the class body purely to keep it
+/// under SwiftLint's `type_body_length` — unlike
+/// `AmbientAwarenessSession+Support.swift`, these need `private` access to
+/// the type and so must stay in this file.
 private extension AmbientAwarenessSession {
-    /// Turns a sensing failure into prose that tells the user what to do next.
-    static func message(for error: Error) -> String {
-        switch error {
-        case AmbientSensingSource.SensingError.depthUnavailable:
-            """
-            Hands-free awareness needs a LiDAR depth sensor, which this device \
-            does not have.
-            """
-        case AmbientSensingSource.SensingError.unsupportedDevice:
-            "This device cannot run hands-free awareness."
-        default:
-            "Hands-free awareness couldn't start. Check camera access in Settings, then try again."
+    // swiftlint:disable discouraged_optional_collection
+    /// Builds the records to compose from — detections if the last pass
+    /// found any discrete objects, otherwise a whole-frame classification
+    /// pass. Split out of `describeIfDue` so that method reads as the
+    /// scheduling/cancellation logic it is, not classification plumbing.
+    ///
+    /// Returns `nil`, not an empty array, when classification itself
+    /// failed — a real, distinct signal from "classified as empty" that
+    /// `describeIfDue` uses to skip the tick entirely rather than announce
+    /// "nothing recognized" for a frame that was never actually read.
+    func records(for frame: AmbientFrame, detections: [DetectedObject]) async -> [PerceptionRecord]? {
+        if detections.isEmpty {
+            do {
+                return try await classifier.classify(frame.image, orientation: frame.orientation)
+            } catch {
+                return nil
+            }
+        }
+        return detections.map {
+            PerceptionRecord(kind: .detectedObject(label: $0.label, confidence: $0.confidence), capturedAt: .now)
         }
     }
 
-    /// Formats a distance in the reader's own units — metres in most of the
-    /// world, feet in the US — rather than hardcoding this file's.
-    static func formattedDistance(meters: Double, locale: Locale) -> String {
-        let formatter = MeasurementFormatter()
-        formatter.locale = locale
-        formatter.unitOptions = .naturalScale
-        formatter.numberFormatter.maximumFractionDigits = 1
-        return formatter.string(from: Measurement(value: meters, unit: UnitLength.meters))
+    // swiftlint:enable discouraged_optional_collection
+
+    /// Delivers a resolver result: the breaker announcement first (if any,
+    /// always spoken), then the routine narration itself — gated on speech
+    /// not already being in flight and the throttle's dedup/cadence rules.
+    /// Split out of `describeIfDue`'s composition `Task` to keep that
+    /// closure's cyclomatic complexity within SwiftLint's limit.
+    func deliverComposedResult(
+        _ result: ReasoningComposeResult,
+        records: [PerceptionRecord],
+        environment: AppEnvironment
+    ) async {
+        if let announcement = result.announcement {
+            await deliver(announcement, signal: .error, isUrgent: true, to: environment)
+        }
+        // Routine narration is skipped, not queued, while speech is already
+        // in flight — `render` interrupts, which is right for a one-shot
+        // capture and wrong here, where it would cut every sentence off
+        // with the next one. The breaker announcement above is deliberately
+        // exempt (`isUrgent: true`), matching
+        // `SpeechRenderTarget.isSpeaking`'s documented contract.
+        guard await !environment.speech.isSpeaking else { return }
+        guard throttle.shouldSpeak(result.text, at: Date.now) else { return }
+        await deliver(
+            result.text,
+            signal: records.isEmpty ? .nothingFound : .resultReady,
+            isUrgent: false,
+            to: environment
+        )
     }
 }

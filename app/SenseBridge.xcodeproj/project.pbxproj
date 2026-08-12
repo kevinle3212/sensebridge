@@ -22,6 +22,7 @@
 		682E27D38574104D02AD5E83 /* CustomSoundClassifierOODTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */; };
 		6BD59D76920B98A3444D4972 /* CustomSoundClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B39F5A26EF1C431714DEF58F /* CustomSoundClassifier.swift */; };
 		6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A609680B79ECF22EB121BCAA /* CrashReporting.swift */; };
+		D770B47116B3722E99E9DED7 /* KeychainCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */; };
 		75103B4FD7ACCB429708A1F6 /* SenseBridgeSoundClassifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */; };
 		76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */; };
 		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
@@ -42,6 +43,7 @@
 		D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */; };
 		F291E9E90D67D7F2F4E634DA /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86D1BA5F897BD45FD1CCDC6 /* OnboardingView.swift */; };
 		F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */; };
+		BA7038AC2272B6CE3BB8AA62 /* AmbientAwarenessSession+Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E25EC1F88197036CF93E3B /* AmbientAwarenessSession+Support.swift */; };
 		F7FA11AE4011CC7899DA53DF /* AlphaScaffoldingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */; };
 		FBE1008D99DC64D5C2F7B689 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 6F8902BD3171C6B275867212 /* Sentry */; };
 /* End PBXBuildFile section */
@@ -88,6 +90,7 @@
 		96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAlertsView.swift; sourceTree = "<group>"; };
 		9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientPreviewImageTests.swift; sourceTree = "<group>"; };
 		A609680B79ECF22EB121BCAA /* CrashReporting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporting.swift; sourceTree = "<group>"; };
+		0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainCredentialStore.swift; sourceTree = "<group>"; };
 		A86D1BA5F897BD45FD1CCDC6 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
 		B39F5A26EF1C431714DEF58F /* CustomSoundClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSoundClassifier.swift; sourceTree = "<group>"; };
@@ -98,6 +101,7 @@
 		D863B3D0A276D8D92A986648 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionView.swift; sourceTree = "<group>"; };
 		EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAwarenessSession.swift; sourceTree = "<group>"; };
+		09E25EC1F88197036CF93E3B /* AmbientAwarenessSession+Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AmbientAwarenessSession+Support.swift"; sourceTree = "<group>"; };
 		EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewView.swift; sourceTree = "<group>"; };
 		F25B799EEB369166FD737AEA /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		F590D9D32D5528105C06EC89 /* SenseBridgeCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SenseBridgeCore; path = Packages/SenseBridgeCore; sourceTree = SOURCE_ROOT; };
@@ -133,6 +137,7 @@
 				F25B799EEB369166FD737AEA /* CameraController.swift */,
 				A609680B79ECF22EB121BCAA /* CrashReporting.swift */,
 				309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */,
+				0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */,
 				D73B9444B53F2DD88AD973EA /* HomeView.swift */,
 				1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */,
 				B659E56450AFF17FFC6D075A /* SettingsSections.swift */,
@@ -154,6 +159,7 @@
 			isa = PBXGroup;
 			children = (
 				EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */,
+				09E25EC1F88197036CF93E3B /* AmbientAwarenessSession+Support.swift */,
 				2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */,
 				EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */,
 				C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */,
@@ -453,6 +459,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */,
+				BA7038AC2272B6CE3BB8AA62 /* AmbientAwarenessSession+Support.swift in Sources */,
 				1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */,
 				843C2D8C082A6B1538F573FD /* AwarenessPreviewFeed.swift in Sources */,
 				1CAA3958ACD6EBEF05E24464 /* AwarenessPreviewView.swift in Sources */,
@@ -460,6 +467,7 @@
 				8E0DBCD0890C974B156BDFFB /* CameraControlsView.swift in Sources */,
 				D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */,
 				6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */,
+				D770B47116B3722E99E9DED7 /* KeychainCredentialStore.swift in Sources */,
 				6BD59D76920B98A3444D4972 /* CustomSoundClassifier.swift in Sources */,
 				B616562B724CF082D62A1B28 /* DiagnosticsSettingsSection.swift in Sources */,
 				3310BF73FB5557F408A36388 /* FoundationModelsSceneComposer.swift in Sources */,

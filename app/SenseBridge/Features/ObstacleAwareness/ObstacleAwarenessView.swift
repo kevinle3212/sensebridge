@@ -126,12 +126,7 @@ struct ObstacleAwarenessView: View {
                 }
                 // Which composer is running changes how the output sounds. Left
                 // unsaid, a user cannot tell the simpler mode from a fault.
-                Text(session.isUsingLanguageModel
-                    ? "Descriptions are composed on-device by Apple Intelligence."
-                    : """
-                    Apple Intelligence is unavailable, so descriptions are read \
-                    out as a plain list of what was recognized.
-                    """)
+                Text(session.activeBackendDescription(settings: environment.settings))
                     .font(.footnote)
                     .foregroundStyle(Color("SecondaryText"))
             } else {
