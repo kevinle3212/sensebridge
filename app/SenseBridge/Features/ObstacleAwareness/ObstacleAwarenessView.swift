@@ -62,8 +62,11 @@ struct ObstacleAwarenessView: View {
     /// and the display-sleep assertion, both of which must be released when
     /// the user leaves this screen.
     @State private var session: AmbientAwarenessSession = .init()
-    @State private var engine: AwarenessEngine = .init()
-    @State private var isNearReading = true
+    /// The one-shot depth source behind "Check once" — a separate instance
+    /// from `session`'s own, so a single check never contends with a
+    /// running continuous session for the camera.
+    @State private var oneShotSource: AmbientSensingSource = .init()
+    @State private var isTakingReading = false
     @State private var lastResult: String?
 
     var body: some View {
@@ -164,36 +167,18 @@ struct ObstacleAwarenessView: View {
             // evaluation of one depth sample; a user who believes continuous
             // monitoring is running would read the silence between taps as
             // "nothing is there", which is a claim this app never makes.
-            Button("Check once for what may be ahead") {
-                let mockDepthMeters = isNearReading ? 1.0 : 3.0
-                isNearReading.toggle()
-                // The transition is what a *continuous* consumer acts on; a
-                // one-shot check only wants the resulting state.
-                _ = engine.evaluate(depthMeters: mockDepthMeters)
-                let isAlerting = engine.isAlerting
-                let message = isAlerting
-                    ? phrasing.describe(subject: phrasing.somethingAhead(), certainty: .medium)
-                    // Not "the way ahead seems clear": that asserts an absence
-                    // the app cannot observe, and hedging the verb doesn't
-                    // rescue the claim. `nothingRecognized` speaks only about
-                    // this check, and comes pre-translated for es/vi — the raw
-                    // literal that used to sit here did neither.
-                    : phrasing.nothingRecognized()
-                lastResult = message
-                // The signal tracks the branch, not the view. A haptic channel
-                // renders the signal alone and discards the text, so this is
-                // the *entire* message under `.deafBlind`. `.awarenessClear`
-                // would be an unhedgeable tactile "stand down" from one
-                // sample; `.nothingFound` claims only what the prose claims.
-                let signal: OutputSignal = isAlerting ? .awarenessAlert : .nothingFound
-                announceIfUnspoken(message, profile: environment.settings.outputProfile)
-                Task { await environment.output.render(OutputMessage(text: message, signal: signal)) }
+            Button(isTakingReading ? "Measuring…" : "Check once for what may be ahead") {
+                Task { await takeOneShotReading() }
             }
-            .disabled(session.status == .running)
-            // Disabled while the continuous loop holds the camera. Without a
-            // value, a VoiceOver user meets a control that has silently gone
-            // dim with no explanation.
-            .accessibilityValue(session.status == .running ? "Unavailable while hands-free awareness is running" : "")
+            .disabled(session.status == .running || isTakingReading)
+            // Disabled while the continuous loop holds the camera, or while
+            // a reading is already in flight. Without a value, a VoiceOver
+            // user meets a control that has silently gone dim with no
+            // explanation.
+            .accessibilityValue(
+                session.status == .running ? "Unavailable while hands-free awareness is running"
+                    : isTakingReading ? "Measuring" : ""
+            )
             .accessibilityHint("""
             Takes one cautious reading of what may be nearby. It does not keep \
             watching, and it is not a safety feature.
@@ -207,6 +192,46 @@ struct ObstacleAwarenessView: View {
             Text("One reading")
                 .foregroundStyle(Color("SecondaryText"))
         }
+    }
+
+    /// Takes one real depth reading. A **fresh** `AwarenessEngine` per
+    /// call, deliberately: the continuous session's hysteresis band is
+    /// right for a loop and wrong for a one-shot check, where reusing state
+    /// across taps could report "something ahead" from a reading taken in
+    /// a different room minutes earlier.
+    private func takeOneShotReading() async {
+        isTakingReading = true
+        defer { isTakingReading = false }
+        let depthMeters: Double?
+        do {
+            depthMeters = try await oneShotSource.sampleOnce()
+        } catch {
+            let spoken = phrasing.couldNotMeasure()
+            lastResult = spoken
+            announceIfUnspoken(spoken, profile: environment.settings.outputProfile)
+            await environment.output.render(OutputMessage(text: spoken, signal: .error))
+            return
+        }
+        guard let depthMeters else {
+            // A frame arrived but nothing was measurable — distinct from
+            // "nothing recognized" and never `.awarenessClear`, matching
+            // `DepthStatistics`'s own "could not measure" contract.
+            let spoken = phrasing.couldNotMeasure()
+            lastResult = spoken
+            announceIfUnspoken(spoken, profile: environment.settings.outputProfile)
+            await environment.output.render(OutputMessage(text: spoken, signal: .error))
+            return
+        }
+        var freshEngine = AwarenessEngine(alertThresholdMeters: environment.settings.awarenessAlertDistanceMeters)
+        _ = freshEngine.evaluate(depthMeters: depthMeters)
+        let isAlerting = freshEngine.isAlerting
+        let message = isAlerting
+            ? phrasing.describe(subject: phrasing.somethingAhead(), certainty: .medium)
+            : phrasing.nothingRecognized()
+        lastResult = message
+        let signal: OutputSignal = isAlerting ? .awarenessAlert : .nothingFound
+        announceIfUnspoken(message, profile: environment.settings.outputProfile)
+        await environment.output.render(OutputMessage(text: message, signal: signal))
     }
 }
 
