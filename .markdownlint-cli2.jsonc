@@ -44,6 +44,9 @@
     "website/project.inlang/**",
     "sessions/**",
     "tmp/**",
+    // Freeform subagent-driven-development artifacts (task briefs, reports,
+    // review packages) — gitignored scratch, same status as sessions/**/tmp/**.
+    ".superpowers/**",
     "LICENSE"
   ]
 }

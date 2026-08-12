@@ -60,3 +60,7 @@ website/project.inlang/
 # exempts NOTES.local.md above.
 sessions/
 tmp/
+
+# Gitignored subagent-driven-development scratch: task briefs, reports, and
+# review packages, rewritten every task run. Same reasoning as sessions/ above.
+.superpowers/
