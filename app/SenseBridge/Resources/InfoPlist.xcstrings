@@ -36,6 +36,29 @@
         }
       }
     },
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge connects to your self-hosted reasoning server, if you set one up. Nothing else on your network is contacted."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge se conecta a tu servidor de razonamiento autoalojado, si configuraste uno. No se contacta nada más en tu red."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SenseBridge kết nối với máy chủ suy luận tự lưu trữ của bạn, nếu bạn đã thiết lập một máy chủ. Không có gì khác trên mạng của bạn bị liên hệ."
+          }
+        }
+      }
+    },
     "NSMicrophoneUsageDescription" : {
       "comment" : "Privacy - Microphone Usage Description",
       "localizations" : {

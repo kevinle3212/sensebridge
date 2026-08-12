@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <!-- Scoped to local networking only — never NSAllowsArbitraryLoads,
+             which would disable ATS app-wide. Covers the self-hosted
+             reasoning endpoint (Ollama/LM Studio default to plain HTTP).
+             See docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md
+             "Self-hosted endpoint — network-layer specifics" for the
+             device-verification requirement and https-only fallback. -->
+        <key>NSAllowsLocalNetworking</key>
+        <true/>
+    </dict>
+</dict>
+</plist>

@@ -515,7 +515,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SenseBridge/Resources/InfoPlist-Additions.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "SenseBridge connects to your self-hosted reasoning server, if you set one up. Nothing else on your network is contacted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
 				INFOPLIST_KEY_SentryDSN = "$(SENTRY_DSN)";
 				INFOPLIST_KEY_UIBackgroundModes = audio;
@@ -702,7 +704,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SenseBridge/Resources/InfoPlist-Additions.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "SenseBridge connects to your self-hosted reasoning server, if you set one up. Nothing else on your network is contacted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
 				INFOPLIST_KEY_SentryDSN = "$(SENTRY_DSN)";
 				INFOPLIST_KEY_UIBackgroundModes = audio;
