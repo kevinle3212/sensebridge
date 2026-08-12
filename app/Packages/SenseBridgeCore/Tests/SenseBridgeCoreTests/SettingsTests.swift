@@ -69,19 +69,19 @@ struct SettingsTests {
     }
 
     @Test func decodingLegacyCloudReasoningEnabledTrueFallsBackToOnDeviceUntilProviderChosen() throws {
-        let json = """
+        let legacyCloudEnabledJSON = """
         {"outputProfile":"blind","speechRate":0.5,"cloudReasoningEnabled":true,"language":"system"}
-        """.data(using: .utf8)!
-        let decoded = try JSONDecoder().decode(Settings.self, from: json)
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(legacyCloudEnabledJSON.utf8))
         #expect(decoded.reasoningBackend == .cloud)
         #expect(decoded.cloudProvider == nil)
     }
 
     @Test func decodingUnrecognizedReasoningBackendFallsBackToOnDevice() throws {
-        let json = """
+        let unrecognizedBackendJSON = """
         {"outputProfile":"blind","speechRate":0.5,"reasoningBackend":"somethingFutureBuildsAdded"}
-        """.data(using: .utf8)!
-        let decoded = try JSONDecoder().decode(Settings.self, from: json)
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(unrecognizedBackendJSON.utf8))
         #expect(decoded.reasoningBackend == .onDevice)
     }
 }
