@@ -15,6 +15,7 @@
 		268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */; };
 		2F02E08A4B22B4E8836E8DDD /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3030507FD05945D3B89734B5 /* SenseBridgeCore */; };
 		311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */; };
+		3BF3CC3E277CE1D9397384FC /* DescriptionDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607B51794FC974DA69389D4F /* DescriptionDetailUITests.swift */; };
 		3310BF73FB5557F408A36388 /* FoundationModelsSceneComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711F69574DFEC999FAF004AF /* FoundationModelsSceneComposer.swift */; };
 		3F02B88DA178392F7EEB35EF /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25B799EEB369166FD737AEA /* CameraController.swift */; };
 		45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */; };
@@ -25,6 +26,7 @@
 		D770B47116B3722E99E9DED7 /* KeychainCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */; };
 		75103B4FD7ACCB429708A1F6 /* SenseBridgeSoundClassifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */; };
 		76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */; };
+		D118395480E4EBA3F1174DE9 /* AmbientAwarenessSessionSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B764484B17EFEBC4BA59EA /* AmbientAwarenessSessionSupportTests.swift */; };
 		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
 		82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */; };
 		843C2D8C082A6B1538F573FD /* AwarenessPreviewFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */; };
@@ -74,6 +76,7 @@
 		212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		E8257130E7E3AAF2761AA8E4 /* ReasoningBackendSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningBackendSettingsView.swift; sourceTree = "<group>"; };
 		274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentTests.swift; sourceTree = "<group>"; };
+		B6B764484B17EFEBC4BA59EA /* AmbientAwarenessSessionSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAwarenessSessionSupportTests.swift; sourceTree = "<group>"; };
 		2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewFeed.swift; sourceTree = "<group>"; };
 		309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsSection.swift; sourceTree = "<group>"; };
 		385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = SenseBridgeSoundClassifier.mlmodel; sourceTree = "<group>"; };
@@ -81,6 +84,7 @@
 		3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlphaScaffoldingUITests.swift; sourceTree = "<group>"; };
 		509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeUITests.swift; sourceTree = "<group>"; };
 		50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionUITests.swift; sourceTree = "<group>"; };
+		607B51794FC974DA69389D4F /* DescriptionDetailUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptionDetailUITests.swift; sourceTree = "<group>"; };
 		53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		60602C61EB43396734122316 /* SenseBridgeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		66C553969EFB2A7DED18325B /* LabelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingView.swift; sourceTree = "<group>"; };
@@ -213,6 +217,7 @@
 			isa = PBXGroup;
 			children = (
 				3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */,
+				607B51794FC974DA69389D4F /* DescriptionDetailUITests.swift */,
 				50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */,
 				509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */,
 			);
@@ -263,6 +268,7 @@
 			isa = PBXGroup;
 			children = (
 				9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */,
+				B6B764484B17EFEBC4BA59EA /* AmbientAwarenessSessionSupportTests.swift */,
 				274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */,
 				38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */,
 				80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */,
@@ -441,6 +447,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7FA11AE4011CC7899DA53DF /* AlphaScaffoldingUITests.swift in Sources */,
+				3BF3CC3E277CE1D9397384FC /* DescriptionDetailUITests.swift in Sources */,
 				311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */,
 				45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */,
 			);
@@ -451,6 +458,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */,
+				D118395480E4EBA3F1174DE9 /* AmbientAwarenessSessionSupportTests.swift in Sources */,
 				76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */,
 				268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */,
 				682E27D38574104D02AD5E83 /* CustomSoundClassifierOODTests.swift in Sources */,

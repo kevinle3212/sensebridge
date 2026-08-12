@@ -124,11 +124,59 @@ struct AwarenessSettingsSection: View {
 
     /// Formats a distance in the reader's own units, so a US user reads feet
     /// rather than a metric figure they have to convert while walking.
+    ///
+    /// `unitStyle = .long` spells the unit out ("feet", not "ft") — VoiceOver
+    /// reads this string as this slider's accessibility value, and the
+    /// abbreviated form reads as literal text, not the unit.
     private static func distanceDescription(meters: Double) -> String {
         let formatter = MeasurementFormatter()
         formatter.unitOptions = .naturalScale
+        formatter.unitStyle = .long
         formatter.numberFormatter.maximumFractionDigits = 1
         return formatter.string(from: Measurement(value: meters, unit: UnitLength.meters))
+    }
+}
+
+/// How many things a composed description names, and how much wording it
+/// uses to do it — see `SpokenDetail`.
+///
+/// A separate `View` for the same reason `AwarenessSettingsSection` is: one
+/// more section on a screen already at its length budget.
+struct DetailLevelSettingsSection: View {
+    @Binding var spokenDetail: SpokenDetail
+
+    var body: some View {
+        Section {
+            Picker("Description detail", selection: $spokenDetail) {
+                ForEach(SpokenDetail.allCases, id: \.self) { detail in
+                    Text(Self.displayName(for: detail))
+                        .tag(detail)
+                }
+            }
+            .accessibilityHint("Sets how many things each description names and how much wording it uses.")
+        } header: {
+            Text("Descriptions")
+                .foregroundStyle(Color("SecondaryText"))
+        } footer: {
+            // Doctrine 4's disclosure, required rather than decorative: "more
+            // detail" must never be heard as "more certain" — see
+            // docs/SAFETY-FRAMING.md and `SpokenDetail`'s own doc comment.
+            Text("""
+            More detail means SenseBridge names more of what it recognized, not that it \
+            is more sure about any of it. Every description is still a cautious guess, \
+            and SenseBridge still never says the way ahead is clear.
+            """)
+            .foregroundStyle(Color("SecondaryText"))
+        }
+    }
+
+    /// Localized label shown in the detail-level picker for `detail`.
+    private static func displayName(for detail: SpokenDetail) -> LocalizedStringKey {
+        switch detail {
+        case .concise: "Brief"
+        case .standard: "Standard"
+        case .detailed: "Detailed"
+        }
     }
 }
 
