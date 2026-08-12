@@ -52,13 +52,22 @@ struct FoundationModelsSceneComposer: SceneComposer {
     /// Instructions kept short and negative-space heavy: the model's job here
     /// is compression, and every capability it is not told about is one it
     /// cannot volunteer into a spoken claim.
-    private static let instructions = """
-    You compress a list of detected object labels into one short noun phrase \
-    for a blind user's screen reader. Name only objects present in the list. \
-    Never add objects, never guess what the place is, never describe distance, \
-    direction, movement, or safety, and never write a full sentence. \
-    Another part of the app adds the wording around your phrase.
-    """
+    ///
+    /// Pins the reply language to `locale` — without this, `es`/`vi` users
+    /// could get an English noun phrase wrapped in a translated hedge
+    /// template. Caught during the 2026-08-11 reasoning-tier design review
+    /// while adding the same instruction to the new network composers.
+    private static func instructions(locale: Locale) -> String {
+        """
+        You compress a list of detected object labels into one short noun phrase \
+        for a blind user's screen reader. Name only objects present in the list. \
+        Never add objects, never guess what the place is, never describe distance, \
+        direction, movement, or safety, and never write a full sentence. Respond \
+        only with the noun phrase, in the language identified by locale \
+        "\(locale.identifier)". Another part of the app adds the wording around \
+        your phrase.
+        """
+    }
 
     private let fallback: LabelListSceneComposer
     private let phrasing: Phrasing
@@ -113,7 +122,7 @@ struct FoundationModelsSceneComposer: SceneComposer {
     /// description is independent of the last.
     private func modelPhrase(for labels: [String]) async -> String? {
         do {
-            let session = LanguageModelSession(instructions: Self.instructions)
+            let session = LanguageModelSession(instructions: Self.instructions(locale: locale))
             let response = try await session.respond(
                 to: "Labels: \(labels.joined(separator: ", "))",
                 generating: SceneSubject.self
