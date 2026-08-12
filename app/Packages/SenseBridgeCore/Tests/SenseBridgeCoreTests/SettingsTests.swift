@@ -8,8 +8,8 @@ struct SettingsTests {
         let settings = Settings(
             outputProfile: .deaf,
             speechRate: 0.7,
-            cloudReasoningEnabled: true,
-            language: .vi
+            language: .vi,
+            reasoningBackend: .cloud
         )
 
         let data = try JSONEncoder().encode(settings)
@@ -29,7 +29,7 @@ struct SettingsTests {
         #expect(decoded.language == .system)
         #expect(decoded.outputProfile == .blind)
         #expect(decoded.speechRate == 0.5)
-        #expect(decoded.cloudReasoningEnabled == false)
+        #expect(decoded.reasoningBackend == .onDevice)
     }
 
     @Test
@@ -66,5 +66,22 @@ struct SettingsTests {
         let decoded = try JSONDecoder().decode(Settings.self, from: Data(preOnboardingJSON.utf8))
 
         #expect(decoded.hasCompletedOnboarding == true)
+    }
+
+    @Test func decodingLegacyCloudReasoningEnabledTrueFallsBackToOnDeviceUntilProviderChosen() throws {
+        let json = """
+        {"outputProfile":"blind","speechRate":0.5,"cloudReasoningEnabled":true,"language":"system"}
+        """.data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(Settings.self, from: json)
+        #expect(decoded.reasoningBackend == .cloud)
+        #expect(decoded.cloudProvider == nil)
+    }
+
+    @Test func decodingUnrecognizedReasoningBackendFallsBackToOnDevice() throws {
+        let json = """
+        {"outputProfile":"blind","speechRate":0.5,"reasoningBackend":"somethingFutureBuildsAdded"}
+        """.data(using: .utf8)!
+        let decoded = try JSONDecoder().decode(Settings.self, from: json)
+        #expect(decoded.reasoningBackend == .onDevice)
     }
 }
