@@ -1,6 +1,52 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "A key is saved" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A key is saved"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hay una clave guardada"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã lưu một khóa"
+          }
+        }
+      }
+    },
+    "API key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "API key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clave de API"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khóa API"
+          }
+        }
+      }
+    },
     "Announces recognized sounds nearby." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -47,6 +93,29 @@
         }
       }
     },
+    "Anthropic" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anthropic"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anthropic"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anthropic"
+          }
+        }
+      }
+    },
     "Awareness" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -89,6 +158,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quay lại"
+          }
+        }
+      }
+    },
+    "Bundled on-device model — not yet available. Needs a benchmarked model; tracked as a follow-up." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bundled on-device model — not yet available. Needs a benchmarked model; tracked as a follow-up."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelo incluido en el dispositivo — aún no disponible. Necesita un modelo evaluado; se hará seguimiento como tarea futura."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mô hình đi kèm trên thiết bị — chưa khả dụng. Cần một mô hình đã được đánh giá; sẽ được theo dõi như việc cần làm tiếp theo."
           }
         }
       }
@@ -277,6 +369,29 @@
         }
       }
     },
+    "Choose a provider" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a provider"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige un proveedor"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chọn nhà cung cấp"
+          }
+        }
+      }
+    },
     "Choose the app's display language." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -296,6 +411,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chọn ngôn ngữ hiển thị của ứng dụng."
+          }
+        }
+      }
+    },
+    "Cloud" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nube"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đám mây"
           }
         }
       }
@@ -484,6 +622,29 @@
         }
       }
     },
+    "Endpoint URL" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Endpoint URL"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL del extremo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL điểm cuối"
+          }
+        }
+      }
+    },
     "English" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -553,6 +714,29 @@
         }
       }
     },
+    "Free, private, and the default. Nothing about your surroundings leaves your device." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free, private, and the default. Nothing about your surroundings leaves your device."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gratis, privado y la opción predeterminada. Nada sobre tu entorno sale de tu dispositivo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miễn phí, riêng tư và là lựa chọn mặc định. Không có thông tin nào về môi trường xung quanh bạn rời khỏi thiết bị."
+          }
+        }
+      }
+    },
     "Gives cautious alerts about what may be nearby. Not a safety device." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -572,6 +756,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đưa ra cảnh báo thận trọng về những gì có thể ở gần. Đây không phải là thiết bị an toàn."
+          }
+        }
+      }
+    },
+    "I have read and agree to %@'s terms of service" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I have read and agree to %@'s terms of service"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "He leído y acepto los términos de servicio de %@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tôi đã đọc và đồng ý với điều khoản dịch vụ của %@"
+          }
+        }
+      }
+    },
+    "I understand this sends labels to the address I entered" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I understand this sends labels to the address I entered"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entiendo que esto envía etiquetas a la dirección que ingresé"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tôi hiểu điều này sẽ gửi nhãn đến địa chỉ tôi đã nhập"
           }
         }
       }
@@ -737,6 +967,29 @@
         }
       }
     },
+    "Local" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cục bộ"
+          }
+        }
+      }
+    },
     "Microphone access is needed to listen for sounds. Enable it in Settings." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -756,6 +1009,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cần quyền truy cập micrô để nghe âm thanh. Hãy bật quyền này trong Cài đặt."
+          }
+        }
+      }
+    },
+    "Model name" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model name"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nombre del modelo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tên mô hình"
+          }
+        }
+      }
+    },
+    "NVIDIA NIM" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NVIDIA NIM"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NVIDIA NIM"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NVIDIA NIM"
           }
         }
       }
@@ -875,6 +1174,52 @@
         }
       }
     },
+    "On-Device" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On-Device"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En el dispositivo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trên thiết bị"
+          }
+        }
+      }
+    },
+    "OpenAI" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OpenAI"
+          }
+        }
+      }
+    },
     "Opens display language settings." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -894,6 +1239,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mở cài đặt ngôn ngữ hiển thị của ứng dụng."
+          }
+        }
+      }
+    },
+    "Paste key from clipboard" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste key from clipboard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pegar clave desde el portapapeles"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dán khóa từ bảng nhớ tạm"
           }
         }
       }
@@ -964,6 +1332,29 @@
         }
       }
     },
+    "Provider" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Provider"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Proveedor"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhà cung cấp"
+          }
+        }
+      }
+    },
     "Read" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1010,6 +1401,75 @@
         }
       }
     },
+    "Reasoning" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reasoning"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Razonamiento"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suy luận"
+          }
+        }
+      }
+    },
+    "Reasoning backend" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reasoning backend"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Motor de razonamiento"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Công cụ suy luận"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa"
+          }
+        }
+      }
+    },
     "Replay walkthrough" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1033,6 +1493,29 @@
         }
       }
     },
+    "Requests this session: %lld" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requests this session: %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solicitudes en esta sesión: %lld"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Số yêu cầu trong phiên này: %lld"
+          }
+        }
+      }
+    },
     "Returns to the previous step." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1052,6 +1535,75 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quay lại bước trước."
+          }
+        }
+      }
+    },
+    "Save key" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save key"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar clave"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lưu khóa"
+          }
+        }
+      }
+    },
+    "Sends recognized labels to a server you control. Off by default. Turn it off any time from this screen. While a network backend is active, the time between hands-free descriptions is held to at least 10 seconds to bound request volume." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends recognized labels to a server you control. Off by default. Turn it off any time from this screen. While a network backend is active, the time between hands-free descriptions is held to at least 10 seconds to bound request volume."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía las etiquetas reconocidas a un servidor que tú controlas. Desactivado de forma predeterminada. Puedes desactivarlo en cualquier momento desde esta pantalla. Mientras un motor en red esté activo, el tiempo entre descripciones manos libres se mantiene en al menos 10 segundos para limitar el volumen de solicitudes."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi các nhãn đã nhận dạng đến máy chủ do bạn kiểm soát. Mặc định tắt. Bạn có thể tắt bất cứ lúc nào từ màn hình này. Trong khi một công cụ mạng đang hoạt động, khoảng thời gian giữa các mô tả rảnh tay được giữ ở mức tối thiểu 10 giây để giới hạn số lượng yêu cầu."
+          }
+        }
+      }
+    },
+    "Sends recognized labels — never camera images, audio, or your location — to the provider you choose, only after you agree to their terms. Off by default. Turn it off any time from this screen. If it stops responding, SenseBridge continues with on-device descriptions and tells you once. While a network backend is active, the time between hands-free descriptions is held to at least 10 seconds to bound request volume." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sends recognized labels — never camera images, audio, or your location — to the provider you choose, only after you agree to their terms. Off by default. Turn it off any time from this screen. If it stops responding, SenseBridge continues with on-device descriptions and tells you once. While a network backend is active, the time between hands-free descriptions is held to at least 10 seconds to bound request volume."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envía las etiquetas reconocidas — nunca imágenes de la cámara, audio ni tu ubicación — al proveedor que elijas, solo después de que aceptes sus términos. Desactivado de forma predeterminada. Puedes desactivarlo en cualquier momento desde esta pantalla. Si deja de responder, SenseBridge continúa con descripciones en el dispositivo y te lo indica una vez. Mientras un motor en red esté activo, el tiempo entre descripciones manos libres se mantiene en al menos 10 segundos para limitar el volumen de solicitudes."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gửi các nhãn đã nhận dạng — không bao giờ gửi hình ảnh camera, âm thanh hay vị trí của bạn — đến nhà cung cấp bạn chọn, chỉ sau khi bạn đồng ý với điều khoản của họ. Mặc định tắt. Bạn có thể tắt bất cứ lúc nào từ màn hình này. Nếu ngừng phản hồi, SenseBridge sẽ tiếp tục với mô tả trên thiết bị và thông báo cho bạn một lần. Trong khi một công cụ mạng đang hoạt động, khoảng thời gian giữa các mô tả rảnh tay được giữ ở mức tối thiểu 10 giây để giới hạn số lượng yêu cầu."
           }
         }
       }
@@ -1351,6 +1903,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nghe một lần để tìm âm thanh có thể nhận biết ở gần. Nó không tiếp tục nghe."
+          }
+        }
+      }
+    },
+    "Test connection" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Test connection"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probar conexión"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiểm tra kết nối"
+          }
+        }
+      }
+    },
+    "Testing…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Testing…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Probando…"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang kiểm tra…"
           }
         }
       }

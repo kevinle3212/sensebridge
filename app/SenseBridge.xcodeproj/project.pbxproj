@@ -37,6 +37,7 @@
 		A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66C553969EFB2A7DED18325B /* LabelingView.swift */; };
 		B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */; };
 		B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */; };
+		C7C9B1F057091B41E9D1D132 /* ReasoningBackendSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8257130E7E3AAF2761AA8E4 /* ReasoningBackendSettingsView.swift */; };
 		B616562B724CF082D62A1B28 /* DiagnosticsSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */; };
 		B62B6F726B5A68E041AADB00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */; };
 		CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */; };
@@ -71,6 +72,7 @@
 		1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeApp.swift; sourceTree = "<group>"; };
 		1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E8257130E7E3AAF2761AA8E4 /* ReasoningBackendSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningBackendSettingsView.swift; sourceTree = "<group>"; };
 		274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentTests.swift; sourceTree = "<group>"; };
 		2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewFeed.swift; sourceTree = "<group>"; };
 		309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsSection.swift; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 				0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */,
 				D73B9444B53F2DD88AD973EA /* HomeView.swift */,
 				1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */,
+				E8257130E7E3AAF2761AA8E4 /* ReasoningBackendSettingsView.swift */,
 				B659E56450AFF17FFC6D075A /* SettingsSections.swift */,
 				212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */,
 			);
@@ -480,6 +483,7 @@
 				B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */,
 				75103B4FD7ACCB429708A1F6 /* SenseBridgeSoundClassifier.mlmodel in Sources */,
 				0FC9712197828F50E15A7423 /* SettingsSections.swift in Sources */,
+				C7C9B1F057091B41E9D1D132 /* ReasoningBackendSettingsView.swift in Sources */,
 				B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */,
 				CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */,
 				A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */,

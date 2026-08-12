@@ -99,6 +99,13 @@ struct SettingsView: View {
                 narrationIntervalSeconds: binding(\.narrationIntervalSeconds),
                 alertDistanceMeters: binding(\.awarenessAlertDistanceMeters)
             )
+            ReasoningBackendSettingsView(
+                reasoningBackend: binding(\.reasoningBackend),
+                cloudProvider: binding(\.cloudProvider),
+                localEndpointURL: binding(\.localEndpointURL),
+                reasoningModelOverride: binding(\.reasoningModelOverride),
+                narrationIntervalSeconds: environment.settings.narrationIntervalSeconds
+            )
             Section {
                 Picker("Output profile", selection: binding(\.outputProfile)) {
                     // `outputProfileOptions`, not `selectableProfiles`: a
@@ -187,42 +194,6 @@ struct SettingsView: View {
     /// it is not zero.
     private static let minimumSpeechVolume = 0.1
 
-    /// A row stating a way the app currently delivers less than it appears to.
-    ///
-    /// The icon is decorative and hidden: VoiceOver would otherwise read
-    /// "exclamation mark triangle" before the sentence that actually carries
-    /// the meaning. The `Important:` prefix on the accessibility label does
-    /// that job instead, because a colour and a glyph convey nothing here.
-    private func warningRow(_ text: LocalizedStringKey) -> some View {
-        Label {
-            Text(text)
-                .font(.callout)
-        } icon: {
-            // Without an explicit scalable font, SF Symbols render at a fixed
-            // point size and don't grow with the paired text at larger
-            // Dynamic Type sizes.
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.callout)
-                .foregroundStyle(.orange)
-                .accessibilityHidden(true)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("Important: \(Text(text))"))
-    }
-
-    /// Why `profile` can't be delivered, phrased for the channel that is
-    /// missing rather than hardcoded per profile.
-    private func unavailableReason(for profile: OutputProfile) -> LocalizedStringKey {
-        let missing = environment.undeliverableChannels(for: profile)
-        if missing.contains(.caption) {
-            return "Captions aren't built yet."
-        }
-        if missing.contains(.haptic) {
-            return "Haptic output isn't available on this device."
-        }
-        return "Speech output isn't available on this device."
-    }
-
     /// A labeled slider, with a percent `accessibilityValue` so VoiceOver
     /// announces the current setting rather than a raw fraction. `range`
     /// defaults to the full `0...1`; pass a narrower one where zero would
@@ -272,6 +243,42 @@ struct SettingsView: View {
 /// `SettingsView` under the 200-line type-body limit without splitting the
 /// screen's actual layout across two files.
 extension SettingsView {
+    /// A row stating a way the app currently delivers less than it appears to.
+    ///
+    /// The icon is decorative and hidden: VoiceOver would otherwise read
+    /// "exclamation mark triangle" before the sentence that actually carries
+    /// the meaning. The `Important:` prefix on the accessibility label does
+    /// that job instead, because a colour and a glyph convey nothing here.
+    func warningRow(_ text: LocalizedStringKey) -> some View {
+        Label {
+            Text(text)
+                .font(.callout)
+        } icon: {
+            // Without an explicit scalable font, SF Symbols render at a fixed
+            // point size and don't grow with the paired text at larger
+            // Dynamic Type sizes.
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.callout)
+                .foregroundStyle(.orange)
+                .accessibilityHidden(true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Important: \(Text(text))"))
+    }
+
+    /// Why `profile` can't be delivered, phrased for the channel that is
+    /// missing rather than hardcoded per profile.
+    func unavailableReason(for profile: OutputProfile) -> LocalizedStringKey {
+        let missing = environment.undeliverableChannels(for: profile)
+        if missing.contains(.caption) {
+            return "Captions aren't built yet."
+        }
+        if missing.contains(.haptic) {
+            return "Haptic output isn't available on this device."
+        }
+        return "Speech output isn't available on this device."
+    }
+
     /// Localized label shown in the language picker for `language`.
     func displayName(for language: AppLanguage) -> LocalizedStringKey {
         switch language {
