@@ -52,11 +52,27 @@ struct CustomSoundClassifier: SoundService, Sendable {
         "fire_alarm", "knock", "dog_bark", "baby_cry", "car_horn", "siren", "glass_shatter"
     ]
 
+    /// Language the reported labels are phrased in. Wording only — the
+    /// bundled model, its class set, and the confidence floor are identical in
+    /// every language.
+    let locale: Locale
+
+    /// Creates a classifier over the bundled Create ML model.
+    init(locale: Locale = .current) {
+        self.locale = locale
+    }
+
+    /// Classifies a WAV buffer against the bundled model, dropping anything
+    /// outside `targetClassNames` — including the `background` class — before
+    /// it can become a spoken claim.
+    /// - Parameter input: WAV-encoded audio; an empty buffer yields no records.
+    /// - Returns: One `.detectedSound` record per surviving match, phrased in `locale`.
+    /// - Throws: Whatever loading the model or running the analysis throws.
     func process(_ input: Data) async throws -> [PerceptionRecord] {
         let model = try SenseBridgeSoundClassifier(configuration: MLModelConfiguration()).model
         let request = try SNClassifySoundRequest(mlModel: model)
         return try await SoundClassificationRunner.classify(
-            input, using: request, topClassNames: Self.targetClassNames
+            input, using: request, topClassNames: Self.targetClassNames, locale: locale
         )
     }
 }

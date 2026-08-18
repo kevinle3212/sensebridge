@@ -11,7 +11,19 @@ struct SceneDescriptionView: View {
     /// Shared app state — renders through the same output targets every
     /// other feature uses, rather than standing up its own synthesizer.
     @Environment(AppEnvironment.self) private var environment
+
+    /// The language chosen in Settings, for casing the on-screen caption —
+    /// not the process locale, which may differ from what the user picked.
+    private var displayLocale: Locale {
+        environment.settings.language.locale ?? .current
+    }
+
     @State private var lastResult: String?
+    /// Whether the last failure was a denied permission, which is the only
+    /// error on this screen that the Settings app can actually fix. Drives the
+    /// `OpenSettingsButton` below the message rather than being inferred from
+    /// the message text, which is localized prose and a poor thing to match on.
+    @State private var isSettingsFixable = false
 
     /// A single capture can afford a longer timeout than the hands-free
     /// narration cadence — see `AmbientAwarenessSession.networkRequestTimeout`
@@ -58,9 +70,15 @@ struct SceneDescriptionView: View {
                 .accessibilityValue(environment.camera.isCapturing ? "Capturing" : "")
                 .accessibilityHint("Takes a photo and composes a cautious description of what's in it.")
                 if let lastResult {
-                    Text(lastResult)
+                    // Capitalized for the screen only. The hedge templates are lowercase
+                    // because they are built for speech and for mid-sentence embedding;
+                    // rendering one verbatim as a caption reads as a typo, not caution.
+                    Text(Phrasing.forDisplay(lastResult, locale: displayLocale))
                         .font(.callout)
                         .foregroundStyle(Color("SecondaryText"))
+                    if isSettingsFixable {
+                        OpenSettingsButton()
+                    }
                 }
             }
             .padding()
@@ -71,9 +89,13 @@ struct SceneDescriptionView: View {
     }
 
     private func startCameraIfNeeded() async {
+        // Cleared up front so a granted permission retires the button on the
+        // next attempt; only a fresh failure puts it back.
+        isSettingsFixable = false
         await environment.camera.start(applying: environment.settings)
         if let startError = environment.camera.startError {
             let spoken = message(for: startError)
+            isSettingsFixable = OpenSettingsButton.canResolve(startError)
             lastResult = spoken
             announceIfUnspoken(spoken, profile: environment.settings.outputProfile)
             await environment.output.render(OutputMessage(text: spoken, signal: .error))
@@ -92,9 +114,24 @@ struct SceneDescriptionView: View {
     /// `lastResult` on screen with no explanation would be worse than
     /// speaking *some* error.
     private func captureAndDescribe() async {
+        // Cleared up front so a granted permission retires the button on the
+        // next attempt; only a fresh failure puts it back.
+        isSettingsFixable = false
+        // The previous description describes the previous frame, so it is
+        // retired before this one is taken rather than left standing until the
+        // replacement arrives. On a caption-only profile that stale sentence is
+        // the entire output, and it reads as a description of the shot the user
+        // just took. `ReadingSession.capturePage` does the same.
+        lastResult = nil
+        await environment.output.render(OutputMessage(text: "", signal: .captureTaken))
         do {
             let detail = environment.settings.spokenDetail
-            let detector = ObjectClassificationService(maximumLabels: detail.maximumLabels)
+            // The language chosen in Settings, not the process locale: the
+            // object noun and the hedge composed around it have to agree, and
+            // `.current` would have spoken an English sentence to a user who
+            // had picked Español.
+            let locale = environment.settings.language.locale ?? .current
+            let detector = ObjectClassificationService(maximumLabels: detail.maximumLabels, locale: locale)
             let resolver = Self.makeResolver(detail: detail)
             let photo = try await environment.camera.capturePhoto()
             let objects = try await detector.detect(photo)
@@ -102,7 +139,7 @@ struct SceneDescriptionView: View {
                 PerceptionRecord(kind: .detectedObject(label: $0.label, confidence: $0.confidence), capturedAt: .now)
             }
             guard let result = await resolver.compose(
-                from: records, settings: environment.settings, locale: .current,
+                from: records, settings: environment.settings, locale: locale,
                 requestTimeout: Self.networkRequestTimeout
             ) else {
                 let spoken = message(for: CameraSource.CameraError.noCameraAvailable)
@@ -120,6 +157,7 @@ struct SceneDescriptionView: View {
             await environment.output.render(OutputMessage(text: result.text, signal: .resultReady))
         } catch {
             let spoken = message(for: error)
+            isSettingsFixable = OpenSettingsButton.canResolve(error)
             lastResult = spoken
             announceIfUnspoken(spoken, profile: environment.settings.outputProfile)
             await environment.output.render(OutputMessage(text: spoken, signal: .error))

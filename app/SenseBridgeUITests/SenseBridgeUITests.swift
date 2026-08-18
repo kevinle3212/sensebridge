@@ -51,11 +51,9 @@ final class SenseBridgeUITests: XCTestCase {
         XCTAssertNotEqual(toggle.value as? String, initialValue)
     }
 
-    /// Covers `SettingsView`'s Output section: doctrine requires that a
-    /// profile whose channels render nothing (Deaf, until a caption
-    /// `RenderTarget` exists) is never offered — see
-    /// `AppEnvironment.selectableProfiles`.
-    func testOutputProfilePickerDoesNotOfferDeaf() {
+    /// Covers `SettingsView`'s Output section: the Deaf profile becomes a
+    /// real choice only after `CaptionRenderTarget` is registered.
+    func testOutputProfilePickerOffersDeaf() {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-uiTestReset"]
@@ -69,25 +67,65 @@ final class SenseBridgeUITests: XCTestCase {
         outputRow.tap()
 
         XCTAssertTrue(app.buttons["Blind"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["Deaf"].exists)
+        XCTAssertTrue(app.buttons["Deaf"].exists)
     }
 
-    /// Doctrine 4's second corollary: an unbuilt capability is named as
-    /// unavailable rather than hidden, so the user learns the option exists
-    /// and why it is absent. The reason travels with the name in one
-    /// accessibility element — a name announced alone would read as a choice.
-    func testUnavailableProfileIsNamedWithItsReason() {
+    /// Selecting the Deaf profile must persist as a working choice rather
+    /// than reverting to speech or leaving Settings with a blank picker row.
+    func testDeafOutputProfileCanBeSelected() {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["-uiTestReset"]
         app.launch()
+        // The assertion lives in `selectDeafProfile`: the selection has to
+        // survive the picker's pop for every later test that depends on it,
+        // so it is checked where it is made rather than only here.
+        selectDeafProfile(in: app)
+    }
+
+    /// The Deaf profile's whole point: prose the other profiles hear has to
+    /// appear on screen. Asserted end to end — the capture path composes real
+    /// prose and pushes it through `MultiRenderTarget` to `CaptionRenderTarget`
+    /// and out to `CaptionOverlay`, so this fails if any link is missing, not
+    /// only if the view is wrong.
+    ///
+    /// The Simulator has no camera, so the prose is an error message rather
+    /// than a label. That is deliberate: which sentence arrives is not the
+    /// claim under test, only that *some* output reaches the screen on a
+    /// profile whose sole channel is this one.
+    func testDeafProfileShowsOutputAsAnOnScreenCaption() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTestReset"]
+        app.launch()
+        selectDeafProfile(in: app)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        element(app, labeled: "Identify object").tap()
+        let capture = app.buttons["Capture object"]
+        XCTAssertTrue(capture.waitForExistence(timeout: 10))
+        capture.tap()
+
+        let caption = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH %@", "Caption:"))
+            .firstMatch
+        XCTAssertTrue(caption.waitForExistence(timeout: 10))
+    }
+
+    /// Drives Settings → Output profile → Deaf, leaving the app on Settings.
+    private func selectDeafProfile(in app: XCUIApplication) {
         element(app, labeled: "Settings").tap()
-        let row = app.staticTexts.matching(
-            NSPredicate(format: "label BEGINSWITH %@", "Deaf, not yet available")
-        ).firstMatch
-        scrollUntilExists(row, in: app)
-        XCTAssertTrue(row.exists)
-        XCTAssertTrue(row.label.contains("Captions aren't built yet"))
+        let outputRow = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Output profile")).firstMatch
+        scrollUntilExists(outputRow, in: app)
+        outputRow.tap()
+        let deaf = app.buttons["Deaf"]
+        XCTAssertTrue(deaf.waitForExistence(timeout: 5))
+        deaf.tap()
+        expectation(
+            for: NSPredicate(format: "label CONTAINS %@", "Deaf"),
+            evaluatedWith: outputRow
+        )
+        waitForExpectations(timeout: 5)
     }
 
     private func element(_ app: XCUIApplication, labeled label: String) -> XCUIElement {

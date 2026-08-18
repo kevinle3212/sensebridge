@@ -22,6 +22,8 @@ final class AppEnvironment {
     let speech: SpeechRenderTarget
     /// Shared haptic output, for the same reason as `speech`.
     let haptics: HapticRenderTarget
+    /// Shared visual caption output for the Deaf profile.
+    let captions: CaptionRenderTarget
 
     /// The most recent `save()` application, so the next one can chain onto
     /// it and preserve ordering — see `save()`.
@@ -45,6 +47,11 @@ final class AppEnvironment {
                 fresh.hasCompletedOnboarding = true
             }
             settingsStore.save(fresh)
+            // Reading history lives in a file rather than in `Settings` — see
+            // `ReadingHistoryStore`'s doc comment — so resetting settings alone
+            // left the previous run's recognized text in place. A "known state"
+            // that carries over user content from an earlier test is not one.
+            ReadingHistoryStore.removePersistedHistory()
         }
         let loaded = settingsStore.load()
         settings = loaded
@@ -61,6 +68,7 @@ final class AppEnvironment {
             enabled: loaded.hapticsEnabled,
             intensity: loaded.hapticIntensity
         )
+        captions = CaptionRenderTarget()
 
         // Started here, at the first moment settings are known, so a crash in
         // the rest of launch is still caught — but only for a user who already
@@ -79,11 +87,10 @@ final class AppEnvironment {
         // UI is responsible for saying so out loud.
     }
 
-    /// The render target registered for each channel. `.caption` is
-    /// deliberately absent: no caption `RenderTarget` exists yet, and
-    /// registering a placeholder would make the gap invisible.
+    /// The render target registered for each channel. A profile is selectable
+    /// only when every channel it declares has a real target in this registry.
     private var renderTargets: [RenderChannel: any RenderTarget] {
-        [.speech: speech, .haptic: haptics]
+        [.speech: speech, .caption: captions, .haptic: haptics]
     }
 
     /// Fan-out target for the current output profile — what every feature
@@ -95,9 +102,8 @@ final class AppEnvironment {
     }
 
     /// The output profiles this build can actually deliver on, derived from
-    /// `renderTargets` rather than hardcoded — so `.deaf` starts appearing on
-    /// its own the day a caption `RenderTarget` is registered. Offering a
-    /// profile whose channels render nothing is the kind of silent failure
+    /// `renderTargets` rather than hardcoded. Offering a profile whose
+    /// channels render nothing is the kind of silent failure
     /// docs/SAFETY-FRAMING.md forbids.
     var selectableProfiles: [OutputProfile] {
         OutputProfile.allCases.filter { profile in
