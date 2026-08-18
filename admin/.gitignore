@@ -1,0 +1,9 @@
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# No environment file is tracked here, not even an example: the repository gate
+# (tools/check-sensitive-files.mjs) refuses to publish one. The variables this
+# app reads are documented in README.md instead.
+.env*

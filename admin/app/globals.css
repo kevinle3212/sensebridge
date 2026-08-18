@@ -1,0 +1,109 @@
+/*
+ * Deliberately plain. This dashboard is one person's read-only view, so it
+ * borrows the site's dark palette for familiarity and stops there — no design
+ * system, no component library, nothing to keep in sync with website/.
+ */
+:root {
+  --bg: #080a10;
+  --surface: #161b28;
+  --hairline: #2a3145;
+  --text: #e8ebf2;
+  --muted: #a7afc2;
+  --accent: #5eb1ff;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 2rem 1.5rem 4rem;
+  font-family: ui-sans-serif, -apple-system, system-ui, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+main {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+}
+
+.lede {
+  max-width: 46rem;
+  margin: 0 0 2rem;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.card {
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 0.75rem;
+}
+
+.card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.125rem;
+}
+
+.card h3 {
+  margin: 1rem 0 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.figure {
+  margin: 0;
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.caption {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.unavailable {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+li {
+  margin: 0.15rem 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Never suppressed: the focus ring is the only way a keyboard user tracks position. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
