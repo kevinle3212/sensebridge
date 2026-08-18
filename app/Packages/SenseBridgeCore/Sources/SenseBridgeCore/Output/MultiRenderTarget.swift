@@ -10,10 +10,12 @@ public struct MultiRenderTarget: RenderTarget, Sendable {
     private let targets: [RenderChannel: any RenderTarget]
 
     /// Channels `profile` prefers but that have no registered target here —
-    /// e.g. `.deaf` prefers `.caption` before a caption `RenderTarget`
-    /// exists. Rendering silently skips these channels; this property makes
-    /// that gap observable so the App layer can refuse to offer a profile
-    /// that would otherwise degrade to nothing on some of its channels.
+    /// what a caller sees when it registers fewer targets than the profiles it
+    /// offers, and what every profile looked like before speech, caption, and
+    /// haptic targets all existed. Rendering silently skips these channels;
+    /// this property makes that gap observable so the App layer can refuse to
+    /// offer a profile that would otherwise degrade to nothing on some of its
+    /// channels.
     public let unsupportedChannels: Set<RenderChannel>
 
     /// Creates a fan-out target for `profile`, delivering through whichever
