@@ -10,12 +10,14 @@ import Foundation
 /// in one and not the other would make a sound event read differently from an
 /// object seen in the same room.
 ///
-/// **English-only, and knowingly so.** The identifier vocabularies of both
-/// frameworks are English, which `ObjectClassificationService` already
-/// documents as a limitation: a Spanish or Vietnamese user hears an English
-/// noun inside a translated hedge, because naming the object *wrongly* would be
-/// worse than naming it in the wrong language. This type inherits that
-/// limitation unchanged — it does not add one.
+/// **Localized for the identifiers in `SpokenVocabulary`, English elsewhere.**
+/// The identifier vocabularies of both frameworks are English. Rather than
+/// machine-translate ~1,600 of them — where the long tail would produce a
+/// confidently wrong noun, which `docs/SAFETY-FRAMING.md` ranks above a crash —
+/// a curated table covers the identifiers a real walk produces, and everything
+/// outside it keeps the previous behaviour: the English noun inside a
+/// translated hedge. The fallback is the safe direction, so an absent entry
+/// degrades the language and never the accuracy.
 public enum SpokenPhrase {
     /// Written-abbreviation identifiers whose spoken form is a different,
     /// unambiguous word. Deliberately tiny and hand-verified rather than
@@ -45,7 +47,39 @@ public enum SpokenPhrase {
     ]
     private static let vowelSoundedConsonantPrefixes = ["hour", "honest", "honou", "honor"]
 
-    /// The article-first spoken phrase for `identifier`.
+    /// The article-first spoken phrase for `identifier` in `locale`.
+    ///
+    /// Falls back to the English phrase — not to the raw identifier — when
+    /// `SpokenVocabulary` has no reviewed entry for this identifier in this
+    /// language. That fallback is the whole safety argument for shipping a
+    /// partial table: the worst outcome is a correctly-named object in the
+    /// wrong language, never a wrongly-named one.
+    public static func subject(for identifier: String, locale: Locale) -> String {
+        let normalized = identifier.replacing("_", with: " ").lowercased()
+        if let translations = SpokenVocabulary.phrases[normalized] {
+            for code in languageCandidates(for: locale) {
+                if let phrase = translations[code] {
+                    return phrase
+                }
+            }
+        }
+        return subject(for: identifier)
+    }
+
+    /// Language keys to try for `locale`, most specific first, so a future
+    /// regional entry (`es_MX`) wins over the bare language (`es`). Mirrors
+    /// `LocalizedCatalog`'s resolution order deliberately: two different
+    /// answers for the same locale in one spoken sentence would be worse than
+    /// either answer alone.
+    private static func languageCandidates(for locale: Locale) -> [String] {
+        let identifier = locale.identifier
+        guard let code = locale.language.languageCode?.identifier, code != identifier else {
+            return [identifier]
+        }
+        return [identifier, code]
+    }
+
+    /// The article-first spoken phrase for `identifier` in English.
     public static func subject(for identifier: String) -> String {
         let words = spokenForms[identifier.replacing("_", with: " ").lowercased()]
             ?? identifier.replacing("_", with: " ")

@@ -109,4 +109,47 @@ struct SettingsTests {
         let decoded = try JSONDecoder().decode(Settings.self, from: data)
         #expect(decoded.spokenDetail == .detailed)
     }
+
+    @Test func readingHistoryIsOffUntilTheUserTurnsItOn() {
+        // Consent to persist recognized text — a prescription label, a bank
+        // letter — is never assumed. See `ReadingHistoryStore`.
+        #expect(Settings().readingHistoryEnabled == false)
+    }
+
+    @Test func decodingSettingsPersistedBeforeTheReadingFieldsExistedYieldsTheirDefaults() throws {
+        let preReadingJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"reasoningBackend":"onDevice","spokenDetail":"standard"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(preReadingJSON.utf8))
+
+        #expect(decoded.readingHistoryEnabled == false)
+        #expect(decoded.readingMode == .capture)
+        #expect(decoded.awarenessProximityHapticsEnabled == true)
+    }
+
+    @Test func decodingAnUnrecognizedReadingModeFallsBackToCaptureWithoutResettingOtherFields() throws {
+        // A settings blob written by a future build must not cost this one every
+        // other preference the user set.
+        let unrecognizedModeJSON = """
+        {"outputProfile":"deaf","speechRate":0.7,"readingMode":"telepathy","readingHistoryEnabled":true}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(unrecognizedModeJSON.utf8))
+
+        #expect(decoded.readingMode == .capture)
+        #expect(decoded.readingHistoryEnabled == true)
+        #expect(decoded.outputProfile == .deaf)
+        #expect(decoded.speechRate == 0.7)
+    }
+
+    @Test func roundTripsTheReadingAndAwarenessFieldsThroughJSON() throws {
+        let settings = Settings(
+            readingHistoryEnabled: true,
+            readingMode: .live,
+            awarenessProximityHapticsEnabled: false
+        )
+
+        let decoded = try JSONDecoder().decode(Settings.self, from: JSONEncoder().encode(settings))
+
+        #expect(decoded == settings)
+    }
 }

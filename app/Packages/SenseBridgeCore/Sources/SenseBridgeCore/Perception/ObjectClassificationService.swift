@@ -13,12 +13,13 @@ import Vision
 /// clear. AGPL and `apple-amlr` weights are hard blockers here, which rules out
 /// most of the alternatives.
 ///
-/// **Known limitation, deliberately not papered over:** the classifier's
-/// identifiers are English, so a user running the app in Spanish or Vietnamese
-/// hears an English noun inside a translated hedge. Naming the object wrongly
-/// would be worse than naming it in the wrong language, and no reviewed
-/// translation of ~1,300 Vision identifiers exists. Logged on the repo's
-/// to-do list rather than papered over here.
+/// **Partial localization, deliberately not papered over:** the classifier's
+/// identifiers are English. `SpokenVocabulary` carries reviewed `es`/`vi`
+/// phrases for the identifiers a real walk produces, and `locale` selects
+/// among them; the ~1,300-identifier long tail still reaches a Spanish or
+/// Vietnamese user as an English noun inside a translated hedge, because
+/// naming the object wrongly would be worse than naming it in the wrong
+/// language. Extending the table is a review task, not a code change.
 public struct ObjectClassificationService: PerceptionService, Sendable {
     /// Precision floor for a label to be reported, applied via Vision's own
     /// precision/recall curve rather than a raw confidence cutoff.
@@ -33,11 +34,18 @@ public struct ObjectClassificationService: PerceptionService, Sendable {
     /// three nouns before it stops being usable; the rest are dropped rather
     /// than queued.
     public let maximumLabels: Int
+    /// Language the reported labels are phrased in, resolved through
+    /// `SpokenVocabulary`. Affects wording only — the precision floor, the
+    /// identifiers considered, and every confidence value are unchanged, so no
+    /// locale can make this service report something it would not report in
+    /// another.
+    public let locale: Locale
 
     /// Creates a classification service.
-    public init(minimumPrecision: Float = 0.7, maximumLabels: Int = 3) {
+    public init(minimumPrecision: Float = 0.7, maximumLabels: Int = 3, locale: Locale = .current) {
         self.minimumPrecision = minimumPrecision
         self.maximumLabels = maximumLabels
+        self.locale = locale
     }
 
     /// Classifies an encoded still image — the `PerceptionService` path, used
@@ -113,7 +121,7 @@ public struct ObjectClassificationService: PerceptionService, Sendable {
         for region in candidates {
             guard let label = try await bestLabel(in: region.boundingBox, using: handler) else { continue }
             detected.append(DetectedObject(
-                label: Self.subjectPhrase(for: label.identifier),
+                label: Self.subjectPhrase(for: label.identifier, locale: locale),
                 confidence: Double(label.confidence),
                 // Vision normalizes from the bottom left and every view here
                 // measures from the top left. Flipped once, at the boundary.
@@ -167,7 +175,7 @@ public struct ObjectClassificationService: PerceptionService, Sendable {
             .map { observation in
                 PerceptionRecord(
                     kind: .detectedObject(
-                        label: Self.subjectPhrase(for: observation.identifier),
+                        label: Self.subjectPhrase(for: observation.identifier, locale: locale),
                         confidence: Double(observation.confidence)
                     ),
                     capturedAt: capturedAt
@@ -182,8 +190,8 @@ public struct ObjectClassificationService: PerceptionService, Sendable {
     /// hand-written fixtures elsewhere in the codebase use ("a chair"). Vision
     /// hands back bare, underscore-joined identifiers ("coffee_mug"). Forwards
     /// to `SpokenPhrase`, the single implementation this and
-    /// `SoundClassificationRunner.subjectPhrase(for:)` both use.
-    static func subjectPhrase(for identifier: String) -> String {
-        SpokenPhrase.subject(for: identifier)
+    /// `SoundClassificationRunner.subjectPhrase(for:locale:)` both use.
+    static func subjectPhrase(for identifier: String, locale: Locale = .current) -> String {
+        SpokenPhrase.subject(for: identifier, locale: locale)
     }
 }

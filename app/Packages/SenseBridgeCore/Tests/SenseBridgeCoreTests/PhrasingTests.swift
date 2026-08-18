@@ -122,4 +122,33 @@ struct PhrasingTests {
         #expect(couldNotMeasure != nothingRecognized)
         #expect(couldNotMeasure.lowercased().contains("measure"))
     }
+
+    @Test func displayCasingCapitalizesOnlyTheFirstCharacter() {
+        // Title-casing would be wrong in all three shipped languages, and is
+        // what `localizedCapitalized` would have done.
+        #expect(Phrasing.forDisplay("it looks like there's a chair.") == "It looks like there's a chair.")
+        #expect(Phrasing.forDisplay("una silla y una mesa") == "Una silla y una mesa")
+    }
+
+    @Test func displayCasingLeavesSpeechInputUntouched() {
+        // The templates must stay lowercase: they are composed into speech and
+        // embedded mid-sentence, where a capital is wrong.
+        let phrasing = Phrasing()
+        let spoken = phrasing.describe(subject: "a chair", certainty: .medium, locale: Locale(identifier: "en"))
+        #expect(spoken.first?.isLowercase == true)
+        #expect(Phrasing.forDisplay(spoken) != spoken)
+    }
+
+    @Test func displayCasingHandlesEmptyAndNonLatinInput() {
+        #expect(Phrasing.forDisplay("").isEmpty)
+        // Vietnamese has no separate uppercase for this and must pass through
+        // unchanged rather than being mangled.
+        let vietnamese = "một cái ghế"
+        #expect(Phrasing.forDisplay(vietnamese, locale: Locale(identifier: "vi")) == "Một cái ghế")
+    }
+
+    @Test func displayCasingIsIdempotent() {
+        let once = Phrasing.forDisplay("it looks like there's a chair.")
+        #expect(Phrasing.forDisplay(once) == once)
+    }
 }

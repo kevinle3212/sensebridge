@@ -122,6 +122,52 @@ public struct Phrasing: Sendable {
         LocalizedCatalog.string("Couldn't take a measurement. Try again.", locale: locale)
     }
 
+    /// The same phrase, capitalized for the screen.
+    ///
+    /// The hedge templates are deliberately lowercase — they are composed into
+    /// speech, where capitalization is meaningless, and they have to survive
+    /// being embedded mid-sentence. On screen that same string renders as a
+    /// sentence starting in lowercase, which reads as a typo rather than as
+    /// caution.
+    ///
+    /// Applied at the **display** boundary only, so it changes nothing a
+    /// synthesizer receives and requires no re-pinning of the doctrine strings
+    /// in `en`/`es`/`vi` — which is what made this look expensive enough to
+    /// defer. Uppercases exactly the first character with `locale`'s own
+    /// casing rules; `localizedCapitalized` would title-case every word, which
+    /// is wrong in all three shipped languages.
+    public static func forDisplay(_ phrase: String, locale: Locale = .current) -> String {
+        guard let first = phrase.first else { return phrase }
+        return String(first).uppercased(with: locale) + phrase.dropFirst()
+    }
+
+    /// What to say when hands-free awareness stops because the app left the
+    /// screen, and will start again on return.
+    ///
+    /// Carries no hedge, and correctly so: it is a statement about this app's
+    /// own state, not a claim about the physical world, so there is nothing to
+    /// be uncertain about. It lives here anyway because this type is the single
+    /// place spoken output is composed — a reviewer auditing what the app can
+    /// say should not have to find operational copy somewhere else.
+    public func awarenessStoppedOffScreen(locale: Locale = .current) -> String {
+        LocalizedCatalog.string(
+            """
+            Hands-free awareness stopped because SenseBridge is no longer on \
+            screen. It will start again when you come back.
+            """,
+            locale: locale
+        )
+    }
+
+    /// What to say when hands-free awareness has restarted by itself.
+    ///
+    /// The counterpart to `awarenessStoppedOffScreen(locale:)`: a user told the
+    /// session would come back needs to hear that it did, or the promise is
+    /// indistinguishable from a broken one.
+    public func awarenessRunningAgain(locale: Locale = .current) -> String {
+        LocalizedCatalog.string("Hands-free awareness is running again.", locale: locale)
+    }
+
     /// The localized format-string template for one certainty bucket, still
     /// carrying its `%@` placeholder. The single source both
     /// `describe(subject:certainty:)` and `hedgeFragments(locale:)` build

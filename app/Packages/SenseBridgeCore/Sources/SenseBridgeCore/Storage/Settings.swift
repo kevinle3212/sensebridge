@@ -67,6 +67,26 @@ public struct Settings: Sendable, Equatable, Codable {
     /// neither has a universal default model; optional override for
     /// `.anthropic`/`.openai`, which do.
     public var reasoningModelOverride: String?
+    /// Whether recently read text is kept on the device so it can be heard
+    /// again without re-photographing it.
+    ///
+    /// **`false` until the user says otherwise, and this file still holds no
+    /// user content** — only the consent flag. The text itself lives in
+    /// `ReadingHistoryStore`, which is file-protected and excluded from backup;
+    /// see that type for why `UserDefaults` is the wrong home for a
+    /// prescription label. Turning this off is a revocation, and the app
+    /// deletes what is stored rather than merely hiding it.
+    public var readingHistoryEnabled: Bool
+    /// Which way the Read screen last got its text — see ``ReadingMode``.
+    public var readingMode: ReadingMode
+    /// Whether hands-free awareness pulses a haptic cue whose rate tracks how
+    /// near the measurement is — see ``ProximityBand``.
+    ///
+    /// `true` by default. The pulse only runs while an alert is already active,
+    /// which is bounded by the user's own `awarenessAlertDistanceMeters`, and
+    /// it is the only way distance reaches someone whose profile carries no
+    /// speech channel at all.
+    public var awarenessProximityHapticsEnabled: Bool
 
     public init(
         outputProfile: OutputProfile = .blind,
@@ -86,7 +106,10 @@ public struct Settings: Sendable, Equatable, Codable {
         reasoningBackend: ReasoningBackend = .onDevice,
         cloudProvider: CloudProvider? = nil,
         localEndpointURL: String? = nil,
-        reasoningModelOverride: String? = nil
+        reasoningModelOverride: String? = nil,
+        readingHistoryEnabled: Bool = false,
+        readingMode: ReadingMode = .capture,
+        awarenessProximityHapticsEnabled: Bool = true
     ) {
         self.outputProfile = outputProfile
         self.speechRate = speechRate
@@ -106,14 +129,21 @@ public struct Settings: Sendable, Equatable, Codable {
         self.cloudProvider = cloudProvider
         self.localEndpointURL = localEndpointURL
         self.reasoningModelOverride = reasoningModelOverride
+        self.readingHistoryEnabled = readingHistoryEnabled
+        self.readingMode = readingMode
+        self.awarenessProximityHapticsEnabled = awarenessProximityHapticsEnabled
     }
 
+    /// The persisted key for each field. Explicit rather than synthesized so a
+    /// property can be renamed without silently orphaning every settings blob
+    /// already on a user's device.
     private enum CodingKeys: String, CodingKey {
         case outputProfile, speechRate, language
         case speechPitch, speechVolume, hapticsEnabled, hapticIntensity, preferredLens, torchDefaultOn
         case narrationIntervalSeconds, awarenessAlertDistanceMeters
         case crashReportingEnabled, hasCompletedOnboarding, spokenDetail
         case reasoningBackend, cloudProvider, localEndpointURL, reasoningModelOverride
+        case readingHistoryEnabled, readingMode, awarenessProximityHapticsEnabled
     }
 
     /// Custom decode so settings persisted before each field below existed
@@ -153,26 +183,56 @@ public struct Settings: Sendable, Equatable, Codable {
         ) ?? true
 
         spokenDetail = try Self.decodeSpokenDetail(from: container)
-
-        if let backendRaw = try container.decodeIfPresent(String.self, forKey: .reasoningBackend),
-           let backend = ReasoningBackend(rawValue: backendRaw) {
-            reasoningBackend = backend
-        } else if let legacyContainer = try? decoder.container(keyedBy: LegacyCodingKeys.self),
-                  let legacyCloudEnabled = try? legacyContainer.decodeIfPresent(
-                      Bool.self, forKey: .cloudReasoningEnabled
-                  ),
-                  legacyCloudEnabled == true {
-            // Old installs that had turned the boolean on fall back to
-            // on-device until they pick a provider and re-consent — see
-            // `cloudProvider = nil` below and the resolver's
-            // not-configured-falls-back-silently behavior.
-            reasoningBackend = .cloud
-        } else {
-            reasoningBackend = .onDevice
-        }
+        reasoningBackend = Self.decodeReasoningBackend(from: container, decoder: decoder)
         cloudProvider = try container.decodeIfPresent(CloudProvider.self, forKey: .cloudProvider)
         localEndpointURL = try container.decodeIfPresent(String.self, forKey: .localEndpointURL)
         reasoningModelOverride = try container.decodeIfPresent(String.self, forKey: .reasoningModelOverride)
+        readingHistoryEnabled = try container.decodeIfPresent(
+            Bool.self, forKey: .readingHistoryEnabled
+        ) ?? false
+        readingMode = try Self.decodeReadingMode(from: container)
+        awarenessProximityHapticsEnabled = try container.decodeIfPresent(
+            Bool.self, forKey: .awarenessProximityHapticsEnabled
+        ) ?? true
+    }
+
+    /// Resolves the reasoning backend, degrading to `.onDevice` on anything
+    /// unrecognized.
+    ///
+    /// Extracted from `init(from:)` to keep it under SwiftLint's
+    /// `function_body_length` gate, and non-throwing on purpose: the whole point
+    /// of this field's handling is that no value it can hold — absent, corrupt,
+    /// or from a future build — is allowed to fail the settings blob and reset
+    /// every other preference. See `init(from:)`'s note about
+    /// `cloudReasoningEnabled`.
+    private static func decodeReasoningBackend(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        decoder: Decoder
+    ) -> ReasoningBackend {
+        if let raw = try? container.decodeIfPresent(String.self, forKey: .reasoningBackend),
+           let backend = ReasoningBackend(rawValue: raw) {
+            return backend
+        }
+        // Old installs that had turned the boolean on fall back to on-device
+        // until they pick a provider and re-consent — see the resolver's
+        // not-configured-falls-back-silently behavior.
+        guard let legacy = try? decoder.container(keyedBy: LegacyCodingKeys.self),
+              let enabled = try? legacy.decodeIfPresent(Bool.self, forKey: .cloudReasoningEnabled),
+              enabled == true
+        else { return .onDevice }
+        return .cloud
+    }
+
+    /// Same never-fail shape as every other field: an absent or unrecognized
+    /// value degrades to `.capture`, the mode that costs the least battery, so
+    /// a corrupt blob never silently leaves the camera running continuously.
+    private static func decodeReadingMode(from container: KeyedDecodingContainer<CodingKeys>) throws -> ReadingMode {
+        guard let raw = try container.decodeIfPresent(String.self, forKey: .readingMode),
+              let mode = ReadingMode(rawValue: raw)
+        else {
+            return .capture
+        }
+        return mode
     }
 
     /// Only `cloudReasoningEnabled`, kept solely so old settings blobs still

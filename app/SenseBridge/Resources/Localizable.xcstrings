@@ -1,6 +1,50 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@: about %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: about %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: unos %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: khoảng %2$@"
+          }
+        }
+      }
+    },
+    "%@: not measured" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: not measured"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: sin medir"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: chưa đo được"
+          }
+        }
+      }
+    },
     "A key is saved" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -24,6 +68,28 @@
         }
       }
     },
+    "A new distance applies the next time hands-free awareness starts." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A new distance applies the next time hands-free awareness starts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una distancia nueva se aplica la próxima vez que se inicie la percepción manos libres."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khoảng cách mới sẽ áp dụng vào lần tiếp theo khi chế độ nhận biết rảnh tay bắt đầu."
+          }
+        }
+      }
+    },
     "API key" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -43,6 +109,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Khóa API"
+          }
+        }
+      }
+    },
+    "Add another page" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add another page"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir otra página"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm trang khác"
+          }
+        }
+      }
+    },
+    "Ahead" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahead"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delante"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phía trước"
+          }
+        }
+      }
+    },
+    "Alert distance" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alert distance"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Distancia de aviso"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khoảng cách cảnh báo"
           }
         }
       }
@@ -162,6 +294,28 @@
         }
       }
     },
+    "Battery %lld percent. This mode uses it quickly." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Battery %lld percent. This mode uses it quickly."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Batería al %lld por ciento. Este modo la consume rápido."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pin %lld phần trăm. Chế độ này dùng pin nhanh."
+          }
+        }
+      }
+    },
     "Brief" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -273,6 +427,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Camera và micrô"
+          }
+        }
+      }
+    },
+    "Caption: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caption: %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subtítulo: %@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phụ đề: %@"
           }
         }
       }
@@ -530,6 +706,50 @@
         }
       }
     },
+    "Copies the recognized text to the clipboard." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copies the recognized text to the clipboard."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia el texto reconocido al portapapeles."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sao chép văn bản nhận được vào bảng tạm."
+          }
+        }
+      }
+    },
+    "Copy text" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar texto"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sao chép văn bản"
+          }
+        }
+      }
+    },
     "Couldn't describe the photo. Try again." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -595,6 +815,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không thể nghe âm thanh. Hãy thử lại."
+          }
+        }
+      }
+    },
+    "Delete everything saved here" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete everything saved here"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borrar todo lo guardado aquí"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa mọi thứ đã lưu ở đây"
+          }
+        }
+      }
+    },
+    "Deletes every saved document and the file holding them." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deletes every saved document and the file holding them."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Borra todos los documentos guardados y el archivo que los contiene."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xóa mọi tài liệu đã lưu và tệp chứa chúng."
           }
         }
       }
@@ -714,6 +978,72 @@
         }
       }
     },
+    "Discard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descartar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ đi"
+          }
+        }
+      }
+    },
+    "Each zone is a third of what the camera sees, measured from where the camera points rather than from your body. Spoken alerts name a side only when one zone is clearly nearer than the rest." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each zone is a third of what the camera sees, measured from where the camera points rather than from your body. Spoken alerts name a side only when one zone is clearly nearer than the rest."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada zona es un tercio de lo que ve la cámara, medido desde donde apunta la cámara y no desde tu cuerpo. Los avisos hablados nombran un lado solo cuando una zona está claramente más cerca que las demás."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mỗi vùng là một phần ba những gì máy ảnh nhìn thấy, được đo từ hướng máy ảnh chỉ tới chứ không phải từ cơ thể bạn. Cảnh báo bằng lời chỉ nêu một bên khi một vùng rõ ràng gần hơn các vùng còn lại."
+          }
+        }
+      }
+    },
+    "End of the text." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End of the text."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fin del texto."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hết văn bản."
+          }
+        }
+      }
+    },
     "Endpoint URL" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -829,6 +1159,28 @@
         }
       }
     },
+    "Further" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Further"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más lejos"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xa hơn"
+          }
+        }
+      }
+    },
     "Gives cautious alerts about what may be nearby. Not a safety device." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -848,6 +1200,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đưa ra cảnh báo thận trọng về những gì có thể ở gần. Đây không phải là thiết bị an toàn."
+          }
+        }
+      }
+    },
+    "History is off, so nothing is being saved." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History is off, so nothing is being saved."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El historial está desactivado, así que no se guarda nada."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lịch sử đang tắt, nên không có gì được lưu."
+          }
+        }
+      }
+    },
+    "History is off, so nothing is being saved. Turn it on in Settings." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History is off, so nothing is being saved. Turn it on in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El historial está desactivado, así que no se guarda nada. Actívalo en Ajustes."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lịch sử đang tắt, nên không có gì được lưu. Hãy bật nó trong Cài đặt."
           }
         }
       }
@@ -944,6 +1340,72 @@
         }
       }
     },
+    "Keep reading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep reading"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir leyendo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc liên tục"
+          }
+        }
+      }
+    },
+    "Keeps the text you read on this device so you can hear it again. Turning this off deletes everything already saved." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps the text you read on this device so you can hear it again. Turning this off deletes everything already saved."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda en este dispositivo el texto que lees para que puedas volver a escucharlo. Desactivarlo borra todo lo ya guardado."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giữ văn bản bạn đọc trên thiết bị này để bạn có thể nghe lại. Tắt tùy chọn này sẽ xóa mọi thứ đã lưu."
+          }
+        }
+      }
+    },
+    "Kept on this device only, locked while the device is locked, never included in a backup, and limited to the most recent 25 documents. Turning history off deletes what is already here." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept on this device only, locked while the device is locked, never included in a backup, and limited to the most recent 25 documents. Turning history off deletes what is already here."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se guarda solo en este dispositivo, bloqueado mientras el dispositivo está bloqueado, nunca incluido en una copia de seguridad, y limitado a los 25 documentos más recientes. Desactivar el historial borra lo que ya hay aquí."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ lưu trên thiết bị này, bị khóa khi thiết bị khóa, không bao giờ có trong bản sao lưu, và giới hạn ở 25 tài liệu gần nhất. Tắt lịch sử sẽ xóa những gì đang có ở đây."
+          }
+        }
+      }
+    },
     "Language" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -963,6 +1425,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ngôn ngữ"
+          }
+        }
+      }
+    },
+    "Left" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Izquierda"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bên trái"
           }
         }
       }
@@ -1059,6 +1543,28 @@
         }
       }
     },
+    "Live reading keeps looking and tells you how to aim. It reads a page out once the text stops changing, and turns the light on if the view is dark." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live reading keeps looking and tells you how to aim. It reads a page out once the text stops changing, and turns the light on if the view is dark."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La lectura continua sigue mirando y te dice cómo apuntar. Lee una página cuando el texto deja de cambiar, y enciende la luz si la vista está oscura."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chế độ đọc liên tục tiếp tục quan sát và hướng dẫn bạn cách hướng máy. Nó đọc một trang khi văn bản ngừng thay đổi, và bật đèn nếu khung hình tối."
+          }
+        }
+      }
+    },
     "Local" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1078,6 +1584,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cục bộ"
+          }
+        }
+      }
+    },
+    "Mention things within about %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mention things within about %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mencionar cosas dentro de unos %@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhắc đến những vật trong khoảng %@"
           }
         }
       }
@@ -1174,6 +1702,28 @@
         }
       }
     },
+    "Nearer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nearer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más cerca"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gần hơn"
+          }
+        }
+      }
+    },
     "Next" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1266,6 +1816,50 @@
         }
       }
     },
+    "Nothing has been read yet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing has been read yet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no se ha leído nada."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa đọc gì cả."
+          }
+        }
+      }
+    },
+    "Nothing has been saved yet." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing has been saved yet."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no se ha guardado nada."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa lưu gì cả."
+          }
+        }
+      }
+    },
     "Obstacle awareness" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1308,6 +1902,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trên thiết bị"
+          }
+        }
+      }
+    },
+    "One photo at a time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One photo at a time"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una foto cada vez"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Từng ảnh một"
           }
         }
       }
@@ -1381,6 +1997,50 @@
         }
       }
     },
+    "Pause" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausa"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tạm dừng"
+          }
+        }
+      }
+    },
+    "Play" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phát"
+          }
+        }
+      }
+    },
     "Point the camera at a scene, then capture, for a hedged description of what's there." : {
       "localizations" : {
         "en" : {
@@ -1447,6 +2107,28 @@
         }
       }
     },
+    "Previous" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anterior"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trước"
+          }
+        }
+      }
+    },
     "Provider" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1466,6 +2148,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nhà cung cấp"
+          }
+        }
+      }
+    },
+    "Pulse faster as things get nearer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pulse faster as things get nearer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vibrar más rápido cuanto más cerca"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rung nhanh hơn khi vật đến gần"
           }
         }
       }
@@ -1516,6 +2220,182 @@
         }
       }
     },
+    "Read from the beginning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read from the beginning"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leer desde el principio"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc từ đầu"
+          }
+        }
+      }
+    },
+    "Read it all" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read it all"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leerlo todo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc toàn bộ"
+          }
+        }
+      }
+    },
+    "Reading history" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading history"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historial de lectura"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lịch sử đọc"
+          }
+        }
+      }
+    },
+    "Reading mode" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading mode"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modo de lectura"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chế độ đọc"
+          }
+        }
+      }
+    },
+    "Reads every page captured so far, and saves it if history is on." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads every page captured so far, and saves it if history is on."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lee todas las páginas capturadas hasta ahora, y las guarda si el historial está activado."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc mọi trang đã chụp cho đến giờ, và lưu lại nếu lịch sử đang bật."
+          }
+        }
+      }
+    },
+    "Reads the previous sentence again." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads the previous sentence again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a leer la frase anterior."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc lại câu trước."
+          }
+        }
+      }
+    },
+    "Reads the rest of the text aloud, one sentence at a time." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads the rest of the text aloud, one sentence at a time."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lee en voz alta el resto del texto, una frase cada vez."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc to phần còn lại của văn bản, mỗi lần một câu."
+          }
+        }
+      }
+    },
+    "Reads this text aloud again." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reads this text aloud again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuelve a leer este texto en voz alta."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đọc to lại văn bản này."
+          }
+        }
+      }
+    },
     "Reasoning" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1562,6 +2442,50 @@
         }
       }
     },
+    "Recently read" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recently read"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leído recientemente"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã đọc gần đây"
+          }
+        }
+      }
+    },
+    "Recognized text" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognized text"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto reconocido"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Văn bản nhận được"
+          }
+        }
+      }
+    },
     "Remove" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1581,6 +2505,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Xóa"
+          }
+        }
+      }
+    },
+    "Repeats the awareness buzz, faster the nearer the measurement. Runs only while an alert is already active." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repeats the awareness buzz, faster the nearer the measurement. Runs only while an alert is already active."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repite la vibración de percepción, más rápido cuanto más cerca esté la medición. Solo funciona mientras un aviso ya está activo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lặp lại rung nhận biết, càng gần thì càng nhanh. Chỉ chạy khi đã có cảnh báo đang hoạt động."
           }
         }
       }
@@ -1654,6 +2600,28 @@
         }
       }
     },
+    "Right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Right"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derecha"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bên phải"
+          }
+        }
+      }
+    },
     "Save key" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1673,6 +2641,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lưu khóa"
+          }
+        }
+      }
+    },
+    "Save what I read" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save what I read"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar lo que leo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lưu những gì tôi đọc"
+          }
+        }
+      }
+    },
+    "Says which sentence is being read, and how many there are." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Says which sentence is being read, and how many there are."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dice qué frase se está leyendo, y cuántas hay."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cho biết câu nào đang được đọc, và có bao nhiêu câu."
           }
         }
       }
@@ -1815,6 +2827,50 @@
         }
       }
     },
+    "Sensitivity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensitivity"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensibilidad"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Độ nhạy"
+          }
+        }
+      }
+    },
+    "Sentence %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sentence %lld of %lld"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frase %1$lld de %2$lld"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Câu %1$lld trên %2$lld"
+          }
+        }
+      }
+    },
     "Sets how many things each description names and how much wording it uses." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1834,6 +2890,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đặt số lượng vật được mô tả và lượng từ ngữ sử dụng trong mỗi lần mô tả."
+          }
+        }
+      }
+    },
+    "Sets how near something has to be before it is mentioned." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sets how near something has to be before it is mentioned."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Define lo cerca que tiene que estar algo antes de mencionarlo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đặt mức độ gần cần thiết trước khi một vật được nhắc đến."
           }
         }
       }
@@ -1861,6 +2939,28 @@
         }
       }
     },
+    "Shows text you have read before, if history is switched on." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows text you have read before, if history is switched on."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muestra el texto que has leído antes, si el historial está activado."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiển thị văn bản bạn đã đọc trước đây, nếu lịch sử đang bật."
+          }
+        }
+      }
+    },
     "Shows the first-run welcome and permission walkthrough again." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1880,6 +2980,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hiện lại màn hình chào mừng và hướng dẫn cấp quyền lần đầu."
+          }
+        }
+      }
+    },
+    "Skips to the next sentence." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skips to the next sentence."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta a la frase siguiente."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển sang câu tiếp theo."
           }
         }
       }
@@ -1949,6 +3071,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiêu chuẩn"
+          }
+        }
+      }
+    },
+    "Stops after the current sentence." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stops after the current sentence."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se detiene después de la frase actual."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dừng lại sau câu hiện tại."
           }
         }
       }
@@ -2114,6 +3258,116 @@
         }
       }
     },
+    "The camera isn't sending anything to read right now." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The camera isn't sending anything to read right now."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La cámara no está enviando nada que leer ahora mismo."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy ảnh hiện không gửi gì để đọc."
+          }
+        }
+      }
+    },
+    "The phone is hot, so readings are much less frequent." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The phone is hot, so readings are much less frequent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El teléfono está muy caliente, así que las mediciones son mucho menos frecuentes."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại đang nóng, nên các phép đo thưa hơn nhiều."
+          }
+        }
+      }
+    },
+    "The phone is warm, so readings are being taken less often." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The phone is warm, so readings are being taken less often."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El teléfono está caliente, así que las mediciones se toman con menos frecuencia."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Điện thoại đang ấm, nên các phép đo được lấy thưa hơn."
+          }
+        }
+      }
+    },
+    "The view looked dark, so the light is on. Turn it off in the camera controls." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The view looked dark, so the light is on. Turn it off in the camera controls."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La vista se veía oscura, así que la luz está encendida. Apágala en los controles de la cámara."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khung hình trông tối, nên đèn đã bật. Hãy tắt nó trong phần điều khiển máy ảnh."
+          }
+        }
+      }
+    },
+    "Throws away the pages captured so far without saving them." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Throws away the pages captured so far without saving them."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descarta las páginas capturadas hasta ahora sin guardarlas."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ các trang đã chụp cho đến giờ mà không lưu lại."
+          }
+        }
+      }
+    },
     "Tiếng Việt" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2137,6 +3391,28 @@
         }
       }
     },
+    "Unavailable until something has been read" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable until something has been read"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible hasta que se haya leído algo"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không dùng được cho đến khi đã đọc được gì đó"
+          }
+        }
+      }
+    },
     "Welcome to SenseBridge" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2156,6 +3432,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chào mừng đến với SenseBridge"
+          }
+        }
+      }
+    },
+    "Where am I?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where am I?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Dónde estoy?"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tôi đang ở đâu?"
           }
         }
       }
