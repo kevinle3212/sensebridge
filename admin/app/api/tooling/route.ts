@@ -98,7 +98,7 @@ async function readCaveman(): Promise<ToolingSummary["caveman"]> {
 async function readPonytail(repoRoot: string): Promise<ToolingSummary["ponytail"]> {
   try {
     const { stdout } = await run(
-      `grep -rnE '(#|//) ?ponytail:' . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=graphify-out --exclude-dir=.next | wc -l`,
+      `grep -rnE '(#|//) ?ponytail:' . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.codegraph --exclude-dir=.next | wc -l`,
       { cwd: repoRoot, timeout: 10_000 },
     );
     return { deferredShortcuts: Number(stdout.trim()) };

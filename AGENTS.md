@@ -84,7 +84,7 @@ Every harness entry point (`CLAUDE.md`, `GEMINI.md`, `.codex/AGENTS.md`,
    which is session-local and vanishes. Genuinely throwaway intermediates — a
    one-shot probe script, a temp file consumed within the same turn — may use
    the harness scratchpad.
-3. **Don't load generated output into context**: `graphify-out/`, `.gitnexus/`,
+3. **Don't load generated output into context**: `.codegraph/`, `.gitnexus/`,
    `node_modules/`, `.build/`. Start from
    [`AGENT-CONTEXT.md`](AGENT-CONTEXT.md)'s "Where to look" table.
 4. **Search before you add.** Never stand up a second implementation of

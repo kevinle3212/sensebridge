@@ -14,9 +14,7 @@
 # installer run resetting user_skill_level back to intermediate),
 # Markdown lint (markdownlint-cli2, whole repo — all five node-dependent
 # checks are skipped together, advisory, if node isn't installed), a
-# regenerate-and-stage of the knowledge-graph visual when the commit touches
-# docs/ or any graph input (tools/graph-visual.mjs), Swift
-# lint/format (scripts/lint.sh, which no-ops
+# Swift lint/format (scripts/lint.sh, which no-ops
 # until app/ exists), actionlint on staged workflow files (advisory if not
 # installed; also runs blocking in CI), and — only when staged changes touch
 # website/ — website/'s lint-staged (eslint/stylelint/prettier) and React
@@ -30,7 +28,7 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
-# Load .env so hook-tuning variables (GRAPHIFY_*, lint toggles) come from the
+# Load .env so hook-tuning variables (lint toggles) come from the
 # repo's own config instead of your shell profile. See scripts/env.sh.
 # shellcheck source=scripts/env.sh
 . "$REPO_ROOT/scripts/env.sh"
@@ -57,30 +55,15 @@ else
 	echo "pre-commit: node not installed — skipping sensitive-file check, skill-lock drift check, settings-hook check, BMAD config check, and Markdown lint; CI still scans." >&2
 fi
 
-# Keep the committed knowledge-graph visual in step with the commit being made,
-# so docs never ship a picture of an older repository.
+# The knowledge-graph visual is no longer regenerated here. graphify was
+# retired on 2026-08-18 and it produced `graph.json`, this render's only input,
+# so there is nothing left for the hook to re-render from — a block that
+# silently no-ops is worse than no block, because it reads like a live gate.
 #
-# Only the SVG render runs here (~1s of node). graphify-out/graph.json is
-# already on disk — post-commit rebuilds it after every commit — and a full
-# `graphify update .` would add up to two minutes to every commit for no gain.
-# The visual therefore pictures the graph as of the previous commit, which is
-# exactly what its own caption claims ("at commit <sha>").
-if command -v node >/dev/null 2>&1 &&
-	[ -f graphify-out/graph.json ] &&
-	git diff --cached --name-only | grep -qE '^(docs/|app/|website/src/|tools/|scripts/)'; then
-	# Hashed rather than `git diff`-ed: the pair can still be untracked (the
-	# generator is newer than the last commit that touched docs/), and
-	# `git diff` is blind to untracked files, so it would report "clean" and
-	# never stage them. `git add` runs either way — staging an unchanged file
-	# is a no-op — and the notice fires only when the bytes really moved.
-	_graph_before=$(cat docs/assets/graph.svg docs/assets/graph-static.svg 2>/dev/null | shasum)
-	node tools/graph-visual.mjs >/dev/null
-	_graph_after=$(cat docs/assets/graph.svg docs/assets/graph-static.svg | shasum)
-	git add docs/assets/graph.svg docs/assets/graph-static.svg
-	if [ "$_graph_before" != "$_graph_after" ]; then
-		echo "pre-commit: knowledge-graph visual was stale — regenerated and staged docs/assets/graph*.svg." >&2
-	fi
-fi
+# docs/assets/graph{,-static}.svg stay committed and stay checked: CI's
+# `npm run check:graph` (tools/graph-visual.mjs --verify) lints the committed
+# bytes and needs no graph input at all. Redrawing the picture is now a
+# deliberate one-off — see the README's "Codebase map" section.
 
 ./scripts/lint.sh
 

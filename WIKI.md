@@ -91,7 +91,6 @@ This page's rendered form is also published live at
 | `.github/workflows/wiki-sync.yml` | Keeps the Wiki's Home page current |
 | `.github/prompts/`, `.github/workflows/github-models.yml` | GitHub Models prompt files and manual-dispatch evaluation |
 | `.github/workflows/copilot-setup-steps.yml` | Copilot coding agent environment bootstrap (`website/` only — no macOS/Xcode) |
-| `.graphifyignore`, `.github/workflows/graphify.yml` | Knowledge-graph build scope and advisory CI rebuild |
 
 ---
 

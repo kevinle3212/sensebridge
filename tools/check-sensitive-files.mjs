@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // check-sensitive-files.mjs — refuse to publish signing/credential material,
-// provider tokens, personal-machine paths that tooling (graphify, gitnexus,
+// provider tokens, personal-machine paths that tooling (codegraph, gitnexus,
 // serena, ...) sometimes bakes into a generated/committed file instead of
 // resolving at runtime, and gitignored-but-force-staged private files.
 //
@@ -62,7 +62,7 @@ const SECRET_PATTERNS = [
   [/glpat-[A-Za-z0-9_-]{20}/, "GitLab personal access token"],
   [/npm_[A-Za-z0-9]{36}/, "npm access token"],
   [/hooks\.slack\.com\/services\/[A-Za-z0-9/+]{20,}/, "Slack webhook URL"],
-  // Catches tools (graphify, gitnexus, serena, ...) that bake an absolute,
+  // Catches tools (codegraph, gitnexus, serena, ...) that bake an absolute,
   // machine-specific path into a generated/committed file instead of
   // resolving it at runtime — a personal-machine leak, not a credential,
   // but still shouldn't ship in a public repo.

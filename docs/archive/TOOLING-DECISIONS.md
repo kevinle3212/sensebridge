@@ -303,7 +303,21 @@ pre-split file.
 
 ### Graphify
 
-**Status** — installed
+**Status** — **retired 2026-08-18.** Everything below is preserved as the
+record of why it was adopted and how it was configured; none of it describes
+the repository as it stands. Retired as the one genuine redundancy the
+2026-08-12 bake-off found, on a fresh measurement: `graphify-out/` was 365 MB
+against CodeGraph's 28 MB and GitNexus's 86 MB, and once the 4:1 inflation
+from the five mirrored copies of the `impeccable` skill scripts is backed out,
+its real coverage (~4,500 nodes) sat *below* CodeGraph's 6,752. It was also
+the only one of the four with no free-text question verb. What replaced it:
+`codegraph explore`/`node` for architecture questions, Serena for symbol work,
+GitNexus for call chains and blast radius. The one thing it did better —
+self-refreshing after every commit and checkout — was replaced by an
+incremental `codegraph sync` block in the same two hooks. The rendered
+`docs/assets/graph.svg` and `tools/graph-visual.mjs` were deliberately kept:
+the picture is committed and self-contained, and `--verify` reads only the
+committed bytes.
 
 **Use here** — Knowledge-graph queries; output (`graphify-out/`) is gitignored. Auto-rebuilds via versioned `.githooks/post-commit` + `post-checkout` (installed by `graphify hook install`, detached/non-blocking, skips rebases and graph-only changes); optional live mode: `graphify watch .` (needs `watchdog` in graphify's env). CI rebuilds it advisorily on `main` and uploads it as a downloadable artifact (`.github/workflows/graphify.yml`, scope in `.graphifyignore`). `npm run graph` (`PYTHONHASHSEED=0 graphify update .` then `tools/graph-visual.mjs`) renders the graph into the root README's animated `docs/assets/graph.svg` plus its reduced-motion twin `graph-static.svg` — both committed, since the graph itself never is; deterministic (seeded layout) so an unchanged graph re-renders byte-identically, and it excludes the per-harness agent-config mirrors so the picture shows SenseBridge rather than vendored tooling. `npm run graph:visual` redraws from the existing `graph.json` without a graphify rebuild. **Freshness and quality are both enforced.** `.githooks/pre-commit` re-renders and stages the pair whenever a commit touches `docs/`, `app/`, `website/src/`, `tools/`, or `scripts/` (SVG render only — ~1s of node; the graph itself is rebuilt by `post-commit`, so the picture is captioned "at commit &lt;sha&gt;" of the previous commit, by design). CI's `docs-links` job then runs `npm run check:graph` (`tools/graph-visual.mjs --verify`) as a **blocking** gate over the committed bytes: accessible `<title>`/`<desc>`, `role="img"`, a reduced-motion twin that really carries no `@keyframes`/`<animateMotion>`, size ceiling, well-formed XML (balanced groups, no unescaped `&`, not truncated), and both variants rendering the same graph. It lints the artifact rather than rebuilding and diffing, because the source commit is baked into the image — a fresh build at CI's `HEAD` is legitimately different bytes and would fail every PR. `.github/workflows/graphify.yml` stays advisory (`continue-on-error: true`) and is deliberately not the gate
 

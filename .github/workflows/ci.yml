@@ -194,8 +194,9 @@ jobs:
         # parses without executing.
         run: node --check docs/assets/js/docs.js
       - name: Knowledge graph visual is intact
-        # docs/assets/graph{,-static}.svg are committed artifacts — graphify-out/
-        # is git-ignored, so nothing else re-checks them after generation. This
+        # docs/assets/graph{,-static}.svg are committed artifacts, and since
+        # graphify's retirement nothing regenerates them at all — so this gate is
+        # the only thing standing between a corrupted asset and main. This
         # lints the committed bytes (accessible name/description, reduced-motion
         # twin genuinely static, well-formed XML, both variants rendering the
         # same graph). It deliberately does not rebuild and diff: the source

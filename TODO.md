@@ -371,7 +371,7 @@ refusals, are in
 → "Evaluated 2026-08-12". Session log:
 `sessions/2026-08-12/2100-PST.md`. Working plan: `tmp/handoff-tooling.md`.
 
-- [ ] **[P2]** **Decide whether to retire `graphify`.** CodeGraph and
+- [x] **[P2]** **Decide whether to retire `graphify`.** CodeGraph and
       graphify are the one genuine redundancy the bake-off found — Serena
       answers symbol questions and the GitNexus `PreToolUse` hook works
       passively, so neither is a removal candidate. On the same architecture
@@ -381,6 +381,25 @@ refusals, are in
       its index additionally covers all five mirrored copies of the
       `impeccable` skill scripts. Either retire graphify or run the CodeGraph
       trial week first, then decide on evidence.
+      **Done 2026-08-18** — retired, on owner's decision after a fresh
+      measurement pass: `graphify-out/` was **365 MB** against CodeGraph's
+      28 MB and GitNexus's 86 MB, and backing out the 4:1 skill-mirror
+      inflation put graphify's real coverage (~4,500 nodes) *below*
+      CodeGraph's 6,752. Removed `.github/workflows/graphify.yml`,
+      `.graphifyignore`, the vendor-installed rebuild blocks in
+      `.githooks/post-commit` and `post-checkout` (~370 lines), the `graph`
+      npm script, and every stale reference across 18 tracked files.
+      **The measurement also found the one real argument for keeping it**:
+      graphify was the only index that self-refreshed, and GitNexus was 14
+      days and ~100 commits stale at the time of removal. That gap is closed
+      by a new `codegraph sync` block in both hooks — incremental,
+      backgrounded, and advisory, so it can never fail a commit.
+      `docs/assets/graph*.svg`, `tools/graph-visual.mjs`, and the
+      `check:graph` CI gate are **deliberately kept**: the picture is
+      committed and self-contained, and `--verify` reads only the committed
+      bytes, so it needs no graph tool installed. Redrawing is now a
+      deliberate one-off via `npm run graph:visual -- --graph <path>`.
+      Still owner-only: `rm -rf graphify-out && pipx uninstall graphify`.
 
 - [ ] **[P2]** **Close out the CodeGraph trial.** Installed 2026-08-12 as a
       CLI-only trial: no MCP configuration and no marker-fenced block in any

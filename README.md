@@ -32,7 +32,6 @@ positioning.
 [![Sync Docs to Wiki](https://github.com/kevinle3212/sensebridge/actions/workflows/wiki-sync.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/wiki-sync.yml)
 [![GitHub Models prompts](https://github.com/kevinle3212/sensebridge/actions/workflows/github-models.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/github-models.yml)
 [![Dependabot auto-merge](https://github.com/kevinle3212/sensebridge/actions/workflows/dependabot-automerge.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/dependabot-automerge.yml)
-[![Graphify Knowledge Graph](https://github.com/kevinle3212/sensebridge/actions/workflows/graphify.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/graphify.yml)
 [![Copilot Setup Steps](https://github.com/kevinle3212/sensebridge/actions/workflows/copilot-setup-steps.yml/badge.svg)](https://github.com/kevinle3212/sensebridge/actions/workflows/copilot-setup-steps.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/kevinle3212/sensebridge?style=flat)](https://github.com/kevinle3212/sensebridge/stargazers)
@@ -60,7 +59,7 @@ positioning.
 - [Repository Structure](#repository-structure)
 - [Quick Start](#quick-start)
 - [Build and Run](#build-and-run)
-- [Knowledge Graph (Graphify)](#knowledge-graph-graphify)
+- [Codebase map](#codebase-map)
 - [Documentation](#documentation)
 - [GitHub Platform](#github-platform)
 - [Maintainer](#maintainer)
@@ -192,7 +191,6 @@ explicitly opts into the cloud adapter — see
 ├── _bmad/                    BMAD-METHOD planning scaffold
 ├── .github/                  CI, security, Pages, Wiki sync, Models, Copilot, Dependabot, templates
 ├── .agents/ .claude/ .codex/ .gemini/ .cursor/  Per-agent config, all deferring to AGENTS.md
-├── graphify-out/             Generated knowledge graph (gitignored, see below)
 └── AGENTS.md CLAUDE.md ...   Root orientation and agent-instruction docs
 ```
 
@@ -235,18 +233,7 @@ Distributing builds to other testers (TestFlight/App Store) requires the
 paid Apple Developer Program — see
 [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md).
 
-## Knowledge Graph (Graphify)
-
-The repository maintains a [graphify](https://github.com/safishamsi/graphify)
-knowledge graph in `graphify-out/` (git-ignored, generated) — an AST-only,
-API-cost-free index that powers codebase-wide questions, cross-file
-relationship lookups, and a wiki-style community view under
-`graphify-out/wiki/`. It rebuilds automatically after every local commit and
-branch switch via `.githooks/post-commit`/`post-checkout` (see
-[`docs/TOOLING.md`](docs/TOOLING.md)), and the
-[`Graphify Knowledge Graph`](.github/workflows/graphify.yml) workflow rebuilds
-it on `main` and uploads a downloadable artifact — advisory only, it never
-blocks a merge.
+## Codebase map
 
 <picture>
   <source
@@ -258,56 +245,60 @@ blocks a merge.
     width="100%">
 </picture>
 
-That picture is not decoration and not hand-drawn: `npm run graph`
-([`tools/graph-visual.mjs`](tools/graph-visual.mjs)) reads the real
-`graphify-out/graph.json`, keeps the highest-degree subgraph, runs a
-deterministic force-directed layout, and writes
-[`docs/assets/graph.svg`](docs/assets/graph.svg). Nodes are symbols; edges are
-relationships graphify actually extracted — `imports`, `calls`, `defines`,
-`references`. The travelling pulses trace those edges, so what moves is real
-structure, not an ornament.
+That picture is not decoration and not hand-drawn. It is a real render of a
+real graph: nodes are symbols, edges are extracted relationships — `imports`,
+`calls`, `defines`, `references` — and the travelling pulses trace those edges,
+so what moves is structure rather than ornament. It shows 340 of the most
+connected symbols joined by 802 relationships, clustered and coloured by
+subsystem. [`tools/graph-visual.mjs`](tools/graph-visual.mjs) keeps the
+highest-degree subgraph, runs a deterministic seeded force-directed layout, and
+writes [`docs/assets/graph.svg`](docs/assets/graph.svg).
 
-Four details worth knowing before you regenerate it:
+**It is a committed snapshot, and deliberately so.** The tool that produced its
+input graph — `graphify` — was retired on 2026-08-18 as redundant against
+CodeGraph, GitNexus, and Serena (see
+[`docs/archive/TOOLING-DECISIONS.md`](docs/archive/TOOLING-DECISIONS.md)).
+Nothing regenerates the picture automatically now. What survives that removal:
 
-- **The graph is committed, its source is not.** `graphify-out/` is
-  git-ignored, so the SVG is checked in as an artifact. The layout is seeded,
-  so an unchanged graph re-renders byte-identically and the asset does not
-  churn in diffs.
-- **You do not have to remember to redraw it, and CI checks it.**
-  `.githooks/pre-commit` re-renders and stages the pair whenever a commit
-  touches `docs/` or any graph input, so the committed picture never lags the
-  committed code. CI then runs `npm run check:graph`
-  (`tools/graph-visual.mjs --verify`) as a blocking gate: it lints the
-  committed bytes for the accessible name and description, a genuinely static
+- **The image itself**, because it is checked in and self-contained. It renders
+  on GitHub with no tool installed by anyone, forever.
+- **The check on it.** CI runs `npm run check:graph`
+  (`tools/graph-visual.mjs --verify`) as a blocking gate that lints the
+  committed bytes — accessible name and description present, a genuinely static
   reduced-motion twin, well-formed XML, and both variants drawing the same
-  graph. It deliberately does not rebuild and diff — the source commit is
-  baked into the image, so a fresh build at a different `HEAD` is legitimately
+  graph. Verification reads the SVGs and nothing else, so it needs no graph
+  tool. It deliberately does not rebuild and diff: the source commit is baked
+  into the image, so a fresh build at a different `HEAD` is legitimately
   different bytes and would fail every pull request.
-- **Vendored agent tooling is excluded.** The same skill scripts are mirrored
-  verbatim into five per-harness config directories (`.claude/`, `.cursor/`,
-  `.gemini/`, `.agents/`, `.github/skills/`), and they outnumber SenseBridge's
-  own code roughly four to one. Left in, the picture would be a portrait of the
-  tooling mirror. The exclusion list is at the top of the generator.
+- **The ability to redraw it**, as a deliberate one-off. `npm run graph:visual`
+  takes `--graph <path>` and accepts any node-link JSON export
+  (`{ nodes, links }`) from whichever tool you point it at.
+
+Two details worth knowing if you ever do redraw it:
+
 - **Motion is opt-out, and the opt-out is real.** GitHub runs no JavaScript in
   a README, so the animation is declarative SVG. Chrome does _not_ propagate
   `prefers-reduced-motion` into an `<img>`-referenced SVG, so an in-file media
-  query alone would silently fail; the `<picture>` above swaps in a still
-  twin instead, which is evaluated against the page. Both paths were verified
-  in a headless browser.
+  query alone would silently fail; the `<picture>` above swaps in a still twin
+  instead, which is evaluated against the page. Both paths were verified in a
+  headless browser.
+- **Vendored agent tooling is excluded.** The same skill scripts are mirrored
+  verbatim into five per-harness config directories (`.claude/`, `.cursor/`,
+  `.gemini/`, `.agents/`, `.github/skills/`) and outnumber SenseBridge's own
+  code roughly four to one. Left in, the picture would be a portrait of the
+  tooling mirror. The exclusion list is at the top of the generator.
 
-For anything beyond a glance, query the graph directly rather than reading the
-picture:
+For actually querying the codebase, use the tools that answer questions rather
+than the picture:
 
-| Task                                             | Command                        |
-| ------------------------------------------------ | ------------------------------ |
-| Build the graph from scratch                     | `graphify .`                   |
-| Update after code changes                        | `graphify update .`            |
-| Ask a natural-language question                  | `graphify query "<question>"`  |
-| Explain a single concept                         | `graphify explain "<concept>"` |
-| Watch and rebuild live                           | `graphify watch .`             |
-| Rebuild the graph and redraw the picture above   | `npm run graph`                |
-| Redraw the picture only, from the existing graph | `npm run graph:visual`         |
-| Check the committed picture is intact (CI gate)  | `npm run check:graph`          |
+| Task | Tool |
+| --- | --- |
+| Find a symbol, its references, or edit it by name | Serena (MCP, `.mcp.json`) |
+| Ask an architecture question in plain language | `codegraph explore "<question>"` |
+| One symbol's source plus its caller/callee trail | `codegraph node <name>` |
+| Call chains, blast radius, clusters | `gitnexus analyze`, then its MCP tools |
+| Check the committed picture is intact (CI gate) | `npm run check:graph` |
+| Redraw the picture from a graph export | `npm run graph:visual -- --graph <path>` |
 
 ## Documentation
 

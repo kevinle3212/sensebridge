@@ -69,7 +69,6 @@
     "todo:archive": "node tools/archive-completed-todo.mjs",
     "logs:condense": "node tools/condense-monthly-logs.mjs",
     "wiki:home": "node tools/generate-wiki-home.mjs > wiki/Home.md",
-    "graph": "PYTHONHASHSEED=0 graphify update . && node tools/graph-visual.mjs",
     "graph:visual": "node tools/graph-visual.mjs",
     "codegraph": "codegraph index --quiet && node tools/check-codegraph-perms.mjs --fix && codegraph status",
     "codegraph:sync": "codegraph sync && node tools/check-codegraph-perms.mjs --fix",

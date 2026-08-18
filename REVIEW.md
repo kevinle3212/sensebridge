@@ -46,7 +46,7 @@ automated pass complements them, it does not sign off for them.
 
 ## Skip paths (do not spend review budget here)
 
-- Generated / vendored: `graphify-out/`, `.nexus/`, `tmp/`, `logs/`,
+- Generated / vendored: `.codegraph/`, `.gitnexus/`, `tmp/`, `logs/`,
   `website/node_modules/`, any lockfile (`website/package-lock.json`).
 - Append-only governance artifacts under `audits/` — never "fix" a past report.
 - `legal/**` — owner-gated; never propose edits (also denied in

@@ -32,9 +32,11 @@ Any username works at the Basic-auth prompt; only the password is checked.
 
 ### Environment
 
-Create `admin/.env.local` by hand. No environment file is ever tracked in this
-repository — not even an example: `tools/check-sensitive-files.mjs` refuses to
-publish one, so the variables are documented here instead.
+Create `admin/.env.local` by hand. `tools/check-sensitive-files.mjs` refuses to
+publish any `.env*` file unless its exact path is listed in that script's
+`NAME_CHECK_EXEMPT` allowlist — the root and `website/` examples are; this
+directory's deliberately is not, because the table below documents the same
+information without a second file to keep in sync.
 
 | Variable | Required | What it is |
 | --- | --- | --- |

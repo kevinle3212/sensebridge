@@ -3,7 +3,9 @@ node_modules/
 next-env.d.ts
 *.tsbuildinfo
 
-# No environment file is tracked here, not even an example: the repository gate
-# (tools/check-sensitive-files.mjs) refuses to publish one. The variables this
-# app reads are documented in README.md instead.
+# No environment file is tracked in this directory. The repository gate
+# (tools/check-sensitive-files.mjs) refuses any .env* path missing from its
+# NAME_CHECK_EXEMPT allowlist, and this one is deliberately absent from it:
+# README.md documents every variable the app reads, so a tracked example would
+# be a second copy to keep in sync.
 .env*
