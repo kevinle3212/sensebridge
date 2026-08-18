@@ -99,11 +99,10 @@ same out-of-distribution audio and fails if a future retrain regresses it.
 `combined-training-data/` are all gitignored — only the trained `.mlmodel`
 and the attribution manifest are committed, not the raw audio clips. The
 trained model is written directly into `app/SenseBridge/Resources/`
-(alongside `Assets.xcassets`) rather than kept here, so XcodeGen's existing
-`sources: - path: SenseBridge` picks it up as a bundled resource
-automatically — the same way `Assets.xcassets` already does — with no
-separate `resources:` entry in `app/project.yml` and no second copy to keep
-in sync after retraining.
+(alongside `Assets.xcassets`) rather than kept here, so the app target's
+existing folder reference picks it up as a bundled resource automatically —
+the same way `Assets.xcassets` already does — with no separate resource entry
+in the Xcode project and no second copy to keep in sync after retraining.
 
 ## Class coverage
 
