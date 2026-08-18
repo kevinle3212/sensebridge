@@ -25,10 +25,12 @@ import UIKit
 /// iOS does not allow camera capture while an app is backgrounded or the screen
 /// is locked. Hands-free awareness therefore needs SenseBridge foregrounded with
 /// the display on, and holds `isIdleTimerDisabled` for as long as it runs. When
-/// the app is backgrounded anyway, this stops and *says so*: a user with the
-/// phone strapped to their chest cannot see that it stopped, and silence on this
-/// channel is indistinguishable from "nothing to report", which
-/// docs/SAFETY-FRAMING.md treats as the failure that matters most.
+/// the app is backgrounded anyway, this stops and *says so*, then starts itself
+/// again on return and says that too: a user with the phone strapped to their
+/// chest cannot see either transition, and silence on this channel is
+/// indistinguishable from "nothing to report", which docs/SAFETY-FRAMING.md
+/// treats as the failure that matters most. See
+/// `AmbientAwarenessSession+Lifecycle.swift`.
 @MainActor
 @Observable
 final class AmbientAwarenessSession {
@@ -47,7 +49,12 @@ final class AmbientAwarenessSession {
     /// The most recent narration, mirrored on screen. The screen is not the
     /// channel — speech is — but a sighted helper, a screenshot, or a braille
     /// display all need the text to exist somewhere.
-    private(set) var lastNarration: String?
+    ///
+    /// Internal rather than `private(set)` only so
+    /// `AmbientAwarenessSession+Lifecycle.swift` can mirror its own
+    /// announcements here — same type, different file. Nothing outside this
+    /// type writes it.
+    var lastNarration: String?
 
     /// What the last detection pass found, for the preview to outline.
     ///
@@ -62,10 +69,13 @@ final class AmbientAwarenessSession {
     /// the app says.
     let preview: AwarenessPreviewFeed = .init()
 
-    /// How often depth is read. Fast enough to notice someone stepping in
-    /// front of the user, slow enough not to hold the CPU at a walk's expense
-    /// — the cost per tick is one pixel-buffer reduction, not a model run.
-    private static let sampleInterval: Duration = .milliseconds(750)
+    /// How often depth is read on a cool device. Fast enough to notice someone
+    /// stepping in front of the user, slow enough not to hold the CPU at a
+    /// walk's expense — the cost per tick is one pixel-buffer reduction, not a
+    /// model run. Stretched by `ThermalBackoff` when the phone heats up.
+    ///
+    /// Not `private` — see `classifier`'s doc comment.
+    static let sampleInterval: Duration = .milliseconds(750)
 
     private let source: AmbientSensingSource = .init()
     /// Not `private`: rebuilt by `configureReasoning(environment:)` in
@@ -77,13 +87,45 @@ final class AmbientAwarenessSession {
     /// Not `private` — see `classifier`'s doc comment.
     var resolver: ReasoningComposerResolver?
     private var engine: AwarenessEngine = .init()
-    private var throttle: NarrationThrottle = .init()
+    /// Not `private` — see `classifier`'s doc comment;
+    /// `AmbientAwarenessSession+Composition.swift` consults it before speaking.
+    var throttle: NarrationThrottle = .init()
     private var loopTask: Task<Void, Never>?
     private var compositionTask: Task<Void, Never>?
-    private var backgroundObserver: NSObjectProtocol?
+    /// Lifecycle and thermal state. Not `private` — see `classifier`'s doc
+    /// comment; `AmbientAwarenessSession+Lifecycle.swift` owns all four.
+    var backgroundObserver: NSObjectProtocol?
+    var foregroundObserver: NSObjectProtocol?
+    /// Whether the next activation should restart the session. Set only by the
+    /// backgrounding path, so a session the user ended by hand stays ended.
+    var isAwaitingForegroundResume = false
+    /// Last thermal level announced, so a change is spoken once rather than
+    /// every tick.
+    var thermalLevel: ThermalBackoff.Level = .normal
     private var lastDescribedAt: Date?
     /// Not `private` — see `classifier`'s doc comment.
     var locale: Locale = .current
+
+    /// The most recent zoned depth reading, mirrored on screen so the user can
+    /// see what the session is working from. Every figure is optional and `nil`
+    /// means "could not be measured" — never "that side is clear".
+    private(set) var lastReading: AwarenessDepthReading = .unmeasured
+    /// How many alerts this session has raised, for the end-of-session summary.
+    /// Counted rather than derived, because a transition is not recoverable
+    /// from the final state.
+    var alertCount = 0
+    /// When the current run started, for the same summary. `nil` while idle.
+    var startedAt: Date?
+    /// The proximity band the last alert was announced at, so a measurement
+    /// coming nearer is spoken once per band rather than on every tick.
+    var lastAnnouncedBand: ProximityBand?
+    /// The repeating haptic pulse, whose rate tracks the proximity band.
+    /// Cancelled whenever the reading clears or the session stops.
+    var pulseTask: Task<Void, Never>?
+    /// The environment this run was started with, so `stop()` — which takes no
+    /// arguments, and is called from the button, from `onDisappear`, and from
+    /// the backgrounding path — can still speak its summary.
+    private var activeEnvironment: AppEnvironment?
 
     /// Whether this device can run hands-free awareness at all. Checked by the
     /// view before offering the control, so the app never presents a button
@@ -133,7 +175,15 @@ final class AmbientAwarenessSession {
         // choice is between holding it on and having the session die a minute
         // after the user pockets the phone.
         UIApplication.shared.isIdleTimerDisabled = true
-        observeBackgrounding(environment: environment)
+        observeLifecycle(environment: environment)
+        // A resumed session inherits the device's current heat, not the level
+        // it had when it was stopped, so the first tick re-announces if the
+        // phone cooled off while the app was away.
+        thermalLevel = .normal
+        alertCount = 0
+        lastAnnouncedBand = nil
+        startedAt = .now
+        activeEnvironment = environment
         status = .running
         loopTask = Task { [weak self] in
             await self?.run(environment: environment)
@@ -142,7 +192,23 @@ final class AmbientAwarenessSession {
     }
 
     /// Stops the loop and releases the camera, display, and ARKit session.
+    ///
+    /// Speaks an end-of-session summary on the way out. Silence is how this
+    /// channel reports "nothing to say", so a session that simply goes quiet is
+    /// indistinguishable from one that crashed — the same reasoning behind
+    /// `awarenessStoppedOffScreen`.
     func stop() {
+        stopProximityPulse()
+        if status == .running, let environment = activeEnvironment {
+            let summary = sessionSummaryText()
+            Task { [weak self] in
+                await self?.deliver(summary, signal: .resultReady, isUrgent: true, to: environment)
+            }
+        }
+        startedAt = nil
+        lastAnnouncedBand = nil
+        lastReading = .unmeasured
+        activeEnvironment = nil
         loopTask?.cancel()
         loopTask = nil
         compositionTask?.cancel()
@@ -153,6 +219,11 @@ final class AmbientAwarenessSession {
             NotificationCenter.default.removeObserver(backgroundObserver)
             self.backgroundObserver = nil
         }
+        // Any stop cancels a pending auto-resume. The backgrounding path re-arms
+        // it immediately afterwards; every other caller — the button, leaving
+        // the screen — means the user is done.
+        isAwaitingForegroundResume = false
+        removeForegroundObserver()
         // Reset both, or restarting in a different room would inherit this
         // room's alert state and swallow the first real alert of the next run.
         engine.reset()
@@ -170,7 +241,7 @@ final class AmbientAwarenessSession {
         while !Task.isCancelled {
             await tick(environment: environment)
             do {
-                try await Task.sleep(for: Self.sampleInterval)
+                try await Task.sleep(for: thermalPacedInterval(environment: environment))
             } catch {
                 // Cancellation is the only way this throws, and it means stop.
                 return
@@ -179,11 +250,25 @@ final class AmbientAwarenessSession {
     }
 
     private func tick(environment: AppEnvironment) async {
-        // `nil` before ARKit's first frame arrives, which takes a moment after
-        // `start()`. Not an error, and emphatically not "nothing is there".
+        // `nil` until this run's first frame arrives, which takes a moment
+        // after `start()` — and stays `nil` rather than handing back the last
+        // frame of a previous run, which is what a resume after backgrounding
+        // would otherwise narrate. Not an error, and emphatically not "nothing
+        // is there".
         guard let frame = source.latestFrame() else { return }
-        if let depthMeters = await source.depthMeters(in: frame) {
-            await report(engine.evaluate(depthMeters: depthMeters), depthMeters: depthMeters, to: environment)
+        // Zoned rather than whole-region: the overall figure inside the reading
+        // is bit-identical to what `depthMeters(in:)` produced, so the alert
+        // decision is unchanged and the zones only add a side to the sentence.
+        let reading = await source.zonedDepth(in: frame)
+        lastReading = reading
+        if let depthMeters = reading.overallMeters {
+            await report(engine.evaluate(depthMeters: depthMeters), reading: reading, to: environment)
+        } else {
+            // A frame that measured nothing never reaches the engine, so
+            // `.becameClear` — the only other thing that ends the pulse — cannot
+            // fire. Left alone, the phone goes on buzzing a proximity it can no
+            // longer measure. See `stopPulseForUnmeasuredFrame`.
+            stopPulseForUnmeasuredFrame()
         }
         await updateDetections(in: frame)
         describeIfDue(frame, environment: environment)
@@ -212,40 +297,6 @@ final class AmbientAwarenessSession {
         detectedObjects = detected
     }
 
-    /// Speaks the awareness alert or clear cue, but only on a real transition.
-    private func report(
-        _ transition: AwarenessTransition,
-        depthMeters: Double,
-        to environment: AppEnvironment
-    ) async {
-        switch transition {
-        case .becameAlerting:
-            let subject = phrasing.somethingAhead(
-                atDistance: Self.formattedDistance(meters: depthMeters, locale: locale),
-                locale: locale
-            )
-            // `.medium`, not `.high`. The reading is a percentile of a
-            // confidence-filtered region measured through an uncalibrated
-            // chest mount; "it looks like" is what that earns, and "likely" is
-            // not.
-            let text = phrasing.describe(subject: subject, certainty: .medium, locale: locale)
-            await deliver(text, signal: .awarenessAlert, isUrgent: true, to: environment)
-        case .becameClear:
-            // The first honest emitter of `.awarenessClear` — see its doc
-            // comment in `RenderTarget.swift`. It is honest here and only here
-            // because a transition is a change the app observed, rather than
-            // an absence inferred from one sample.
-            await deliver(
-                phrasing.nearestMeasurementMovedAway(locale: locale),
-                signal: .awarenessClear,
-                isUrgent: true,
-                to: environment
-            )
-        case .unchanged:
-            break
-        }
-    }
-
     /// Classifies and narrates the scene, if enough time has passed, the
     /// channel is free, and no composition is already in flight.
     ///
@@ -259,13 +310,13 @@ final class AmbientAwarenessSession {
     private func describeIfDue(_ frame: AmbientFrame, environment: AppEnvironment) {
         guard compositionTask == nil else { return } // single-flight: skip, don't queue
         let now = Date.now
-        if let lastDescribedAt,
-           now.timeIntervalSince(lastDescribedAt) < environment.settings.narrationIntervalSeconds {
+        let interval = narrationInterval(environment: environment)
+        if let lastDescribedAt, now.timeIntervalSince(lastDescribedAt) < interval {
             return
         }
         lastDescribedAt = now
         let capturedAt = frame.capturedAt
-        let staleAfter = max(environment.settings.narrationIntervalSeconds * 2, 12)
+        let staleAfter = max(interval * 2, 12)
         let currentDetections = detectedObjects
 
         compositionTask = Task { [weak self] in
@@ -290,7 +341,11 @@ final class AmbientAwarenessSession {
     }
 
     /// Renders `text` through every channel the user's profile prefers.
-    private func deliver(
+    ///
+    /// Internal rather than `private` so
+    /// `AmbientAwarenessSession+Proximity.swift` — a same-type extension split
+    /// out only for SwiftLint's length gates — can speak through it too.
+    func deliver(
         _ text: String,
         signal: OutputSignal,
         isUrgent: Bool,
@@ -306,90 +361,5 @@ final class AmbientAwarenessSession {
         lastNarration = text
         announceIfUnspoken(text, profile: environment.settings.outputProfile)
         await environment.output.render(OutputMessage(text: text, signal: signal))
-    }
-
-    /// Stops the session when the app is backgrounded, and says so out loud.
-    ///
-    /// iOS revokes camera access on backgrounding, so the loop would otherwise
-    /// keep running against frames that never arrive — perfectly silent, and
-    /// indistinguishable from a quiet room to someone who cannot see the
-    /// screen. The `audio` background mode exists in this target so this one
-    /// announcement is audible; nothing else in the app plays in the
-    /// background.
-    private func observeBackgrounding(environment: AppEnvironment) {
-        backgroundObserver = NotificationCenter.default.addObserver(
-            forName: UIApplication.didEnterBackgroundNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self, status == .running else { return }
-                stop()
-                let text = "Hands-free awareness stopped because SenseBridge is no longer on screen."
-                lastNarration = text
-                await environment.output.render(OutputMessage(text: text, signal: .error))
-            }
-        }
-    }
-}
-
-/// Composition-pipeline helpers that touch session state (`classifier`,
-/// `throttle`, `deliver`), split out of the class body purely to keep it
-/// under SwiftLint's `type_body_length` — unlike
-/// `AmbientAwarenessSession+Support.swift`, these need `private` access to
-/// the type and so must stay in this file.
-private extension AmbientAwarenessSession {
-    // swiftlint:disable discouraged_optional_collection
-    /// Builds the records to compose from — detections if the last pass
-    /// found any discrete objects, otherwise a whole-frame classification
-    /// pass. Split out of `describeIfDue` so that method reads as the
-    /// scheduling/cancellation logic it is, not classification plumbing.
-    ///
-    /// Returns `nil`, not an empty array, when classification itself
-    /// failed — a real, distinct signal from "classified as empty" that
-    /// `describeIfDue` uses to skip the tick entirely rather than announce
-    /// "nothing recognized" for a frame that was never actually read.
-    func records(for frame: AmbientFrame, detections: [DetectedObject]) async -> [PerceptionRecord]? {
-        if detections.isEmpty {
-            do {
-                return try await classifier.classify(frame.image, orientation: frame.orientation)
-            } catch {
-                return nil
-            }
-        }
-        return detections.map {
-            PerceptionRecord(kind: .detectedObject(label: $0.label, confidence: $0.confidence), capturedAt: .now)
-        }
-    }
-
-    // swiftlint:enable discouraged_optional_collection
-
-    /// Delivers a resolver result: the breaker announcement first (if any,
-    /// always spoken), then the routine narration itself — gated on speech
-    /// not already being in flight and the throttle's dedup/cadence rules.
-    /// Split out of `describeIfDue`'s composition `Task` to keep that
-    /// closure's cyclomatic complexity within SwiftLint's limit.
-    func deliverComposedResult(
-        _ result: ReasoningComposeResult,
-        records: [PerceptionRecord],
-        environment: AppEnvironment
-    ) async {
-        if let announcement = result.announcement {
-            await deliver(announcement, signal: .error, isUrgent: true, to: environment)
-        }
-        // Routine narration is skipped, not queued, while speech is already
-        // in flight — `render` interrupts, which is right for a one-shot
-        // capture and wrong here, where it would cut every sentence off
-        // with the next one. The breaker announcement above is deliberately
-        // exempt (`isUrgent: true`), matching
-        // `SpeechRenderTarget.isSpeaking`'s documented contract.
-        guard await !environment.speech.isSpeaking else { return }
-        guard throttle.shouldSpeak(result.text, at: Date.now) else { return }
-        await deliver(
-            result.text,
-            signal: records.isEmpty ? .nothingFound : .resultReady,
-            isUrgent: false,
-            to: environment
-        )
     }
 }

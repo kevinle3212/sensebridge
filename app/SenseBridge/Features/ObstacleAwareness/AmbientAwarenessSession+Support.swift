@@ -1,5 +1,6 @@
 import Foundation
 import SenseBridgeCore
+import UIKit
 
 /// Turning machine facts — an error, a distance in metres, the active
 /// reasoning backend — into the words the user actually hears, plus
@@ -16,7 +17,10 @@ extension AmbientAwarenessSession {
     /// takes effect on the next session start, matching `engine`/`throttle`'s
     /// existing per-session-rebuilt lifetime.
     func configureReasoning(environment: AppEnvironment) {
-        classifier = ObjectClassificationService(maximumLabels: environment.settings.spokenDetail.maximumLabels)
+        classifier = ObjectClassificationService(
+            maximumLabels: environment.settings.spokenDetail.maximumLabels,
+            locale: locale
+        )
         resolver = ReasoningComposerResolver(
             onDeviceComposer: FoundationModelsSceneComposer(
                 phrasing: phrasing, locale: locale, detail: environment.settings.spokenDetail
@@ -53,6 +57,48 @@ extension AmbientAwarenessSession {
             case nil: "Descriptions are composed on-device — no cloud provider is selected yet."
             }
         }
+    }
+
+    /// How hot and how charged the phone is, in the terms that matter to
+    /// someone relying on this session — or `nil` when there is nothing worth
+    /// saying.
+    ///
+    /// Surfaced rather than left to the backoff to handle silently. Hands-free
+    /// awareness holds the screen on and the camera running, and `ThermalBackoff`
+    /// answers heat by slowing the sampling rate — from the outside that is a
+    /// session that has quietly become less responsive, with no way to tell it
+    /// from one that is working. AGENTS.md doctrine 4: a limitation the user
+    /// cannot see is a limitation stated nowhere.
+    func deviceConditionDescription() -> String? {
+        var notes = [String]()
+        switch thermalLevel {
+        case .normal:
+            break
+        case .reduced:
+            notes.append(String(localized: "The phone is warm, so readings are being taken less often."))
+        case .minimal:
+            notes.append(String(localized: "The phone is hot, so readings are much less frequent."))
+        }
+        if let battery = Self.batteryPercentage() {
+            notes.append(String(
+                localized: "Battery \(battery) percent. This mode uses it quickly.",
+                comment: "Battery level shown while hands-free awareness runs."
+            ))
+        }
+        return notes.isEmpty ? nil : notes.joined(separator: " ")
+    }
+
+    /// The battery level as a whole percentage, or `nil` when iOS will not
+    /// report it — the simulator, and any device where monitoring was refused.
+    ///
+    /// `nil` rather than a guess: an invented figure on this screen would be a
+    /// claim about how long the session can run, which is exactly the kind of
+    /// unearned certainty the rest of this app avoids.
+    static func batteryPercentage() -> Int? {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let level = UIDevice.current.batteryLevel
+        guard level >= 0 else { return nil }
+        return Int((level * 100).rounded())
     }
 
     /// Shared `URLSession` config for every network reasoning request —
