@@ -17,22 +17,25 @@ trap 'rm -rf "$SANDBOX"' EXIT
 git -C "$SANDBOX" init -q
 mkdir -p "$SANDBOX/tmp"
 
+# Every helper takes a session id so the concurrency cases below can drive two
+# sessions against one sandbox checkout; single-session cases default to "s1".
 stamp_edit() {
-  jq -nc --arg p "$1" --arg d "$SANDBOX" \
-    '{tool_name:"Edit", tool_input:{file_path:$p}, cwd:$d}' \
+  jq -nc --arg p "$1" --arg d "$SANDBOX" --arg s "${2:-s1}" \
+    '{tool_name:"Edit", tool_input:{file_path:$p}, cwd:$d, session_id:$s}' \
     | bash "$HOOK" stamp-edit 2>/dev/null
 }
 
 # Emits "block" when the Stop hook blocks, "pass" when it stays silent.
 verdict() {
   local out
-  out=$(jq -nc --arg d "$SANDBOX" '{cwd:$d, stop_hook_active:false}' | bash "$HOOK" 2>/dev/null)
+  out=$(jq -nc --arg d "$SANDBOX" --arg s "${1:-s1}" \
+    '{cwd:$d, stop_hook_active:false, session_id:$s}' | bash "$HOOK" 2>/dev/null)
   if [ -z "$out" ]; then printf 'pass'; else printf '%s' "$out" | jq -r '.decision'; fi
 }
 
 expect() {
   local want=$1 label=$2 got
-  got=$(verdict)
+  got=$(verdict "${3:-s1}")
   if [ "$got" != "$want" ]; then
     printf 'FAIL  want=%-5s got=%-5s  %s\n' "$want" "$got" "$label"
     failures=$((failures + 1))
@@ -62,8 +65,27 @@ expect pass "install newer than the edit"
 sleep 1 && stamp_edit "$SANDBOX/app/Packages/Core/Sources/Settings.swift"
 expect block "later edit re-arms the gate"
 
-# 7. stop_hook_active short-circuits, so a blocked stop can never loop.
-loop_out=$(jq -nc --arg d "$SANDBOX" '{cwd:$d, stop_hook_active:true}' | bash "$HOOK" 2>/dev/null)
+# 7. Regression (2026-08-13): a second session sharing the checkout must not
+#    inherit session one's armed gate. One repo-global edit marker used to block
+#    every concurrent session, with nothing the blocked session did to clear it.
+expect pass "another session's edit does not block this one" s2
+
+# 8. That second session is still gated by its own edits.
+stamp_edit "$SANDBOX/app/SenseBridge/Features/Other.swift" s2
+expect block "second session blocked by its own edit" s2
+
+# 9. One install clears every session at once — the install marker stays global
+#    because an install genuinely installs the whole checkout.
+sleep 1 && touch "$SANDBOX/tmp/.last-app-install"
+expect pass "install clears session one" s1
+expect pass "install clears session two" s2
+
+# 10. stop_hook_active short-circuits, so a blocked stop can never loop. Case 9
+#     cleared the gate, so re-arm first — otherwise this passes for the wrong
+#     reason and would keep passing if the short-circuit were deleted.
+sleep 1 && stamp_edit "$SANDBOX/app/SenseBridge/App/Loop.swift"
+expect block "gate re-armed before the loop check"
+loop_out=$(jq -nc --arg d "$SANDBOX" '{cwd:$d, stop_hook_active:true, session_id:"s1"}' | bash "$HOOK" 2>/dev/null)
 if [ -n "$loop_out" ]; then
   echo "FAIL  stop_hook_active should short-circuit but the hook still blocked"
   failures=$((failures + 1))

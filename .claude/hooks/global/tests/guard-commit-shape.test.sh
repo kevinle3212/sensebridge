@@ -83,6 +83,83 @@ expect deny 'git checkout -b feature/sound-alerts'
 expect allow 'git checkout main'
 expect allow 'git switch main'
 
+# --- `-F -` reads stdin, and a heredoc puts that message inline -----------
+# `699d6d6` landed a non-conventional subject through this path. The spelling
+# matters: a short option may be glued to its value, so `-F-` means `-F -`.
+# Requiring a separator let the glued form fall past the stdin branch, past the
+# `" -F "` test, and out through the no-inline-message exit — no check at all.
+expect deny 'git commit -F - <<EOF
+WIP broken thing
+EOF'
+expect allow 'git commit -F - <<EOF
+fix(sound-alerts): stop classifier on background transition
+EOF'
+expect deny 'git commit -F- <<EOF
+WIP broken thing
+EOF'
+expect allow 'git commit -F- <<EOF
+fix(sound-alerts): stop classifier on background transition
+EOF'
+expect deny 'git commit --file=- <<EOF
+WIP broken thing
+EOF'
+expect deny 'git commit -F- <<'"'"'EOF'"'"'
+WIP broken thing
+EOF'
+# A real path is a file this hook cannot read, so it stays the owner's call.
+expect allow 'git commit -F /tmp/msg.txt'
+expect allow 'git commit --file /tmp/msg.txt'
+
+# --- every invocation in a chain is judged, not just the first ------------
+# Reading the first `-m` in the command let each later commit through, so a
+# conventional header up front covered anything after it.
+expect deny 'git commit -m "feat(a): fine" && git commit -m "WIP"'
+expect deny 'git commit -m "feat(a): fine" ; git commit -m "WIP"'
+expect deny 'git commit -m "feat(a): fine" || git commit -m "WIP"'
+expect deny 'git commit -m "feat(a): fine"
+git commit -m "WIP"'
+expect allow 'git commit -m "feat(a): fine" && git commit -m "fix(b): also fine"'
+# Only the commit's own -m counts: another command's -m is not a message.
+expect allow 'mkdir -m 755 /tmp/d && git commit -m "feat(a): fine"'
+expect deny 'mkdir -m 755 /tmp/d && git commit -m "WIP"'
+# A separator inside a quoted message must not split the command.
+expect allow 'git commit -m "fix(x): handle a; b correctly"'
+expect deny 'git commit -m "WIP; more"'
+# Branch creation is judged per segment too.
+expect deny 'git checkout -b feat/ok && git checkout -b bad-name'
+
+# --- the heredoc must be attributed to the commit, not merely found --------
+# Reading "the first heredoc in the command" let an earlier decoy, whose body
+# reads as a conventional header, stand in for the real message entirely.
+expect deny 'cat > /tmp/notes.txt <<'"'"'NOTE'"'"'
+feat(x): decoy that looks conventional
+NOTE
+git commit -F- <<EOF
+WIP broken thing
+EOF'
+expect allow 'cat > /tmp/notes.txt <<'"'"'NOTE'"'"'
+WIP this is only a note, not a commit message
+NOTE
+git commit -F- <<EOF
+feat(read): add page-turn detection
+EOF'
+# A `git commit` written inside another heredoc's body is text, not a command.
+expect allow 'cat > /tmp/notes.txt <<'"'"'NOTE'"'"'
+then run: git commit -F- <<EOF
+WIP broken thing
+EOF
+NOTE'
+# Ambiguous shapes fail closed rather than guessing which body is the message.
+expect deny 'git commit -F- <<EOF
+feat(a): fine
+EOF
+git commit -F- <<EOF2
+WIP broken
+EOF2'
+# An unterminated body cannot be trusted to be the whole message.
+expect deny 'git commit -F- <<EOF
+feat(a): looks fine but never terminates'
+
 if [ "$failures" -eq 0 ]; then
   echo "guard-commit-shape: all cases pass"
 else

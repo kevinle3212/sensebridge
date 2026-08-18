@@ -148,7 +148,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "test -f tmp/handoff.md && awk 'NR<=12{print;next} /^#+ /{h=$0;shown=0;next} /^[[:space:]]*- \\[ \\]/{if(!shown&&h!=\"\"){print \"\";print h;shown=1}print} END{printf \"\\n(%d lines total in tmp/handoff.md — Read it for full detail.)\\n\", NR}' tmp/handoff.md; exit 0",
+            "command": "r=$(git rev-parse --show-toplevel 2>/dev/null); [ -n \"$r\" ] || r=\"$HOME/.claude\"; for f in \"$r/tmp/handoff.md\" \"$r/tmp/handoff-away.md\"; do test -s \"$f\" && awk -v f=\"$f\" 'NR<=12{print;next} /^#+ /{h=$0;shown=0;next} /^[[:space:]]*- \\[ \\]/{if(!shown&&h!=\"\"){print \"\";print h;shown=1}print} END{printf \"\\n(%d lines total in %s — Read it for full detail.)\\n\", NR, f}' \"$f\"; done; exit 0",
             "timeout": 5,
             "statusMessage": "Loading handoff snapshot..."
           }

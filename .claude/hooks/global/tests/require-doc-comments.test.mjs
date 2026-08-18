@@ -82,14 +82,14 @@ expect(true, "undocumented exported TS function", report("f.ts", "export functio
 
 expect(false, "JSDoc above an exported function", report("g.ts", "/**\n * Parses input.\n * @param {string} input Raw text.\n */\nexport function parse(input) {\n  return input;\n}\n"));
 
-expect(false, "test files are exempt per §14", report("SettingsTests.swift", "func testSomething() {}\n"));
+expect(false, "test files are exempt per the Documentation section", report("SettingsTests.swift", "func testSomething() {}\n"));
 
 expect(false, "spec files are exempt", report("h.spec.ts", "export function helper() {}\n"));
 
 expect(false, "non-code files are out of scope", report("README.md", "func classify() {}\n"));
 
-// §7 forbids improving adjacent code, so a declaration the edit did not write
-// must never be reported — only the line this call actually introduced.
+// "Making changes" forbids improving adjacent code, so a declaration the edit
+// did not write must never be reported — only the line this call introduced.
 expect(
   false,
   "pre-existing undocumented declaration left alone",

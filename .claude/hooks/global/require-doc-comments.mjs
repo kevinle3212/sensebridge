@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 // PostToolUse hook (matcher: Edit|Write|MultiEdit): reports declarations that
-// the edit just introduced without a doc comment above them, per CLAUDE.md §14
-// ("every function, method, class, struct, interface, and attribute/property
-// gets a doc comment").
+// the edit just introduced without a doc comment above them, per CLAUDE.md's
+// "Documentation" section ("every function, method, class, struct, interface,
+// and attribute/property gets a doc comment").
 //
 // Advisory, never blocking. A PostToolUse hook fires after the write has
 // already landed, so there is nothing to deny; the value is that the omission
 // is named in the transcript at the moment it happens rather than surviving to
 // review. It reports only declarations whose text appears in *this* edit, so an
-// untouched legacy file is never dredged up — CLAUDE.md §7 forbids improving
-// adjacent code, and a hook that demanded docs on lines the session did not
-// write would be pushing exactly that.
+// untouched legacy file is never dredged up — CLAUDE.md's "Making changes"
+// forbids improving adjacent code, and a hook that demanded docs on lines the
+// session did not write would be pushing exactly that.
 //
 // ponytail: covers `func`/`class`/`struct`/`enum`/`protocol`/`actor`/`init` and
 // the JS/TS equivalents — not stored properties. Telling a Swift stored
 // property from a local `let` inside a function body needs real parsing, and
 // the false positives from guessing would train the reader to ignore the hook.
-// §14's property requirement therefore stays prose; this covers the rest.
+// The property requirement therefore stays prose; this covers the rest.
 // Upgrade path: swap the regex scan for SwiftSyntax / the TS compiler API if
 // property coverage ever proves worth the dependency.
 //
@@ -78,8 +78,8 @@ const DOC_LINE = /^[\t ]*(?:\/\/\/|\/\*\*|\*\/|\*|\/\/!|#|@\w)/;
 
 /**
  * Picks the declaration pattern for a path, or null when the file is out of
- * scope — including test files, which CLAUDE.md §14 exempts when their names
- * are self-documenting.
+ * scope — including test files, which CLAUDE.md's "Documentation" section
+ * exempts when their names are self-documenting.
  *
  * @param {string} path Absolute or repo-relative path that was just written.
  * @returns {RegExp|null} The pattern to scan with, or null to skip the file.
@@ -154,7 +154,7 @@ const shown = undocumented.slice(0, MAX_REPORTED);
 const overflow = undocumented.length - shown.length;
 
 const context = [
-  `CLAUDE.md §14: ${undocumented.length} declaration(s) just written without a doc comment.`,
+  `CLAUDE.md "Documentation": ${undocumented.length} declaration(s) just written without a doc comment.`,
   "Add one in the idiomatic form for the language (/// or DocC in Swift, JSDoc/TSDoc in JS/TS)",
   "stating what it does, key params/returns, and for non-trivial logic why — do not restate the name.",
   "",

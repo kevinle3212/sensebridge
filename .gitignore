@@ -46,6 +46,14 @@ models/sound-classifier/freesound-training-data/*
 # with `gitnexus analyze`. See docs/TOOLING.md.
 .gitnexus/
 
+# CodeGraph index — same category as .gitnexus/ above: local-only, ~99 MB,
+# regenerate with `codegraph index`. CodeGraph writes its own
+# .codegraph/.gitignore, but that file ignores everything *except itself*, so
+# without this line the directory still surfaces in `git status` and a
+# `git add -A` would commit it. The tracked config is codegraph.json at the
+# repo root, not this directory. See docs/archive/TOOLING-DECISIONS.md.
+.codegraph/
+
 # Claude Code local state
 .claude/worktrees/
 .claude/settings.local.json

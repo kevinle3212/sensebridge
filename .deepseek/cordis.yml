@@ -1,0 +1,41 @@
+# SenseBridge overlay for DeepSeek Harness (`dsh`).
+#
+# This is a PATCH OVERLAY, not a standalone profile. Apply it on top of a
+# built-in profile so the harness keeps its own agent-loop and provider config
+# and this file only adds repository behaviour:
+#
+#   dsh --profile tui --patch ./.deepseek/cordis.yml
+#
+# Deliberately minimal. The agent-loop, provider, and MCP blocks are NOT
+# authored here: their schema must be read from the installed version with
+# `dsh --dump-default-config` rather than guessed, because `@deepseek-ai/dsh`
+# is still a release candidate and its config surface is moving (rc.5 -> rc.7
+# during a single session). Guessing it would produce a file that looks
+# authoritative and silently does nothing.
+#
+# Never add API keys, tokens, or machine-local credentials to this file.
+# `DEEPSEEK_API_KEY` belongs in the environment — see docs/ENVIRONMENT.md.
+
+# Reuse the guards Claude Code already runs, instead of re-implementing them
+# per harness. This is the same doctrine `.codex/hooks/dispatch.sh` follows,
+# but the bridge is first-party here, so no hand-written shim is needed:
+# `@deepseek-ai/dsh-hooks-claude-code` reads a Claude settings file directly
+# and translates its outcomes into the harness's decision system.
+#
+# COVERAGE IS PARTIAL, and this matters. `.claude/settings.json` declares
+# SessionStart, PreToolUse, PostToolUse, Stop, and PostToolBatch. The bridge
+# documents PreToolUse, PostToolUse, UserPromptSubmit, and Stop. Treat
+# SessionStart and PostToolBatch as UNVERIFIED under `dsh` until a probe run
+# proves otherwise; do not assume a guard fired just because it is listed in
+# the Claude config.
+- dsh-hooks-claude-code:
+    # A settings file with a `hooks` key is accepted, so point at the project
+    # config rather than maintaining a second copy that would drift.
+    configPath: ./.claude/settings.json
+    # Substitutes ${CLAUDE_PROJECT_DIR} in command strings and exports it to
+    # every hook. Repository hooks resolve their own paths through it, so it is
+    # required, not cosmetic.
+    projectDir: .
+    # Match Claude Code's own default so a hook that sets no timeout behaves
+    # identically across harnesses.
+    defaultTimeoutMs: 600000

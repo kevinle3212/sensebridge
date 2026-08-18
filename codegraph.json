@@ -1,0 +1,8 @@
+{
+  "exclude": [
+    ".claude/skills/impeccable/**",
+    ".cursor/skills/impeccable/**",
+    ".gemini/skills/impeccable/**",
+    ".github/skills/impeccable/**"
+  ]
+}

@@ -7,7 +7,8 @@ argument-hint: "[resume | (nothing = reconcile the plan and record the session)]
 
 One file owns everything that has to survive a `/clear`, a crash, or a usage
 cutoff: **`tmp/handoff.md`, and it holds the plan itself.** Paths are relative to
-the current project root.
+the project root, or to `~/.claude/` on a global run — the global `CLAUDE.md`'s
+"Plans and durable state" owns which.
 
 | Artifact | What it is | Written | Scope |
 | --- | --- | --- | --- |

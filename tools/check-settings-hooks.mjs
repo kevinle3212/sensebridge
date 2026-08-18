@@ -244,6 +244,15 @@ const GLOBAL_TEMPLATE = ".claude/settings.global.json";
 const GLOBAL_HOOKS = ".claude/hooks/global";
 
 /**
+ * Extensions that make a `$HOME`-relative path a script *registration* rather
+ * than a data path. Only a registration promises that copying `GLOBAL_HOOKS`
+ * into `~/.claude/hooks/` makes it work, so only a registration is held to that
+ * promise — `~/.claude/tmp/handoff.md` is a location the loader reads, not a
+ * hook it spawns.
+ */
+const SCRIPT_SUFFIX = /\.(?:sh|bash|zsh|mjs|cjs|js|py)$/;
+
+/**
  * Substrings that must never appear anywhere in the shareable template, each
  * with the reason reported when one does.
  *
@@ -310,6 +319,12 @@ if (templateRaw !== "") {
     const target = reference[1];
     const expected = /^\.claude\/hooks\/(.+)$/.exec(target);
     if (expected === null) {
+      // A `$HOME` path that names no executable is data, not a registration.
+      // The handoff loader has to name `~/.claude` so a session with no project
+      // still finds its plan file, and that promises nothing about a script
+      // this repository ships. Anything under `~/.claude/hooks/` is still
+      // checked below whether or not it carries an extension.
+      if (!SCRIPT_SUFFIX.test(target)) continue;
       problems.push(
         `${GLOBAL_TEMPLATE} references "$HOME/${target}", which is outside ~/.claude/hooks/. ` +
           `Only scripts shipped in ${GLOBAL_HOOKS}/ may be registered by home-relative path.`,
