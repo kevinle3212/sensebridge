@@ -29,6 +29,16 @@ extension AmbientAwarenessSession {
     func thermalPacedInterval(environment: AppEnvironment) async -> Duration {
         let level = ThermalBackoff.level(for: ProcessInfo.processInfo.thermalState)
         if let notice = ThermalBackoff.notice(changingFrom: thermalLevel, to: level, locale: locale) {
+            // Logged at the transition, not per tick: this loop runs on a fixed
+            // cadence for as long as someone walks, and a line per sample would
+            // be a battery cost for a question nobody asks. The levels describe
+            // the device's own thermal state and carry nothing the camera saw,
+            // so `.public` is chosen deliberately rather than defaulted into.
+            let previous = String(describing: thermalLevel)
+            let current = String(describing: level)
+            AppLog.sensing.notice(
+                "thermal backoff \(previous, privacy: .public) -> \(current, privacy: .public)"
+            )
             thermalLevel = level
             await announce(notice, to: environment)
         }

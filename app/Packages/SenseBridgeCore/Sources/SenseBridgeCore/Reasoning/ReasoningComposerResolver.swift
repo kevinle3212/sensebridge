@@ -247,6 +247,18 @@ public final class ReasoningComposerResolver {
         guard consecutiveFailures >= 2, !breakerTripped else { return nil }
         breakerTripped = true
         probeTickCounter = 0
+        // The failure count is a property of this app's own retry logic, not of
+        // anything the camera saw, so `.public` is a deliberate choice rather
+        // than the default landing on it — see `AppLog`'s privacy rule.
+        //
+        // Bound to a local first because a `Logger` message is an autoclosure:
+        // interpolating the property directly needs an explicit `self.`, which
+        // SwiftFormat's `redundantSelf` then strips back out, and the file
+        // stops compiling. The local ends that argument.
+        let failures = consecutiveFailures
+        AppLog.reasoning.notice(
+            "breaker tripped after \(failures, privacy: .public) network failures; using on-device"
+        )
         return LocalizedCatalog.string(
             "Cloud descriptions aren't responding, so SenseBridge is continuing with on-device descriptions.",
             locale: locale
@@ -260,6 +272,7 @@ public final class ReasoningComposerResolver {
         breakerTripped = false
         consecutiveFailures = 0
         probeTickCounter = 0
+        AppLog.reasoning.notice("reasoning breaker recovered; network composer is serving requests again")
         return LocalizedCatalog.string(
             "Cloud descriptions are working again.", locale: locale
         )

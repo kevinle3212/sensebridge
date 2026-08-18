@@ -408,6 +408,63 @@ as primary and the other as fallback: they were trained independently, so
 neither is inherently more trustworthy. `Phrasing` then hedges the result
 the same way every other feature's output is hedged.
 
+## Logging
+
+Added 2026-08-18. Before that the app had no logging at all, which made the
+only report a user can actually give — "it went quiet" — undiagnosable: that
+sentence fits a crashed session, a thermal throttle, a denied permission, and a
+genuinely silent room equally well. `AppLog`
+(`Sources/SenseBridgeCore/Diagnostics/AppLog.swift`) exists to separate those
+four in a sysdiagnose, and for nothing else.
+
+Four `Logger` categories under the app's bundle identifier — `sensing`,
+`perception`, `reasoning`, `output` — one per pipeline stage. They are declared
+in `AppLog` and nowhere else; a stray `Logger(subsystem:category:)` elsewhere
+would sit outside the rule below and file its output under a category nothing
+knows to read, so `AppLogPrivacyTests` fails the build on one.
+
+**What is logged:** events and state transitions only — a session starting or
+stopping, a permission granted or denied, a thermal level changing, the
+reasoning circuit breaker tripping or recovering. Never a per-frame or
+per-observation record; that would be both a privacy surface and a battery cost
+on a loop that runs for as long as someone walks.
+
+**What is never logged:** recognized text, image content, or audio content. Not
+at any privacy level — not `.private`, not redacted, not hashed. It does not
+reach a log statement. This is the rule
+[`docs/PRIVACY.md`](PRIVACY.md#what-happens-to-user-content) points at, and the
+one `CrashReporting.scrub` depends on when it declines to scrub an exception
+message.
+
+### The privacy default is backwards from the obvious one
+
+The intuitive worry is that logged **strings** leak. They are the safe case: a
+`Logger` string interpolation defaults to `.private` and renders as `<private>`
+in a sysdiagnose from a release build.
+
+The real exposure is the reverse. **Numerics, booleans, and raw enum values
+default to `.public`**, on the assumption that a number identifies nobody. Here
+that assumption is wrong — an OCR confidence score, a detected-object class
+index, a proximity band, and a recognized-text character count are all numeric
+and all derived from what the camera saw.
+
+So the enforced rule is: **every interpolated value carries an explicit
+`privacy:` label**, including values that look harmless, and anything derived
+from perception output is `.private` or is bucketed before it is logged.
+Requiring the label even where `.public` is correct is deliberate — an explicit
+`.public` is a decision a reviewer can see and argue with, while a missing one
+is invisible and means the same thing.
+
+`AppLogPrivacyTests` enforces this structurally, by scanning the package
+sources for log call sites and failing on any interpolation without a
+`privacy:` label. **What that test proves, and what it does not:** `OSLog`
+output cannot be read back in-process, so it cannot assert that a value was
+redacted at runtime. It asserts a property of the source text instead. That is
+the invariant that actually fails in practice, it fails closed, and it errs
+toward false positives a human immediately understands rather than false
+negatives that ship. It was verified against a deliberately introduced
+violation, not merely observed passing.
+
 ## Mobile project shape
 
 The reasoning core lives in a separate SwiftPM package, not inside the app
