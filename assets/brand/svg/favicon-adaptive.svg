@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SenseBridge">
+  <title>SenseBridge</title>
+  <style>
+    .bg { fill: #080a10; }
+    .ring, .core { stroke: #5eb1ff; fill: #5eb1ff; }
+    .chord { stroke: #ffb37a; }
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #f7f8fb; }
+      .ring, .core { stroke: #145fc4; fill: #145fc4; }
+      .chord { stroke: #a8480d; }
+    }
+  </style>
+  <rect class="bg" width="64" height="64" rx="14"/>
+  <path class="ring" d="M 36.274 50.513 A 19 19 0 1 1 50.513 36.274" fill="none" stroke-width="6" stroke-linecap="round"/>
+  <path class="chord" d="M 39.329 47.458 L 47.458 39.329" fill="none" stroke-width="6" stroke-linecap="round"/>
+  <circle class="core" cx="32" cy="32" r="7.5" stroke="none"/>
+</svg>

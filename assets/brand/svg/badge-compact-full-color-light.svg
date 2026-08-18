@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SenseBridge mark">
+  <title>SenseBridge mark</title>
+  <rect width="64" height="64" rx="14" fill="#f7f8fb"/>
+  <path d="M 36.274 50.513 A 19 19 0 1 1 50.513 36.274" fill="none" stroke="#145fc4" stroke-width="6" stroke-linecap="round"/>
+  <path d="M 39.329 47.458 L 47.458 39.329" fill="none" stroke="#a8480d" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="7.5" fill="#145fc4"/>
+</svg>
