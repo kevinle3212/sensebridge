@@ -54,6 +54,7 @@
     "check:scene-drag": "node scripts/check-scene-drag.js",
     "check:bfcache": "node scripts/check-bfcache.js",
     "test:a11y": "node scripts/a11y.js",
+    "chrome:install": "node scripts/install-chrome.mjs",
     "audit:react": "react-doctor --no-telemetry",
     "doctor": "react-doctor --no-telemetry",
     "railway:status": "node scripts/with-env.js npx --yes @railway/cli status",

@@ -145,6 +145,7 @@
   "read_aloud_natural_idle_label": "Escuchar (voz natural)",
   "read_aloud_stop_label": "Detener lectura",
   "read_aloud_reading_page": "Leyendo la página…",
+  "read_aloud_now_section": "Ahora: {section}",
   "read_aloud_finished_reading": "Lectura finalizada.",
   "read_aloud_reading_stopped": "Lectura detenida.",
   "read_aloud_stopped": "Detenido.",

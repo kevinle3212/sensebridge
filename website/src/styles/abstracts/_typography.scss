@@ -16,7 +16,9 @@ $font-body:
   sans-serif;
 $font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", "Menlo", monospace;
 
-// Hero h1 only (DESIGN.md "The One Display Face Rule").
+// Hero h1 only — a deliberate pairing with type-h2's Fraunces, not a
+// rule-derived exception (DESIGN.md §0 voided the earlier display-face
+// constraint on 2026-07-18).
 @mixin type-display {
   font-family: $font-display;
   font-optical-sizing: auto;

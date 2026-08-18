@@ -65,7 +65,16 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex, follow" />}
+    {/*
+      SVG first for browsers that take it — it is the adaptive master and stays
+      sharp at any size. `favicon.ico` is the fallback for the ones that do not,
+      and is requested from the site root whether it is declared or not, so
+      declaring it costs nothing and shipping it stops a 404 in every log.
+    */}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="canonical" href={canonicalURL} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="SenseBridge" />

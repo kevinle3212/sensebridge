@@ -145,6 +145,7 @@
   "read_aloud_natural_idle_label": "Nghe (giọng tự nhiên)",
   "read_aloud_stop_label": "Dừng đọc",
   "read_aloud_reading_page": "Đang đọc trang…",
+  "read_aloud_now_section": "Bây giờ: {section}",
   "read_aloud_finished_reading": "Đã đọc xong.",
   "read_aloud_reading_stopped": "Đã dừng đọc.",
   "read_aloud_stopped": "Đã dừng.",

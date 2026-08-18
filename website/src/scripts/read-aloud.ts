@@ -19,7 +19,18 @@
 import { debugLog } from "./debug";
 import { m } from "../paraglide/messages.js";
 
+/**
+ * Cancels whichever reader is running. The optional message is announced in
+ * the live region; omitting it stops silently, which is what an automatic stop
+ * (tab hidden, page unload) wants.
+ */
 type StopFn = (message?: string) => void;
+
+/** One chunk of the page: its heading, if it has one, and the text to speak. */
+interface Segment {
+  heading: string | null;
+  text: string;
+}
 
 export {};
 
@@ -56,6 +67,53 @@ export {};
   setupDeviceVoice(main);
   setupNaturalVoice();
 
+  /** Collapses whitespace the way a screen reader would hear it. */
+  function normalize(text: string | null): string {
+    return (text ?? "").replace(/\s+/g, " ").trim();
+  }
+
+  /**
+   * Splits `main` into one segment per top-level `<section>`, keeping anything
+   * before the first section as an unheaded preamble.
+   *
+   * Walks `children` rather than `querySelectorAll("section")` for two
+   * reasons: it preserves document order between sections and the loose
+   * content around them, and a nested section would otherwise be read twice —
+   * once inside its parent's `textContent` and once on its own.
+   *
+   * Returns a single whole-page segment when the page has no sections at all,
+   * so this can never read *less* of the page than the old monolithic
+   * utterance did.
+   */
+  function segmentsOf(mainElement: HTMLElement): Segment[] {
+    const segments: Segment[] = [];
+    let preamble = "";
+
+    for (const child of Array.from(mainElement.children)) {
+      if (child.tagName === "SECTION") {
+        if (preamble) {
+          segments.push({ heading: null, text: preamble });
+          preamble = "";
+        }
+        const heading = child.querySelector("h2, h1");
+        segments.push({
+          heading: heading ? normalize(heading.textContent) || null : null,
+          text: normalize(child.textContent),
+        });
+      } else {
+        preamble = normalize(`${preamble} ${normalize(child.textContent)}`);
+      }
+    }
+    if (preamble) {
+      segments.push({ heading: null, text: preamble });
+    }
+
+    const withText = segments.filter((segment) => segment.text);
+    return withText.length > 0
+      ? withText
+      : [{ heading: null, text: normalize(mainElement.textContent) }];
+  }
+
   function setupDeviceVoice(mainElement: HTMLElement): void {
     const IDLE_LABEL = m.read_aloud_device_idle_label();
     const STOP_LABEL = m.read_aloud_stop_label();
@@ -84,32 +142,69 @@ export {};
       }
     };
 
+    // One utterance per section rather than one for the whole page. A single
+    // monolithic utterance gives a listener no sense of where they are in the
+    // document and nothing to orient by; announcing each section's own heading
+    // as it starts turns the same audio into something navigable. It also
+    // works around a long-standing engine limit — several browsers truncate or
+    // stall on very long utterances — without that being the reason for it.
+    //
+    // Chained through `onend` rather than queued all at once: the queue would
+    // survive a `cancel()` race on some engines, and chaining means the stage
+    // announcement always lands with the audio it describes.
     const start = (): void => {
-      const text = mainElement.textContent.replace(/\s+/g, " ").trim();
-      if (!text) {
+      const segments = segmentsOf(mainElement);
+      if (segments.length === 0) {
         return;
       }
 
       setActive(stop);
+      const language = document.documentElement.lang || "en-US";
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = document.documentElement.lang || "en-US";
-      utterance.onend = () => {
-        setIdle();
-        clearActive(stop);
-        announce(m.read_aloud_finished_reading());
-      };
-      utterance.onerror = () => {
-        setIdle();
-        clearActive(stop);
-        announce(m.read_aloud_reading_stopped());
+      const speakFrom = (index: number): void => {
+        // `.at()`, not `segments[index]`: indexing an array with a variable is
+        // an object-injection sink to eslint-plugin-security, which this repo
+        // runs at `error` for every rule.
+        const segment = segments.at(index);
+        if (!segment) {
+          setIdle();
+          clearActive(stop);
+          announce(m.read_aloud_finished_reading());
+          return;
+        }
+
+        // Polite, not assertive: the live region is `aria-live="polite"`, so
+        // this queues behind whatever the user is already hearing instead of
+        // interrupting the previous section's closing words.
+        announce(
+          segment.heading
+            ? m.read_aloud_now_section({ section: segment.heading })
+            : m.read_aloud_reading_page(),
+        );
+
+        const utterance = new SpeechSynthesisUtterance(segment.text);
+        utterance.lang = language;
+        utterance.onend = () => {
+          // A `cancel()` from `stop()` also fires `onend` on some engines.
+          // Without this guard the chain would march on through the remaining
+          // sections after the user pressed stop.
+          if (activeStop !== stop) {
+            return;
+          }
+          speakFrom(index + 1);
+        };
+        utterance.onerror = () => {
+          setIdle();
+          clearActive(stop);
+          announce(m.read_aloud_reading_stopped());
+        };
+        window.speechSynthesis.speak(utterance);
       };
 
       window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
       label.textContent = STOP_LABEL;
       toggleButton.setAttribute("aria-pressed", "true");
-      announce(m.read_aloud_reading_page());
+      speakFrom(0);
     };
 
     setIdle();
@@ -178,9 +273,34 @@ export {};
       announce(m.read_aloud_reading_page_natural());
     };
 
+    // Progress broadcast, for anything that wants to follow the narration.
+    //
+    // A `CustomEvent` on `document` rather than a direct call into the motion
+    // layer: this script is progressive enhancement that must keep working with
+    // the motion layer absent (reduced motion, a JS error there, a page that
+    // has no spine), and the motion layer must not have to know an audio
+    // element exists. Either side can be missing and the other still runs.
+    const broadcast = (playing: boolean): void => {
+      const duration = audio.duration;
+      const progress = Number.isFinite(duration) && duration > 0 ? audio.currentTime / duration : 0;
+      document.dispatchEvent(
+        new CustomEvent("sensebridge:narration", { detail: { progress, playing } }),
+      );
+    };
+    audio.addEventListener("timeupdate", () => {
+      broadcast(!audio.paused);
+    });
+    audio.addEventListener("play", () => {
+      broadcast(true);
+    });
+    audio.addEventListener("pause", () => {
+      broadcast(false);
+    });
+
     audio.addEventListener("ended", () => {
       setIdle();
       clearActive(stop);
+      broadcast(false);
       announce(m.read_aloud_finished_reading());
     });
 

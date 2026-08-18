@@ -47,6 +47,41 @@
   color-scheme: light;
 }
 
+// Two OS-level accessibility preferences the site had never handled. Both are
+// answered by overriding the token itself rather than by patching consumers:
+// every call site reads `var(--color-*)`, so one rule here covers the surfaces
+// that exist today and any added later, which a per-component override would
+// not. Neither preference is a WCAG 2.2 AA requirement; they are here because
+// this site's audience is disproportionately the people who set them. Someone
+// who turned transparency down did so because layered surfaces are hard for
+// them to read, and shipping a translucent panel anyway ignores an explicit
+// request.
+
+// Translucency off: `surface-glass` is the only translucent token, at 60%
+// alpha. Collapse it onto the opaque surface it sits over — same hue, no
+// show-through, no separate palette to keep in sync.
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme="light"] {
+    --color-surface-glass: var(--color-surface);
+  }
+}
+
+// Higher contrast requested: strengthen the two tokens that carry the least of
+// it. Hairlines become the body text colour so section boundaries and control
+// borders stop being a suggestion, and secondary text is promoted to primary —
+// the muted tier is exactly what someone setting this preference is telling us
+// they cannot read. Accent and background stay put: both already clear AA by a
+// wide margin (see the contrast table in _tokens.scss), and darkening the
+// background further would only reduce the accent's own ratio against it.
+@media (prefers-contrast: more) {
+  :root,
+  [data-theme="light"] {
+    --color-hairline: var(--color-text-primary);
+    --color-text-secondary: var(--color-text-primary);
+  }
+}
+
 // Self-hosted variable fonts: Fraunces (display/headings), Geist (body/UI),
 // Geist Mono (the label mixin, for later batches). `font-display: swap` means
 // text renders immediately in a fallback and swaps once the font loads —
