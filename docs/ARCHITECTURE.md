@@ -34,8 +34,8 @@ SenseBridge App (native Swift / SwiftUI)
   Sensing Layer (SensingSource)         Output Layer (RenderTarget)
   - Camera                              - Speech (AVSpeech)
   - Depth (LiDAR)                       - VoiceOver announce
-  - Microphone                          - Visual captions (later)
-                                         - Haptics (later)
+  - Microphone                          - Visual captions
+                                         - Haptics
          |                                        ^
          v                                        |
   Perception Layer
@@ -60,8 +60,16 @@ SenseBridge App (native Swift / SwiftUI)
 ```
 
 **Data flow — "read this document":**
-`Camera → Perception (Vision OCR + structure) → Reasoning (reading-order) →
-Output (Speech RenderTarget) → User`. No network, no server.
+`Camera → Perception (document segmentation + perspective correction → Vision
+OCR + structure) → Reasoning (reading-order → sentence segmentation → playback
+cursor) → Output (Speech RenderTarget) → User`. No network, no server.
+
+The Read screen runs this two ways. **Capture** takes one photo per tap and can
+build a multi-page document; **live** polls `CameraSource`'s video-data output,
+recognizes each frame, and reads a page aloud once its recognized text stops
+changing. Both end in the same `ReadingPlayback` cursor, so the transport
+controls work identically on either. See "Reading — playback, live, and
+history" below.
 
 **Data flow — "describe this scene":**
 `Camera → Perception (Vision detect + OCR) → structured perception record →
@@ -101,11 +109,19 @@ around something the app never names is a claim it cannot back (see
 - **Output Layer** — delivers via `RenderTarget`, which carries an
   `OutputMessage` (hedged prose plus an `OutputSignal`) so a haptic-only
   channel has something to react to when there is no prose to speak. Speech +
-  VoiceOver and haptics are built; captions are not, so the deaf output
-  profile is not offered yet — `MultiRenderTarget.unsupportedChannels`
-  reports that gap rather than rendering a silent no-op. Watch and glasses
-  later. `RenderTarget` is the extensibility stub that absorbs future-sense
-  ideas without building them now — write the stub, note the idea, move on.
+  VoiceOver, visual captions, and haptics are built. `CaptionRenderTarget`
+  keeps the current already-hedged text in observable app state, and
+  `CaptionOverlay` renders it as a high-contrast, Dynamic-Type-aware safe-area
+  inset whenever the active profile asks for the `.caption` channel — the same
+  condition `MultiRenderTarget` delivers on, so the two can't drift apart. Past
+  a Dynamic-Type-scaled height cap the caption scrolls rather than truncating,
+  since on a caption-only profile a dropped tail is a dropped result. Every
+  camera-capture screen emits an empty `.captureTaken` message before it
+  shoots, which clears the previous caption, so a result describing an old
+  frame never remains visible as if it described the new one. Watch and glasses
+  later. `RenderTarget` is the extensibility
+  stub that absorbs future-sense ideas without building them now — write the
+  stub, note the idea, move on.
   **The signal is not a decoration on the prose — on a haptic-only channel it
   is the entire message**, because `HapticRenderTarget` renders
   `OutputMessage.signal` and discards `text`. Pick the signal from the branch
@@ -175,6 +191,74 @@ at its worst) groups its output by certainty bucket rather than repeating one
 full hedged sentence per object, so the no-Apple-Intelligence path reads as
 prose rather than a stutter of identical templates.
 
+### Object and sound names in Spanish and Vietnamese
+
+Vision and Sound Analysis return English identifiers. `SpokenVocabulary` holds
+hand-written article-first phrases for the identifiers a real walk produces —
+roughly 75, including the complete `BuiltInSoundClassifier.targetClassNames`
+set — and `SpokenPhrase.subject(for:locale:)` resolves the most specific locale
+first, falling back to the **English phrase** when there is no reviewed entry.
+
+Two decisions are load-bearing. **Whole phrases, not article plus noun:**
+Spanish agrees the article with gender and Vietnamese picks a classifier by the
+kind of thing being counted (`cái`, `con`, `chiếc`, `quyển`), neither of which
+is derivable from an English identifier, so composing one at runtime would be
+the guess the table exists to avoid. **A partial table, not a translated
+vocabulary:** machine-translating ~1,600 identifiers would name the long tail
+confidently and wrongly, and [SAFETY-FRAMING.md](SAFETY-FRAMING.md) ranks
+mis-naming a physical object above a crash. Falling back to English degrades the
+*language* and never the accuracy, which is the safe direction to fail in.
+
+`locale` is a property of the classifier, not a global: it affects wording only,
+never which identifiers are considered or what confidence they carry, so no
+locale can make the app report something another locale would not.
+
+### Reading — playback, live, and history
+
+`ReadingSession` (App layer) owns the Read screen: capture, the playback
+cursor, the live loop, and the history store. It dies with the screen, because
+everything it holds — the camera, the cursor, and any torch it switched on —
+has to be released when the user leaves, and a blind user has no way to notice
+any of the three still running.
+
+**Playback is a cursor, not a queue.** `TextSegmenter` splits the whole
+document into sentence-level segments up front, and `ReadingPlayback` walks
+them one at a time, awaiting each utterance through
+`SpeechRenderTarget.speak(_:)` before starting the next. That is what makes
+"back", "next", and "pause" land *between* sentences rather than cutting one
+off mid-word. A timer-driven approximation would drift out of step with the
+synthesizer on the first long sentence. `ReadingPlayback` itself is pure —
+clamping, blank-segment dropping, and the "past the end" state are all
+verifiable without a camera or a synthesizer.
+
+**Aiming guidance is about recognition, never about the page.**
+`ReadingFraming` reduces the OCR bounding boxes to one instruction: nothing
+recognized, text running past named edges, text too small, or well framed. The
+copy says "no text is being recognized", never "the page is blank" — an
+absence inferred from one frame is not an absence the app observed. Well-framed
+returns *no* string at all: live reading evaluates several frames a second, and
+a channel that says "looks good" every time it has nothing to report is a
+channel the listener turns off. Multiple edges collapse to one instruction,
+because a listener follows one instruction at a time.
+
+**The torch is decided from the frame, not from failure.** `FrameLuminance`
+measures the mean relative luminance of the live buffer and reports `dim`,
+`adequate`, or `unmeasured`. Three cases rather than an optional boolean:
+treating an unreadable pixel format as darkness would leave the torch on
+permanently on any device whose capture format changes. Three consecutive dark
+frames are required before it switches on, so a hand passing over the lens does
+not produce a strobe — and switching it on is *announced*, because a torch is a
+change to the world around the user, including for anyone facing them.
+
+**Reading history is opt-in, capped, protected, and unbacked-up.**
+`ReadingHistoryStore` is a separate file rather than anything in `Settings`,
+whose own doc comment forbids it holding user content — and recognized text is
+the most sensitive content this app produces. The file carries
+`.completeFileProtection` (unreadable while the device is locked, including by
+this app), is excluded from backup, holds at most 25 documents, and defaults to
+off. Turning history off deletes what is already stored rather than hiding it.
+See [PRIVACY.md](PRIVACY.md).
+
 ### Hands-free awareness — the one continuous pipeline
 
 `AmbientAwarenessSession` (App layer) is the only loop in the app; every other
@@ -189,6 +273,79 @@ listening — while letting a real `AwarenessTransition` through immediately.
 This is also where `OutputSignal.awarenessClear` finally has an honest emitter.
 It is truthful only on an alerting → not-alerting *transition*, which is a
 change the app observed, rather than an absence inferred from one sample.
+
+**Direction is a detail on a sentence, never a second decision.** The distance
+is still measured over `regionOfInterest` exactly as it was before zones
+existed, so the number the alert threshold acts on is untouched. Zones are cut
+from a **wider** strip — `AwarenessZoneGeometry.zoneRegion(measuring:)` — for a
+reason worth stating plainly: the region of interest keeps only the middle half
+of the across-axis, so thirds of *it* spanned roughly 8° of the sensor's ~48°
+across-FOV. A chest strap re-tightened each morning yaws by more than that, so
+"on your left" could have meant a door frame genuinely straight ahead. Cutting
+zones from the full width makes each about 16°, with the sides beginning 8°
+off-centre — inside what the geometry earns.
+
+Naming a side then takes three things, all in
+`AwarenessDepthReading.namedZone`:
+
+1. One zone nearer than every other *measured* zone by at least 0.4 m
+   (`AwarenessZoneReading.significantZone`). A single resolved zone never
+   qualifies — that would be inferred from the other two being unreadable — and
+   a wall across the frame qualifies none either.
+2. **A measured centre.** A listener told "on your left" reasonably concludes
+   the way in front is comparatively free, and a glass door straight ahead is
+   exactly what returns no confident depth.
+3. **Agreement with the spoken distance**, within 0.5 m. Because the zone strip
+   now reaches into periphery the distance never looked at, the nearest zone is
+   not automatically what triggered the alert; a bollard off to one side must
+   not lend its direction to a sentence about a wall.
+
+Which third is the user's left follows from frames carrying
+`CGImagePropertyOrientation.right`. That, and the residual mount yaw, are the
+assumptions arithmetic cannot self-check — both are on the device-validation
+list in [TESTING.md](TESTING.md).
+
+The on-screen per-zone summary is finer-grained than any of this: it publishes
+what each zone last measured, including differences too small for the spoken
+path to name a side from. It carries a legend saying so, because three numbers
+laid out left-to-right otherwise read as the directional judgment the app is
+deliberately refusing to make out loud.
+
+**No reading is ever composed from a frame older than the run it belongs to.**
+`ARSession` is kept for the lifetime of `AmbientSensingSource` so a stop/start
+pair resumes tracking rather than rebuilding it — and `currentFrame` survives
+that pair too, still vending the previous run's last frame until the new run
+produces one. `latestFrame(orientation:)` therefore refuses any frame whose
+`timestamp` predates the current `run(_:options:)`, and it does so there rather
+than in each caller, because both callers are exposed: the one-shot check reads
+immediately after starting, and hands-free awareness restarts whenever the app
+returns to the foreground. A stale frame is the hardest kind of wrong reading to
+notice, since nothing about the sentence looks stale.
+
+**"Check once" reports its measurement, even when nothing is close.** A single
+check that measures something past the user's alert distance now says how far
+the nearest measurable thing was (`Phrasing.nearestMeasurement(atDistance:)`),
+where it used to fall back to "Nothing recognizable was found." That sentence
+was wrong on both halves — recognition never runs on this path, and depth
+sensing had just succeeded — and it taught a listener that the app says
+"nothing" when it means "nothing close", which is the habit that makes a real
+alert ignorable.
+
+**Proximity drives cadence on the channel that carries no prose.**
+`ProximityBand` buckets a distance into four bands and gives each a repeat
+interval; `AmbientAwarenessSession` pulses the existing `.awarenessAlert` cue at
+that rate while an alert is active. This adds no new haptic pattern to learn —
+it varies the rate of one existing cue — and it must not grow into a
+vocabulary, which would need co-design with deaf-blind collaborators. The
+furthest band deliberately does not repeat: indoors there is always a wall three
+metres away, and a cue that never stops is a cue that stops being noticed.
+Crossing into a nearer band re-speaks the distance once per band, because a
+listener walking toward a wall who hears one sentence and then silence cannot
+tell that from the session having died.
+
+**Every session ends with a summary.** Alerts raised and minutes run — facts
+about this app, not about the world. "You passed four obstacles" would be a
+claim built from readings that were never verified.
 
 **The floor is rejected by measurement, not by rectangle.** A phone on a chest
 strap tilts down by whatever angle the strap happens to hold that morning, so
@@ -210,7 +367,24 @@ with the display on, and holds `isIdleTimerDisabled` while running. When the app
 is backgrounded anyway the session stops and *says so* — the target carries the
 `audio` background mode for that one announcement and nothing else — because
 silence on this channel is indistinguishable from "nothing to report" to someone
-who cannot see the screen.
+who cannot see the screen. It then **restarts itself** when the app next becomes
+active, announcing that too. `AmbientAwarenessSession+Lifecycle.swift` owns both
+edges. The resume is armed only by the backgrounding path and disarmed by any
+other `stop()`, so a session the user ended by hand never comes back on its own;
+`didBecomeActive` rather than `willEnterForeground`, because ARKit will not start
+a session for an app that is not yet active.
+
+**Thermal backoff.** This loop holds the camera, a LiDAR session, the neural
+engine, and a full-brightness screen for as long as someone is willing to walk,
+and iOS will throttle all four on a warm device. `ThermalBackoff` (Core) maps
+`ProcessInfo.thermalState` to an interval multiplier — 1× while nominal or fair,
+2× at `.serious`, 4× at `.critical` — applied to both cadences, so the expensive
+half backs off proportionally rather than the cheap half backing off alone. A
+multiplier rather than fixed intervals, so it composes with the user's own
+narration cadence instead of overriding it. Every level change is spoken once,
+recovery included; being throttled into silence unannounced is the failure mode
+this exists to avoid. It never stops the session — someone mid-walk is worse off
+with silence than with a slower cadence they were told about.
 
 Foundation Models requires Apple Intelligence (iPhone 15 Pro+); implement
 availability checks and a graceful fallback (label lists instead of composed
@@ -280,7 +454,7 @@ app/
                      HapticRenderTarget (Core Haptics, UIFeedbackGenerator
                      fallback) + HapticPattern (pure, engine-free),
                      MultiRenderTarget (fan-out per OutputProfile).
-                     CaptionRenderTarget is not built yet
+                     App layer: CaptionRenderTarget + CaptionOverlay
       Storage/       Settings + SettingsStore protocol +
                      UserDefaultsSettingsStore. CloudSyncService (optional
                      CloudKit sync) and EnrollmentStore (encrypted,
@@ -290,8 +464,10 @@ app/
   SenseBridge/                    the app target
     App/            SenseBridgeApp.swift, AppEnvironment.swift (DI
                      container), CameraController.swift (@Observable bridge
-                     over the one shared CameraSource), HomeView.swift,
-                     SettingsView.swift
+                     over the one shared CameraSource), CaptionRenderTarget +
+                     CaptionOverlay (the .caption channel — an app-layer
+                     RenderTarget because it owns SwiftUI state),
+                     HomeView.swift, SettingsView.swift
     Accessibility/   VoiceOverAnnouncement.swift — the
                      announceIfUnspoken(_:profile:) entry point (see
                      docs/ACCESSIBILITY.md). HapticPattern lives in

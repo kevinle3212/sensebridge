@@ -132,6 +132,64 @@ uses. It still does not construct `CustomSoundClassifier` itself — so the
 package-level-unit-test limit above still holds — but it is real automated
 regression coverage of the inference path the type wraps, not a manual check.
 
+## The accessibility-audit gate
+
+Every screen's audit runs through one shared helper,
+`XCTestCase.performScopedAccessibilityAudit` in
+[`app/SenseBridgeUITests/AccessibilityAuditSupport.swift`](../app/SenseBridgeUITests/AccessibilityAuditSupport.swift),
+which also carries the evidence for every exemption. Two properties of it are
+worth knowing before adding an audit:
+
+- **Audit types are requested, not filtered.** Asking for `.all` and discarding
+  categories in the handler still pays for them. `List`/`Form` screens request
+  only the categories whose findings the project acts on.
+- **A scrolled screen is audited without `.contrast`.** A lazy `List` keeps
+  every row it has instantiated, and contrast has to screenshot each one:
+  measured on Settings, 0.85 s at rest versus never finishing after a scroll
+  (`Code=-56 "Audit failed to complete in time"`). Screens that need scrolling
+  are therefore audited twice — fully at rest, then for the labelling
+  categories once scrolled. Contrast findings on elements that are not fully
+  visible are exempted by geometry, since the pixels being measured are the
+  navigation bar's material rather than the app's.
+
+## What only a device can settle
+
+Some claims are structurally beyond both `swift test` and the Simulator suite,
+and this list exists so they are tracked rather than assumed:
+
+- **Which third of the depth buffer is the user's left.**
+  `AwarenessZoneGeometry` derives it from frames carrying
+  `CGImagePropertyOrientation.right`, and `AwarenessZoneGeometryTests` pins the
+  ordering — but a test can only prove the code matches the assumption, never
+  that the assumption matches the hardware. Getting it backwards would
+  confidently send someone the wrong way, so this needs one LiDAR-device check:
+  hold something clearly to one side and confirm the spoken side matches.
+- **That no reading survives a stop/start.** `latestFrame(orientation:)` drops
+  frames older than the current `run(_:options:)`, which is what stops a check
+  taken in one room being answered with the frame captured in another. The whole
+  mechanism sits behind `#if canImport(ARKit)`, so the check is: take a reading,
+  walk to a clearly different distance, take another, and confirm the second
+  answer is not the first.
+- **How long "Check once" waits for depth.** `AmbientSensingSource.sampleOnce`
+  now waits for a frame that actually carries a depth map rather than for the
+  first frame ARKit vends, because `sceneDepth` is populated several frames
+  after the camera opens. The ARKit path compiles only for iOS and the
+  Simulator delivers no frames, so nothing but a device can show whether one tap
+  now answers with a distance where it used to answer "couldn't take a
+  measurement", or whether three seconds is the right ceiling.
+- **Proximity-pulse cadence.** The band boundaries and repeat intervals are
+  unit-tested; whether the resulting rhythm reads as "getting nearer" to a hand
+  is a judgement only a person holding the phone can make.
+- **Live reading's auto-torch.** `FrameLuminanceTests` covers every pixel
+  format and the video-range rescale against synthetic buffers. What it cannot
+  cover is whether `dimThreshold` sits in the right place for a real
+  auto-exposed camera in a real dim room, or whether three frames is long
+  enough to avoid a strobe as the user's hand moves.
+- **Sentence-level playback timing.** `ReadingPlayback` is pure and fully
+  tested, and `SpeechRenderTarget.speak(_:)`'s continuation bookkeeping is
+  unit-tested — but "does 'next' actually land between sentences" is a listening
+  test.
+
 ## Recruiting field testers
 
 NFB or ACB local chapters, accessibility Discord/forum communities, and

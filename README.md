@@ -128,8 +128,8 @@ flowchart TB
     subgraph Output["Output Layer (RenderTarget)"]
         Speech[Speech — AVSpeechSynthesizer]
         VO[VoiceOver announce]
-        Caption[Visual captions — later]
-        Haptic[Haptics — later]
+        Caption[Visual captions]
+        Haptic[Haptics]
     end
 
     subgraph Storage["Local Storage"]
@@ -157,8 +157,8 @@ flowchart TB
 
     Profile --> Speech
     Profile --> VO
-    Profile -.-> Caption
-    Profile -.-> Haptic
+    Profile --> Caption
+    Profile --> Haptic
 
     Reasoning -.-> Storage
     Reasoning -. "explicit, revocable consent" .-> CloudOpt

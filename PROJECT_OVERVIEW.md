@@ -29,17 +29,17 @@ are wired to live capture:
 | Obstacle Awareness | `AmbientSensingSource` → `DepthGeometry`/`DepthStatistics` | ARKit (LiDAR `sceneDepth`) |
 | Sound Alerts | `MicrophoneSensingSource` → `CombinedSoundClassifier` (`CustomSoundClassifier` + `BuiltInSoundClassifier`, concurrent) | Sound Analysis, Core ML |
 
-Output runs through `SpeechRenderTarget` (AVFoundation) and `HapticRenderTarget`
-(Core Haptics). One model is vendored and integrated — an in-house Create ML
-sound classifier over per-clip-licence-verified training data, cleared by the
-`model-license-audit` skill on 2026-08-05.
+Output runs through `SpeechRenderTarget` (AVFoundation), `CaptionRenderTarget`
+(a high-contrast SwiftUI caption inset for the Deaf profile), and
+`HapticRenderTarget` (Core Haptics). One model is vendored and integrated — an
+in-house Create ML sound classifier over per-clip-licence-verified training
+data, cleared by the `model-license-audit` skill on 2026-08-05.
 
 What still blocks a release, in order (see `GAPS.md` for the full inventory):
 device-only verification of lens switching, zoom, torch, and orientation-correct
 capture; the `ObstacleAwarenessView` "check once" button, which still evaluates a
-hard-coded depth sample rather than a live one; no `CaptionRenderTarget`, so the
-deaf output profile is listed-but-unselectable by design; and the paid Apple
-Developer Program, without which no TestFlight or App Store artifact can exist.
+hard-coded depth sample rather than a live one; and the paid Apple Developer
+Program, without which no TestFlight or App Store artifact can exist.
 
 ## Layout
 

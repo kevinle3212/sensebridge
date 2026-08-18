@@ -45,6 +45,40 @@ exist on.
   in-memory data on-device; no audio is ever written to durable storage or
   leaves the device.
 
+## Reading history (opt-in, off by default)
+
+The one place this app stores user content on purpose, and the most sensitive
+content it ever produces — a prescription label, a bank letter, a medical
+result. `ReadingHistoryStore` exists so a listener can hear a document again
+without re-photographing it, and it is built so that convenience costs as
+little as it can:
+
+- **Off by default.** Nothing is written until the user turns history on. This
+  is `Settings.readingHistoryEnabled`, and it defaults to `false`.
+- **Deleted on revocation.** Turning history off deletes what is already
+  stored rather than merely hiding it. A user withdrawing consent means the
+  data goes.
+- **Not in `UserDefaults`.** `Settings` must never hold user content, and the
+  preferences plist is both readable whenever the device is unlocked-at-boot
+  and swept into every backup. The store is its own file instead.
+- **`FileProtectionType.complete`.** The file is unreadable while the device is
+  locked, including by SenseBridge itself. A phone taken off a table is a phone
+  whose reading history cannot be extracted. The attribute is set in the write
+  options *and* re-applied afterwards, because an atomic replace can otherwise
+  inherit the replacement's default protection.
+- **Excluded from backup.** Recognized text stays on the device it was read on
+  rather than travelling to iCloud or a desktop archive, where this app's
+  guarantees do not reach.
+- **Bounded at 25 documents**, oldest evicted first. An unbounded history is an
+  unbounded liability, and nobody re-reads the hundredth-most-recent thing they
+  photographed.
+- **Stated on the screen, not only here.** `ReadingHistoryView` says where the
+  text lives, that it is never backed up, and that switching history off
+  deletes it — a user deciding whether to leave it on needs that while they are
+  deciding.
+- **Still no network.** History is on-device storage; nothing about it involves
+  a server, and the core guarantee above is unchanged.
+
 ## Biometric data (facial enrollment — deferred, designed now)
 
 Facial recognition is not in the MVP, but because getting this wrong later is

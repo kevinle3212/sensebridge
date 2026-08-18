@@ -31,9 +31,9 @@ What exists today:
 - **An `app/` with five features on real perception.** A local Swift package
   (`app/Packages/SenseBridgeCore`) with the Sensing/Perception/Reasoning/
   Output/Storage/CloudOptional protocol seams and a hedged `Phrasing`/
-  `AwarenessEngine`, plus an Xcode project (`app/SenseBridge.xcodeproj`,
-  generated via `xcodegen` from `app/project.yml`) with app, unit-test, and
-  UI-test targets. Builds and tests pass (`swift test`, `xcodebuild
+  `AwarenessEngine`, plus an Xcode project (`app/SenseBridge.xcodeproj`, whose
+  `project.pbxproj` is edited directly and is the single source of truth for
+  build settings) with app, unit-test, and UI-test targets. Builds and tests pass (`swift test`, `xcodebuild
   build`/`test`, `swiftlint`, `swiftformat`, Semgrep `p/swift`). Live capture
   is wired behind the seams, not canned: Reading (`CameraSource` +
   `OCRService`, AVFoundation/Vision), Labeling (`ObjectClassificationService`,

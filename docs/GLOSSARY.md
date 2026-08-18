@@ -103,11 +103,11 @@ clear thresholds) so the signal doesn't flap near the boundary. Defined in
 **The blind, deaf, and deaf-blind output profiles** — `OutputProfile`'s
 three cases, each selecting which `RenderChannel`s (`speech`, `caption`,
 `haptic`) a user's output should go through: `.blind` prefers speech,
-`.deaf` prefers captions, `.deafBlind` prefers haptics. As of this writing
-only speech and haptics are implemented — no caption `RenderTarget` exists
-yet, so `.deaf` is not offered as a selectable profile (see
-`AppEnvironment.selectableProfiles`, which derives availability from what's
-actually registered rather than a hardcoded list).
+`.deaf` prefers captions, `.deafBlind` prefers haptics. All three channels
+now have a registered target, so all three profiles are selectable — but
+availability is still derived from what is actually registered rather than a
+hardcoded list (see `AppEnvironment.selectableProfiles`), so a channel added
+without a target names itself instead of failing silently.
 
 **Dynamic Type** — Apple's user-controlled text-size system. SenseBridge
 never hardcodes font sizes so text scales with the user's chosen size,
@@ -185,8 +185,10 @@ Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Reasoning/Phrasing.swift`.
 
 **RenderTarget** — the protocol every output channel conforms to: delivers
-an `OutputMessage` through one sense. Speech and haptics are implemented;
-caption is not yet. Defined in
+an `OutputMessage` through one sense. Speech, caption, and haptic targets are
+all implemented — the caption one lives in the app layer
+(`app/SenseBridge/App/CaptionRenderTarget.swift`) because it owns SwiftUI
+state. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Output/RenderTarget.swift`.
 
 **Rotor** — VoiceOver's mechanism for jumping between elements of a kind
