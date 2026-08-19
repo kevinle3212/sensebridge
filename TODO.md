@@ -41,6 +41,42 @@ sweeping; it does not reprint the count.
 
 ## To-Do
 
+### Graphify retirement and audit follow-ups (2026-08-18, 16:30 PST)
+
+- [ ] **[P2]** **[Needs owner]** **Delete the retired graphify artifacts and
+      the tool itself.** Held back deliberately: `graphify-out/` is ~365MB, and
+      `CLAUDE.md` forbids an agent deleting a heavy directory (timeout risk).
+      Run `rm -rf graphify-out && pipx uninstall graphify`. Afterwards, three
+      exclusions kept purely as a guard against an un-ignored 365MB directory
+      can come out together: the `graphify-out/` lines in `.gitignore`,
+      `.markdownlintignore`, and `.markdownlint-cli2.jsonc`. Each carries a
+      comment saying so.
+
+- [ ] **[P3]** **[Needs owner]** **`CLAUDE.template.md` still documents
+      `graphify` (lines ~265-266), and must not be edited alone.** The template
+      mirrors the owner-gated `~/.claude/CLAUDE.md`, which also still names
+      graphify under "Tools". Editing only the tracked copy drifts the two
+      apart, against the standing "sync CLAUDE.template.md with global" rule.
+      Update the global file first (owner-only), then mirror it here in the
+      same change.
+
+- [ ] **[P3]** **Decide where CC-BY attribution surfaces in the app.**
+      `CREDITS.md` correctly names the two CC-BY-3.0 training clips
+      ("Car Horn Honk" by etcd_09, "sim police siren.wav" by THE_bizniss); the
+      other 56 are CC0 and need none. That attribution exists in the repository
+      but nowhere in the shipped app, and CC-BY asks for credit in the
+      distributed work. Low risk — the model is a derived work and the credit is
+      public — but a Settings → Acknowledgements row would close it properly.
+      Needs a product/UI call on placement, plus the usual VoiceOver pass.
+
+- [ ] **[P2]** **`check:scene-drag` and `check:bfcache` now verify nothing on
+      this machine.** Both skip because the pinned headless Chrome never
+      delivers an `IntersectionObserver` callback (measured 2026-08-18 against a
+      bare div on a `data:` URL, so it is not site-specific). The skip is loud
+      and honest, but coverage is gone until a runner exists whose Chrome fires
+      IO — options: a different Chrome channel, `headless: "shell"` (needs its
+      own download), or a headed CI run.
+
 ### Device install is blocked on Xcode signing (2026-08-18, 13:30 PST)
 
 From [`sessions/2026-08-18/1330-PST.md`](sessions/2026-08-18/1330-PST.md).
