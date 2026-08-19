@@ -43,6 +43,42 @@ sweeping; it does not reprint the count.
 
 ### Graphify retirement and audit follow-ups (2026-08-18, 16:30 PST)
 
+- [ ] **[P0]** **[Needs owner]** **Confirm on hardware which side "on your
+      left" actually means, before this branch merges.** Raised from the
+      untracked state a stop-time review caught: directional awareness ships on
+      this branch, and the single check that justifies it has never run.
+      `docs/TESTING.md` → "What only a device can settle" already names it, but
+      nothing in `TODO.md` tracked it, so it was invisible at the severity it
+      deserves.
+
+      **What is already right, so this is not a code fix.** The phrasing is
+      hedged to `.medium` certainty — "it looks like", not "likely" — explicitly
+      because the reading comes through an uncalibrated chest mount
+      (`AmbientAwarenessSession+Proximity.swift`). `AwarenessZoneGeometry`
+      widened each zone from ~8° to ~16° precisely so a few degrees of mount yaw
+      cannot move a measurement between zones, and `AwarenessZoneGeometryTests`
+      pins the buffer ordering. A test can only prove the code matches the
+      assumption; it can never prove the assumption matches the hardware.
+
+      **Why P0 rather than P3.** ARKit hands back a landscape buffer while the
+      app is portrait, so left/right comes from a transposition. If that
+      assumption is inverted, the app confidently announces the opposite side —
+      `AwarenessZoneGeometry`'s own comment calls sending someone the wrong way
+      "the worst outcome in this file's remit", and `AGENTS.md` ranks a
+      confidently-wrong claim above a crash. Hedged wording does not rescue an
+      inverted direction: "it looks like something on your left" is just as
+      wrong as "something on your left" when the thing is on the right.
+
+      **The check, once signing is fixed** (blocked by the P1 above): run
+      hands-free awareness, hold something clearly to one side, and confirm the
+      spoken side matches. Then repeat on the other side — a single-sided test
+      passes under a transposition half the time.
+
+      **Coupled to the signing blocker.** This cannot run until
+      `npm run app:install` works, so the two move together. Until both clear,
+      directional awareness is unvalidated on hardware and this branch should
+      not merge on the strength of its green suites.
+
 - [ ] **[P2]** **[Needs owner]** **Delete the retired graphify artifacts and
       the tool itself.** Held back deliberately: `graphify-out/` is ~365MB, and
       `CLAUDE.md` forbids an agent deleting a heavy directory (timeout risk).
