@@ -178,6 +178,8 @@ explicitly opts into the cloud adapter — see
 │   ├── SenseBridgeUITests/    UI / VoiceOver tests
 │   └── Packages/SenseBridgeCore/  SPM package (Sources/Tests)
 ├── website/                  Public marketing site (Astro, static, pre-launch)
+├── admin/                    Single-owner tooling dashboard (Next.js, run locally, not deployed)
+├── assets/                   Brand masters (SVG) and the generators that derive every raster
 ├── docs/                     Product, architecture, safety, privacy, testing, tooling docs
 │   └── planning/               Original planning documents
 ├── models/                   Bundled on-device model licenses and provenance
@@ -190,7 +192,7 @@ explicitly opts into the cloud adapter — see
 ├── docker/                   Website container build (Railway deploy)
 ├── _bmad/                    BMAD-METHOD planning scaffold
 ├── .github/                  CI, security, Pages, Wiki sync, Models, Copilot, Dependabot, templates
-├── .agents/ .claude/ .codex/ .gemini/ .cursor/  Per-agent config, all deferring to AGENTS.md
+├── .agents/ .claude/ .codex/ .gemini/ .cursor/ .deepseek/  Per-agent config, all deferring to AGENTS.md
 └── AGENTS.md CLAUDE.md ...   Root orientation and agent-instruction docs
 ```
 
@@ -206,7 +208,9 @@ app/SenseBridge/
 │   ├── Labeling/               Identify common objects and surfaces
 │   ├── SceneDescription/       Natural-sentence scene description
 │   ├── ObstacleAwareness/      Cautious LiDAR-based awareness (never navigation)
-│   └── SoundAlerts/            Sound-event awareness
+│   ├── SoundAlerts/            Sound-event awareness
+│   ├── Camera/                 Shared capture surface and preview
+│   └── Onboarding/             First-run permission and orientation flow
 └── Resources/               Localizable strings, asset catalog
 ```
 

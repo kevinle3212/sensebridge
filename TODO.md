@@ -349,6 +349,33 @@ restatements: each was discovered by running something rather than by reading.
       than errors, and reword the parenthetical so it does not assert that a
       timeout is a genuine failure. **Reproduce:** run either check while a
       simulator test run is in progress.
+      **Done/Fixed 2026-08-18 — and the diagnosis above was wrong.** They are
+      not flaky under load. They cannot pass in this environment at all, for
+      two separate reasons found by instrumenting the page rather than by
+      re-reading the scripts:
+      1. **`requestIdleCallback` never fires in the pinned headless Chrome.**
+         Measured directly: a bare `requestIdleCallback(cb)` on `about:blank`
+         never called back in 8s. Both loaders in `BaseLayout.astro` deferred
+         their dynamic `import()` behind it, so `motion.js` and
+         `scenes/index.js` were never fetched — no error, no canvas, silence.
+         **This was a real production bug, not just a test problem**: the API
+         is explicitly best-effort, so any visitor on a page that never goes
+         idle could get the same nothing. Fixed by passing
+         `{ timeout: 2000 }`, which turns it into a deadline. Verified: both
+         chunks now load where neither did before.
+      2. **`IntersectionObserver` never delivers a callback in that Chrome
+         either** — confirmed against a bare 300x300 fixed-position div on a
+         `data:` URL, so it is nothing to do with this site. Every scene mounts
+         from an IO callback, so no scene can ever mount under this runner.
+      Both checks now probe that capability first
+      (`intersectionObserverDelivers` in `website/scripts/lib/scene-mount.js`)
+      and **skip loudly** — "This is not a pass" — instead of asserting a
+      regression that is not there. They also retry the mount once
+      (`waitForSceneMount`) and the misleading parenthetical is reworded.
+      **Still open, and worth its own item:** these two checks now verify
+      nothing on this machine. Getting real coverage back needs a runner whose
+      Chrome delivers IO callbacks — a different channel, `headless: "shell"`
+      (needs its own Chrome download), or a headed run in CI.
 
 - [ ] **[P3]** **`.impeccable/design.json` is stale in content, not just in
       mtime.** The hook warns on every `website/` edit that `DESIGN.md` is

@@ -19,6 +19,7 @@
 // leaves a server holding a port behind.
 import puppeteer from "puppeteer";
 import { startDistServer } from "./lib/dist-server.js";
+import { intersectionObserverDelivers, waitForSceneMount } from "./lib/scene-mount.js";
 
 // Generous, because a CI runner renders this scene through software WebGL.
 const SCENE_MOUNT_TIMEOUT_MS = 30_000;
@@ -138,23 +139,32 @@ try {
     element.scrollIntoView({ block: "center" });
   });
 
-  let sceneMounted = true;
-  try {
-    await page.waitForSelector(`${STAGE}.scene-active canvas`, {
-      timeout: SCENE_MOUNT_TIMEOUT_MS,
-    });
-  } catch {
-    sceneMounted = false;
-  }
+  // Every scene mounts from an IntersectionObserver callback
+  // (src/scripts/scenes/index.ts), so a runner that never delivers one can
+  // never mount a scene. Reporting that as "the scene failed to mount, and
+  // WebGL2 is available so this is real" would be a false accusation rather
+  // than a finding, so the capability is established before the result is
+  // trusted.
+  const observerDelivers = await intersectionObserverDelivers(page);
+  const sceneMounted =
+    observerDelivers &&
+    (await waitForSceneMount(page, `${STAGE}.scene-active canvas`, SCENE_MOUNT_TIMEOUT_MS));
 
-  if (sceneMounted) {
+  if (!observerDelivers) {
+    skipped =
+      "this Chrome never delivers IntersectionObserver callbacks, so no scene can mount here " +
+      "and the scene behaviour cannot be exercised";
+  } else if (sceneMounted) {
     expect(true, "phone stage mounts its WebGL scene on the first visit");
   } else {
     const hasWebgl2 = await page.evaluate(
       () => document.createElement("canvas").getContext("webgl2") !== null,
     );
     if (hasWebgl2) {
-      expect(false, "phone stage mounts its WebGL scene (WebGL2 is available, so this is real)");
+      expect(
+        false,
+        "phone stage mounts its WebGL scene (WebGL2 is available and it failed twice, so this is real)",
+      );
       if (pageErrors.length > 0) {
         console.error(`  page errors: ${pageErrors.join("; ")}`);
       }

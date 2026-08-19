@@ -177,44 +177,80 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       // flips mid-session, from reduce to no-preference, motion stays off
       // until reload; the reverse flip is handled live by gsap.matchMedia
       // inside the module.)
-      window.addEventListener(
-        "load",
-        () => {
-          if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-            return;
-          }
-          const idle =
-            window.requestIdleCallback ??
-            ((callback: IdleRequestCallback) => setTimeout(callback, 1));
-          idle(() => {
+      const startMotion = () => {
+        if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+          return;
+        }
+        // The `timeout` is load-bearing, not a nicety. `requestIdleCallback`
+        // is best-effort: a browser that never reaches idle may never call
+        // back at all, and headless Chrome demonstrably never does — which is
+        // why `check:scene-drag` and `check:bfcache` could not pass, and why
+        // TODO.md recorded them as "flaky under machine load" rather than as
+        // structurally unable to run. The timeout turns it into a deadline, so
+        // decoration starts within 2s even on a page that stays busy.
+        const idle =
+          window.requestIdleCallback ??
+          ((callback: IdleRequestCallback) => setTimeout(callback, 1));
+        idle(
+          () => {
             void import("../scripts/motion");
-          });
-        },
-        { once: true },
-      );
+          },
+          { timeout: 2000 },
+        );
+      };
+
+      // See the scenes loader below for why `readyState` is checked before
+      // listening: this is a deferred module, so `load` may already be gone by
+      // the time it runs, and a listener added then never fires.
+      if (document.readyState === "complete") {
+        startMotion();
+      } else {
+        window.addEventListener("load", startMotion, { once: true });
+      }
     </script>
     <script>
       // "First Light" 3D scenes (scripts/scenes/index.ts) are decoration on
-      // top of decoration: same load-after-`load`, at-idle, reduced-motion
-      // gate as the motion loader above, so a reduced-motion visitor never
-      // even fetches this tiny entry chunk. scenes/index.ts's own
-      // webglAllowed() re-checks reduced-motion (plus WebGL2/saveData/
-      // deviceMemory) before it ever imports `three` itself.
-      window.addEventListener(
-        "load",
-        () => {
-          if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-            return;
-          }
-          const idle =
-            window.requestIdleCallback ??
-            ((callback: IdleRequestCallback) => setTimeout(callback, 1));
-          idle(() => {
+      // top of decoration: same after-load, at-idle, reduced-motion gate as
+      // the motion loader above, so a reduced-motion visitor never even
+      // fetches this tiny entry chunk. scenes/index.ts's own webglAllowed()
+      // re-checks reduced-motion (plus WebGL2/saveData/deviceMemory) before it
+      // ever imports `three` itself.
+      const startScenes = () => {
+        if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+          return;
+        }
+        // The `timeout` is load-bearing, not a nicety. `requestIdleCallback`
+        // is best-effort: a browser that never reaches idle may never call
+        // back at all, and headless Chrome demonstrably never does — which is
+        // why `check:scene-drag` and `check:bfcache` could not pass, and why
+        // TODO.md recorded them as "flaky under machine load" rather than as
+        // structurally unable to run. The timeout turns it into a deadline, so
+        // decoration starts within 2s even on a page that stays busy.
+        const idle =
+          window.requestIdleCallback ??
+          ((callback: IdleRequestCallback) => setTimeout(callback, 1));
+        idle(
+          () => {
             void import("../scripts/scenes/index");
-          });
-        },
-        { once: true },
-      );
+          },
+          { timeout: 2000 },
+        );
+      };
+
+      // `readyState` is checked before listening, and that check is the whole
+      // fix. Astro emits this as a module script, so it is deferred — and a
+      // deferred module can execute *after* `load` has already fired, at which
+      // point `addEventListener("load", …)` waits for an event that will never
+      // come again. Every scene then silently fails to mount: no error, no
+      // canvas, just a static page. It is a race, so it looked like
+      // flakiness — `check:scene-drag` and `check:bfcache` were logged in
+      // TODO.md as "flaky under machine load", which is exactly the condition
+      // that makes the module land late and lose the race every time.
+      if (document.readyState === "complete") {
+        startScenes();
+      } else {
+        window.addEventListener("load", startScenes, { once: true });
+      }
     </script>
   </body>
 </html>
