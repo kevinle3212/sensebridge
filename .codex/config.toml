@@ -9,10 +9,6 @@ hooks = true
 
 # Serena provides symbolic code navigation/editing, project-scoped. NO_COLOR
 # keeps ANSI codes out of the stdio JSON-RPC stream.
-[mcp_servers.serena]
-command = "serena"
-args = ["start-mcp-server", "--project-from-cwd", "--context=codex"]
+["start-mcp-server", "--project-from-cwd", "--context=codex"]
 startup_timeout_sec = 60
 
-[mcp_servers.serena.env]
-NO_COLOR = "1"
