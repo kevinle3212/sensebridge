@@ -27,9 +27,6 @@ fi
 
 # Advisory-only GitNexus staleness reminder — see .githooks/post-commit for
 # the rationale (no vendor `hook install` for GitNexus; never auto-reindexes).
-if [ -d .gitnexus ]; then
-	echo "post-merge: GitNexus knowledge graph may be stale — run 'gitnexus analyze' (or 'node .gitnexus/run.cjs analyze') to refresh it." >&2
-fi
 
 # Refresh website/tsconfig.debug.json's diagnostics output (.tsbuildinfo.debug,
 # trace/) whenever landing on main with website source changes — deliberately

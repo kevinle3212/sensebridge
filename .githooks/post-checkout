@@ -8,13 +8,6 @@ if [ -n "$_SENSEBRIDGE_ROOT" ] && [ -f "$_SENSEBRIDGE_ROOT/scripts/env.sh" ]; th
     . "$_SENSEBRIDGE_ROOT/scripts/env.sh"
 fi
 unset _SENSEBRIDGE_ROOT
-# gitnexus-staleness-notice-start
-# Hand-maintained — see .githooks/post-commit for the full rationale (no
-# vendor `hook install` for GitNexus; advisory only, never auto-reindexes).
-if [ "$3" = "1" ] && [ -d .gitnexus ]; then
-    echo "[gitnexus] branch switched — the knowledge graph reflects the previous checkout; run 'gitnexus analyze' (or 'node .gitnexus/run.cjs analyze') to refresh it." >&2
-fi
-# gitnexus-staleness-notice-end
 
 # codegraph-sync-start
 # Branch switches move the tree further than a single commit does, so the same

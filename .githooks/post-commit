@@ -8,23 +8,6 @@ if [ -n "$_SENSEBRIDGE_ROOT" ] && [ -f "$_SENSEBRIDGE_ROOT/scripts/env.sh" ]; th
     . "$_SENSEBRIDGE_ROOT/scripts/env.sh"
 fi
 unset _SENSEBRIDGE_ROOT
-# gitnexus-staleness-notice-start
-# Hand-maintained — not installed by any `gitnexus hook install` (no such
-# command exists). Advisory only: never blocks, never
-# runs `analyze` itself. The vendor's own Claude Code PostToolUse hook
-# (~/.claude/hooks/gitnexus/gitnexus-hook.cjs) deliberately avoids driving
-# `analyze` from a hook — a full rebuild can take up to ~120s and an unclean
-# kill risks index corruption. This block only covers git activity outside a
-# Claude Code session (plain terminal, other editors, CI). See
-# docs/TOOLING.md's GitNexus row.
-if [ -d .gitnexus ]; then
-    _GITNEXUS_CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || git diff --name-only HEAD 2>/dev/null)
-    _GITNEXUS_NON_INDEX=$(echo "$_GITNEXUS_CHANGED" | grep -v '^\.gitnexus/' || true)
-    if [ -n "$_GITNEXUS_NON_INDEX" ]; then
-        echo "[gitnexus] knowledge graph may be stale — run 'gitnexus analyze' (or 'node .gitnexus/run.cjs analyze') to refresh it." >&2
-    fi
-fi
-# gitnexus-staleness-notice-end
 
 # codegraph-sync-start
 # Hand-maintained, and the reason it exists: graphify was retired on
