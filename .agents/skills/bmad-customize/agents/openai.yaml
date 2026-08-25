@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Customize"
-  short_description: "Authors and updates customization overrides for installed"
-  default_prompt: "Use $bmad-customize when the user says 'customize bmad', 'override a skill', 'change agent behavior', or 'customize a workflow'."

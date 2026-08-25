@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Prfaq"
-  short_description: "Working Backwards PRFAQ challenge that stress-tests a"
-  default_prompt: "Use $bmad-prfaq when the user requests to 'create a PRFAQ', 'work backwards', or 'run the PRFAQ challenge'."

@@ -299,7 +299,9 @@ To change vendor behaviour durably, use the surface built for it:
 - **`skillOverrides` in `settings.json`** turns a skill off outright.
 - **Plugin config**: `~/.config/caveman/config.json`,
   `~/.config/ponytail/config.json`.
-- **BMAD** ships `bmad-customize` specifically for authoring overrides.
+- **BMAD** ships `bmad-customize` (now at
+  `~/.agents/skills/bmad/references/bmad-customize/`) specifically for authoring
+  overrides.
 - **The Next.js block**: commit it with your work. Deleting it from a diff only
   recreates an uncommitted change.
 

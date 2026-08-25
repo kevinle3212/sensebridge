@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD UX"
-  short_description: "Plan UX patterns and design specifications"
-  default_prompt: "Use $bmad-ux for its listed purpose."

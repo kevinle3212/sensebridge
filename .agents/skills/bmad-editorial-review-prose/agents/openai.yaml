@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Editorial Review Prose"
-  short_description: "Clinical copy-editor that reviews text for communication"
-  default_prompt: "Use $bmad-editorial-review-prose for its listed purpose."
