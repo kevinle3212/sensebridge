@@ -1,4 +1,0 @@
-interface:
-  display_name: "Swift Concurrency 6 2"
-  short_description: "adopting Swift 6.2 concurrency"
-  default_prompt: "Use $swift-concurrency-6-2 when adopting Swift 6.2 concurrency — single-threaded by default, `@concurrent` for explicit background offloading, isolated conformances for main-actor types."

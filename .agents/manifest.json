@@ -67,11 +67,6 @@
       "kind": "dependency"
     },
     {
-      "name": "docker-clean",
-      "path": ".agents/skills/docker-clean/SKILL.md",
-      "kind": "maintenance"
-    },
-    {
       "name": "documentation",
       "path": ".agents/skills/documentation/SKILL.md",
       "kind": "maintenance"
@@ -143,31 +138,6 @@
       "kind": "maintenance"
     },
     {
-      "name": "stripe-best-practices",
-      "path": ".agents/skills/stripe-best-practices/SKILL.md",
-      "kind": "stripe"
-    },
-    {
-      "name": "stripe-projects",
-      "path": ".agents/skills/stripe-projects/SKILL.md",
-      "kind": "stripe"
-    },
-    {
-      "name": "swift-actor-persistence",
-      "path": ".agents/skills/swift-actor-persistence/SKILL.md",
-      "kind": "swift"
-    },
-    {
-      "name": "swift-concurrency-6-2",
-      "path": ".agents/skills/swift-concurrency-6-2/SKILL.md",
-      "kind": "swift"
-    },
-    {
-      "name": "swift-protocol-di-testing",
-      "path": ".agents/skills/swift-protocol-di-testing/SKILL.md",
-      "kind": "swift"
-    },
-    {
       "name": "testing",
       "path": ".agents/skills/testing/SKILL.md",
       "kind": "maintenance"
@@ -181,11 +151,6 @@
       "name": "update-context",
       "path": ".agents/skills/update-context/SKILL.md",
       "kind": "maintenance"
-    },
-    {
-      "name": "upgrade-stripe",
-      "path": ".agents/skills/upgrade-stripe/SKILL.md",
-      "kind": "stripe"
     },
     {
       "name": "website-design",

@@ -60,9 +60,14 @@ final class ReadingAndAwarenessUITests: XCTestCase {
     /// Error path: with no camera, capturing says so out loud rather than
     /// leaving a silent screen — and the transport controls stay absent rather
     /// than offering to play a document that does not exist.
+    ///
+    /// The camera-less state is forced by `-uiTestNoCamera` rather than assumed
+    /// from the host. Assuming it is what made this pass in the Simulator and
+    /// fail on the first device run — a phone has a camera, so "with no camera"
+    /// was simply not the situation under test any more.
     func testCapturingWithoutACameraReportsItAndOffersNoPlayback() {
         continueAfterFailure = false
-        let app = launch()
+        let app = launch(extraArguments: ["-uiTestNoCamera"])
 
         element(app, labeled: "Read").tap()
         XCTAssertTrue(app.buttons["Capture document"].waitForExistence(timeout: 5))
@@ -220,9 +225,14 @@ final class ReadingAndAwarenessUITests: XCTestCase {
 
     /// A freshly reset app instance, so no earlier test's persisted settings
     /// leak into this one.
-    private func launch() -> XCUIApplication {
+    /// Launches from a known state, optionally with extra launch arguments.
+    ///
+    /// - Parameter extraArguments: Appended after `-uiTestReset`; used to pass
+    ///   `-uiTestNoCamera` where a test needs the camera-unavailable path
+    ///   regardless of whether the host has a camera.
+    private func launch(extraArguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
+        app.launchArguments = ["-uiTestReset"] + extraArguments
         app.launch()
         return app
     }

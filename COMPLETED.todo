@@ -6219,3 +6219,176 @@ isn't built yet.
       released this session's lock by hand, ran one Bash call, and the lock came
       back tied to the same `claude` pid — which also proves hook changes take
       effect without restarting Claude Code.
+
+## Archived 2026-08-19
+
+### Device install is blocked on Xcode signing (2026-08-18, 13:30 PST)
+
+- [x] **[P1]** **[Needs owner]** **Sign Xcode back in so `npm run app:install`
+      can complete.** **Done 2026-08-19.** Kevin signed the Apple ID back in and
+      the device build now completes end to end: `** BUILD SUCCEEDED **`, signed
+      as `Apple Development: kevinle3212@gmail.com (G7T2DQV68P)` against a
+      freshly issued `iOS Team Provisioning Profile: com.sensebridge.app`, and
+      installed to bundle ID `com.sensebridge.app` over the CoreDevice network
+      tunnel with no cable attached.
+
+      The diagnosis held exactly: `error: No Accounts: Add a new account in
+      Accounts settings.` meant a missing Apple ID, not a bad certificate and
+      not a wrong bundle prefix, so `app/Config/Signing.local.xcconfig` needed
+      no `BUNDLE_ID_PREFIX` after all. Nothing in the repo changed to fix this.
+
+### Twelve-repository tooling evaluation (2026-08-12, 21:00 PST)
+
+- [x] **[P2]** **Decide whether to retire `graphify`.** CodeGraph and
+      graphify are the one genuine redundancy the bake-off found — Serena
+      answers symbol questions and the GitNexus `PreToolUse` hook works
+      passively, so neither is a removal candidate. On the same architecture
+      question, `codegraph explore` answered with verified `file:line`
+      accuracy in 0.66s while `graphify explain` returned only "Ambiguous:
+      'depth' matches 12 nodes"; graphify has no free-text question verb, and
+      its index additionally covers all five mirrored copies of the
+      `impeccable` skill scripts. Either retire graphify or run the CodeGraph
+      trial week first, then decide on evidence.
+      **Done 2026-08-18** — retired, on owner's decision after a fresh
+      measurement pass: `graphify-out/` was **365 MB** against CodeGraph's
+      28 MB and GitNexus's 86 MB, and backing out the 4:1 skill-mirror
+      inflation put graphify's real coverage (~4,500 nodes) *below*
+      CodeGraph's 6,752. Removed `.github/workflows/graphify.yml`,
+      `.graphifyignore`, the vendor-installed rebuild blocks in
+      `.githooks/post-commit` and `post-checkout` (~370 lines), the `graph`
+      npm script, and every stale reference across 18 tracked files.
+      **The measurement also found the one real argument for keeping it**:
+      graphify was the only index that self-refreshed, and GitNexus was 14
+      days and ~100 commits stale at the time of removal. That gap is closed
+      by a new `codegraph sync` block in both hooks — incremental,
+      backgrounded, and advisory, so it can never fail a commit.
+      `docs/assets/graph*.svg`, `tools/graph-visual.mjs`, and the
+      `check:graph` CI gate are **deliberately kept**: the picture is
+      committed and self-contained, and `--verify` reads only the committed
+      bytes, so it needs no graph tool installed. Redrawing is now a
+      deliberate one-off via `npm run graph:visual -- --graph <path>`.
+      Still owner-only: `rm -rf graphify-out && pipx uninstall graphify`.
+
+### First device test run — 8 XCUITest failures (2026-08-19, 01:00 PST)
+
+- [x] **[P2]** **Three UI tests encode a Simulator-only "there is no camera"
+      assumption and cannot pass on hardware.**
+      `DescriptionDetailUITests.testDescribeScreenStillReportsNoCameraAtDetailedLevel`,
+      `ReadingAndAwarenessUITests.testCapturingWithoutACameraReportsItAndOffersNoPlayback`,
+      and `LiveTapThroughUITests.testEveryCameraScreenAnswersOnTap`.
+
+      These are not device regressions — they assert the no-camera *error path*,
+      which a phone with a working camera correctly never enters. The device log
+      shows the real path instead: `Read | Point the camera at text, then
+      capture, to hear it read aloud. | Nothing recognizable was found. |
+      Torch` — a camera that opened and found no text, which is right.
+
+      **Done 2026-08-19 — launch argument, not destination gating.** Gating
+      them to the Simulator would have shrunk coverage to the destination that
+      matters least. `-uiTestNoCamera` instead forces the path they assert, so
+      they test the same property on both: `CameraController` reads it in
+      `performStart(applying:)` *and* `capturePhoto()` — both, so a screen
+      reached without starting the session cannot slip past — and it is
+      compiled out of release builds with `#if DEBUG`.
+      `ReadingAndAwarenessUITests.launch()` gained an `extraArguments:`
+      parameter rather than an inline duplicate. `docs/TESTING.md` gained
+      "Which destination a UI test means something on", carrying the general
+      rule: force the state you assert on, never inherit it from the host.
+      Verified on device: all three pass.
+
+- [x] **[P1]** **`LiveTapThroughUITests.testAwarenessSingleCheckAnswersOnTap`
+      fails on device: "the one-shot check control never appeared".** This one
+      sits in the awareness feature area, which is also where the unvalidated
+      directional P0 lives, so it does not get filed alongside the camera-path
+      failures until it is triaged.
+
+      **Done 2026-08-19, and the permission theory above was wrong.** Nothing
+      to do with permissions: `singleCheckSection` is the last section of a
+      `List`, so on a LiDAR device the hands-free section renders in full above
+      it and pushes the button off screen — and a lazy `List` leaves an
+      off-screen row out of the accessibility hierarchy entirely, not merely out
+      of view. What identified it was the sibling test
+      `ReadingAndAwarenessUITests.testSingleCheckWithoutDepthSaysItCouldNotMeasure`,
+      which asserts on the same control, scrolls to reach it, and passed on the
+      same run. The test now scrolls, and accepts either honest outcome — a
+      could-not-measure or a hedged reading — instead of only the no-depth
+      wording, which had quietly made it a Simulator test wearing a device
+      test's name. Verified on device: passes.
+
+### TODO burn-down pass — findings (2026-08-12, 22:00 PST)
+
+- [x] **[P3]** **`check:scene-drag` and `check:bfcache` are flaky under
+      machine load, and fail in a way that reads as a real regression.** Both
+      passed, then both failed while an `xcodebuild test` simulator run was
+      using the machine, then both passed again once it finished — with the
+      suspect source changes stashed in between to rule them out.
+      `check:scene-drag`'s message is the misleading part: *"glasses stage
+      mounts its WebGL scene (WebGL2 is available, so this is real)"*, which
+      states the opposite of what happened. WebGL2 being *available* does not
+      mean a headless GPU under contention will mount a scene inside the
+      script's timeout. Cost this session: one stash-and-rebuild cycle to prove
+      a change innocent. **Fix worth making:** retry the mount once before
+      failing, or widen the timeout when the first attempt times out rather
+      than errors, and reword the parenthetical so it does not assert that a
+      timeout is a genuine failure. **Reproduce:** run either check while a
+      simulator test run is in progress.
+      **Done/Fixed 2026-08-18 — and the diagnosis above was wrong.** They are
+      not flaky under load. They cannot pass in this environment at all, for
+      two separate reasons found by instrumenting the page rather than by
+      re-reading the scripts:
+      1. **`requestIdleCallback` never fires in the pinned headless Chrome.**
+         Measured directly: a bare `requestIdleCallback(cb)` on `about:blank`
+         never called back in 8s. Both loaders in `BaseLayout.astro` deferred
+         their dynamic `import()` behind it, so `motion.js` and
+         `scenes/index.js` were never fetched — no error, no canvas, silence.
+         **This was a real production bug, not just a test problem**: the API
+         is explicitly best-effort, so any visitor on a page that never goes
+         idle could get the same nothing. Fixed by passing
+         `{ timeout: 2000 }`, which turns it into a deadline. Verified: both
+         chunks now load where neither did before.
+      2. **`IntersectionObserver` never delivers a callback in that Chrome
+         either** — confirmed against a bare 300x300 fixed-position div on a
+         `data:` URL, so it is nothing to do with this site. Every scene mounts
+         from an IO callback, so no scene can ever mount under this runner.
+      Both checks now probe that capability first
+      (`intersectionObserverDelivers` in `website/scripts/lib/scene-mount.js`)
+      and **skip loudly** — "This is not a pass" — instead of asserting a
+      regression that is not there. They also retry the mount once
+      (`waitForSceneMount`) and the misleading parenthetical is reworded.
+      **Still open, and worth its own item:** these two checks now verify
+      nothing on this machine. Getting real coverage back needs a runner whose
+      Chrome delivers IO callbacks — a different channel, `headless: "shell"`
+      (needs its own Chrome download), or a headed run in CI.
+
+### Deferred from docs/planning/ (2026-08-07, 14:36 PST)
+
+- [x] **[P2]** **Structured on-device logging via `OSLog`/`Logger`.** Source:
+      `SENSEBRIDGE-04-ENGINEERING-QUALITY.md` §17 "Observability &
+      Reliability" → "Logging". Proposed: local, structured logging via
+      Apple's unified logging, with privacy-aware redaction (mark recognized
+      text/images/audio content `private` so it's never captured in device
+      logs) and level control for on-device debugging. Current state:
+      grepped `app/Packages/SenseBridgeCore/Sources` and `app/SenseBridge`
+      for `OSLog`/`Logger`/`import os` — zero hits. There is no logging of
+      any kind in the app today, debug or otherwise. Not `Needs owner` — this
+      is a self-contained implementation task, and the redaction rule
+      (**never log recognized text, images, or audio content — events and
+      states only**) should be enforced the same way `docs/PRIVACY.md`
+      already enforces "no user content persisted."
+
+      **Done 2026-08-18** (commit `bbccc45`). `AppLog.swift` defines the
+      subsystem and four category `Logger`s (sensing, perception, reasoning,
+      output). The redaction rule is enforced structurally rather than by
+      review: `AppLogPrivacyTests` scans package sources and fails if any
+      `AppLog.*` call interpolates a value without an explicit `privacy:`
+      label, and separately forbids constructing a `Logger` anywhere but
+      `AppLog.swift`. That test throws rather than passing when it finds no
+      Swift files, so an empty scan cannot masquerade as a clean one — which
+      matters, because `OSLog` defaults strings to `.private` but numerics,
+      booleans, and enums to `.public`, so the dangerous direction is the one a
+      reader is least likely to expect. `docs/ARCHITECTURE.md` gained the
+      "Logging" section `docs/PRIVACY.md:25` had been pointing at.
+
+      The stale statement above is left in place rather than rewritten: it
+      recorded what was true when the item was filed, and the closing note is
+      what supersedes it.

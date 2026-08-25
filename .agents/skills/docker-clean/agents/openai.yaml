@@ -1,4 +1,0 @@
-interface:
-  display_name: "Docker Clean"
-  short_description: "Prune Docker build cache, unused images, containers, networks"
-  default_prompt: "Use $docker-clean to reclaim local disk space from Docker, safe tier by default."

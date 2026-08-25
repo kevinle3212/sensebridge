@@ -30,17 +30,19 @@ final class DescriptionDetailUITests: XCTestCase {
         )
     }
 
-    /// Error path: with "Detailed" selected, the Describe screen's existing
-    /// no-camera error path (the Simulator has no camera, so
-    /// `startCameraIfNeeded()` settles on this state — see
-    /// `AlphaScaffoldingUITests.testDescribeScreenPassesAccessibilityAudit`)
-    /// still speaks its known message rather than crashing or going silent —
-    /// proving the detail-level plumbing added to `SceneDescriptionView`
-    /// didn't disturb the failure path.
+    /// Error path: with "Detailed" selected, the Describe screen's no-camera
+    /// error path still speaks its known message rather than crashing or going
+    /// silent — proving the detail-level plumbing added to
+    /// `SceneDescriptionView` didn't disturb the failure path.
+    ///
+    /// `-uiTestNoCamera` forces that path rather than relying on the host to
+    /// lack a camera. It used to rely on exactly that, which is why it passed
+    /// in the Simulator for months and failed on the first device run: a phone
+    /// has a camera, so the error being asserted correctly never happened.
     func testDescribeScreenStillReportsNoCameraAtDetailedLevel() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTestReset"]
+        app.launchArguments = ["-uiTestReset", "-uiTestNoCamera"]
         app.launch()
         selectDetail("Detailed", in: app)
         app.navigationBars.buttons.firstMatch.tap()

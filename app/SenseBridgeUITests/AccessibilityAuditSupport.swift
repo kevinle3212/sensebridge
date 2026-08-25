@@ -18,6 +18,18 @@ extension XCTestCase {
     /// so it scales with its paired text instead of staying a fixed point
     /// size.
     ///
+    /// "WCAG-AA-passing `AccentColor`" above was only true of its light
+    /// variant. Its dark variant was Apple's own systemBlue `#0A84FF`, which
+    /// clears 4.5:1 against black but measures **3.82:1** against `#2C2C2E`,
+    /// the dark grouped-row background a `List` actually draws on — so the
+    /// asset passed wherever anyone had checked it and failed where the app
+    /// renders. Four audits on the first device run failed on exactly that,
+    /// against the onboarding `Next` button and the Read screen's
+    /// `Reading history` link. The dark variant is now `#4DA6FF` (5.45:1 on
+    /// `#2C2C2E`, 4.99:1 on the `#323236` measured on hardware), and
+    /// `npm run check:contrast` computes every one of those ratios at rest so
+    /// the next such color cannot reach a device to be found.
+    ///
     /// Four narrow categories remain acknowledged below, verified real —
     /// not assumed — by pixel-sampling and instrumenting the audit's own
     /// evidence rather than guessing at a fix:
@@ -158,7 +170,26 @@ extension XCTestCase {
                 // visible element still fails this gate, including the
                 // labelled-element device-run findings described above.
                 guard let frame = issue.element?.frame else { return false }
-                return !readable.contains(frame)
+                if !readable.contains(frame) {
+                    return true
+                }
+                // This issue is about to fail the test. XCTest reports a
+                // contrast finding as the bare string "Contrast nearly passed",
+                // which names neither the element nor the screen — the first
+                // device run produced four of them and identified none. The
+                // element is still in hand here, so it is logged where the
+                // information exists rather than reconstructed later by
+                // guesswork.
+                let label = issue.element?.label ?? "<unlabelled>"
+                // The appearance is logged with it because this app ships a
+                // light and a dark `AccentColor`, and a finding is unactionable
+                // without knowing which of the two was on screen.
+                let appearance = XCUIDevice.shared.appearance == .dark ? "dark" : "light"
+                print(
+                    "[a11y-contrast] \"\(label)\" appearance=\(appearance) "
+                        + "frame=\(frame) — \(issue.detailedDescription)"
+                )
+                return false
             }
         }
 

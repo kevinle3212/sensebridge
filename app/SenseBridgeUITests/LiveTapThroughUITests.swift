@@ -69,7 +69,14 @@ final class LiveTapThroughUITests: XCTestCase {
         continueAfterFailure = false
         for screen in Self.cameraScreens {
             let app = XCUIApplication()
-            app.launchArguments = ["-uiTestReset"]
+            // `-uiTestNoCamera` pins every screen to its camera-unavailable
+            // path. Without it this test asks a real phone what its lens can
+            // see, and answers like "Nothing recognizable was found." — a
+            // perfectly correct result — fail the assertion because they are
+            // not in `expected`. The property under test is that the control
+            // answers at all, and forcing one deterministic answer tests that
+            // on a device exactly as well as it did in the Simulator.
+            app.launchArguments = ["-uiTestReset", "-uiTestNoCamera"]
             app.launch()
 
             element(app, labeled: screen.mode).tap()
@@ -122,10 +129,25 @@ final class LiveTapThroughUITests: XCTestCase {
 
     /// The awareness screen's one-shot check answers on tap.
     ///
-    /// The hands-free control is hidden on hardware without LiDAR, which a
-    /// simulator is, so "Check once" is the control this asserts on — and its
-    /// honest simulator outcome is that it could not measure, never that
-    /// anything is clear.
+    /// "Check once" is the control this asserts on, because it is present on
+    /// every device — the hands-free control above it is hidden without LiDAR.
+    ///
+    /// It must be scrolled to, and that is not a nicety. `singleCheckSection`
+    /// is the last section of a `List`, so on a LiDAR device the hands-free
+    /// section renders its full content above it and pushes the button off
+    /// screen — and a `List` is lazy, so an off-screen row is not merely
+    /// invisible, it is absent from the accessibility hierarchy entirely.
+    /// Without the scroll this failed on the first device run with "the
+    /// one-shot check control never appeared", which reads like a missing
+    /// control rather than an unrendered one. Its sibling
+    /// `ReadingAndAwarenessUITests.testSingleCheckWithoutDepthSaysItCouldNotMeasure`
+    /// scrolls, and passed on the same run.
+    ///
+    /// The expected outcomes differ by hardware and both are honest: a device
+    /// without depth could not measure, and a device with it reports a reading
+    /// hedged by `AwarenessZoneGeometry`. Neither may claim the way is clear —
+    /// `testNoScreenClaimsTheWayIsClearWhenSensorsAreUnavailable` below is what
+    /// asserts that, on the exact words.
     func testAwarenessSingleCheckAnswersOnTap() {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -134,12 +156,18 @@ final class LiveTapThroughUITests: XCTestCase {
 
         element(app, labeled: "Obstacle awareness").tap()
         let check = element(app, labeled: "Check once for what may be ahead")
+        scrollUntilExists(check, in: app)
         XCTAssertTrue(check.waitForExistence(timeout: 5), "the one-shot check control never appeared")
         check.tap()
 
+        // Any settled answer counts. Asserting only the no-depth wording made
+        // this a Simulator test wearing a device test's name.
+        let answered = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@", "measure", "looks like")
+        ).firstMatch
         XCTAssertTrue(
-            waitForAny(of: ["Couldn't take a measurement. Try again."], in: app, timeout: 20),
-            "the one-shot check produced no result at all"
+            answered.waitForExistence(timeout: 20),
+            "the one-shot check produced no result at all — on screen instead: \(visibleText(in: app))"
         )
     }
 
@@ -199,6 +227,22 @@ final class LiveTapThroughUITests: XCTestCase {
     /// Polling rather than `waitForExistence` per candidate: waiting on each in
     /// turn would multiply the timeout by the number of candidates, and these
     /// are alternatives, not a sequence.
+    /// Swipes up on `app` until `element` exists, bounded so a genuinely
+    /// missing element still fails fast rather than looping forever.
+    ///
+    /// A sixth private copy of a helper five other files in this target also
+    /// carry. Left duplicated rather than extracted because this project
+    /// references test sources explicitly (no file-system synchronized group),
+    /// so a shared file means hand-edited `project.pbxproj` entries — a bad
+    /// trade against a helper whose copies disagreeing costs one extra swipe.
+    private func scrollUntilExists(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 6) {
+        var remaining = maxSwipes
+        while !element.exists, remaining > 0 {
+            app.swipeUp()
+            remaining -= 1
+        }
+    }
+
     private func waitForAny(of labels: [String], in app: XCUIApplication, timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {

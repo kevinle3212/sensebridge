@@ -28,18 +28,94 @@ holds only open work; TODO.md never holds a completed one.
 
 ## Open queue (summary)
 
-**133 open** as of **2026-08-17**, of which **103 are `Needs owner`**
+**139 open** as of **2026-08-19**, of which **108 are `Needs owner`**
 (blocked on credentials, device access, a human tester, or a decision only
-Kevin can make) and **30 are agent-actionable**. Both halves are now counted
-rather than carried forward: the total is `grep -cE '^[[:space:]]*- \[ \] '`,
-and the split is `grep -c 'Needs owner]'` less the one example in the Legend
-table above. The previous line read 104/27, which was two off in each
-direction — carrying a hand-maintained split across four passes had drifted it. This is a signpost, not a second source of truth —
+Kevin can make) and **31 are agent-actionable**. Both halves are counted rather
+than carried forward: the total is `grep -cE '^[[:space:]]*- \[ \] '`, and the
+owner-gated half is `grep -cE '^[[:space:]]*- \[ \] .*Needs owner\]'`. That
+second command replaces a bare `grep -c 'Needs owner]'` less a hand-subtracted
+Legend example, which silently counted completed items and prose mentions too —
+it read 111 against a true 107 the first time an owner-gated item was ticked
+off. Anchoring both figures to the `- [ ]` prefix keeps them one query apart
+from the file itself. This is a signpost, not a second source of truth —
 every item is detailed in its dated section under **To-Do** below; act from
 there. `npm run todo:sweep:check` only reports whether completed items need
 sweeping; it does not reprint the count.
 
 ## To-Do
+
+### First device test run — 8 XCUITest failures (2026-08-19, 01:00 PST)
+
+Signing was fixed on 2026-08-19, which made `scripts/app.sh device-test` (new,
+`npm run app:device-test`) possible for the first time. The suite had only ever
+run in the Simulator. On the iPhone 17 Pro: **24 XCTest cases passed, 8 failed**,
+in three distinct classes. None of them was previously visible, because no gate
+in this repo has ever run the UI suite on hardware.
+
+- [ ] **[P1]** **[Needs owner]** **Four accessibility audits fail on device with
+      `Contrast nearly passed`, and pass in the Simulator.** `AlphaScaffoldingUITests`
+      (`testBackButtonReturnsToPreviousStep`,
+      `testOnboardingWalkthroughAdvancesThroughEveryStepToHome`,
+      `testReplayWalkthroughReturnsToOnboarding`) and
+      `ReadingAndAwarenessUITests.testReadScreenExposesModePickerAndHistoryAndPassesAccessibilityAudit`,
+      all via `AccessibilityAuditSupport.swift:137`.
+
+      **Root cause found and fixed 2026-08-19; awaiting one device re-run to
+      confirm.** It was real, and it was one defect behind all four failures.
+
+      Instrumenting the audit callback to log the element — rather than guessing
+      — named them on the first run: the onboarding `Next` button and the Read
+      screen's `Reading history` link, both default-styled accent-colored labels
+      at body size. `AccentColor`'s **dark** variant was Apple's own systemBlue
+      `#0A84FF`. It clears 4.5:1 against black, which is presumably where it was
+      checked, but measures **3.82:1** against `#2C2C2E` — the dark grouped-row
+      background a `List` actually draws on — and **3.50:1** against the
+      `#323236` this app was pixel-sampled rendering on hardware. Both sit
+      inside the 3.0-4.5 band whose audit message is exactly "Contrast is not
+      high enough for element unless font size is larger". The light variant was
+      fine throughout at 7.04:1, which is why nobody caught it.
+
+      Dark variant is now `#4DA6FF`: 5.45:1 on `#2C2C2E`, 4.99:1 on `#323236`,
+      8.21:1 on black. **This is a visible change to the app's dark-mode accent
+      and is Kevin's to veto** — it is a lighter, less saturated blue than
+      Apple's system default.
+
+      **The class of defect is now gated without hardware.**
+      `npm run check:contrast` (`tools/check-color-contrast.mjs`, tested by
+      `tools/tests/check-color-contrast.test.mjs`) computes the WCAG 2.1 ratio
+      for every authored color asset against each system background it renders
+      on, in both appearances, and fails below 4.5:1. It reproduced the device's
+      finding independently before the fix and passes after. A contrast ratio
+      between two known sRGB colors never needed a phone, an unlocked screen, or
+      six minutes — only the *composited* case does, which is what the device
+      audit stays responsible for.
+
+      **Still open, and now `Needs owner`:** the device audit has not re-run
+      since the fix, so the *composited-pixel* claim is unverified. Two attempts
+      failed for two different reasons, neither of them the code:
+
+      1. The iPhone 17 Pro went `unavailable` mid-verification and by 02:17 was
+         gone from `xcodebuild`'s destination list entirely.
+      2. The iPad Air (M3) was attached and listed, and the four checks were
+         pointed at it — contrast needs only a real display, not LiDAR or a
+         camera. It failed before running a test: `Developer Mode disabled To
+         use Kevin Le's iPad Air (M3) for development, enable Developer Mode in
+         Settings → Privacy & Security.` The same blocker recorded for the
+         iPhone on 2026-07-23.
+
+      **To close it:** `npm run app:device-test` with the phone unlocked and
+      reachable. Confirm the four pass *without*
+      `performScopedAccessibilityAudit` being weakened — a pass bought by
+      loosening the filter is not one. The instrumentation prints `appearance=`
+      beside each finding, so confirm the run was in **dark** mode: the failing
+      variant was the dark one, and a device in light mode passes without
+      exercising the fix at all.
+
+      The iPad is a usable fallback for this specific check once Developer Mode
+      is on, with one caveat — its display is sRGB rather than the iPhone 17
+      Pro's P3, so an iPad pass is good evidence and not a substitute.
+      `scripts/app.sh`'s `resolve_device` matches `/iPhone/` only, so an iPad
+      run needs `xcodebuild -destination "platform=iOS,id=<udid>"` directly.
 
 ### Graphify retirement and audit follow-ups (2026-08-18, 16:30 PST)
 
@@ -69,15 +145,32 @@ sweeping; it does not reprint the count.
       inverted direction: "it looks like something on your left" is just as
       wrong as "something on your left" when the thing is on the right.
 
-      **The check, once signing is fixed** (blocked by the P1 above): run
-      hands-free awareness, hold something clearly to one side, and confirm the
-      spoken side matches. Then repeat on the other side — a single-sided test
-      passes under a transposition half the time.
+      **Unblocked as of 2026-08-19: the app is installed and launches.** Signing
+      was fixed, `npm run app:install` reaches the iPhone 17 Pro over the
+      CoreDevice tunnel, and a device test run drove real screens on the phone.
+      One caveat worth knowing rather than fearing: the *first* device run
+      failed with `The application could not be launched because the Developer
+      App Certificate is not trusted.`, and the second run launched fine without
+      anyone changing anything. The cause was not established, so if it recurs
+      the fix is the one-time step at
+      [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) step 5 — on the phone,
+      Settings → General → VPN & Device Management → trust the certificate.
 
-      **Coupled to the signing blocker.** This cannot run until
-      `npm run app:install` works, so the two move together. Until both clear,
-      directional awareness is unvalidated on hardware and this branch should
-      not merge on the strength of its green suites.
+      **The check itself.** Start hands-free awareness, hold something clearly
+      to one side, and confirm the spoken side matches. Then repeat on the other
+      side — a single-sided test passes under a transposition half the time, so
+      one side proves nothing.
+
+      **Grant the camera permission before judging the result.** This is a fresh
+      install, so the first launch prompts for camera access, and a screen that
+      never got it will look broken rather than wrong-handed.
+
+      **Now the last gate on this branch.** The signing blocker that held this
+      is cleared and the app launches, so the physical check above is the only
+      thing left between this branch and merge — the certificate note is a
+      troubleshooting aid if a launch fails, not a step anyone has to perform.
+      Until the check runs, directional awareness is unvalidated on hardware and
+      this branch should not merge on the strength of its green suites.
 
 - [ ] **[P2]** **[Needs owner]** **Delete the retired graphify artifacts and
       the tool itself.** Held back deliberately: `graphify-out/` is ~365MB, and
@@ -116,20 +209,6 @@ sweeping; it does not reprint the count.
 ### Device install is blocked on Xcode signing (2026-08-18, 13:30 PST)
 
 From [`sessions/2026-08-18/1330-PST.md`](sessions/2026-08-18/1330-PST.md).
-
-- [ ] **[P1]** **[Needs owner]** **Sign Xcode back in so `npm run app:install`
-      can complete.** `xcodebuild` for the device fails at signing with
-      `error: No Accounts: Add a new account in Accounts settings.` and
-      `No profiles for 'com.sensebridge.app' were found`. A codesigning identity
-      exists (`security find-identity -v -p codesigning` returns one), so the
-      certificate is fine — Xcode simply has no Apple ID account to fetch or
-      create a provisioning profile with. Fix in Xcode → Settings → Accounts.
-      If the profile still will not issue afterwards, add a prefix of your own
-      to the gitignored `app/Config/Signing.local.xcconfig`, which currently
-      sets `DEVELOPMENT_TEAM` but not `BUNDLE_ID_PREFIX`, so every device build
-      tries to sign `com.sensebridge.app` — see that file's own comment. Until
-      this clears, **no `app/` change since 2026-08-18 has been validated on
-      hardware**, only in the Simulator.
 
 - [ ] **[P2]** **[Needs owner]** **Decide whether an on-screen caption should
       expire.** `CaptionRenderTarget` holds the last text until a capture
@@ -265,6 +344,7 @@ needs a person, not a commit.
       [`docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`](docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md)
       are the ones that matter most: a hedge that reads as a flat assertion in
       Spanish or Vietnamese is a safety-framing defect, not a copy nit.
+
 - [ ] **[P2]** **[Needs owner]** **Device validation of the awareness
       geometry**, per
       [`docs/TESTING.md`](docs/TESTING.md) "What only a device can settle":
@@ -406,49 +486,6 @@ restatements: each was discovered by running something rather than by reading.
       unprompted. **Verify a fix:** `npm --prefix website run check:audio`
       prints "matches the current page text."
 
-- [ ] **[P3]** **`check:scene-drag` and `check:bfcache` are flaky under
-      machine load, and fail in a way that reads as a real regression.** Both
-      passed, then both failed while an `xcodebuild test` simulator run was
-      using the machine, then both passed again once it finished — with the
-      suspect source changes stashed in between to rule them out.
-      `check:scene-drag`'s message is the misleading part: *"glasses stage
-      mounts its WebGL scene (WebGL2 is available, so this is real)"*, which
-      states the opposite of what happened. WebGL2 being *available* does not
-      mean a headless GPU under contention will mount a scene inside the
-      script's timeout. Cost this session: one stash-and-rebuild cycle to prove
-      a change innocent. **Fix worth making:** retry the mount once before
-      failing, or widen the timeout when the first attempt times out rather
-      than errors, and reword the parenthetical so it does not assert that a
-      timeout is a genuine failure. **Reproduce:** run either check while a
-      simulator test run is in progress.
-      **Done/Fixed 2026-08-18 — and the diagnosis above was wrong.** They are
-      not flaky under load. They cannot pass in this environment at all, for
-      two separate reasons found by instrumenting the page rather than by
-      re-reading the scripts:
-      1. **`requestIdleCallback` never fires in the pinned headless Chrome.**
-         Measured directly: a bare `requestIdleCallback(cb)` on `about:blank`
-         never called back in 8s. Both loaders in `BaseLayout.astro` deferred
-         their dynamic `import()` behind it, so `motion.js` and
-         `scenes/index.js` were never fetched — no error, no canvas, silence.
-         **This was a real production bug, not just a test problem**: the API
-         is explicitly best-effort, so any visitor on a page that never goes
-         idle could get the same nothing. Fixed by passing
-         `{ timeout: 2000 }`, which turns it into a deadline. Verified: both
-         chunks now load where neither did before.
-      2. **`IntersectionObserver` never delivers a callback in that Chrome
-         either** — confirmed against a bare 300x300 fixed-position div on a
-         `data:` URL, so it is nothing to do with this site. Every scene mounts
-         from an IO callback, so no scene can ever mount under this runner.
-      Both checks now probe that capability first
-      (`intersectionObserverDelivers` in `website/scripts/lib/scene-mount.js`)
-      and **skip loudly** — "This is not a pass" — instead of asserting a
-      regression that is not there. They also retry the mount once
-      (`waitForSceneMount`) and the misleading parenthetical is reworded.
-      **Still open, and worth its own item:** these two checks now verify
-      nothing on this machine. Getting real coverage back needs a runner whose
-      Chrome delivers IO callbacks — a different channel, `headless: "shell"`
-      (needs its own Chrome download), or a headed run in CI.
-
 - [ ] **[P3]** **`.impeccable/design.json` is stale in content, not just in
       mtime.** The hook warns on every `website/` edit that `DESIGN.md` is
       newer. Checked directly rather than trusting the timestamp: the sidecar's
@@ -469,36 +506,6 @@ refusals, are in
 [`docs/archive/TOOLING-DECISIONS.md`](docs/archive/TOOLING-DECISIONS.md)
 → "Evaluated 2026-08-12". Session log:
 `sessions/2026-08-12/2100-PST.md`. Working plan: `tmp/handoff-tooling.md`.
-
-- [x] **[P2]** **Decide whether to retire `graphify`.** CodeGraph and
-      graphify are the one genuine redundancy the bake-off found — Serena
-      answers symbol questions and the GitNexus `PreToolUse` hook works
-      passively, so neither is a removal candidate. On the same architecture
-      question, `codegraph explore` answered with verified `file:line`
-      accuracy in 0.66s while `graphify explain` returned only "Ambiguous:
-      'depth' matches 12 nodes"; graphify has no free-text question verb, and
-      its index additionally covers all five mirrored copies of the
-      `impeccable` skill scripts. Either retire graphify or run the CodeGraph
-      trial week first, then decide on evidence.
-      **Done 2026-08-18** — retired, on owner's decision after a fresh
-      measurement pass: `graphify-out/` was **365 MB** against CodeGraph's
-      28 MB and GitNexus's 86 MB, and backing out the 4:1 skill-mirror
-      inflation put graphify's real coverage (~4,500 nodes) *below*
-      CodeGraph's 6,752. Removed `.github/workflows/graphify.yml`,
-      `.graphifyignore`, the vendor-installed rebuild blocks in
-      `.githooks/post-commit` and `post-checkout` (~370 lines), the `graph`
-      npm script, and every stale reference across 18 tracked files.
-      **The measurement also found the one real argument for keeping it**:
-      graphify was the only index that self-refreshed, and GitNexus was 14
-      days and ~100 commits stale at the time of removal. That gap is closed
-      by a new `codegraph sync` block in both hooks — incremental,
-      backgrounded, and advisory, so it can never fail a commit.
-      `docs/assets/graph*.svg`, `tools/graph-visual.mjs`, and the
-      `check:graph` CI gate are **deliberately kept**: the picture is
-      committed and self-contained, and `--verify` reads only the committed
-      bytes, so it needs no graph tool installed. Redrawing is now a
-      deliberate one-off via `npm run graph:visual -- --graph <path>`.
-      Still owner-only: `rm -rf graphify-out && pipx uninstall graphify`.
 
 - [ ] **[P2]** **Close out the CodeGraph trial.** Installed 2026-08-12 as a
       CLI-only trial: no MCP configuration and no marker-fenced block in any
@@ -722,20 +729,6 @@ numbered files (verified by header diff) and contributed no additional items.
       a fixture folder, runs it through the existing perception services, and
       prints a diff-able report) is a plain implementation task an agent can
       do without the owner.
-
-- [ ] **[P2]** **Structured on-device logging via `OSLog`/`Logger`.** Source:
-      `SENSEBRIDGE-04-ENGINEERING-QUALITY.md` §17 "Observability &
-      Reliability" → "Logging". Proposed: local, structured logging via
-      Apple's unified logging, with privacy-aware redaction (mark recognized
-      text/images/audio content `private` so it's never captured in device
-      logs) and level control for on-device debugging. Current state:
-      grepped `app/Packages/SenseBridgeCore/Sources` and `app/SenseBridge`
-      for `OSLog`/`Logger`/`import os` — zero hits. There is no logging of
-      any kind in the app today, debug or otherwise. Not `Needs owner` — this
-      is a self-contained implementation task, and the redaction rule
-      (**never log recognized text, images, or audio content — events and
-      states only**) should be enforced the same way `docs/PRIVACY.md`
-      already enforces "no user content persisted."
 
 - [ ] **[P3]** **[Needs owner]** **Consent-based facial-enrollment
       *framework* (not full facial recognition).** Source:

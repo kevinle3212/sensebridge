@@ -10,7 +10,7 @@ policy — `.claude/skills/`, `.cursor/rules/sensebridge-skills.mdc`, and
 `.gemini/skills/sensebridge-router/SKILL.md` route here, they do not restate
 policy.
 
-Use the global `bmad` skill (`~/.agents/skills/bmad`) for product planning —
+Use the global `bmad` skill (`~/.claude/skills/bmad`) for product planning —
 it is a gated router over twenty BMad bodies and deliberately does not fire on
 coding work; `council` before an
 important or hard-to-reverse architectural decision; `impeccable` for

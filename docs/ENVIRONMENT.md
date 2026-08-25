@@ -223,6 +223,7 @@ markdownlint-cli2 — no heavy dependencies).
 | `app:build` | Simulator build, no code signing (what `pre-push` runs) |
 | `app:package-test` | `xcodebuild test` for every package under `app/Packages/*` |
 | `app:device` | Signed build for the attached iPhone |
+| `app:device-test` | Signed build + test **on** the attached iPhone — the only command that runs the suite against real ARKit, LiDAR, and arm64. **Not green yet:** its first run (2026-08-19) was 24 passed / 8 failed, in three classes tracked in `TODO.md`. Some of those are tests that assert the Simulator's no-camera path, so they cannot pass on a phone; the contrast findings appear to be real. |
 | `app:install` | Device build, then install onto the attached iPhone |
 | `app:clean` / `app:open` | Clean build products / open the Xcode project |
 | `lint` | `lint:swift` + `lint:md` + `lint:mjs` |
@@ -235,6 +236,7 @@ markdownlint-cli2 — no heavy dependencies).
 | `format:mjs` / `format:mjs:fix` | Prettier (check / write) over the same `.mjs` files `lint:mjs` covers |
 | `check` | Every non-Swift gate below, in order |
 | `check:sensitive` / `:all` | `tools/check-sensitive-files.mjs` — staged, or the whole tree |
+| `check:contrast` | Every authored color asset clears WCAG AA (4.5:1) against the system backgrounds it renders on, in both appearances (`tools/check-color-contrast.mjs`). Device-free arithmetic that catches the class of contrast defect the on-device `XCUIAccessibilityAudit` reports as a bare "Contrast nearly passed" |
 | `check:skills` | Canonical skill tree, personas, and harness adapters match the hash-lock (`tools/skill-lock.mjs`) |
 | `check:hooks` | `.claude/settings.json` carries no owner-personal or double-registered hook (`tools/check-settings-hooks.mjs`) |
 | `check:bmad` | BMAD's `user_skill_level` still reads `expert` in both config files (`tools/check-bmad-config.mjs`) |

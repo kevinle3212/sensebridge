@@ -8,8 +8,12 @@ description:
 
 # Security Review — SenseBridge
 
-This command **extends** Claude Code's built-in `/security-review`
-(`anthropics/claude-code-security-review`); it does not replace it. Run the
+This command **extends** two things rather than replacing either: the global
+`security-review` skill (`~/.claude/skills/security-review/SKILL.md`), which is
+the severity-ordered base checklist for every project on this machine, and
+Claude Code's built-in `/security-review`
+(`anthropics/claude-code-security-review`). Work the global checklist first,
+then layer the project-specific passes below on top of it. Run the
 standard diff-scoped security analysis first — injection (SQL/command/LDAP/NoSQL/
 XXE), auth/authz flaws, data exposure and hardcoded secrets, crypto weaknesses,
 input validation, business-logic flaws, XSS, with false-positive filtering — then

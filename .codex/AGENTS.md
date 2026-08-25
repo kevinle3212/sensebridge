@@ -8,8 +8,8 @@ Codex defaults live in `~/.codex/`.
 
 ## MCP and navigation
 
-- Serena (`.codex/config.toml`) provides symbolic navigation and focused
-  repository inspection; prefer it over raw text search.
+- User-scope Serena provides symbolic navigation and focused repository
+  inspection; prefer it over raw text search.
 - `codegraph explore "<question>"` answers codebase/architecture questions
   against `.codegraph/` (generated output is gitignored). The `post-commit`
   hook runs `codegraph sync` for you; run it by hand after changing code

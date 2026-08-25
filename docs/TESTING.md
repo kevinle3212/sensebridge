@@ -151,6 +151,61 @@ worth knowing before adding an audit:
   categories once scrolled. Contrast findings on elements that are not fully
   visible are exempted by geometry, since the pixels being measured are the
   navigation bar's material rather than the app's.
+- **The audit names its finding, since 2026-08-19.** `XCUIAccessibilityAudit`
+  reports a contrast failure as the bare string `Contrast nearly passed` —
+  naming neither the element, the screen, nor the ratio. The first device run
+  produced four of them and identified none. The handler now logs the label,
+  the appearance, the frame, and the audit's own detailed description for every
+  issue it is about to fail on, which is what turned "four unexplained
+  failures" into "the onboarding `Next` button and the Read screen's `Reading
+  history` link" in a single run.
+
+**A device-free gate catches the arithmetic half of this.**
+`npm run check:contrast` (`tools/check-color-contrast.mjs`) computes the WCAG
+2.1 ratio for every authored color asset against each system background it is
+drawn on, in both appearances, and fails below 4.5:1. It does not replace the
+device audit — a color can clear the arithmetic and still be composited over
+something unexpected — but the contrast ratio of two known sRGB colors never
+needed a phone, an unlocked screen, or six minutes to compute. It found the
+defect behind all four device failures in milliseconds: `AccentColor`'s dark
+variant was Apple's own systemBlue `#0A84FF`, which is 3.82:1 against iOS's
+dark grouped-row background `#2C2C2E` and 3.50:1 against the `#323236` this app
+was pixel-sampled rendering on hardware. Both sit in the 3.0-4.5 band whose
+audit message is precisely "not high enough unless font size is larger".
+
+## Which destination a UI test means something on
+
+`npm run app:test` runs the UI suite in the Simulator. `npm run app:device-test`
+runs the same suite on an attached iPhone, and is the only command that
+exercises real ARKit, LiDAR, the camera, and arm64. **They are not
+interchangeable, and a green Simulator run is not evidence for the device.**
+
+The first device run of this suite (2026-08-19) failed eight tests, and not one
+of them was a regression. They divided cleanly:
+
+- **Tests that assumed the host has no camera.** Three of them asserted the
+  no-camera *error* path, which they got for free from a Simulator that
+  genuinely has none. A phone has a camera, so the path they assert is
+  correctly never entered. They now pass `-uiTestNoCamera`, which
+  `CameraController` honors in both `start(applying:)` and `capturePhoto()` and
+  which is compiled out of release builds. **Force the state you are asserting
+  on; never inherit it from the host** — a test that depends on the Simulator's
+  hardware limitations is a Simulator test wearing a portable test's name.
+- **A test that did not scroll.** `singleCheckSection` is the last section of a
+  `List`, so on a LiDAR device the hands-free section above it renders in full
+  and pushes it off screen — and a lazy `List` leaves an off-screen row out of
+  the accessibility hierarchy entirely, not merely out of view. Reaching a
+  control near the bottom of a screen requires `scrollUntilExists`, whatever the
+  Simulator happens to fit on one page.
+- **Contrast findings the Simulator cannot produce.** See the audit gate above:
+  `.contrast` is measured off rendered pixels, and the device renders through a
+  P3 display with True Tone that the Simulator does not model. This is the one
+  audit category where the device is the authority and the Simulator's green is
+  not evidence.
+
+Everything else in the suite is destination-independent by design, and should
+stay that way. If a test can only pass on one destination, that belongs in its
+doc comment, in the words of what it actually depends on.
 
 ## What only a device can settle
 
@@ -162,8 +217,12 @@ and this list exists so they are tracked rather than assumed:
   `CGImagePropertyOrientation.right`, and `AwarenessZoneGeometryTests` pins the
   ordering — but a test can only prove the code matches the assumption, never
   that the assumption matches the hardware. Getting it backwards would
-  confidently send someone the wrong way, so this needs one LiDAR-device check:
-  hold something clearly to one side and confirm the spoken side matches.
+  confidently send someone the wrong way, so this needs a LiDAR-device check:
+  hold something clearly to one side, confirm the spoken side matches, then
+  repeat on the other side. Both sides, because the failure being ruled out is
+  a transposition — and a transposition passes a single-sided test half the
+  time, which is the one result that would look like validation without being
+  any.
 - **That no reading survives a stop/start.** `latestFrame(orientation:)` drops
   frames older than the current `run(_:options:)`, which is what stops a check
   taken in one room being answered with the frame captured in another. The whole
