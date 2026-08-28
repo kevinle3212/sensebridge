@@ -49,6 +49,18 @@ the README for the full list, and the
 alerts. These catch classes of bugs before review; they don't replace a
 private report for anything they miss.
 
+## Accepted dependency risks
+
+An advisory is only ever accepted when there is no fixed version to upgrade
+to. Each acceptance is recorded next to the lockfile it applies to, states the
+reachable attack path, and carries a date by which it must be argued again
+rather than renewed silently. `osv-scanner` prints the reason on every run, so
+an acceptance stays visible instead of disappearing into config.
+
+| Advisory | Package | Where it is recorded | Re-argue by |
+| --- | --- | --- | --- |
+| [GHSA-jmr9-qjv8-65gv](https://osv.dev/GHSA-jmr9-qjv8-65gv) | `extract-zip` 2.0.1 (dev only, via `pa11y-ci` → `puppeteer`) | [`website/osv-scanner.toml`](website/osv-scanner.toml) | 2026-11-18 |
+
 ## Out of scope (for now)
 
 Account takeover, server-side issues, and anything requiring a backend the
