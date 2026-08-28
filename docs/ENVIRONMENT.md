@@ -215,6 +215,7 @@ markdownlint-cli2 — no heavy dependencies).
 | `check:links` | Relative Markdown links resolve (`scripts/check-links.sh`) |
 | `check:docs-js` | `docs/assets/js/docs.js` parses — it ships unbundled |
 | `check:env-loader` | `scripts/env.sh` parses `.env` rather than executing it |
+| `check:linguist` | Vendored skill trees stay out of GitHub's language breakdown while first-party JavaScript and TypeScript remain counted (`tools/check-linguist-vendored.mjs`) |
 | `check:secrets` | `gitleaks detect` (needs `brew install gitleaks`) |
 | `check:deps` | `osv-scanner` over both lockfiles (needs `brew install osv-scanner`) |
 | `docs:build` | Render `docs/` to `tmp/_site` with the `github-pages` gem bundle, containerized (needs Docker) |
