@@ -475,6 +475,17 @@ Two things do not reproduce locally, so check them deliberately:
   and no typecheck, lint, build, or first-visit browser check can see it.
   Skips loudly (never silently passes) when the runner has no WebGL2 or its
   Chrome declines to bfcache the page.
+- `npm run check:context-restore` — visits the built `dist/`, mounts the phone
+  stage, then uses the `WEBGL_lose_context` extension to drop its GL context and
+  asserts the stage falls back to its static art **without disposing the scene**
+  (the canvas stays in the DOM), then that a `webglcontextrestored` brings the
+  scene back live. Requires `npm run build` first; same ephemeral `dist/` server
+  as `check:scene-drag`. This exists because a browser evicts the oldest of the
+  several WebGL contexts this site mounts once too many are live, and the scene
+  engine used to treat that eviction as permanent teardown — the scene vanished
+  to bare fallback shapes for the rest of the session. Skips loudly (never
+  silently passes) when the runner has no WebGL2 or its software renderer cannot
+  actually restore a context.
 - `npm run check:site-url` — asserts every absolute URL in the built `dist/`
   (canonical link, sitemap, `robots.txt`) comes from the configured `SITE_URL`
   rather than a domain baked into tracked source. Requires `npm run build`
