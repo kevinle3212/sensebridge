@@ -90,33 +90,38 @@ final class AlphaScaffoldingUITests: XCTestCase {
         _ app: XCUIApplication,
         allowsListFormAuditQuirks: Bool = false
     ) throws {
+        // On a List/Form screen the audit is narrowed to the categories this
+        // suite actually enforces. `.all` additionally runs `.dynamicType`,
+        // which re-renders the whole screen at every text size and re-walks the
+        // hierarchy each time — findings this suite discards anyway — and that
+        // cost is what makes the Settings audit exceed its own time budget and
+        // throw Code=-56 under load. Non-List screens stay on `.all`.
+        let auditTypes: XCUIAccessibilityAuditType = allowsListFormAuditQuirks
+            ? [.contrast, .hitRegion, .sufficientElementDescription, .trait]
+            : .all
         // The region a user can actually read: the window minus whatever the
         // navigation bar's translucent material sits over. Contrast is measured
-        // off rendered pixels, so a finding on a row that is not fully in view
-        // (half under the nav bar, or scrolled off) is meaningless — which is the
-        // non-determinism that flaked this suite's Settings audit only in
-        // full-suite runs, where the scroll stop varies.
+        // off rendered pixels, so a finding on a row not fully in view (half
+        // under the nav bar, or scrolled off) is meaningless — the
+        // non-determinism that flaked this audit only in full-suite runs.
         let readable = app.navigationBars.firstMatch.exists
             ? app.frame.divided(
                 atDistance: app.navigationBars.firstMatch.frame.maxY, from: .minYEdge
             ).remainder
             : app.frame
         func audit() throws {
-            try app.performAccessibilityAudit { issue in
-                if issue.auditType == .contrast {
-                    // An unlabelled contrast finding is system chrome (e.g. a
-                    // Picker's trailing value text), not app content.
-                    if issue.element?.label == nil {
-                        return true
-                    }
-                    // A partially- or off-screen row's contrast is not real.
-                    if let frame = issue.element?.frame, !readable.contains(frame) {
-                        return true
-                    }
-                    return false
+            try app.performAccessibilityAudit(for: auditTypes) { issue in
+                guard issue.auditType == .contrast else { return false }
+                // An unlabelled contrast finding is system chrome (e.g. a
+                // Picker's trailing value text), not app content.
+                if issue.element?.label == nil {
+                    return true
                 }
-                return allowsListFormAuditQuirks
-                    && [.dynamicType, .textClipped, .elementDetection].contains(issue.auditType)
+                // A partially- or off-screen row's contrast is not real.
+                if let frame = issue.element?.frame, !readable.contains(frame) {
+                    return true
+                }
+                return false
             }
         }
         do {
@@ -124,9 +129,8 @@ final class AlphaScaffoldingUITests: XCTestCase {
         } catch let error as NSError
             where error.domain == "com.apple.xcode.xctest.accessibilityAudit" && error.code == -56 {
             // A timeout is the absence of a verdict, not a pass: the audit ran
-            // out of its own budget while the Simulator was busy with the rest of
-            // the suite. Retrying asserts the same thing again; a second timeout
-            // still fails the test.
+            // out of its own budget while the Simulator was busy with the rest
+            // of the suite. Retry; a second timeout still fails the test.
             try audit()
         }
     }
