@@ -106,7 +106,9 @@ final class AlphaScaffoldingUITests: XCTestCase {
                 if issue.auditType == .contrast {
                     // An unlabelled contrast finding is system chrome (e.g. a
                     // Picker's trailing value text), not app content.
-                    if issue.element?.label == nil { return true }
+                    if issue.element?.label == nil {
+                        return true
+                    }
                     // A partially- or off-screen row's contrast is not real.
                     if let frame = issue.element?.frame, !readable.contains(frame) {
                         return true
