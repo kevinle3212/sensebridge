@@ -90,20 +90,42 @@ final class AlphaScaffoldingUITests: XCTestCase {
         _ app: XCUIApplication,
         allowsListFormAuditQuirks: Bool = false
     ) throws {
-        try app.performAccessibilityAudit { issue in
-            // A disabled control is an inactive UI component, which WCAG 1.4.3
-            // exempts from contrast: SwiftUI dims it by design, and no restyling
-            // lifts a greyed-out control above a ratio it is deliberately below.
-            // The default-off Haptics rows ("Preview haptic", "Haptic intensity")
-            // are what this reaches; whether they land inside the audited region
-            // varies with layout, which is why the Settings-awareness audit
-            // flaked. Enabled elements are still measured, so the gate holds.
-            if issue.auditType == .contrast && issue.element?.isEnabled == false {
-                return true
+        // The region a user can actually read: the window minus whatever the
+        // navigation bar's translucent material sits over. Contrast is measured
+        // off rendered pixels, so a finding on a row that is not fully in view
+        // (half under the nav bar, or scrolled off) is meaningless — which is the
+        // non-determinism that flaked this suite's Settings audit only in
+        // full-suite runs, where the scroll stop varies.
+        let readable = app.navigationBars.firstMatch.exists
+            ? app.frame.divided(
+                atDistance: app.navigationBars.firstMatch.frame.maxY, from: .minYEdge
+            ).remainder
+            : app.frame
+        func audit() throws {
+            try app.performAccessibilityAudit { issue in
+                if issue.auditType == .contrast {
+                    // An unlabelled contrast finding is system chrome (e.g. a
+                    // Picker's trailing value text), not app content.
+                    if issue.element?.label == nil { return true }
+                    // A partially- or off-screen row's contrast is not real.
+                    if let frame = issue.element?.frame, !readable.contains(frame) {
+                        return true
+                    }
+                    return false
+                }
+                return allowsListFormAuditQuirks
+                    && [.dynamicType, .textClipped, .elementDetection].contains(issue.auditType)
             }
-            return (issue.auditType == .contrast && issue.element?.label == nil)
-                || (allowsListFormAuditQuirks
-                    && [.dynamicType, .textClipped, .elementDetection].contains(issue.auditType))
+        }
+        do {
+            try audit()
+        } catch let error as NSError
+            where error.domain == "com.apple.xcode.xctest.accessibilityAudit" && error.code == -56 {
+            // A timeout is the absence of a verdict, not a pass: the audit ran
+            // out of its own budget while the Simulator was busy with the rest of
+            // the suite. Retrying asserts the same thing again; a second timeout
+            // still fails the test.
+            try audit()
         }
     }
 
