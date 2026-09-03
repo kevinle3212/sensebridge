@@ -91,7 +91,17 @@ final class AlphaScaffoldingUITests: XCTestCase {
         allowsListFormAuditQuirks: Bool = false
     ) throws {
         try app.performAccessibilityAudit { issue in
-            (issue.auditType == .contrast && issue.element?.label == nil)
+            // A disabled control is an inactive UI component, which WCAG 1.4.3
+            // exempts from contrast: SwiftUI dims it by design, and no restyling
+            // lifts a greyed-out control above a ratio it is deliberately below.
+            // The default-off Haptics rows ("Preview haptic", "Haptic intensity")
+            // are what this reaches; whether they land inside the audited region
+            // varies with layout, which is why the Settings-awareness audit
+            // flaked. Enabled elements are still measured, so the gate holds.
+            if issue.auditType == .contrast && issue.element?.isEnabled == false {
+                return true
+            }
+            return (issue.auditType == .contrast && issue.element?.label == nil)
                 || (allowsListFormAuditQuirks
                     && [.dynamicType, .textClipped, .elementDetection].contains(issue.auditType))
         }
