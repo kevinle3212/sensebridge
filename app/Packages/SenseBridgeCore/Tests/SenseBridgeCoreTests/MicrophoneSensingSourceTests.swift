@@ -22,7 +22,19 @@ import Testing
 // test on an interactive permission prompt's outcome.
 @Suite(.serialized)
 struct MicrophoneSensingSourceTests {
-    @Test(.enabled(if: MicrophoneSensingSource.authorizationStatus == .authorized))
+    // Live microphone capture cannot run on a headless CI runner: it has no
+    // audio input device, and `AVAudioEngine.start()` there blocks indefinitely
+    // rather than returning or throwing -- the whole test job hangs on it with
+    // no output, not a fast pass/fail. The authorization gate below already
+    // skips these on a machine that has never granted mic access, but a runner
+    // can report `.authorized` while still having no capture hardware, so CI is
+    // excluded explicitly. GitHub Actions and most CI providers set `CI=true`.
+    private static var canCaptureMicrophone: Bool {
+        MicrophoneSensingSource.authorizationStatus == .authorized
+            && ProcessInfo.processInfo.environment["CI"] == nil
+    }
+
+    @Test(.enabled(if: canCaptureMicrophone))
     func recordingProducesNonEmptyWAVData() async throws {
         let source = MicrophoneSensingSource()
         // No real sound is expected -- this asserts the capture pipeline
@@ -33,7 +45,7 @@ struct MicrophoneSensingSourceTests {
         #expect(data.prefix(4) == Data("RIFF".utf8))
     }
 
-    @Test(.enabled(if: MicrophoneSensingSource.authorizationStatus == .authorized))
+    @Test(.enabled(if: canCaptureMicrophone))
     func cancellingStopsTheRecordingPromptly() async throws {
         // The regression: the sleep used to run inside an unstructured `Task`
         // created from a `withCheckedThrowingContinuation` closure. That closure

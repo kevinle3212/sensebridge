@@ -56,8 +56,16 @@ jobs:
             # summary as the normal log while a raw copy survives on disk; it is
             # only ever printed (which test failed, and why) when the run
             # actually failed, so a passing run's log stays exactly as short.
+            # A single-library package exposes one scheme named after the
+            # package, and that scheme carries the test action. Adding a second
+            # target (e.g. an executable) makes xcodebuild split schemes: the
+            # bare "$name" scheme becomes library-only with no test action, and
+            # the aggregate "$name-Package" scheme is the one that tests. Prefer
+            # the -Package scheme when it exists so both package shapes test.
             (cd "$dir" && \
-              xcodebuild test -scheme "$name" -destination 'platform=macOS' 2>&1 | tee /tmp/xcodebuild-raw.log | xcpretty; \
+              scheme="$name"; \
+              if xcodebuild -list 2>/dev/null | grep -qE "^[[:space:]]*${name}-Package$"; then scheme="${name}-Package"; fi; \
+              xcodebuild test -scheme "$scheme" -destination 'platform=macOS' 2>&1 | tee /tmp/xcodebuild-raw.log | xcpretty; \
               status="${PIPESTATUS[0]}"; \
               if [ "$status" -ne 0 ]; then \
                 echo "::group::Raw xcodebuild output (xcpretty suppresses per-test failure detail)"; \
