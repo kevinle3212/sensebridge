@@ -22,13 +22,13 @@ import Testing
 // test on an interactive permission prompt's outcome.
 @Suite(.serialized)
 struct MicrophoneSensingSourceTests {
-    // Live microphone capture cannot run on a headless CI runner: it has no
-    // audio input device, and `AVAudioEngine.start()` there blocks indefinitely
-    // rather than returning or throwing -- the whole test job hangs on it with
-    // no output, not a fast pass/fail. The authorization gate below already
-    // skips these on a machine that has never granted mic access, but a runner
-    // can report `.authorized` while still having no capture hardware, so CI is
-    // excluded explicitly. GitHub Actions and most CI providers set `CI=true`.
+    /// Live microphone capture cannot run on a headless CI runner: it has no
+    /// audio input device, and `AVAudioEngine.start()` there blocks indefinitely
+    /// rather than returning or throwing -- the whole test job hangs on it with
+    /// no output, not a fast pass/fail. The authorization gate below already
+    /// skips these on a machine that has never granted mic access, but a runner
+    /// can report `.authorized` while still having no capture hardware, so CI is
+    /// excluded explicitly. GitHub Actions and most CI providers set `CI=true`.
     private static var canCaptureMicrophone: Bool {
         MicrophoneSensingSource.authorizationStatus == .authorized
             && ProcessInfo.processInfo.environment["CI"] == nil

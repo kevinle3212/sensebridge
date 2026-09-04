@@ -20,13 +20,13 @@ struct SenseBridgeApp: App {
                 .safeAreaInset(edge: .bottom) {
                     CaptionOverlay()
                 }
-                #if DEBUG
+            #if DEBUG
                 .safeAreaInset(edge: .bottom) {
                     // Stacks beneath the caption inset, never over content —
                     // see `DevWatermarkFooter` for why it is dev-only.
                     DevWatermarkFooter()
                 }
-                #endif
+            #endif
                 .environment(environment)
                 .environment(\.locale, environment.settings.language.locale ?? .autoupdatingCurrent)
         }
