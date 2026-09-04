@@ -156,7 +156,19 @@ extension XCTestCase {
         /// One audit pass, so the timeout below can run a second one.
         func audit() throws {
             try app.performAccessibilityAudit(for: auditTypes) { issue in
-                guard issue.auditType == .contrast else { return false }
+                guard issue.auditType == .contrast else {
+                    // A non-contrast finding (e.g. `.dynamicType`) is about to
+                    // fail the test. XCTest reports only the bare category, so
+                    // log the element and screen where they are still in hand.
+                    let label = issue.element?.label ?? "<unlabelled>"
+                    let frame = issue.element.map { "\($0.frame)" } ?? "?"
+                    let type = issue.auditType.rawValue
+                    print(
+                        "[a11y-audit] type=\(type) \"\(label)\" "
+                            + "frame=\(frame) — \(issue.detailedDescription)"
+                    )
+                    return false
+                }
                 // An unlabelled element is system chrome, not app content.
                 if issue.element?.label == nil {
                     return true

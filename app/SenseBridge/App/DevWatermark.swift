@@ -20,8 +20,15 @@ import SwiftUI
         var body: some View {
             if let installed = Self.lastDownloadedDate(at: Bundle.main.bundlePath) {
                 Text("Last Downloaded: \(Self.formatted(installed))")
-                    .font(.caption2.monospaced())
-                    .foregroundStyle(.secondary)
+                    // `.system(.caption2, design: .monospaced)` keeps the text
+                    // style's Dynamic Type scaling, which `.caption2.monospaced()`
+                    // drops — the accessibility audit flags the latter as
+                    // "Dynamic Type font sizes are partially unsupported".
+                    .font(.system(.caption2, design: .monospaced))
+                    // `.primary`, not `.secondary`: even this debug-only footer
+                    // is on screen, and `.secondary` on `.bar` fails the WCAG-AA
+                    // contrast audit that gates every screen.
+                    .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 2)
                     .background(.bar)
