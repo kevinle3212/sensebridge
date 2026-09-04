@@ -1,0 +1,41 @@
+# osv-scanner configuration for website/package-lock.json.
+#
+# Read by both the pre-push hook (.githooks/pre-push) and CI's osv-scan job
+# (.github/workflows/security.yml), which scan this lockfile by explicit path.
+# osv-scanner resolves its config from the directory holding the lockfile, so
+# this file must live here and not at the repository root.
+#
+# Nothing is ignored here to make a task easier. An entry is only added when
+# there is no fixed version to upgrade to, and every entry states the reachable
+# attack path and a date by which it must be re-argued rather than renewed
+# silently.
+
+[[IgnoredVulns]]
+id = "GHSA-jmr9-qjv8-65gv"
+ignoreUntil = 2026-11-18
+reason = """
+extract-zip 2.0.1 — unvalidated symlink path traversal (zip slip), CVSS 8.6.
+
+No fix exists. 2.0.1 is the latest published version and the package is
+unmaintained, so there is nothing to upgrade to; the advisory's affected range
+is every version ever released.
+
+Why it is accepted rather than removed:
+
+  - It is a development-only dependency, three levels deep and never shipped
+    to a user: pa11y-ci -> puppeteer -> @puppeteer/browsers -> extract-zip.
+    Nothing in website/dist/ contains it.
+  - The only archive it ever unpacks is a Chrome for Testing build fetched
+    over HTTPS from Google's own CDN by @puppeteer/browsers. No archive from
+    an untrusted party reaches it, so the malicious-zip precondition the
+    advisory requires is not met by any code path this repository runs.
+  - Removing it means removing pa11y-ci, which is the accessibility gate.
+    Trading a real, enforced accessibility check for a theoretical zip-slip on
+    a Google-signed download would make this project worse, and accessibility
+    is a hard gate here rather than a preference.
+
+Revisit by 2026-11-18: check whether extract-zip has been patched or forked
+under a maintained name, or whether @puppeteer/browsers has dropped it. If it
+is still unfixed then, re-argue this entry from scratch — do not extend the
+date without re-reading the dependency path above.
+"""
