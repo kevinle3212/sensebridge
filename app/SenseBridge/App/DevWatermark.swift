@@ -25,13 +25,17 @@ import SwiftUI
                     // drops — the accessibility audit flags the latter as
                     // "Dynamic Type font sizes are partially unsupported".
                     .font(.system(.caption2, design: .monospaced))
-                    // `.primary`, not `.secondary`: even this debug-only footer
-                    // is on screen, and `.secondary` on `.bar` fails the WCAG-AA
-                    // contrast audit that gates every screen.
+                    // `.primary` on a *solid* background: even this debug-only
+                    // footer is on screen and audited. The accessibility audit
+                    // cannot measure contrast over the translucent `.bar`
+                    // material (it samples whatever screen content shows
+                    // through), so it failed on every screen; a solid
+                    // `.systemBackground` with `.primary` text is an
+                    // unambiguous ~21:1 the audit can verify.
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 2)
-                    .background(.bar)
+                    .background(Color(uiColor: .systemBackground))
                     .accessibilityHidden(true)
                     .allowsHitTesting(false)
             }
