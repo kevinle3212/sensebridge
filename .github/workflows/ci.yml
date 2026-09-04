@@ -77,7 +77,7 @@ jobs:
               set +e
               scheme="$name"
               if xcodebuild -list 2>/dev/null | grep -qE "^[[:space:]]*${name}-Package$"; then scheme="${name}-Package"; fi
-              xcodebuild test -scheme "$scheme" -destination 'platform=macOS' > /tmp/xcodebuild-raw.log 2>&1 &
+              script -q /dev/null xcodebuild test -scheme "$scheme" -destination 'platform=macOS' > /tmp/xcodebuild-raw.log 2>&1 &
               xcpid=$!
               ( sleep 480; echo ">>> WATCHDOG: no completion after 480s, killing xcodebuild (likely a hang)" >> /tmp/xcodebuild-raw.log; kill -9 "$xcpid" 2>/dev/null ) &
               wdpid=$!
