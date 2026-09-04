@@ -68,7 +68,7 @@
     "vercel:inspect": "node scripts/with-env.js npx --yes vercel inspect --logs"
   },
   "dependencies": {
-    "@astrojs/react": "^6.0.1",
+    "@astrojs/react": "^6.0.5",
     "@astrojs/sitemap": "^3.7.3",
     "@inlang/paraglide-js": "^2.25.0",
     "@sentry/astro": "^10.71.0",
