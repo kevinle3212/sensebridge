@@ -147,7 +147,12 @@ enum CrashReporting {
     /// rule in `docs/ARCHITECTURE.md` already forbids recognized text, images,
     /// and audio from appearing in any message the app constructs. If that rule
     /// is ever relaxed, this function is where the consequence lands.
-    static func scrub(_ event: Event) -> Event {
+    ///
+    /// `nonisolated`: Sentry runs `beforeSend` on its own background thread, so
+    /// this must be callable off the main actor. It touches no actor-isolated
+    /// state — only the `event` it is handed — so dropping the enum's `@MainActor`
+    /// isolation here is safe.
+    nonisolated static func scrub(_ event: Event) -> Event {
         event.user = nil
         event.serverName = nil
         event.request = nil
