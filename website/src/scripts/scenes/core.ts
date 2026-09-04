@@ -175,11 +175,14 @@ export function mountScene(container: HTMLElement, factory: SceneFactory): Mount
   const startTime = performance.now();
   let lastTime = startTime;
   let rafId = 0;
+  // Set while the GL context is lost (see handleContextLost): the loop keeps
+  // ticking but skips rendering, since drawing into a lost context throws.
+  let contextLost = false;
   const loop = (time: number): void => {
     rafId = requestAnimationFrame(loop);
     const deltaSeconds = Math.min((time - lastTime) / 1000, 0.1);
     lastTime = time;
-    if (!inView || !documentVisible) {
+    if (!inView || !documentVisible || contextLost) {
       return;
     }
     instance.render((time - startTime) / 1000, deltaSeconds);
@@ -200,17 +203,37 @@ export function mountScene(container: HTMLElement, factory: SceneFactory): Mount
     intersectionObserver.disconnect();
     document.removeEventListener("visibilitychange", handleVisibilityChange);
     canvas.removeEventListener("webglcontextlost", handleContextLost);
+    canvas.removeEventListener("webglcontextrestored", handleContextRestored);
     theme.dispose();
     instance.dispose();
     renderer.dispose();
     canvas.remove();
   };
 
+  // A lost GL context is almost always transient — the browser evicts the
+  // oldest context when a page (or the machine) has too many live at once, then
+  // hands it back. Treating loss as permanent teardown (the previous behaviour)
+  // is why scenes silently degraded to their static fallback art the longer a
+  // session ran: several scenes each hold a context, one gets evicted, and it
+  // never came back. So loss now pauses instead of disposing — preventDefault()
+  // keeps the context recoverable, and THREE.WebGLRenderer re-initialises all
+  // GPU resources itself on `webglcontextrestored`, so the scene simply resumes.
+  // ponytail: relies on THREE's built-in restore; if too many concurrent
+  // contexts start thrashing (evict-restore loops), cap live scenes here.
   function handleContextLost(event: Event): void {
     event.preventDefault();
-    dispose();
+    contextLost = true;
+    // Show the static CSS/SVG fallback art while the context is gone.
+    container.classList.remove("scene-active");
+  }
+  function handleContextRestored(): void {
+    contextLost = false;
+    // Skip the frozen interval so the first frame back doesn't jump the drift.
+    lastTime = performance.now();
+    container.classList.add("scene-active");
   }
   canvas.addEventListener("webglcontextlost", handleContextLost);
+  canvas.addEventListener("webglcontextrestored", handleContextRestored);
 
   return { dispose };
 }

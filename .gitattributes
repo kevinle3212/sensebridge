@@ -20,6 +20,7 @@
 *.pbxproj -text linguist-generated
 
 # Generated / vendored — exclude from GitHub language stats and diffs.
+graphify-out/** linguist-generated -diff
 .gitnexus/**    linguist-generated -diff
 website/package-lock.json linguist-generated -diff
 package-lock.json         linguist-generated -diff
