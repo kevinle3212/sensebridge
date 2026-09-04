@@ -71,6 +71,10 @@ jobs:
             # that started, which the xcpretty summary alone never shows.
             (
               cd "$dir"
+              # The step runs under `bash -e`; without this, `wait` returning the
+              # watchdog's kill status (137) aborts the subshell before the raw
+              # log is dumped, hiding the very output the watchdog exists to show.
+              set +e
               scheme="$name"
               if xcodebuild -list 2>/dev/null | grep -qE "^[[:space:]]*${name}-Package$"; then scheme="${name}-Package"; fi
               xcodebuild test -scheme "$scheme" -destination 'platform=macOS' > /tmp/xcodebuild-raw.log 2>&1 &
