@@ -62,20 +62,31 @@ jobs:
             # bare "$name" scheme becomes library-only with no test action, and
             # the aggregate "$name-Package" scheme is the one that tests. Prefer
             # the -Package scheme when it exists so both package shapes test.
-            (cd "$dir" && \
-              scheme="$name"; \
-              if xcodebuild -list 2>/dev/null | grep -qE "^[[:space:]]*${name}-Package$"; then scheme="${name}-Package"; fi; \
-              xcodebuild test -scheme "$scheme" -destination 'platform=macOS' \
-                -test-timeouts-enabled YES \
-                -default-test-execution-time-allowance 120 \
-                -maximum-test-execution-time-allowance 300 2>&1 | tee /tmp/xcodebuild-raw.log | xcpretty; \
-              status="${PIPESTATUS[0]}"; \
-              if [ "$status" -ne 0 ]; then \
-                echo "::group::Raw xcodebuild output (xcpretty suppresses per-test failure detail)"; \
-                cat /tmp/xcodebuild-raw.log; \
-                echo "::endgroup::"; \
-              fi; \
-              exit "$status")
+            # A watchdog bounds the run. swift-testing does not honour
+            # xcodebuild's XCTest -test-timeouts flags, so a test that blocks
+            # on unavailable hardware (no audio input device, no window server)
+            # would otherwise hang the whole job until the 6h GitHub ceiling.
+            # Killing xcodebuild after the deadline turns that into a fast,
+            # diagnosable failure: the raw pre-xcpretty log names the last test
+            # that started, which the xcpretty summary alone never shows.
+            (
+              cd "$dir"
+              scheme="$name"
+              if xcodebuild -list 2>/dev/null | grep -qE "^[[:space:]]*${name}-Package$"; then scheme="${name}-Package"; fi
+              xcodebuild test -scheme "$scheme" -destination 'platform=macOS' > /tmp/xcodebuild-raw.log 2>&1 &
+              xcpid=$!
+              ( sleep 480; echo ">>> WATCHDOG: no completion after 480s, killing xcodebuild (likely a hang)" >> /tmp/xcodebuild-raw.log; kill -9 "$xcpid" 2>/dev/null ) &
+              wdpid=$!
+              wait "$xcpid"; status=$?
+              kill "$wdpid" 2>/dev/null; wait "$wdpid" 2>/dev/null || true
+              xcpretty < /tmp/xcodebuild-raw.log || true
+              if [ "$status" -ne 0 ]; then
+                echo "::group::Raw xcodebuild output (xcpretty suppresses per-test detail)"
+                tail -300 /tmp/xcodebuild-raw.log
+                echo "::endgroup::"
+              fi
+              exit "$status"
+            )
           done
 
       - name: Detect project layout
