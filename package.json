@@ -75,9 +75,9 @@
     "website:container:volume": "scripts/website-container.sh volume"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.1",
+    "@commitlint/cli": "^21.2.2",
     "@commitlint/config-conventional": "^21.1.0",
-    "eslint": "^10.8.0",
+    "eslint": "^10.9.1",
     "markdownlint-cli2": "^0.23.2",
     "prettier": "^3.9.6"
   }
