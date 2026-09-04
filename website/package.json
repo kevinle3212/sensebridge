@@ -25,7 +25,7 @@
     "preview": "astro preview --host 127.0.0.1",
     "sync": "astro sync",
     "clean": "rm -rf dist .astro .tsbuildinfo.debug trace",
-    "check": "npm run sync && npm run lint && npm run format && npm run typecheck:all && npm run build && npm run check:disclaimer && npm run check:zero-js && npm run check:site-url && npm run check:contrast && npm run check:audio && npm run check:csp && npm run check:consent && npm run check:scene-drag && npm run check:bfcache",
+    "check": "npm run sync && npm run lint && npm run format && npm run typecheck:all && npm run build && npm run check:disclaimer && npm run check:zero-js && npm run check:site-url && npm run check:contrast && npm run check:audio && npm run check:csp && npm run check:consent && npm run check:scene-drag && npm run check:bfcache && npm run check:context-restore",
     "typecheck": "astro check",
     "typecheck:tsc": "tsc -p tsconfig.json --noEmit",
     "typecheck:watch": "tsc -p tsconfig.json --noEmit --watch",
@@ -53,6 +53,7 @@
     "check:contrast": "node scripts/check-contrast.js",
     "check:scene-drag": "node scripts/check-scene-drag.js",
     "check:bfcache": "node scripts/check-bfcache.js",
+    "check:context-restore": "node scripts/check-context-restore.js",
     "test:a11y": "node scripts/a11y.js",
     "audit:react": "react-doctor --no-telemetry",
     "doctor": "react-doctor --no-telemetry",
@@ -112,7 +113,8 @@
     "**/*.{js,ts,tsx,jsx,scss,json,md}": "prettier --write"
   },
   "overrides": {
-    "brace-expansion": "^5.0.8"
+    "brace-expansion": "^5.0.8",
+    "fast-uri": "^3.1.7"
   },
   "allowScripts": {
     "@parcel/watcher@2.5.6": true,

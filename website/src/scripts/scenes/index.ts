@@ -78,7 +78,8 @@ if (allowed) {
   // rebuilding renderers, geometry, and shaders on the way back, which is main
   // -thread work the restore does not need. If the browser drops the GL
   // context while the page is frozen, core.ts's `webglcontextlost` handler
-  // still tears that scene down and restores its static art.
+  // shows the static fallback art and its `webglcontextrestored` handler
+  // resumes the scene once the context comes back.
   window.addEventListener("pagehide", (event) => {
     if (event.persisted) {
       return;

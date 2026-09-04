@@ -207,5 +207,26 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         { once: true },
       );
     </script>
+    <script>
+      // Pauses looping decorative CSS animations while their section is offscreen
+      // (scripts/idle-anims.ts) — same load-after-`load`, at-idle, reduced-motion
+      // gate as the two loaders above. Under `reduce` those animations never run,
+      // so this is never fetched.
+      window.addEventListener(
+        "load",
+        () => {
+          if (!window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+            return;
+          }
+          const idle =
+            window.requestIdleCallback ??
+            ((callback: IdleRequestCallback) => setTimeout(callback, 1));
+          idle(() => {
+            void import("../scripts/idle-anims");
+          });
+        },
+        { once: true },
+      );
+    </script>
   </body>
 </html>
