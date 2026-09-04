@@ -90,7 +90,7 @@ it.
 
 - Invoke the matching skill before hand-rolling a workflow; route physical-world
   output changes through the safety-framing-reviewer.
-- Persist review findings via `audits/scripts/new-audit.sh` — append-only.
+- Persist review findings via `tools/new-audit.sh` — append-only.
 - Never edit `legal/` without owner approval; AGPL and `apple-amlr` are hard
   license blockers.
 - Never commit to `main`; branch and open a PR so CI runs.

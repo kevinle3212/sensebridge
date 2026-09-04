@@ -165,10 +165,6 @@ if command -v swift-format >/dev/null 2>&1; then swift-format lint -r . 2>&1 | h
 - **Warning**: MEDIUM issues only
 - **Block**: CRITICAL or HIGH issues found
 
-For detailed Swift patterns, see the
-[swift-concurrency-6-2](../skills/swift-concurrency-6-2/SKILL.md),
-[swift-protocol-di-testing](../skills/swift-protocol-di-testing/SKILL.md), and
-[swift-actor-persistence](../skills/swift-actor-persistence/SKILL.md) skills.
 Project-wide engineering rules live in `CLAUDE.md` and `AGENTS.md`, which are
 the authority wherever they and this file disagree.
 

@@ -474,18 +474,6 @@ restatements: each was discovered by running something rather than by reading.
       `docs/archive/TOOLING-DECISIONS.md`, and `.codegraph/` are deliberately
       excluded from all six commands.
 
-- [ ] **[P1]** **[Needs owner]** **`npm run check` in `website/` is red, and
-      was before this session.** `check:audio` reports
-      `website/public/audio/main.mp3` stale: the built page's `<main>` text no
-      longer hashes to `public/audio/manifest.json`'s `textHash`. **Confirmed
-      pre-existing, not caused by this session's website edits** — with
-      `website/src` stashed and rebuilt, the check fails identically. Needs the
-      owner because fixing it means `npm run generate:audio`, which spends
-      roughly 4,400 of the free plan's 10,000 monthly ElevenLabs credits (see
-      the quota item below) — an agent should not burn a metered quota
-      unprompted. **Verify a fix:** `npm --prefix website run check:audio`
-      prints "matches the current page text."
-
 - [ ] **[P3]** **`.impeccable/design.json` is stale in content, not just in
       mtime.** The hook warns on every `website/` edit that `DESIGN.md` is
       newer. Checked directly rather than trusting the timestamp: the sidecar's
@@ -654,33 +642,15 @@ land.
       listen at both `.standard` and `.detailed` before flipping the default
       — see the P1 device-validation item above.
 
-- [ ] **[P3]** **Extend `SpokenPhrase`'s abbreviation table from real Vision
-      identifiers** — currently seeded from identifiers hand-verified during
-      planning (`tv`, `cd player`, `atm`, etc. — see
-      `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/SpokenPhrase.swift`),
-      not enumerated from the framework. Plan's "Deferred to Kevin" §4
-      recommends a `#if DEBUG` dump of the classifier's known identifiers run
-      once on device — ten minutes, converts a guess into a list.
-
-- [ ] **[P3]** **Fold recognized sounds/text into scene descriptions** —
-      genuinely more comprehensive, genuinely not attempted tonight.
-      `.detectedSound` is dropped by every composer; `OCRService` discards
-      Vision's per-observation confidence, so there's nothing to hedge from
-      without changing its return type first. Options in the plan's
-      "Deferred to Kevin" §5.
-
 - [ ] **[P3]** **Two hook friction points found by tonight's safety-framing
-      review, worth a look but not urgent:** (1) `audits/scripts/new-audit.sh`
-      creates a report file, then `guard-protected-paths.sh` denies every
-      `Edit` to it as append-only — so the skill's own generate-then-fill
-      workflow can't use `Edit` to fill in the template it just generated;
-      the reviewer worked around it by appending instead, but the template
-      placeholders are still sitting above the real findings in
-      `audits/safety-framing/20260812-105707-...md`. (2) `away-guard.sh`
-      blocked an audit-report append because the report's *prose* quoted
-      version-control verbs inside a heredoc — no actual `git`/`gh` call was
-      involved, just words describing one. Both are minor tooling
-      false-positives, not correctness bugs in the review itself.
+      review** — (1) **Done 2026-08-25**: `audits/scripts/new-audit.sh` no
+      longer needs a second write; it now takes the report body on stdin and
+      emits the complete file in one invocation (the generator moved to
+      `tools/new-audit.sh`, wired through a `SENSEBRIDGE_AUDITS_DIR` seam so
+      tests can target a temp dir). (2) **Still open, [Needs owner]**: the
+      `away-guard.sh` quoted-delimiter heredoc false-positive — a full fix
+      diff is prepared and awaiting Kevin's review before touching a security
+      control; see tmp/handoff-away.md.
 
 - [ ] **[P2]** **[Needs owner]** **Push `feat/awareness-reasoning-tiers` and
       open a PR** — 25+ commits ahead of `main` once the two items above are
@@ -708,27 +678,6 @@ nothing here: none — every one of the 7 source documents had at least one
 item that was either still open or worth re-verifying below; the merged
 `SENSEBRIDGE-COMPLETE-PLAN.md` is a section-for-section duplicate of the 7
 numbered files (verified by header diff) and contributed no additional items.
-
-- [ ] **[P2]** **AI evaluation harness for perception quality regressions.**
-      Source: `SENSEBRIDGE-04-ENGINEERING-QUALITY.md` §16 "AI evaluation" (and
-      `docs/TESTING.md`'s "AI evaluation" row, which documents the *target*
-      but nothing implements it yet — no eval folder, script, or fixture set
-      exists under `app/` or `tools/`). Proposed: a small, periodically-run,
-      eyeballed evaluation harness — a folder of real-world images (mail,
-      packaging, rooms) with expected-ish outputs, checked by hand for
-      reading-accuracy regressions and for new over-confident or hallucinated
-      scene claims (the `SceneComposer`/`FoundationModelsSceneComposer`
-      output must never assert something the underlying Vision labels didn't
-      support — see `docs/SAFETY-FRAMING.md`). Why it still matters: this is
-      the one testing layer in `docs/TESTING.md`'s table with no automated or
-      scripted-manual counterpart anywhere in the repo, and it's the layer
-      most likely to catch a silent hedging regression that a passing unit
-      test wouldn't. **[Needs owner]** for the image set itself (real mail/
-      room/packaging photos have to come from an actual device and a real
-      environment), but the harness scaffolding (a `tools/` script that loads
-      a fixture folder, runs it through the existing perception services, and
-      prints a diff-able report) is a plain implementation task an agent can
-      do without the owner.
 
 - [ ] **[P3]** **[Needs owner]** **Consent-based facial-enrollment
       *framework* (not full facial recognition).** Source:
@@ -2475,6 +2424,21 @@ remaining open items.
       directly above the flagged line). Verify: `gh api
       repos/kevinle3212/sensebridge/code-scanning/alerts/93 --jq .state`
       returns `dismissed`.
+
+### Overnight session leftovers (2026-08-25)
+
+- [ ] **[P2]** **[Needs owner]** Confirm the ElevenLabs account's current plan
+      tier: CREDITS.md's narration paragraph still says the site audio was
+      generated "on ElevenLabs' free plan", written for the original
+      generation. Tonight's regeneration (`main.mp3`, ~4,400 credits) used the
+      configured key, whose tier could not be checked (`.env` reads are
+      hook-blocked). If the plan changed, reword that paragraph and the footer
+      attribution rationale (paid plans drop the credit requirement). Full
+      note in tmp/handoff-away.md.
+- [ ] **[P3]** `npm run prettier` flags 7 pre-existing `tools/*.mjs` files —
+      formatting drift only; `npm run format:mjs:fix` clears them but churns
+      diffs unrelated to any given change. Fold into the next tools-touching
+      change rather than a standalone formatting commit.
 
 ## In Progress
 

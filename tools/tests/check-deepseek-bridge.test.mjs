@@ -49,6 +49,19 @@ const VALID_OVERLAY = [
 const REAL_EVENTS = ["SessionStart", "PostToolUse", "PreToolUse", "Stop", "PostToolBatch"];
 
 /**
+ * What a well-behaved `dsh --dump-config` prints in this suite: the bridge
+ * plugin registered AND every base-settings hook event carried through. The
+ * checker's layer-3 success branch requires both, so the default stub models
+ * a healthy merge rather than a bare registration.
+ */
+const HEALTHY_DUMP = [
+  "plugins:",
+  "  - dsh-hooks-claude-code:",
+  ...REAL_EVENTS.map((event) => `      ${event}: []`),
+  "",
+].join("\n");
+
+/**
  * Writes an executable stand-in for the `dsh` binary.
  *
  * @param {string} dir Directory to write the stub into.
@@ -57,7 +70,7 @@ const REAL_EVENTS = ["SessionStart", "PostToolUse", "PreToolUse", "Stop", "PostT
  * @param {string} behaviour.stdout Text the dump call prints.
  * @returns {string} Absolute path to the stub, suitable for DSH_BIN.
  */
-function writeDshStub(dir, { exit = 0, stdout = "plugins:\n  - dsh-hooks-claude-code: {}\n" }) {
+function writeDshStub(dir, { exit = 0, stdout = HEALTHY_DUMP }) {
   const path = join(dir, "dsh-stub");
   writeFileSync(
     path,
@@ -252,6 +265,17 @@ test("layer 3 fails when the resolved config omits the bridge plugin", () => {
   });
   assert.equal(r.status, 1, r.out);
   assert.match(r.out, /not registered in the effective config/);
+});
+
+test("layer 3 fails when the resolved config drops a base-settings event", () => {
+  // The Codex-gate finding: registering the plugin proves nothing about
+  // what it carries. A merge that dropped even one declared event must
+  // fail — the guards behind it would silently stop running under dsh.
+  const partialDump = HEALTHY_DUMP.replace("      PreToolUse: []\n", "");
+  assert.notEqual(partialDump, HEALTHY_DUMP, "fixture must actually remove an event");
+  const r = run({ bin: (dir) => writeDshStub(dir, { stdout: partialDump }) });
+  assert.equal(r.status, 1, r.out);
+  assert.match(r.out, /did not survive the merge/);
 });
 
 console.log(`check-deepseek-bridge: ${passed} passed, 0 failed`);

@@ -35,7 +35,7 @@ in review: **correct hedging first, then not crashing, then performance.**
 ## Audit Output <!-- audit-output -->
 
 After a review pass, persist findings to `audits/safety-framing/` with the
-`audit-refresh` skill (`audits/scripts/new-audit.sh safety-framing "<short
+`audit-refresh` skill (`tools/new-audit.sh safety-framing "<short
 title>"`). Reports are append-only and follow
 [`audits/AGENT-GUIDE.md`](../../audits/AGENT-GUIDE.md); supersede a prior report
 instead of rewriting it.

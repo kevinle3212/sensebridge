@@ -24,6 +24,12 @@ Apple's frameworks is recorded with its license in
 attention here (two of the strongest-looking candidate models, Ultralytics
 YOLO and Apple FastVLM, are license traps this project deliberately avoids).
 
+The app's single third-party Swift dependency is
+[Sentry's Cocoa SDK](https://github.com/getsentry/sentry-cocoa) (crash
+reporting), MIT licensed and pinned at 9.24.0. It is integrated through Swift
+Package Manager rather than vendored, so its upstream license text travels
+with the source checkout.
+
 The Sound Alerts feature's custom classifier
 (`app/SenseBridge/Resources/SenseBridgeSoundClassifier.mlmodel`) is trained
 in-house via Create ML — no third-party weights — on individually
@@ -98,14 +104,11 @@ deliberately excluded; see the adaptation header in `seo-technical` and
 - [`.agents/skills/seo-technical`](.agents/skills/seo-technical/SKILL.md)
   (same setup)
 
-The Swift skills and review agents below were adapted from
+The Swift review agents below were adapted from
 [ECC](https://github.com/affaan-m/ecc) (v2.0.0, commit `ed38744`), which is MIT
 licensed. They are adapted, not verbatim: each was reshaped to this repository's
 conventions and annotated with the SenseBridge invariant it serves.
 
-- [`.agents/skills/swift-concurrency-6-2`](.agents/skills/swift-concurrency-6-2/SKILL.md)
-- [`.agents/skills/swift-protocol-di-testing`](.agents/skills/swift-protocol-di-testing/SKILL.md)
-- [`.agents/skills/swift-actor-persistence`](.agents/skills/swift-actor-persistence/SKILL.md)
 - [`.agents/agents/swift-reviewer.md`](.agents/agents/swift-reviewer.md)
 - [`.agents/agents/swift-build-resolver.md`](.agents/agents/swift-build-resolver.md)
 

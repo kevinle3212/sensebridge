@@ -26,6 +26,12 @@ public enum SpokenPhrase {
     /// crash. Extend only with an identifier observed in a real classifier
     /// result.
     ///
+    /// Provenance of the 2026-08-25 additions (`cd`, `atv`): both appear in a
+    /// dump of `ClassifyImageRequest().supportedIdentifiers` from the
+    /// development host. The older entries predate that taxonomy revision and
+    /// deliberately stay — the device-side vocabulary can differ from any one
+    /// host's dump, and an unused mapping is harmless where a wrong one is not.
+    ///
     /// Not localized: the keys are English identifiers and the values are
     /// English words, per this type's documented English-only scope.
     private static let spokenForms: [String: String] = [
@@ -34,9 +40,17 @@ public enum SpokenPhrase {
         "cd player": "compact disc player",
         "dvd player": "digital video disc player",
         "atm": "cash machine",
+        "atv": "all-terrain vehicle",
         "suv": "sport utility vehicle",
         "pc": "personal computer",
-        "rv": "recreational vehicle"
+        "rv": "recreational vehicle",
+        "cd": "compact disc",
+        // A catch-all taxonomy label, not an abbreviation — mapped because the
+        // raw form is both ungrammatical aloud ("a consumer electronics") and
+        // information-free. `ObjectClassificationService` additionally prefers
+        // any specific sibling label over this one; this entry covers the
+        // frames where no sibling passed the precision floor.
+        "consumer electronics": "electronic device"
     ]
 
     /// Identifiers whose written first letter disagrees with the sound that

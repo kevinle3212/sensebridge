@@ -13,6 +13,19 @@ struct SpokenPhraseTests {
     func expandsKnownAbbreviationsToTheirSpokenWords() {
         #expect(SpokenPhrase.subject(for: "tv") == "a television")
         #expect(SpokenPhrase.subject(for: "cd_player") == "a compact disc player")
+        // Added from the real `ClassifyImageRequest` identifier set, 2026-08-25.
+        #expect(SpokenPhrase.subject(for: "cd") == "a compact disc")
+        #expect(SpokenPhrase.subject(for: "atv") == "an all-terrain vehicle")
+    }
+
+    /// Catch-all taxonomy labels get a speakable form: the raw identifier is
+    /// both ungrammatical aloud ("a consumer electronics") and names a
+    /// category rather than a thing. `ObjectClassificationService` prefers any
+    /// specific sibling over these; this pin covers frames where none passed
+    /// the precision floor and the catch-all still has to be speakable.
+    @Test
+    func mapsCatchAllTaxonomyLabelsToASpeakableForm() {
+        #expect(SpokenPhrase.subject(for: "consumer_electronics") == "an electronic device")
     }
 
     @Test

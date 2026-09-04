@@ -6392,3 +6392,48 @@ isn't built yet.
       The stale statement above is left in place rather than rewritten: it
       recorded what was true when the item was filed, and the closing note is
       what supersedes it.
+
+## Archived 2026-08-25
+
+### TODO burn-down pass — findings (2026-08-12, 22:00 PST)
+
+- [x] **[P1]** **Done 2026-08-25** — `check:audio` staleness fixed by
+      regenerating `website/public/audio/main.mp3` + `manifest.json` with
+      `npm --prefix website run generate:audio` (~4,400 ElevenLabs credits,
+      spent under the session plan's standing approval). Verified:
+      `npm --prefix website run check:audio` prints "matches the current page
+      text." Caveat: CREDITS.md's "generated on ElevenLabs' free plan" line was
+      written for the original generation; the configured key's current plan
+      tier is unverified (`.env` reads are hook-blocked) — see
+      tmp/handoff-away.md.
+
+### Awareness feature + reasoning-tier implementation (2026-08-11, 21:00 PST)
+
+- [x] **[P3]** **Done 2026-08-25** — Extend `SpokenPhrase`'s abbreviation table
+      from real Vision identifiers: dumped the live vocabulary via
+      `ClassifyImageRequest().supportedIdentifiers` on the dev host (1,303
+      identifiers, `tmp/vision-identifiers.txt`) instead of needing an on-device
+      DEBUG dump. Exactly two written abbreviations exist in that set — added
+      `cd`→compact disc and `atv`→all-terrain vehicle with regression tests;
+      the older entries stay because a device-side revision can differ.
+
+- [x] **[P3]** **Done 2026-08-25** — Fold recognized sounds/text into scene
+      descriptions: `LabelListSceneComposer.compose(from:)` now composes one
+      hedged sentence per stream (sight → sound → text) with new reviewed
+      sound-hedge templates in en/es/vi; network composers untouched (the wire
+      contract forbids sounds/text leaving the device). The OCR-confidence
+      concern resolved by doctrine: recognized text carries no detector
+      confidence, so its quote is pinned at the medium hedge regardless.
+      Covered by `SoundTextSceneFusionTests` (12 tests).
+
+### Deferred from docs/planning/ (2026-08-07, 14:36 PST)
+
+- [x] **[P2]** **Done 2026-08-25** — AI evaluation harness implemented as the
+      in-package Swift executable `eval-harness` (`npm run eval`): renders
+      synthetic fixtures at run time (no committed binary media), runs them
+      through the real `OCRService`/`ObjectClassificationService`/
+      `LabelListSceneComposer`, and prints every composed phrase through
+      `ReasoningOutputValidator`, flagging content-rule rejections as OVERCLAIM
+      lines; exits non-zero on pipeline hard failures. Still **[Needs owner]
+      ** for the held-out real-photo set — the harness's synthetic fixtures are
+      scaffolding, not the eventual evaluation corpus.

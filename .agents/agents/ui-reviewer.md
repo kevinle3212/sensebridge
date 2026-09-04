@@ -35,7 +35,7 @@ route that finding to accessibility as High or above.
 After a review pass, persist findings to `audits/accessibility/` (UI findings in
 this app are almost always accessibility findings) or `audits/general/` for
 purely structural notes, with the `audit-refresh` skill
-(`audits/scripts/new-audit.sh accessibility "<short title>"`). Reports are
+(`tools/new-audit.sh accessibility "<short title>"`). Reports are
 append-only and follow [`audits/AGENT-GUIDE.md`](../../audits/AGENT-GUIDE.md).
 
 ## Tool Fallback <!-- tool-fallback -->

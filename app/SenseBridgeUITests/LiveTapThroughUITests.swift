@@ -71,11 +71,11 @@ final class LiveTapThroughUITests: XCTestCase {
             let app = XCUIApplication()
             // `-uiTestNoCamera` pins every screen to its camera-unavailable
             // path. Without it this test asks a real phone what its lens can
-            // see, and answers like "Nothing recognizable was found." — a
-            // perfectly correct result — fail the assertion because they are
-            // not in `expected`. The property under test is that the control
-            // answers at all, and forcing one deterministic answer tests that
-            // on a device exactly as well as it did in the Simulator.
+            // see, and answers like "Couldn't name anything." — a perfectly
+            // correct result — fail the assertion because they are not in
+            // `expected`. The property under test is that the control answers
+            // at all, and forcing one deterministic answer tests that on a
+            // device exactly as well as it did in the Simulator.
             app.launchArguments = ["-uiTestReset", "-uiTestNoCamera"]
             app.launch()
 
@@ -116,7 +116,7 @@ final class LiveTapThroughUITests: XCTestCase {
         listen.tap()
 
         let known = [
-            "Nothing recognizable was found.",
+            "Couldn't name anything.",
             "Couldn't listen for sounds. Try again.",
             "No microphone is available on this device.",
             "Microphone access is needed to listen for sounds. Enable it in Settings."

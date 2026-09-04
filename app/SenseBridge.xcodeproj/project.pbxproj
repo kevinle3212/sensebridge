@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73B9444B53F2DD88AD973EA /* HomeView.swift */; };
 		C4A7E91B2D3F4A5B6C7D8E9F /* CaptionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A7E91B2D3F4A5B6C7D8E9D /* CaptionOverlay.swift */; };
+		A1B2C3D4E5F60718293A4B5D /* DevWatermark.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* DevWatermark.swift */; };
 		C4A7E91B2D3F4A5B6C7D8EA0 /* CaptionRenderTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A7E91B2D3F4A5B6C7D8E9E /* CaptionRenderTarget.swift */; };
 		0EC253358BB6592F0066F3A3 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 0C7C04C5AB2A89D896C5A4A4 /* Sentry */; };
 		0FC9712197828F50E15A7423 /* SettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B659E56450AFF17FFC6D075A /* SettingsSections.swift */; };
@@ -16,6 +17,7 @@
 		1CAA3958ACD6EBEF05E24464 /* AwarenessPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */; };
 		1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */; };
 		268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */; };
+		F0E1D2C3B4A594837261504F /* DevWatermarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E1D2C3B4A594837261504E /* DevWatermarkTests.swift */; };
 		2F02E08A4B22B4E8836E8DDD /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3030507FD05945D3B89734B5 /* SenseBridgeCore */; };
 		311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */; };
 		3BF3CC3E277CE1D9397384FC /* DescriptionDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607B51794FC974DA69389D4F /* DescriptionDetailUITests.swift */; };
@@ -91,6 +93,7 @@
 		0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverAnnouncement.swift; sourceTree = "<group>"; };
 		1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeApp.swift; sourceTree = "<group>"; };
 		C4A7E91B2D3F4A5B6C7D8E9D /* CaptionOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptionOverlay.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* DevWatermark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevWatermark.swift; sourceTree = "<group>"; };
 		C4A7E91B2D3F4A5B6C7D8E9E /* CaptionRenderTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptionRenderTarget.swift; sourceTree = "<group>"; };
 		1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -101,6 +104,7 @@
 		309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsSection.swift; sourceTree = "<group>"; };
 		385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = SenseBridgeSoundClassifier.mlmodel; sourceTree = "<group>"; };
 		38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportingTests.swift; sourceTree = "<group>"; };
+		F0E1D2C3B4A594837261504E /* DevWatermarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevWatermarkTests.swift; sourceTree = "<group>"; };
 		3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlphaScaffoldingUITests.swift; sourceTree = "<group>"; };
 		509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeUITests.swift; sourceTree = "<group>"; };
 		50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionUITests.swift; sourceTree = "<group>"; };
@@ -169,6 +173,7 @@
 			children = (
 				53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */,
 				C4A7E91B2D3F4A5B6C7D8E9D /* CaptionOverlay.swift */,
+				A1B2C3D4E5F60718293A4B5C /* DevWatermark.swift */,
 				C4A7E91B2D3F4A5B6C7D8E9E /* CaptionRenderTarget.swift */,
 				F25B799EEB369166FD737AEA /* CameraController.swift */,
 				A609680B79ECF22EB121BCAA /* CrashReporting.swift */,
@@ -309,6 +314,7 @@
 				B6B764484B17EFEBC4BA59EA /* AmbientAwarenessSessionSupportTests.swift */,
 				274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */,
 				38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */,
+				F0E1D2C3B4A594837261504E /* DevWatermarkTests.swift */,
 				80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */,
 			);
 			path = SenseBridgeTests;
@@ -506,6 +512,7 @@
 				D118395480E4EBA3F1174DE9 /* AmbientAwarenessSessionSupportTests.swift in Sources */,
 				76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */,
 				268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */,
+				F0E1D2C3B4A594837261504F /* DevWatermarkTests.swift in Sources */,
 				682E27D38574104D02AD5E83 /* CustomSoundClassifierOODTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -515,6 +522,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C4A7E91B2D3F4A5B6C7D8E9F /* CaptionOverlay.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5D /* DevWatermark.swift in Sources */,
 				C4A7E91B2D3F4A5B6C7D8EA0 /* CaptionRenderTarget.swift in Sources */,
 				F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */,
 				BA7038AC2272B6CE3BB8AA62 /* AmbientAwarenessSession+Support.swift in Sources */,

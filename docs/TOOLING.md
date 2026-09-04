@@ -49,7 +49,7 @@ or orchestration platform touches `app/`.
 | Skills / reviewer personas | `.agents/skills/` (canonical, 61 skills), `.agents/agents/` (9 review personas) | Project-doctrine-specific: safety framing, accessibility, model licensing, plus the `council` decision-review skill and the `website-design` route. One tree, not five — harness dirs (`.claude/`, `.cursor/`, `.gemini/`, `.github/`) hold either a symlink back per skill or a thin router adapter; `impeccable` is the one vendor-managed skill excluded from the lock below |
 | Skill-lock | `.agents/manifest.json`, `.agents/skill-lock.json`, `tools/skill-lock.mjs`; `.githooks/pre-commit` and `npm run check:skills` (both `--check` via the tool's default no-flag mode) | Hash-locks the canonical skill tree, the 9 persona files, and every harness adapter, so a canonical edit without a re-sync (`node tools/skill-lock.mjs --write`) shows up as drift instead of silently diverging. Replaces the earlier mirror-and-regenerate model (`tools/sync-skills.mjs`, retired 2026-08-07) |
 | Review companions | `REVIEW.md` (root), `.agents/skills/security-review/SKILL.md` (`.claude/commands/security-review.md` is a stub pointing here) | Extend the built-in `/code-review` and `/security-review` with project severity overrides, skip paths, and on-device/privacy/model-license checks — additive, not replacements |
-| Audit system | `audits/` | Append-only. Process docs are tracked; findings are gitignored. Create reports via `audits/scripts/new-audit.sh`; read `audits/AGENT-GUIDE.md` first |
+| Audit system | `audits/` | Append-only. Process docs are tracked; findings are gitignored. Create reports via `tools/new-audit.sh`; read `audits/AGENT-GUIDE.md` first |
 | Marketing website | `website/` (Astro, `package.json`, `.stylelintrc.json`, `.prettierrc`, `eslint.config.mjs`) | The one deliberate exception to "no web stack" — copy still follows `docs/SAFETY-FRAMING.md`. Node tooling is scoped to this directory |
 | React Doctor, React Scan | `website/package.json` — React Doctor in `devDependencies`, React Scan in **`dependencies`** | `npm run audit:react` / `npm run doctor`, both `--no-telemetry` (load-bearing for the no-telemetry posture). CI gate is `blocking: warning`, held at zero findings; suppressions live in `website/doctor.config.jsonc`. Call it via `env -u GIT_DIR` from any hook. React Scan is a dev-only inline import in `BaseLayout.astro`; **there is no `npm run scan`** |
 | Website hosting (Railway) | `docker/` (`Dockerfile`, `nginx.conf.template`, `docker-compose.yml`), `railway.toml` | Deploys the static site only — no env vars, no backend, no effect on the app's serverless/on-device posture. The Railway service's Root Directory must stay the **repo root**, since the build context spans `docker/` and `website/` |
@@ -478,7 +478,7 @@ server config, or any other executable automation in this repo:
 - **Fail closed, fail loud.** Shell: `set -euo pipefail`. Node/other:
   non-zero exit and a clear stderr message on error, never a silent no-op on
   an unexpected condition.
-- **Validate and quote everything.** Allowlist input (e.g. `audits/scripts/new-audit.sh`'s
+- **Validate and quote everything.** Allowlist input (e.g. `tools/new-audit.sh`'s
   type enum), quote every variable expansion, and prefer argv-array process
   spawning (`execFileSync(cmd, [args])`) over shell string interpolation —
   never build a shell command by concatenating untrusted input.

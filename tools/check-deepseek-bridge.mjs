@@ -193,7 +193,24 @@ if (!dshInstalled) {
       `dsh resolved ${OVERLAY} but the output names no dsh-hooks-claude-code plugin, ` +
         "so the guard bridge is not registered in the effective config.",
     );
-    notes.push("dsh is installed; the overlay resolved and registers the guard bridge.");
+    // Registering the plugin proves nothing about what it carries: a merge
+    // that dropped the base settings would still name the bridge. Every hook
+    // event declared in the base settings must appear in the effective
+    // config, or the bridge registered while carrying nothing.
+    const missingEvents = declaredEvents.filter((event) => !resolved.includes(event));
+    assert(
+      missingEvents.length === 0,
+      `dsh resolved ${OVERLAY} but its effective config is missing ` +
+        `${missingEvents.map((e) => `\`${e}\``).join(", ")}, which ` +
+        `${CLAUDE_SETTINGS} declares — the base settings did not survive the merge. ` +
+        "If `dsh --help` shows --dump-config summarizes rather than inlines the " +
+        "hooks file, this assertion needs a format-aware rewrite rather than a " +
+        "config change.",
+    );
+    notes.push(
+      "dsh is installed; the overlay resolved, registers the guard bridge, " +
+        "and carries every hook event the base settings declare.",
+    );
   }
 }
 

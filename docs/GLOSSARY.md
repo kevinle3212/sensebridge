@@ -198,8 +198,9 @@ accessibility traits. See [`docs/ACCESSIBILITY.md`](ACCESSIBILITY.md).
 **SceneComposer** — the protocol for composing a hedged natural-language
 scene description from `PerceptionRecord`s. `LabelListSceneComposer`, the
 only implementation in the codebase today, is an explicit fallback that
-reads back perceived labels directly rather than a Foundation-Models-composed
-sentence. Defined in
+speaks what perception recognized directly rather than a
+Foundation-Models-composed sentence — one hedged sentence per stream, sight →
+sound → text, each with its own modality's hedge. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Reasoning/SceneComposer.swift`.
 
 **SenseBridgeCore** — the SwiftPM package holding all device-agnostic

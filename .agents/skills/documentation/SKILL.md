@@ -36,5 +36,5 @@ agent. SenseBridge is docs-rich; stale docs mislead contributors and users.
 ## Validation
 
 Confirm links resolve and any documented command still runs. Record a doc audit
-with `audits/scripts/new-audit.sh documentation "<title>"` when the pass is
+with `tools/new-audit.sh documentation "<title>"` when the pass is
 substantial.

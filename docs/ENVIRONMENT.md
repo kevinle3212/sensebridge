@@ -225,6 +225,7 @@ markdownlint-cli2 — no heavy dependencies).
 | `app:device` | Signed build for the attached iPhone |
 | `app:device-test` | Signed build + test **on** the attached iPhone — the only command that runs the suite against real ARKit, LiDAR, and arm64. **Not green yet:** its first run (2026-08-19) was 24 passed / 8 failed, in three classes tracked in `TODO.md`. Some of those are tests that assert the Simulator's no-camera path, so they cannot pass on a phone; the contrast findings appear to be real. |
 | `app:install` | Device build, then install onto the attached iPhone |
+| `eval` | `swift run eval-harness` — the AI evaluation harness: renders synthetic fixtures through the real OCR/object services and `LabelListSceneComposer`, flags over-claiming compositions via `ReasoningOutputValidator`. See [docs/TESTING.md](TESTING.md) |
 | `app:clean` / `app:open` | Clean build products / open the Xcode project |
 | `lint` | `lint:swift` + `lint:md` + `lint:mjs` |
 | `lint:swift` | SwiftFormat + SwiftLint (`scripts/lint.sh`) |

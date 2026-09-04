@@ -63,8 +63,8 @@ threat-model update rather than just a code change.
 
 ## Recording findings
 
-`audits/scripts/new-audit.sh performance "<title>"` or
-`audits/scripts/new-audit.sh security "<title>"`, whichever invariant is at
+`tools/new-audit.sh performance "<title>"` or
+`tools/new-audit.sh security "<title>"`, whichever invariant is at
 risk. Honesty rule per [ci-green-gate](../ci-green-gate/SKILL.md): if a race
 can't be reproduced deterministically in CI, say so and name what still needs
 device verification.

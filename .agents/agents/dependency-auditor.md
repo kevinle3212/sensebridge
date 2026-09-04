@@ -32,7 +32,7 @@ For model-license specifics, defer to and feed the `model-license-audit` skill.
 
 After a review pass, persist findings to `audits/dependencies/` (or
 `audits/model-license/` for a license-focused pass) with the `audit-refresh`
-skill (`audits/scripts/new-audit.sh dependencies "<short title>"`). Reports are
+skill (`tools/new-audit.sh dependencies "<short title>"`). Reports are
 append-only and follow [`audits/AGENT-GUIDE.md`](../../audits/AGENT-GUIDE.md);
 supersede a prior report instead of rewriting it.
 

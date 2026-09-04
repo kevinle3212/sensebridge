@@ -65,6 +65,52 @@ struct ObjectClassificationServiceTests {
         #expect(ObjectClassificationService.subjectPhrase(for: "escalator") == "an escalator")
     }
 
+    /// Vagueness is decided on the normalized identifier — same normalization
+    /// `SpokenPhrase` applies before its table lookups — so an identifier
+    /// cannot be vague to the detector yet specific in speech.
+    @Test
+    func vaguenessIsDecidedOnTheNormalizedIdentifier() {
+        #expect(ObjectClassificationService.isVague("consumer_electronics"))
+        #expect(ObjectClassificationService.isVague("Consumer Electronics"))
+        #expect(!ObjectClassificationService.isVague("television"))
+    }
+
+    /// A specific label wins even when a catch-all outscores it, and
+    /// confidence orders within each group: the sentence names the thing when
+    /// a name passed the precision floor and falls back to the category only
+    /// when none did.
+    @Test
+    func orderingIsSpecificFirstThenByConfidence() {
+        let ordered = ObjectClassificationService.orderedSpecificFirst(
+            [
+                (identifier: "consumer_electronics", confidence: 0.9),
+                (identifier: "television", confidence: 0.7),
+                (identifier: "monitor", confidence: 0.5)
+            ],
+            identifier: { $0.identifier },
+            confidence: { $0.confidence }
+        )
+
+        #expect(ordered.map(\.identifier) == ["television", "monitor", "consumer_electronics"])
+    }
+
+    /// With no specific sibling available, vague labels keep their chance:
+    /// they pass through with confidence order intact rather than being
+    /// dropped for their vagueness.
+    @Test
+    func vagueLabelsKeepTheirChanceWhenNothingSpecificRemains() {
+        let ordered = ObjectClassificationService.orderedSpecificFirst(
+            [
+                (identifier: "consumer_electronics", confidence: 0.6),
+                (identifier: "consumer_electronics", confidence: 0.8)
+            ],
+            identifier: { $0.identifier },
+            confidence: { $0.confidence }
+        )
+
+        #expect(ordered.map(\.confidence) == [0.8, 0.6])
+    }
+
     @Test
     func everyDetectionIsWellFormedAndInsideTheFrame() async throws {
         let image = try Self.renderShapes()

@@ -87,7 +87,11 @@ detections branching to the on-screen preview as yellow outlines. One
 detection pass feeds both channels deliberately: an outline drawn from one
 source and a sentence spoken from another would eventually disagree, and a box
 around something the app never names is a claim it cannot back (see
-[SAFETY-FRAMING.md](SAFETY-FRAMING.md)).
+[SAFETY-FRAMING.md](SAFETY-FRAMING.md)). Between the raw passes and that shared
+list sits `DetectionStabilizer`, which filters per-tick noise: labels confirm
+over consecutive ticks before they are shown or spoken, survive brief absences,
+and drop once persistence runs out — while a thrown pass holds the last stable
+set rather than counting a sensor failure as "nothing there".
 
 ### Component responsibilities
 
@@ -189,7 +193,11 @@ more certainty about any one of it. `LabelListSceneComposer` (the composer
 that runs whenever Apple Intelligence is unavailable — "the on-device default"
 at its worst) groups its output by certainty bucket rather than repeating one
 full hedged sentence per object, so the no-Apple-Intelligence path reads as
-prose rather than a stutter of identical templates.
+prose rather than a stutter of identical templates — and since the fusion
+work, it composes one hedged sentence per perception stream, sight → sound → text,
+each stream carrying its own modality's hedge ("it looks like…" vs "it sounds
+like…"), so a scene with a chair, an alarm, and a sign is described as the one
+moment it was rather than three unrelated broadcasts.
 
 ### Object and sound names in Spanish and Vietnamese
 

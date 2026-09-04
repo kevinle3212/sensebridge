@@ -48,7 +48,7 @@ Program, without which no TestFlight or App Store artifact can exist.
 | Product, architecture, privacy, safety framing, accessibility, testing | `docs/` (index: `WIKI.md`) |
 | Agent instructions | `AGENTS.md` (canonical) + `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.github/copilot-instructions.md` (pointers) |
 | Skills and reviewer personas | `.agents/`, `.claude/skills/` |
-| Append-only audits | `audits/` (generate via `audits/scripts/new-audit.sh`) |
+| Append-only audits | `audits/` (generate via `tools/new-audit.sh`) |
 | CI/CD and security scanning | `.github/workflows/` |
 | Git hooks (secret scan, lint, commit format) | `.githooks/` (enabled by `scripts/setup.sh`) |
 | Tooling decisions (global vs. project) | `docs/TOOLING.md` |

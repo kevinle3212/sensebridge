@@ -7,9 +7,9 @@ struct SceneComposerTests {
     /// docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md
     /// "Doctrine-pinned strings".
     @Test(arguments: [
-        (localeIdentifier: "en", expected: "Nothing recognizable was found."),
-        (localeIdentifier: "es", expected: "No se reconoció nada."),
-        (localeIdentifier: "vi", expected: "Không nhận ra được gì.")
+        (localeIdentifier: "en", expected: "Couldn't name anything."),
+        (localeIdentifier: "es", expected: "No se pudo identificar nada."),
+        (localeIdentifier: "vi", expected: "Không nhận ra được vật nào.")
     ])
     func fallbackStringIsLocalizedWhenNoDetections(localeIdentifier: String, expected: String) async throws {
         let composer = LabelListSceneComposer(locale: Locale(identifier: localeIdentifier))
@@ -41,18 +41,19 @@ struct SceneComposerTests {
         #expect(description == "it looks like there's likely a chair and a table. there might be a lamp.")
     }
 
+    /// Depth is not scene content — distance narration is AwarenessEngine's
+    /// job, so a depth-only frame still reads as "nothing recognized" here.
+    /// (Sounds and text used to fall through the same way; since fusion they
+    /// get their own sentences — see `SoundTextSceneFusionTests`.)
     @Test
-    func nonObjectOnlyRecordsYieldTheNothingRecognizedFallback() async throws {
+    func depthOnlyRecordsYieldTheNothingRecognizedFallback() async throws {
         let composer = LabelListSceneComposer(locale: Locale(identifier: "en"))
-        let records = [
-            PerceptionRecord(kind: .depthReading(meters: 1.2), capturedAt: .now),
-            PerceptionRecord(kind: .recognizedText("exit"), capturedAt: .now),
-            PerceptionRecord(kind: .detectedSound(label: "a fire alarm", confidence: 0.9), capturedAt: .now)
-        ]
 
-        let description = try await composer.compose(from: records)
+        let description = try await composer.compose(
+            from: [PerceptionRecord(kind: .depthReading(meters: 1.2), capturedAt: .now)]
+        )
 
-        #expect(description == "Nothing recognizable was found.")
+        #expect(description == "Couldn't name anything.")
     }
 
     @Test

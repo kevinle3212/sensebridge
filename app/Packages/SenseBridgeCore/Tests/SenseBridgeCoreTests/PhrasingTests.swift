@@ -30,9 +30,9 @@ struct PhrasingTests {
     }
 
     @Test(arguments: [
-        (localeIdentifier: "en", expected: "Nothing recognizable was found."),
-        (localeIdentifier: "es", expected: "No se reconoció nada."),
-        (localeIdentifier: "vi", expected: "Không nhận ra được gì.")
+        (localeIdentifier: "en", expected: "Couldn't name anything."),
+        (localeIdentifier: "es", expected: "No se pudo identificar nada."),
+        (localeIdentifier: "vi", expected: "Không nhận ra được vật nào.")
     ])
     func nothingRecognizedIsTranslatedAndClaimsNoAbsence(localeIdentifier: String, expected: String) {
         let phrase = Phrasing().nothingRecognized(locale: Locale(identifier: localeIdentifier))

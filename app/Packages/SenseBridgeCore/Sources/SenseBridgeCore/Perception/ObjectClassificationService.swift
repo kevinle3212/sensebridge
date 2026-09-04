@@ -143,9 +143,17 @@ public struct ObjectClassificationService: PerceptionService, Sendable {
         // chosen as the interesting part, and cropping it again would feed the
         // classifier the middle of an object instead of the object.
         request.cropAndScaleAction = .scaleToFit
-        return try await handler.perform(request)
+        let precise = try await handler.perform(request)
             .filter { $0.hasMinimumPrecision(minimumPrecision, forRecall: 0) }
-            .max { $0.confidence < $1.confidence }
+        // Same specific-first preference as `records(from:)`: a region whose
+        // highest-confidence guess is a catch-all yields the specific sibling
+        // when one also passed the floor, so the outline drawn around this
+        // region and every sentence naming it stay in agreement.
+        return Self.orderedSpecificFirst(
+            precise,
+            identifier: { $0.identifier },
+            confidence: { $0.confidence }
+        ).first
     }
 
     /// Keeps the most confident detection per label, most confident first, up to
@@ -165,22 +173,71 @@ public struct ObjectClassificationService: PerceptionService, Sendable {
     /// Filters and converts raw observations into `PerceptionRecord` values.
     private func records(from observations: [ClassificationObservation]) -> [PerceptionRecord] {
         let capturedAt = Date.now
-        return observations
+        let scored = observations
             // `forRecall: 0` asks "at any recall, is this identifier precise
             // enough?", which is the loosest form of the check and the one
             // Apple documents for filtering a general classification pass.
             .filter { $0.hasMinimumPrecision(minimumPrecision, forRecall: 0) }
-            .sorted { $0.confidence > $1.confidence }
-            .prefix(maximumLabels)
-            .map { observation in
-                PerceptionRecord(
-                    kind: .detectedObject(
-                        label: Self.subjectPhrase(for: observation.identifier, locale: locale),
-                        confidence: Double(observation.confidence)
-                    ),
-                    capturedAt: capturedAt
-                )
+            .map { (identifier: $0.identifier, confidence: $0.confidence) }
+        return Self.orderedSpecificFirst(
+            scored,
+            identifier: { $0.identifier },
+            confidence: { $0.confidence }
+        )
+        .prefix(maximumLabels)
+        .map { scored in
+            PerceptionRecord(
+                kind: .detectedObject(
+                    label: Self.subjectPhrase(for: scored.identifier, locale: locale),
+                    confidence: Double(scored.confidence)
+                ),
+                capturedAt: capturedAt
+            )
+        }
+    }
+
+    /// One classifier result reduced to what label choice needs: the raw
+    /// identifier and its confidence. Exists so the ordering rule below is a
+    /// pure function tests can drive without constructing Vision types.
+    typealias ScoredIdentifier = (identifier: String, confidence: Float)
+
+    /// Identifiers that name a category so broad that speaking them tells the
+    /// listener almost nothing — "a consumer electronics" was heard live doing
+    /// exactly that (2026-08-25). Deliberately tiny, like `SpokenPhrase`'s
+    /// table: every entry here demotes a real classifier output, so an entry
+    /// must earn itself. Extend only with identifiers observed being useless.
+    ///
+    /// Normalized with underscores to spaces before the lookup, matching
+    /// `SpokenPhrase`.
+    static let vagueIdentifiers: Set<String> = ["consumer electronics"]
+
+    /// True when `identifier` is in ``vagueIdentifiers`` after normalization.
+    static func isVague(_ identifier: String) -> Bool {
+        vagueIdentifiers.contains(identifier.replacing("_", with: " ").lowercased())
+    }
+
+    /// Orders `items` specific-first, confidence within each group.
+    ///
+    /// A catch-all ("consumer electronics", confidence 0.9) that outscores a
+    /// specific sibling ("television", 0.75) would otherwise take the slot and
+    /// speak category noise where a name existed. Specific labels come first;
+    /// vague ones keep their chance when nothing specific remains.
+    ///
+    /// Generic over `ClassificationObservation` and ``ScoredIdentifier`` alike
+    /// so `bestLabel(in:using:)` and `records(from:)` share one ordering rule
+    /// instead of two copies of its comparator.
+    static func orderedSpecificFirst<T>(
+        _ items: [T],
+        identifier: (T) -> String,
+        confidence: (T) -> Float
+    ) -> [T] {
+        items.sorted { lhs, rhs in
+            let (lhsVague, rhsVague) = (isVague(identifier(lhs)), isVague(identifier(rhs)))
+            if lhsVague != rhsVague {
+                return rhsVague // the specific side comes first
             }
+            return confidence(lhs) > confidence(rhs)
+        }
     }
 
     /// Turns a Vision identifier into the noun phrase `Phrasing` expects.

@@ -39,20 +39,60 @@ public struct Phrasing: Sendable {
         return String(format: template, subject)
     }
 
+    /// The same hedge ladder, for what the microphone heard rather than what
+    /// the camera saw. Modality is doctrine, not decoration: "it looks like
+    /// there's a fire alarm" over a *heard* alarm claims visual evidence the
+    /// app does not have, so sounds get their own reviewed templates instead
+    /// of reusing the sight ones.
+    ///
+    /// - Parameters:
+    ///   - subject: Article-first noun phrase for the heard thing, exactly as
+    ///     ``describe(subject:certainty:locale:)`` expects ("a fire alarm").
+    ///   - certainty: Bucket for the detector's own confidence — see
+    ///     ``certainty(forConfidence:)``.
+    public func describeSound(subject: String, certainty: Certainty, locale: Locale = .current) -> String {
+        let template = Self.soundHedgeTemplate(for: certainty, locale: locale)
+        return String(format: template, subject)
+    }
+
+    /// What to say when OCR found text in the scene.
+    ///
+    /// Fixed at the medium hedge on purpose: unlike objects and sounds, a
+    /// recognized line arrives without a confidence value
+    /// (`PerceptionRecord.Kind.recognizedText` carries none), so there is no
+    /// evidence to scale a stronger or weaker hedge from — and quoting what
+    /// the recognizer may have misread demands caution regardless. The quote
+    /// itself is truncated by the caller to keep the sentence speakable.
+    public func recognizedTextVisible(quote: String, locale: Locale = .current) -> String {
+        let template = LocalizedCatalog.string("it looks like there's text that reads %@.", locale: locale)
+        return String(format: template, quote)
+    }
+
+    /// Longest span of recognized text quoted inside one spoken sentence.
+    /// Longer than any real sign line and short enough that even a garbage
+    /// recognition stays a momentary interruption rather than a recital.
+    static let maximumRecognizedTextQuoteLength = 48
+
     /// What to say when perception ran and recognized nothing.
     ///
     /// Deliberately a statement about *this app's perception*, never about the
-    /// world: "nothing was recognized" is falsifiable and honest, whereas
-    /// "the way ahead is clear" — or any hedged variant of it — asserts an
-    /// absence the app cannot observe. `audits/AGENT-GUIDE.md` names that
-    /// second form as the Critical archetype, and hedging the verb does not
-    /// rescue it, because the *claim* is still absence.
+    /// world: "the way ahead is clear" — or any hedged variant of it — asserts
+    /// an absence the app cannot observe, which `audits/AGENT-GUIDE.md` names
+    /// as the Critical archetype; hedging the verb does not rescue it, because
+    /// the *claim* is still absence.
+    ///
+    /// The subjectless voice matches every other error phrase here ("Couldn't
+    /// take a measurement. Try again."), and replaced the passive "Nothing
+    /// recognizable was found.", which listeners read as "there was nothing
+    /// there" even while depth sensing held an obstacle the classifier could
+    /// not name (2026-08-25). Naming the failed act — the naming — keeps the
+    /// perception scope without inviting the world-absence reading.
     ///
     /// Lives here rather than at a call site so it inherits what every other
     /// phrase here inherits: one reviewed es/vi translation from the String
     /// Catalog, and one place to change if the doctrine changes.
     public func nothingRecognized(locale: Locale = .current) -> String {
-        LocalizedCatalog.string("Nothing recognizable was found.", locale: locale)
+        LocalizedCatalog.string("Couldn't name anything.", locale: locale)
     }
 
     /// The subject to use when depth sensing measured something but
@@ -107,6 +147,21 @@ public struct Phrasing: Sendable {
     public static func hedgeFragments(locale: Locale) -> [String] {
         Certainty.allCases.map { certainty in
             hedgeTemplate(for: certainty, locale: locale)
+                .replacing(" %@.", with: "")
+                .replacing("%@.", with: "")
+        }
+    }
+
+    /// The sound-modality counterpart of ``hedgeFragments(locale:)`` — the
+    /// fragment form of ``describeSound(subject:certainty:locale:)``'s
+    /// templates, kept beside them for the same never-drifts reason. Sounds
+    /// never leave the device (the wire contract forbids it), so these do not
+    /// feed `ReasoningOutputValidator`; they exist so a checker can ask
+    /// "does this spoken output carry one of the app's own hedges?" about
+    /// every modality alike.
+    public static func soundHedgeFragments(locale: Locale) -> [String] {
+        Certainty.allCases.map { certainty in
+            soundHedgeTemplate(for: certainty, locale: locale)
                 .replacing(" %@.", with: "")
                 .replacing("%@.", with: "")
         }
@@ -178,6 +233,18 @@ public struct Phrasing: Sendable {
         case .low: "there might be %@."
         case .medium: "it looks like there's %@."
         case .high: "it looks like there's likely %@."
+        }
+        return LocalizedCatalog.string(key, locale: locale)
+    }
+
+    /// The sound-modality counterpart of `hedgeTemplate(for:locale:)` — same
+    /// ladder shape, heard-not-seen verb, sourced from the same String Catalog
+    /// so es/vi get reviewed translations rather than English leakage.
+    private static func soundHedgeTemplate(for certainty: Certainty, locale: Locale) -> String {
+        let key = switch certainty {
+        case .low: "there might be the sound of %@."
+        case .medium: "it sounds like there's %@."
+        case .high: "it sounds like there's likely %@."
         }
         return LocalizedCatalog.string(key, locale: locale)
     }

@@ -67,7 +67,7 @@ machine with `kimi doctor` before trusting the policy.
 ## Routing
 
 - Invoke the matching skill in `.agents/skills/` before hand-rolling a
-  workflow; persist review findings via `audits/scripts/new-audit.sh`
+  workflow; persist review findings via `tools/new-audit.sh`
   (append-only).
 - After repository changes, run the `update-context` skill so docs and agent
   instructions stay synchronized.

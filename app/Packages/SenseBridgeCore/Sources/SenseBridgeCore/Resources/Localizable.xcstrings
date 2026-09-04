@@ -111,6 +111,28 @@
         }
       }
     },
+    "Couldn't name anything.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't name anything."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo identificar nada."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không nhận ra được vật nào."
+          }
+        }
+      }
+    },
     "Couldn't take a measurement. Try again.": {
       "localizations": {
         "en": {
@@ -239,28 +261,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Không nhận ra văn bản nào. Hãy thử lại gần hơn hoặc thêm ánh sáng."
-          }
-        }
-      }
-    },
-    "Nothing recognizable was found.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing recognizable was found."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se reconoció nada."
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Không nhận ra được gì."
           }
         }
       }
@@ -641,6 +641,72 @@
         }
       }
     },
+    "it looks like there's text that reads %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it looks like there's text that reads %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece que hay texto que dice %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hình như có chữ ghi %@."
+          }
+        }
+      }
+    },
+    "it sounds like there's %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it sounds like there's %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece escucharse %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dường như nghe thấy %@."
+          }
+        }
+      }
+    },
+    "it sounds like there's likely %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it sounds like there's likely %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece que probablemente se escuche %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rất có thể nghe thấy %@."
+          }
+        }
+      }
+    },
     "something about %@ ahead": {
       "extractionState": "manual",
       "localizations": {
@@ -749,6 +815,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "có thể có %@."
+          }
+        }
+      }
+    },
+    "there might be the sound of %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "there might be the sound of %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "puede que se escuche %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "có thể nghe thấy %@."
           }
         }
       }

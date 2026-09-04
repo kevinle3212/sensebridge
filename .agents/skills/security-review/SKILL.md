@@ -19,7 +19,7 @@ XXE), auth/authz flaws, data exposure and hardcoded secrets, crypto weaknesses,
 input validation, business-logic flaws, XSS, with false-positive filtering — then
 add the project-specific checks below. Findings persist through the
 [audit-refresh](../audit-refresh/SKILL.md) skill
-(`audits/scripts/new-audit.sh security "<title>"`), append-only.
+(`tools/new-audit.sh security "<title>"`), append-only.
 
 ## Standard pass
 

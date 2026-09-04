@@ -186,8 +186,5 @@ Remaining errors: 3
 
 Final: `Build Status: SUCCESS/FAILED | Errors Fixed: N | Files Modified: list`
 
-For detailed Swift patterns, see the
-[swift-concurrency-6-2](../skills/swift-concurrency-6-2/SKILL.md) and
-[swift-actor-persistence](../skills/swift-actor-persistence/SKILL.md) skills.
 Project-wide engineering rules live in `CLAUDE.md` and `AGENTS.md`, which are
 the authority wherever they and this file disagree.

@@ -56,13 +56,18 @@ final class AmbientAwarenessSession {
     /// type writes it.
     var lastNarration: String?
 
-    /// What the last detection pass found, for the preview to outline.
+    /// What detection currently stands behind, for the preview to outline.
     ///
     /// The same list the next narration is composed from, so a box on screen and
-    /// a noun in the user's ear always refer to the same thing. Emptied whenever
-    /// a pass finds nothing or fails — a stale outline left hanging over a scene
-    /// that has moved on is a claim about the present built from the past.
+    /// a noun in the user's ear always refer to the same thing. Not the raw
+    /// per-tick output — `stabilizer` filters it: labels confirm over
+    /// consecutive ticks, survive brief absences, and drop once persistence
+    /// runs out, so a stale outline never outlives its evidence by more than
+    /// `persistenceTicks` ticks.
     private(set) var detectedObjects: [DetectedObject] = []
+
+    /// Temporal filter between raw detection passes and `detectedObjects`.
+    private var stabilizer: DetectionStabilizer = .init()
 
     /// The on-screen mirror of this session — camera frames, on their own
     /// cadence. Purely presentational: switching it off would not change a word
@@ -234,6 +239,10 @@ final class AmbientAwarenessSession {
         // nor its outlines may outlive the feed they came from.
         preview.stop()
         detectedObjects = []
+        // A fresh run must not inherit the previous room's confirmation state,
+        // or the first seconds of the next session would speak labels the
+        // current scene never earned.
+        stabilizer = DetectionStabilizer()
         status = .idle
     }
 
@@ -278,23 +287,26 @@ final class AmbientAwarenessSession {
     ///
     /// On the depth cadence rather than the narration cadence: outlines that
     /// only moved once every several seconds would sit over whatever the camera
-    /// used to be pointed at, which is worse than not drawing them. The extra
-    /// work is a saliency pass plus at most a few crops of a classifier that
-    /// already runs on the neural engine — small beside the ARKit world-tracking
-    /// session and the full-brightness screen this mode already holds on.
+    /// used to be pointed at, which is worse than not drawing them —
+    /// see `DetectionStabilizer` for how single-tick noise is absorbed without
+    /// ever asserting a stale scene for long.
     ///
     /// Narration reads whatever this last left behind, so the expensive pass
     /// happens once and serves both channels.
     private func updateDetections(in frame: AmbientFrame) async {
-        // A frame that cannot be detected in is routine — motion blur, a pass
-        // that returned nothing. Clearing is the honest response: it removes the
-        // outlines rather than leaving the last ones asserting a stale scene.
-        let detected = await (try? classifier.detect(frame.image, orientation: frame.orientation)) ?? []
-        // `stop()` can land while a pass is in flight. Assigning unconditionally
-        // would resurrect outlines the stop had just cleared, and they would be
-        // waiting on screen the next time the session starts.
-        guard status == .running else { return }
-        detectedObjects = detected
+        do {
+            let detected = try await classifier.detect(frame.image, orientation: frame.orientation)
+            guard status == .running else { return }
+            detectedObjects = stabilizer.update(detected)
+        } catch {
+            // A thrown pass is a sensor malfunction, not a measured-empty
+            // scene: holding the last stable set is more honest than wiping
+            // every outline because one Vision call failed (motion blur makes
+            // this routine). A genuinely vacated scene still empties within
+            // `persistenceTicks + 1` ticks via normal misses.
+            guard status == .running else { return }
+            detectedObjects = stabilizer.update([], malfunction: true)
+        }
     }
 
     /// Classifies and narrates the scene, if enough time has passed, the
