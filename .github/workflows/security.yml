@@ -58,7 +58,7 @@ jobs:
         if: steps.credential.outputs.present == 'true'
         # Pinned to the commit behind the v1.52.2 tag, not the mutable v1
         # ref — same rationale as the other pinned actions in this workflow.
-        uses: GitGuardian/ggshield-action@da20be06cafe5e8633dc24744efe1efe8d30f06b
+        uses: GitGuardian/ggshield-action@2002482fb5990b486be5598ebcf48a8eba393fce
         env:
           GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
           GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
