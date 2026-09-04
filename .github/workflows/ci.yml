@@ -65,7 +65,10 @@ jobs:
             (cd "$dir" && \
               scheme="$name"; \
               if xcodebuild -list 2>/dev/null | grep -qE "^[[:space:]]*${name}-Package$"; then scheme="${name}-Package"; fi; \
-              xcodebuild test -scheme "$scheme" -destination 'platform=macOS' 2>&1 | tee /tmp/xcodebuild-raw.log | xcpretty; \
+              xcodebuild test -scheme "$scheme" -destination 'platform=macOS' \
+                -test-timeouts-enabled YES \
+                -default-test-execution-time-allowance 120 \
+                -maximum-test-execution-time-allowance 300 2>&1 | tee /tmp/xcodebuild-raw.log | xcpretty; \
               status="${PIPESTATUS[0]}"; \
               if [ "$status" -ne 0 ]; then \
                 echo "::group::Raw xcodebuild output (xcpretty suppresses per-test failure detail)"; \

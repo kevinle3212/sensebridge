@@ -25,12 +25,13 @@ struct MicrophoneSensingSourceTests {
     /// Live microphone capture cannot run on a headless CI runner: it has no
     /// audio input device, and `AVAudioEngine.start()` there blocks indefinitely
     /// rather than returning or throwing -- the whole test job hangs on it with
-    /// no output, not a fast pass/fail. The authorization gate below already
-    /// skips these on a machine that has never granted mic access, but a runner
-    /// can report `.authorized` while still having no capture hardware, so CI is
-    /// excluded explicitly. GitHub Actions and most CI providers set `CI=true`.
+    /// no output, not a fast pass/fail. Gating on `isCaptureAvailable` skips
+    /// these unless real capture hardware is present (which no CI runner has),
+    /// which is more robust than the mic-authorization state alone -- a runner
+    /// can report `.authorized` while still having no device. The `CI` check is
+    /// belt-and-suspenders for a runner that somehow exposes a virtual device.
     private static var canCaptureMicrophone: Bool {
-        MicrophoneSensingSource.authorizationStatus == .authorized
+        MicrophoneSensingSource.isCaptureAvailable
             && ProcessInfo.processInfo.environment["CI"] == nil
     }
 

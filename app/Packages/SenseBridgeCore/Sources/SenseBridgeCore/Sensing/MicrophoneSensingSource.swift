@@ -42,6 +42,16 @@ public actor MicrophoneSensingSource {
         }
     }
 
+    /// Whether live capture can actually run in this environment: the mic is
+    /// authorized *and* a real audio input device exists. A headless CI runner
+    /// can report `.authorized` while having no capture hardware, and
+    /// `AVAudioEngine.start()` there blocks indefinitely rather than failing —
+    /// so a hardware-presence check, not the authorization state alone, is what
+    /// tells a capture test whether it can run without hanging.
+    public nonisolated static var isCaptureAvailable: Bool {
+        authorizationStatus == .authorized && AVCaptureDevice.default(for: .audio) != nil
+    }
+
     private let engine: AVAudioEngine = .init()
 
     /// Whether a tap is currently installed on the engine's input node.
