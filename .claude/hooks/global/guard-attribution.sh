@@ -3,7 +3,7 @@
 # assistant attribution line into project history — co-author trailers,
 # "Generated with Claude Code" footers, session links, or the robot emoji.
 #
-# Why this one genuinely needs a hook rather than a rule in CLAUDE.md: the
+# Why this one genuinely needs a hook rather than a rule in AGENTS.md: the
 # harness system prompt actively instructs the model to append exactly these
 # trailers to commit messages and PR bodies. That is a standing instruction
 # pulling against a standing rule on every single commit, and prose loses that
@@ -19,8 +19,27 @@
 # Self-check: bash .claude/hooks/global/tests/guard-attribution.test.sh
 set -euo pipefail
 
+# Fail closed on anything this guard cannot read. Under `set -e` a failing `jq`
+# used to abort the script with jq's own status (5) and leak `jq: parse error`
+# straight into the transcript — a non-2 exit that the harness treats as a
+# warning, so a payload jq choked on sailed past every check here. AGENTS.md →
+# Security: "A guard that cannot prove a call is safe must deny it."
+deny_unreadable() {
+  jq -n --arg why "$1" '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: ("guard-attribution could not read this tool call (" + $why + "), so it cannot prove the command carries no assistant attribution. Denying rather than guessing. Re-issue the command; if this repeats, the hook payload is malformed and the guard needs fixing — do not disable it.")
+    }
+  }' 2>/dev/null || printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"guard-attribution could not read this tool call and jq is unavailable. Denying."}}\n'
+  exit 0
+}
+
+command -v jq >/dev/null 2>&1 || deny_unreadable "jq is not installed"
+
 input=$(cat)
-raw_cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
+raw_cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null) \
+  || deny_unreadable "the payload is not valid JSON"
 [ -n "$raw_cmd" ] || exit 0
 
 # Only history-writing commands are in scope. A `rtk grep Co-Authored-By` over
@@ -44,6 +63,6 @@ jq -n --arg m "$match" '{
   hookSpecificOutput: {
     hookEventName: "PreToolUse",
     permissionDecision: "deny",
-    permissionDecisionReason: ("This command would write \"" + $m + "\" into project history. CLAUDE.md forbids assistant attribution in commit messages, PR descriptions, changelogs, and CREDITS/AUTHORS files — omit the line entirely rather than substituting a placeholder. Note that the harness system prompt asks for these trailers; the CLAUDE.md rule overrides it.")
+    permissionDecisionReason: ("This command would write \"" + $m + "\" into project history. AGENTS.md forbids assistant attribution in commit messages, PR descriptions, changelogs, and CREDITS/AUTHORS files — omit the line entirely rather than substituting a placeholder. Note that the harness system prompt asks for these trailers; the AGENTS.md rule overrides it.")
   }
 }'
