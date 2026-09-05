@@ -103,9 +103,17 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Developer/Xcode/DerivedData
-          key: derived-data-swift-${{ hashFiles('app/**/*.swift', 'app/**/project.pbxproj') }}
+          # Package.resolved is the FIRST key segment, and the restore-keys
+          # fallback is scoped to it, so each resolved SPM dependency set gets
+          # its own cache lineage. Without this, bumping a binary dependency
+          # (e.g. sentry-cocoa) leaves the cached DerivedData holding a
+          # precompiled module built against the old framework headers, and
+          # the build fails with "SentryDefines.h has been modified since the
+          # module file was built". Source-only edits still restore
+          # incrementally within the same dependency set.
+          key: derived-data-swift-${{ hashFiles('app/**/Package.resolved') }}-${{ hashFiles('app/**/*.swift', 'app/**/project.pbxproj') }}
           restore-keys: |
-            derived-data-swift-
+            derived-data-swift-${{ hashFiles('app/**/Package.resolved') }}-
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4
