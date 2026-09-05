@@ -56,15 +56,46 @@ jobs:
             # summary as the normal log while a raw copy survives on disk; it is
             # only ever printed (which test failed, and why) when the run
             # actually failed, so a passing run's log stays exactly as short.
-            (cd "$dir" && \
-              xcodebuild test -scheme "$name" -destination 'platform=macOS' 2>&1 | tee /tmp/xcodebuild-raw.log | xcpretty; \
-              status="${PIPESTATUS[0]}"; \
-              if [ "$status" -ne 0 ]; then \
-                echo "::group::Raw xcodebuild output (xcpretty suppresses per-test failure detail)"; \
-                cat /tmp/xcodebuild-raw.log; \
-                echo "::endgroup::"; \
-              fi; \
-              exit "$status")
+            # A single-library package exposes one scheme named after the
+            # package, and that scheme carries the test action. Adding a second
+            # target (e.g. an executable) makes xcodebuild split schemes: the
+            # bare "$name" scheme becomes library-only with no test action, and
+            # the aggregate "$name-Package" scheme is the one that tests. Prefer
+            # the -Package scheme when it exists so both package shapes test.
+            # A watchdog bounds the run. swift-testing does not honour
+            # xcodebuild's XCTest -test-timeouts flags, so a test that blocks
+            # on unavailable hardware (no audio input device, no window server)
+            # would otherwise hang the whole job until the 6h GitHub ceiling.
+            # Killing xcodebuild after the deadline turns that into a fast,
+            # diagnosable failure: the raw pre-xcpretty log names the last test
+            # that started, which the xcpretty summary alone never shows.
+            # Tests run serially (-parallel-testing-enabled NO): swift-testing
+            # creates a task per test up front, so a single test that blocks on
+            # unavailable hardware starves the cooperative pool and deadlocks the
+            # whole run (every test starts, none finishes). Serial keeps that a
+            # localized failure instead of a total hang.
+            (
+              cd "$dir"
+              # The step runs under `bash -e`; without this, `wait` returning the
+              # watchdog's kill status (137) aborts the subshell before the raw
+              # log is dumped, hiding the very output the watchdog exists to show.
+              set +e
+              scheme="$name"
+              if xcodebuild -list 2>/dev/null | grep -qE "^[[:space:]]*${name}-Package$"; then scheme="${name}-Package"; fi
+              script -q /dev/null xcodebuild test -scheme "$scheme" -destination 'platform=macOS' -parallel-testing-enabled NO > /tmp/xcodebuild-raw.log 2>&1 &
+              xcpid=$!
+              ( sleep 480; echo ">>> WATCHDOG: no completion after 480s, killing xcodebuild (likely a hang)" >> /tmp/xcodebuild-raw.log; kill -9 "$xcpid" 2>/dev/null ) &
+              wdpid=$!
+              wait "$xcpid"; status=$?
+              kill "$wdpid" 2>/dev/null; wait "$wdpid" 2>/dev/null || true
+              xcpretty < /tmp/xcodebuild-raw.log || true
+              if [ "$status" -ne 0 ]; then
+                echo "::group::Raw xcodebuild output (xcpretty suppresses per-test detail)"
+                tail -300 /tmp/xcodebuild-raw.log
+                echo "::endgroup::"
+              fi
+              exit "$status"
+            )
           done
 
       - name: Detect project layout
@@ -89,11 +120,22 @@ jobs:
         run: |
           PROJ=$(find app -maxdepth 1 \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -quit)
           FLAG=$([[ "$PROJ" == *.xcworkspace ]] && echo -workspace || echo -project)
+          # tee the raw log so the accessibility-audit diagnostics the UITests
+          # print (element label, appearance, frame, measured contrast) survive
+          # xcpretty's per-test suppression and are visible on a failure.
+          set +e
           xcodebuild build test \
             "$FLAG" "$PROJ" \
             -scheme SenseBridge \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
-            CODE_SIGNING_ALLOWED=NO | xcpretty && exit "${PIPESTATUS[0]}"
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee /tmp/app-raw.log | xcpretty
+          status="${PIPESTATUS[0]}"
+          if [ "$status" -ne 0 ]; then
+            echo "::group::Accessibility audit detail"
+            grep -aE "\[a11y-contrast\]|\[a11y-audit\]|Contrast failed|Dynamic Type|Accessibility audit" /tmp/app-raw.log | tail -80
+            echo "::endgroup::"
+          fi
+          exit "$status"
 
       - name: No app yet
         if: steps.detect.outputs.kind == 'none'
@@ -194,8 +236,9 @@ jobs:
         # parses without executing.
         run: node --check docs/assets/js/docs.js
       - name: Knowledge graph visual is intact
-        # docs/assets/graph{,-static}.svg are committed artifacts — graphify-out/
-        # is git-ignored, so nothing else re-checks them after generation. This
+        # docs/assets/graph{,-static}.svg are committed artifacts, and since
+        # graphify's retirement nothing regenerates them at all — so this gate is
+        # the only thing standing between a corrupted asset and main. This
         # lints the committed bytes (accessible name/description, reduced-motion
         # twin genuinely static, well-formed XML, both variants rendering the
         # same graph). It deliberately does not rebuild and diff: the source

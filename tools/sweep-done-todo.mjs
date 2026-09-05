@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 /**
  * sweep-done-todo.mjs — move finished items out of TODO.md's dated `## To-Do`
- * sections and into its `## Completed` section, preserving which review or
- * audit each one came from.
+ * sections straight into `COMPLETED.todo`, preserving which review or audit
+ * each one came from.
  *
- * This is the missing first half of the archive pipeline. TODO.md's own
- * "Item Completion" rule says a finished bullet gets its annotation and is
- * then cut over to `## Completed`, and
- * `tools/archive-completed-todo.mjs` sweeps `## Completed` out to
- * `COMPLETED.todo` every 3 days. Nothing automated the cut in between, so it
- * depended on remembering — and by 2026-07-31 there were 125 ticked items
- * sitting in To-Do while the archive job reported "nothing to archive" on
- * every run. To-Do is supposed to hold only open work; this makes that true
- * mechanically.
+ * TODO.md's own "Item Completion" rule says a finished bullet gets its
+ * annotation and is then cut out; this makes that mechanical instead of
+ * depending on remembering — by 2026-07-31 there were 125 ticked items
+ * sitting in To-Do because nothing automated the cut. To-Do is supposed to
+ * hold only open work, and TODO.md is supposed to hold no completed work at
+ * all: this writes directly to `COMPLETED.todo`'s day-grouped
+ * `## Archived <date>` blocks (reusing `archive-completed-todo.mjs`'s merge
+ * logic) rather than staging anything in a `## Completed` section first.
  *
  * Sections lose only their ticked bullets. A section whose bullets are *all*
  * ticked moves wholesale — heading and its explanatory preamble included —
@@ -26,22 +25,19 @@
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { archiveWith, pacificDateStamp } from "./archive-completed-todo.mjs";
 
 /** The working TODO file this script rewrites. */
 const TODO_PATH = "TODO.md";
+
+/** Where finished items land, grouped under a per-day heading. */
+const ARCHIVE_PATH = "COMPLETED.todo";
 
 /** Heading that opens the region holding open work. */
 const TODO_HEADING = "## To-Do";
 
 /** Heading that ends the To-Do region (sections after it are left alone). */
 const IN_PROGRESS_HEADING = "## In Progress";
-
-/** Heading that finished items are appended under. */
-const COMPLETED_HEADING = "## Completed";
-
-/** Placeholder the archive tool writes when it empties `## Completed`. */
-const PLACEHOLDER =
-  "*Nothing archived since the last sweep — see [`COMPLETED.todo`](COMPLETED.todo) for history.*";
 
 /** Matches a top-level list item, ticked or not. Indented items are continuations. */
 const BULLET = /^- \[([ x])\] /;
@@ -143,9 +139,8 @@ const lines = original.split("\n");
 
 const todoIndex = requireHeading(lines, TODO_HEADING);
 const inProgressIndex = requireHeading(lines, IN_PROGRESS_HEADING);
-const completedIndex = requireHeading(lines, COMPLETED_HEADING);
 
-if (!(todoIndex < inProgressIndex && inProgressIndex < completedIndex)) {
+if (!(todoIndex < inProgressIndex)) {
   throw new Error(`${TODO_PATH}: headings are out of order; refusing to rewrite`);
 }
 
@@ -194,77 +189,29 @@ if (movedCount === 0) {
 if (checkOnly) {
   console.error(
     `sweep-done-todo: ${movedCount} finished item(s) still sit in ${TODO_PATH}'s To-Do region.\n` +
-      'Run `npm run todo:sweep` to move them to "## Completed".',
+      `Run \`npm run todo:sweep\` to move them to ${ARCHIVE_PATH}.`,
   );
   process.exit(1);
 }
 
-// `## In Progress` through the end of file is untouched, except that the
-// harvested bullets are spliced in just under `## Completed`.
-const tail = lines.slice(inProgressIndex);
-const completedOffset = tail.indexOf(COMPLETED_HEADING);
-const existingCompleted = trimBlanks(tail.slice(completedOffset + 1)).filter(
-  (line) => line !== PLACEHOLDER,
-);
+// Fold the harvested bullets straight into COMPLETED.todo's day-grouped
+// blocks — the same merge `archive-completed-todo.mjs` used to apply a step
+// later, now run directly so TODO.md never carries a `## Completed` section.
+const body = trimBlanks(harvested).join("\n");
+const archive = readFileSync(ARCHIVE_PATH, "utf8");
+writeFileSync(ARCHIVE_PATH, archiveWith(archive, body, pacificDateStamp()));
 
-/**
- * Splits harvested lines into any leading headingless bullets and the `###`
- * sections that follow.
- *
- * @param {string[]} src Harvested lines, heading-first per section.
- * @returns {{lead: string[], sections: Array<{heading: string, body: string[]}>}}
- */
-function splitHarvested(src) {
-  const lead = [];
-  const sections = [];
-  for (const line of src) {
-    if (line.startsWith("### ")) sections.push({ heading: line, body: [] });
-    else if (sections.length > 0) sections[sections.length - 1].body.push(line);
-    else lead.push(line);
-  }
-  return { lead, sections };
-}
-
-// Fold each harvested section into `## Completed` under the heading already
-// there, rather than emitting a second copy of it. Sweeping the same section
-// twice in one day — which happens whenever a first pass misses an item and a
-// second pass catches it — used to produce two identical `###` headings, and
-// markdownlint MD024 (no-duplicate-heading) fails the `docs-links` CI job on
-// that. A routine bookkeeping command should never be able to redden a build.
-// Same defect, same day, as the one fixed in archive-completed-todo.mjs.
-const { lead, sections: harvestedSections } = splitHarvested(trimBlanks(harvested));
-const mergedCompleted = [...existingCompleted];
-const freshSections = [];
-for (const section of harvestedSections) {
-  const existingAt = mergedCompleted.indexOf(section.heading);
-  if (existingAt === -1) {
-    freshSections.push(section);
-    continue;
-  }
-  mergedCompleted.splice(existingAt + 1, 0, "", ...trimBlanks(section.body));
-}
-
-const harvestedOut = [
-  ...lead,
-  ...freshSections.flatMap((section) => [section.heading, "", ...trimBlanks(section.body), ""]),
-];
-
+// `## In Progress` through the end of file is untouched.
 const rebuilt = [
   ...lines.slice(0, todoIndex + 1),
   "",
   ...trimBlanks(keptRegion),
   "",
-  ...trimBlanks(tail.slice(0, completedOffset)),
-  "",
-  COMPLETED_HEADING,
-  "",
-  ...trimBlanks(harvestedOut),
-  ...(mergedCompleted.length > 0 ? ["", ...mergedCompleted] : []),
-  "",
+  ...lines.slice(inProgressIndex),
 ];
 
 writeFileSync(TODO_PATH, collapseBlanks(rebuilt).join("\n"));
 console.log(
-  `sweep-done-todo: moved ${movedCount} finished item(s) to "${COMPLETED_HEADING}"; ` +
+  `sweep-done-todo: moved ${movedCount} finished item(s) directly to "${ARCHIVE_PATH}"; ` +
     `${keptCount} open item(s) remain in To-Do.`,
 );

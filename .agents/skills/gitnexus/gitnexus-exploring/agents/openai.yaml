@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gitnexus Exploring"
-  short_description: "the user asks how code works, wants to understand"
-  default_prompt: "Use $gitnexus-exploring when the user asks how code works, wants to understand architecture, trace execution flows, or explore unfamiliar parts of the codebase."

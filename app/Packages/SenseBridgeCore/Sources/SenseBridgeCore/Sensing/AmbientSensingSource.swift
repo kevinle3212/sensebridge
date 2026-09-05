@@ -5,60 +5,6 @@
     import Foundation
     import ImageIO
 
-    /// One moment of ambient sensing: what the camera saw, and how far away the
-    /// nearest confident thing in front of the user was.
-    ///
-    /// `@unchecked Sendable` is justified narrowly. Both stored buffers are
-    /// `CVPixelBuffer`s vended by ARKit's internal pool and **retained** by this
-    /// struct; a pooled buffer is not recycled while a reference to it is
-    /// outstanding, and nothing in this package writes to either one. That is
-    /// the same guarantee Apple's own ARKit-plus-Vision samples rely on when
-    /// they hand `ARFrame.capturedImage` to a request on a background queue.
-    /// Adding a mutable stored property here would invalidate the reasoning —
-    /// remove the property rather than widening the annotation.
-    public struct AmbientFrame: @unchecked Sendable {
-        /// The camera image, in ARKit's native landscape orientation. Pass
-        /// `orientation` alongside it to Vision rather than rotating it.
-        public let image: CVPixelBuffer
-        /// LiDAR depth in metres, `nil` on a frame ARKit produced no depth for
-        /// (the first frames after `start()`, or a device without LiDAR).
-        public let depthMap: CVPixelBuffer?
-        /// Per-pixel `ARConfidenceLevel`, parallel to `depthMap`.
-        public let depthConfidenceMap: CVPixelBuffer?
-        /// The orientation to hand Vision so the image is analyzed upright.
-        public let orientation: CGImagePropertyOrientation
-        /// The camera, expressed in pixels of `imageResolution` — **not** of
-        /// `depthMap`, which is smaller. The reduction rescales it.
-        public let projection: CameraProjection
-        /// The resolution `projection` is expressed in.
-        public let imageResolution: CGSize
-        public let capturedAt: Date
-
-        /// Creates a frame.
-        ///
-        /// Public so callers outside this package can build one — in practice
-        /// tests, which stand a synthetic `CVPixelBuffer` in for ARKit because
-        /// ARKit delivers no frames at all in a simulator. Without this, the
-        /// type is public but constructible only by the one class that vends it.
-        public init(
-            image: CVPixelBuffer,
-            depthMap: CVPixelBuffer?,
-            depthConfidenceMap: CVPixelBuffer?,
-            orientation: CGImagePropertyOrientation,
-            projection: CameraProjection,
-            imageResolution: CGSize,
-            capturedAt: Date
-        ) {
-            self.image = image
-            self.depthMap = depthMap
-            self.depthConfidenceMap = depthConfidenceMap
-            self.orientation = orientation
-            self.projection = projection
-            self.imageResolution = imageResolution
-            self.capturedAt = capturedAt
-        }
-    }
-
     /// Continuous camera-plus-LiDAR sensing for hands-free awareness, built on
     /// `ARSession` because it is the only API that hands back a camera frame and
     /// a registered `sceneDepth` map from one session — see
@@ -127,6 +73,19 @@
         private let session: ARSession = .init()
         private(set) var isRunning = false
 
+        /// When the current run began, on `ARFrame.timestamp`'s clock
+        /// (`CACurrentMediaTime()`).
+        ///
+        /// The session outlives each run so tracking state survives a
+        /// stop/start pair — and so does `ARSession.currentFrame`, which keeps
+        /// returning the *last* frame of the previous run until the new one
+        /// produces its first. Without this boundary, a check taken in one room
+        /// could be answered with the frame captured in another: the same
+        /// confidently-wrong claim docs/SAFETY-FRAMING.md exists to prevent,
+        /// and the harder one to notice, since nothing about the reading looks
+        /// stale.
+        private var runStartedAt: TimeInterval = 0
+
         /// Creates a sensing source.
         ///
         /// - Parameters:
@@ -168,6 +127,12 @@
             // expected to leave running while walking.
             configuration.planeDetection = []
             configuration.environmentTexturing = .none
+            // Stamped before `run(_:options:)` rather than after, so a frame
+            // captured during the call itself counts as this run's. Erring the
+            // other way would discard a legitimately fresh frame; erring this
+            // way cannot admit an older one, because `ARFrame.timestamp` shares
+            // this clock.
+            runStartedAt = CACurrentMediaTime()
             session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
             isRunning = true
         }
@@ -179,8 +144,16 @@
             isRunning = false
         }
 
-        /// The most recent frame ARKit has produced, or `nil` before the first
-        /// one arrives.
+        /// The most recent frame **this run** has produced, or `nil` before the
+        /// first one arrives.
+        ///
+        /// "This run" is load-bearing, and it is enforced here rather than in
+        /// each caller: `ARSession.currentFrame` keeps vending the last frame
+        /// of the previous run after `stop()`/`start()`, so every caller that
+        /// reads it immediately after starting — the one-shot check, and the
+        /// continuous session's first tick after resuming — could otherwise
+        /// narrate a scene the user has already walked away from. See
+        /// ``runStartedAt``.
         ///
         /// Does no pixel work of its own — it retains buffers and returns. The
         /// reduction in `depthMeters(in:)` is the expensive half and runs off
@@ -190,7 +163,7 @@
         public func latestFrame(
             orientation: CGImagePropertyOrientation = .right
         ) -> AmbientFrame? {
-            guard isRunning, let frame = session.currentFrame else { return nil }
+            guard isRunning, let frame = session.currentFrame, frame.timestamp > runStartedAt else { return nil }
             let intrinsics = frame.camera.intrinsics
             let rotation = frame.camera.transform
             let projection = CameraProjection(
@@ -283,8 +256,11 @@
         /// `nonisolated` because it is the expensive half of `depthMeters(in:)`
         /// and must not run on the main actor this class is otherwise pinned to
         /// — see docs/ARCHITECTURE.md "Main thread stays free". It touches no
-        /// instance state, only its arguments.
-        private nonisolated static func readDepthRegion(
+        /// instance state, only its arguments. Internal rather than `private`
+        /// solely so `zonedDepth(in:)` in `AmbientSensingSource+Zones.swift`
+        /// (split out for SwiftLint's `file_length` gate) walks each zone
+        /// through this identical path; nothing outside the package calls it.
+        nonisolated static func readDepthRegion(
             depthMap: CVPixelBuffer,
             confidenceMap: CVPixelBuffer,
             region: CGRect,

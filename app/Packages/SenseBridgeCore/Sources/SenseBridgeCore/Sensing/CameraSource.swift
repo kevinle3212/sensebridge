@@ -88,6 +88,23 @@ public actor CameraSource: SensingSource {
     public private(set) var availableLenses: [CameraLens] = [.wide]
 
     private let photoOutput: AVCapturePhotoOutput = .init()
+
+    /// The live-frame output behind continuous reading, and the object holding
+    /// its most recent frame.
+    ///
+    /// Added to the session unconditionally rather than on demand: adding an
+    /// output to a running session requires a reconfiguration that drops frames
+    /// and re-ramps exposure, which a user would experience as the camera
+    /// hiccuping every time they switched Read into live mode. The cost of
+    /// leaving it attached is one buffer's worth of memory and a delegate that
+    /// does nothing but a pointer swap.
+    private let videoOutput: AVCaptureVideoDataOutput = .init()
+    private let videoReceiver: VideoFrameReceiver = .init()
+    /// The queue frames are delivered on. Serial and dedicated, as
+    /// `AVCaptureVideoDataOutput` requires — never the main queue, which is what
+    /// docs/ARCHITECTURE.md "Main thread stays free" exists to protect.
+    private let videoQueue: DispatchQueue = .init(label: "com.sensebridge.camera.video", qos: .userInitiated)
+
     private var streamContinuation: AsyncThrowingStream<Data, Error>.Continuation?
     private var pendingCapture: CheckedContinuation<Data, Error>?
     private var pendingDelegate: PhotoCaptureDelegate?
@@ -203,6 +220,14 @@ public actor CameraSource: SensingSource {
             if session.canAddOutput(photoOutput) {
                 session.addOutput(photoOutput)
             }
+            // Late frames are dropped rather than queued: live reading wants
+            // the newest frame, and a backlog of stale ones would have it
+            // narrating a page the camera stopped pointing at seconds ago.
+            videoOutput.alwaysDiscardsLateVideoFrames = true
+            videoOutput.setSampleBufferDelegate(videoReceiver, queue: videoQueue)
+            if session.canAddOutput(videoOutput) {
+                session.addOutput(videoOutput)
+            }
             session.commitConfiguration()
 
             device = selectedDevice
@@ -218,6 +243,10 @@ public actor CameraSource: SensingSource {
         }
 
         observeLifecycleNotifications()
+        // After the outputs exist and before frames start arriving, so the very
+        // first live frame is already upright rather than the one after the
+        // first rotation change.
+        applyVideoRotation()
         session.startRunning()
 
         let (stream, continuation) = AsyncThrowingStream<Data, Error>.makeStream()
@@ -232,6 +261,10 @@ public actor CameraSource: SensingSource {
         }
         notificationObservers.removeAll()
         failPendingCapture(with: .sessionStopped)
+        // The held frame must not outlive the session that produced it. A stale
+        // buffer read after a stop is a picture of wherever the camera was
+        // pointing minutes ago, and live reading would narrate it as the present.
+        videoReceiver.reset()
         streamContinuation?.finish()
         streamContinuation = nil
         startTask = nil
@@ -382,6 +415,36 @@ public actor CameraSource: SensingSource {
         connection.videoRotationAngle = horizonLevelCaptureAngle
     }
 
+    /// The same rotation, applied to the live-frame connection.
+    ///
+    /// Separate from `applyHorizonLevelRotation()` because the two fire at
+    /// different times: the photo connection is set immediately before each
+    /// capture, while this is set whenever the angle changes, so frames already
+    /// in flight are the only ones that can arrive at the old rotation. That is
+    /// why `CameraVideoFrame` is stamped `.up` rather than carrying an angle —
+    /// the rotation is the connection's job, and a frame is never analysed with
+    /// an orientation from a different moment than the buffer.
+    private func applyVideoRotation() {
+        guard let connection = videoOutput.connection(with: .video),
+              connection.isVideoRotationAngleSupported(horizonLevelCaptureAngle)
+        else { return }
+        connection.videoRotationAngle = horizonLevelCaptureAngle
+    }
+
+    /// The most recent live camera frame, already upright, or `nil` before the
+    /// first one arrives or while the session is stopped.
+    ///
+    /// A pull rather than a stream, for the reason spelled out on
+    /// `VideoFrameReceiver`: the camera produces 30 frames a second and live
+    /// reading consumes two or three.
+    ///
+    /// `nil` is "no frame yet", never "the camera sees nothing" — the same
+    /// distinction `AmbientSensingSource.latestFrame()` draws.
+    public func latestVideoFrame() -> CameraVideoFrame? {
+        guard streamContinuation != nil else { return nil }
+        return videoReceiver.latestFrame()
+    }
+
     /// Creates the rotation coordinator for `device` and seeds/observes
     /// `horizonLevelCaptureAngle`. No `previewLayer` is passed — this actor
     /// doesn't own the App layer's preview layer, and the capture-side angle
@@ -399,8 +462,16 @@ public actor CameraSource: SensingSource {
         }
     }
 
+    /// Records a new physical rotation and pushes it straight to the live-frame
+    /// connection.
+    ///
+    /// The photo connection is deliberately *not* updated here — it is set per
+    /// capture, where the angle is read fresh. The live connection has no such
+    /// moment, so it has to be updated as the angle changes or every frame after
+    /// the phone turns would be recognized sideways.
     private func setHorizonLevelCaptureAngle(_ angle: CGFloat) {
         horizonLevelCaptureAngle = angle
+        applyVideoRotation()
     }
 
     /// Sets continuous autofocus/autoexposure anchored at the frame's
@@ -473,6 +544,11 @@ public actor CameraSource: SensingSource {
         // `failPendingCapture(with:)` for why leaving it pending would wedge
         // capture permanently rather than merely losing this one photo.
         failPendingCapture(with: .sessionStopped)
+        // Same rule as `stop()`, and for the same reason stated there: the held
+        // frame must not outlive the session that produced it. Without this, an
+        // app backgrounded in one room and resumed in another hands live reading
+        // a frame of the first room, which it would narrate as the present.
+        videoReceiver.reset()
     }
 
     private static func requestAuthorization() async -> Bool {

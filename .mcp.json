@@ -1,18 +1,3 @@
 {
-	"mcpServers": {
-		"serena": {
-			"command": "serena",
-			"args": [
-				"start-mcp-server",
-				"--context=claude-code",
-				"--project",
-				".",
-				"--enable-web-dashboard=true",
-				"--open-web-dashboard=false"
-			],
-			"env": {
-				"NO_COLOR": "1"
-			}
-		}
-	}
+  "mcpServers": {}
 }

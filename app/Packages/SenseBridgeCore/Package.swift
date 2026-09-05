@@ -13,6 +13,10 @@ let package = Package(
             name: "SenseBridgeCore",
             resources: [.process("Resources/Localizable.xcstrings")]
         ),
+        .executableTarget(
+            name: "eval-harness",
+            dependencies: ["SenseBridgeCore"]
+        ),
         .testTarget(name: "SenseBridgeCoreTests", dependencies: ["SenseBridgeCore"])
     ]
 )

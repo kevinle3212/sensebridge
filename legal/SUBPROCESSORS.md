@@ -3,7 +3,7 @@
 > Informational, not legal advice. Review by qualified counsel before public
 > launch.
 
-**Effective date:** 2026-08-01
+**Effective date:** 2026-08-12
 **Maintainer:** Kevin K. Le
 **Contact:** <kevinle3212@gmail.com>
 
@@ -13,9 +13,11 @@ be a list you can read, not a sentence promising there isn't one.
 
 For most SenseBridge users, **this list is empty in practice.** The app is
 serverless and processes camera, audio, and depth data entirely on your device.
-Nothing below receives that content, ever. What follows is the complete set of
-parties involved in the narrow paths that do leave a device — a crash report you
-switched on, or a web page you requested.
+Nothing below receives that content, ever — including the reasoning backends
+below, which can receive recognized object labels only, and only if you turn
+one on. What follows is the complete set of parties involved in the narrow
+paths that do leave a device — a crash report you switched on, a Local or
+Cloud reasoning backend you turned on, or a web page you requested.
 
 ## The app
 
@@ -28,8 +30,31 @@ Apple is listed for completeness rather than as a subprocessor engaged by this
 project: the relationship is between you and Apple under Apple's own terms, and
 the maintainer neither controls it nor receives data through it.
 
-**Nobody receives camera frames, photos, recognized text, audio, depth data, or
-location.** There is no path in the software that would allow it.
+**Nobody receives camera frames, photos, raw audio, depth data, or
+location.** There is no path in the software that would allow it. The one
+exception is recognized object labels, which reach a reasoning backend only
+if you explicitly opt into one — see below.
+
+## Optional Local and Cloud reasoning (opt-in, off by default)
+
+| Party | What they receive | Where | Retention | When |
+| --- | --- | --- | --- | --- |
+| Anthropic PBC | Recognized object labels only | Per Anthropic's own infrastructure | Per Anthropic's own retention policy | Only if *you* switch Settings → Reasoning to Cloud, select Anthropic, and supply your own API key |
+| OpenAI, L.L.C. | Recognized object labels only | Per OpenAI's own infrastructure | Per OpenAI's own retention policy | Only if *you* switch Settings → Reasoning to Cloud, select OpenAI, and supply your own API key |
+| NVIDIA Corporation (NIM) | Recognized object labels only | Per NVIDIA's own infrastructure | Per NVIDIA's own retention policy | Only if *you* switch Settings → Reasoning to Cloud, select NVIDIA NIM, and supply your own API key |
+| Whatever destination you configure | Recognized object labels only | Wherever you pointed it | Whatever that destination does | Only if *you* switch Settings → Reasoning to Local and enter an endpoint yourself |
+
+Anthropic, OpenAI, and NVIDIA are listed for completeness rather than as
+subprocessors engaged by this project: each is bring-your-own-key. You call
+that provider directly with your own account and API key; the maintainer
+never receives, forwards, or has visibility into that traffic, and is not a
+party to your relationship with the provider. The Local row is not a named
+party at all — it is entirely the destination you yourself typed in, and the
+maintainer has no relationship with it whatsoever.
+
+**Nobody receives camera frames, photos, raw audio, depth data, or
+location through either reasoning path.** Only recognized object labels can
+leave, and only after you explicitly opt in.
 
 ## The website
 
@@ -57,6 +82,11 @@ about a visitor or a user.
 The processors above are United States entities. Where the GDPR or the UK GDPR
 applies, transfers rely on Standard Contractual Clauses, with the UK
 International Data Transfer Addendum for UK transfers.
+
+This does not cover the optional Local or Cloud reasoning paths above: those
+are transfers you make yourself, directly to a destination you chose, under
+that destination's own terms. The maintainer is not a party to them and they
+are not covered by these clauses.
 
 ## Changes to this list
 

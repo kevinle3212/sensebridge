@@ -1,4 +1,0 @@
-interface:
-  display_name: "Gitnexus Impact Analysis"
-  short_description: "the user wants to know what will break if they change"
-  default_prompt: "Use $gitnexus-impact-analysis when the user wants to know what will break if they change something, or needs safety analysis before editing code."

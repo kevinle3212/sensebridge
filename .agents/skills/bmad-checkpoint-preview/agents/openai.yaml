@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Checkpoint Preview"
-  short_description: "LLM-assisted human-in-the-loop review"
-  default_prompt: "Use $bmad-checkpoint-preview when the user says 'checkpoint', 'human review', or 'walk me through this change'."

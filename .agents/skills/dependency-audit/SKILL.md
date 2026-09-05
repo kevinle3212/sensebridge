@@ -38,4 +38,4 @@ solution" bar.
 ## Validation
 
 Resolve and build (`swift build` / `xcodebuild build`) after any dependency
-change; record the audit via `audits/scripts/new-audit.sh dependencies "<title>"`.
+change; record the audit via `tools/new-audit.sh dependencies "<title>"`.

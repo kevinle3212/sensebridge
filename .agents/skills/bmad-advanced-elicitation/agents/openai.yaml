@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Advanced Elicitation"
-  short_description: "Push the LLM to reconsider, refine, and improve its recent"
-  default_prompt: "Use $bmad-advanced-elicitation when user asks for deeper critique or mentions a known deeper critique method, e."

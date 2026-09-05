@@ -35,4 +35,4 @@ agent. The demanding path is continuous camera + depth + on-device inference.
   VoiceOver during processing.
 - **Memory.** Bound frame/audio buffers; release perception buffers promptly.
 
-Record findings via `audits/scripts/new-audit.sh performance "<title>"`.
+Record findings via `tools/new-audit.sh performance "<title>"`.

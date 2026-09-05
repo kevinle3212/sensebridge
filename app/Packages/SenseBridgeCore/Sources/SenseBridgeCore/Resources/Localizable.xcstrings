@@ -1,24 +1,509 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Nothing recognizable was found.": {
+    "%@ on your left": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing recognizable was found."
+            "value": "%@ on your left"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se reconoció nada."
+            "value": "%@ a tu izquierda"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Không nhận ra được gì."
+            "value": "%@ ở bên trái bạn"
+          }
+        }
+      }
+    },
+    "%@ on your right": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ on your right"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a tu derecha"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ở bên phải bạn"
+          }
+        }
+      }
+    },
+    "%@ straight ahead": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ straight ahead"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ justo delante"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ngay phía trước"
+          }
+        }
+      }
+    },
+    "Cloud descriptions are working again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud descriptions are working again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las descripciones en la nube están funcionando de nuevo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mô tả trên đám mây đã hoạt động trở lại."
+          }
+        }
+      }
+    },
+    "Cloud descriptions aren't responding, so SenseBridge is continuing with on-device descriptions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud descriptions aren't responding, so SenseBridge is continuing with on-device descriptions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las descripciones en la nube no responden, así que SenseBridge continúa con descripciones en el dispositivo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mô tả trên đám mây không phản hồi, vì vậy SenseBridge tiếp tục dùng mô tả trên thiết bị."
+          }
+        }
+      }
+    },
+    "Couldn't name anything.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't name anything."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo identificar nada."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không nhận ra được vật nào."
+          }
+        }
+      }
+    },
+    "Couldn't take a measurement. Try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't take a measurement. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo tomar una medición. Inténtalo de nuevo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể đo được. Hãy thử lại."
+          }
+        }
+      }
+    },
+    "End of the text.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End of the text."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fin del texto."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hết văn bản."
+          }
+        }
+      }
+    },
+    "Hands-free awareness is running again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hands-free awareness is running again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La percepción manos libres está funcionando de nuevo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chế độ nhận biết rảnh tay đang chạy trở lại."
+          }
+        }
+      }
+    },
+    "Hands-free awareness ran for %1$@. Alerts raised: %2$@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hands-free awareness ran for %1$@. Alerts raised: %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La percepción manos libres funcionó durante %1$@. Avisos generados: %2$@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chế độ nhận biết rảnh tay đã chạy %1$@. Số cảnh báo: %2$@."
+          }
+        }
+      }
+    },
+    "Hands-free awareness stopped because SenseBridge is no longer on screen. It will start again when you come back.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hands-free awareness stopped because SenseBridge is no longer on screen. It will start again when you come back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La percepción manos libres se ha detenido porque SenseBridge ya no está en pantalla. Se reanudará cuando vuelvas."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chế độ nhận biết rảnh tay đã dừng vì SenseBridge không còn hiển thị trên màn hình. Nó sẽ tiếp tục khi bạn quay lại."
+          }
+        }
+      }
+    },
+    "No text is being recognized. Try moving closer, or adding light.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No text is being recognized. Try moving closer, or adding light."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se está reconociendo texto. Prueba a acercarte o a añadir luz."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không nhận ra văn bản nào. Hãy thử lại gần hơn hoặc thêm ánh sáng."
+          }
+        }
+      }
+    },
+    "Page %1$@ of %2$@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %1$@ of %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página %1$@ de %2$@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trang %1$@ trên %2$@."
+          }
+        }
+      }
+    },
+    "Page added. %@ pages so far.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page added. %@ pages so far."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Página añadida. %@ páginas hasta ahora."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã thêm trang. %@ trang cho đến giờ."
+          }
+        }
+      }
+    },
+    "Reading again from the beginning.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading again from the beginning."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo de nuevo desde el principio."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đọc lại từ đầu."
+          }
+        }
+      }
+    },
+    "SenseBridge is back to checking at its normal pace.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge is back to checking at its normal pace."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge vuelve a comprobar a su ritmo normal."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SenseBridge đã trở lại tốc độ kiểm tra bình thường."
+          }
+        }
+      }
+    },
+    "Sentence %1$@ of %2$@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sentence %1$@ of %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frase %1$@ de %2$@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Câu %1$@ trên %2$@."
+          }
+        }
+      }
+    },
+    "Text runs past the bottom. Try tilting the camera down, or moving back.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text runs past the bottom. Try tilting the camera down, or moving back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto se sale por abajo. Prueba a inclinar la cámara hacia abajo o a alejarla."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văn bản vượt quá phía dưới. Hãy thử nghiêng máy ảnh xuống hoặc đưa ra xa."
+          }
+        }
+      }
+    },
+    "Text runs past the edges of the frame. Try moving the camera back.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text runs past the edges of the frame. Try moving the camera back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto se sale de los bordes del encuadre. Prueba a alejar la cámara."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văn bản vượt quá các cạnh khung hình. Hãy thử đưa máy ảnh ra xa."
+          }
+        }
+      }
+    },
+    "Text runs past the left. Try moving the camera left, or moving back.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text runs past the left. Try moving the camera left, or moving back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto se sale por la izquierda. Prueba a mover la cámara a la izquierda o a alejarla."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văn bản vượt quá bên trái. Hãy thử di chuyển máy ảnh sang trái hoặc đưa ra xa."
+          }
+        }
+      }
+    },
+    "Text runs past the right. Try moving the camera right, or moving back.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text runs past the right. Try moving the camera right, or moving back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto se sale por la derecha. Prueba a mover la cámara a la derecha o a alejarla."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văn bản vượt quá bên phải. Hãy thử di chuyển máy ảnh sang phải hoặc đưa ra xa."
+          }
+        }
+      }
+    },
+    "Text runs past the top. Try tilting the camera up, or moving back.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text runs past the top. Try tilting the camera up, or moving back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto se sale por arriba. Prueba a inclinar la cámara hacia arriba o a alejarla."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văn bản vượt quá phía trên. Hãy thử nghiêng máy ảnh lên hoặc đưa ra xa."
+          }
+        }
+      }
+    },
+    "The nearest distance I could measure is about %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The nearest distance I could measure is about %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La distancia más cercana que pude medir es de unos %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khoảng cách gần nhất tôi đo được là khoảng %@."
           }
         }
       }
@@ -42,6 +527,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "Khoảng cách đo được gần nhất giờ đã xa hơn."
+          }
+        }
+      }
+    },
+    "The phone is hot, so SenseBridge is checking much less often.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The phone is hot, so SenseBridge is checking much less often."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El teléfono está muy caliente, así que SenseBridge comprueba con mucha menos frecuencia."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Điện thoại đang nóng, nên SenseBridge kiểm tra ít thường xuyên hơn nhiều."
+          }
+        }
+      }
+    },
+    "The phone is warm, so SenseBridge is checking less often.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The phone is warm, so SenseBridge is checking less often."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El teléfono está caliente, así que SenseBridge comprueba con menos frecuencia."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Điện thoại đang ấm, nên SenseBridge kiểm tra ít thường xuyên hơn."
+          }
+        }
+      }
+    },
+    "The text looks small. Try moving closer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text looks small. Try moving closer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El texto se ve pequeño. Prueba a acercarte."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văn bản trông nhỏ. Hãy thử lại gần hơn."
           }
         }
       }
@@ -90,6 +641,72 @@
         }
       }
     },
+    "it looks like there's text that reads %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it looks like there's text that reads %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece que hay texto que dice %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "hình như có chữ ghi %@."
+          }
+        }
+      }
+    },
+    "it sounds like there's %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it sounds like there's %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece escucharse %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dường như nghe thấy %@."
+          }
+        }
+      }
+    },
+    "it sounds like there's likely %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "it sounds like there's likely %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parece que probablemente se escuche %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rất có thể nghe thấy %@."
+          }
+        }
+      }
+    },
     "something about %@ ahead": {
       "extractionState": "manual",
       "localizations": {
@@ -97,6 +714,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "something about %@ ahead"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "algo a unos %@ de distancia"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vật gì đó cách khoảng %@"
+          }
+        }
+      }
+    },
+    "something about %@ away": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "something about %@ away"
           }
         },
         "es": {
@@ -136,6 +775,28 @@
         }
       }
     },
+    "something now about %@ ahead": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "something now about %@ ahead"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "algo ahora a unos %@ por delante"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "có gì đó bây giờ cách khoảng %@ phía trước"
+          }
+        }
+      }
+    },
     "there might be %@.": {
       "localizations": {
         "en": {
@@ -154,6 +815,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "có thể có %@."
+          }
+        }
+      }
+    },
+    "there might be the sound of %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "there might be the sound of %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "puede que se escuche %@."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "có thể nghe thấy %@."
           }
         }
       }

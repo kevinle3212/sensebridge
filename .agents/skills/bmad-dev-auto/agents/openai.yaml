@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Dev Auto"
-  short_description: "One iteration of an unattended development loop"
-  default_prompt: "Use $bmad-dev-auto when invoked by name."

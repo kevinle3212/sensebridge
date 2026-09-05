@@ -30,9 +30,9 @@ struct PhrasingTests {
     }
 
     @Test(arguments: [
-        (localeIdentifier: "en", expected: "Nothing recognizable was found."),
-        (localeIdentifier: "es", expected: "No se reconoció nada."),
-        (localeIdentifier: "vi", expected: "Không nhận ra được gì.")
+        (localeIdentifier: "en", expected: "Couldn't name anything."),
+        (localeIdentifier: "es", expected: "No se pudo identificar nada."),
+        (localeIdentifier: "vi", expected: "Không nhận ra được vật nào.")
     ])
     func nothingRecognizedIsTranslatedAndClaimsNoAbsence(localeIdentifier: String, expected: String) {
         let phrase = Phrasing().nothingRecognized(locale: Locale(identifier: localeIdentifier))
@@ -80,5 +80,75 @@ struct PhrasingTests {
         // No language ever gets an unhedged assertion, including "high".
         #expect(phrase != "a chair.")
         #expect(!phrase.hasPrefix("a chair"))
+    }
+
+    @Test func hedgeFragmentsCoversAllThreeCertaintyTemplatesInEnglish() {
+        let fragments = Phrasing.hedgeFragments(locale: Locale(identifier: "en"))
+        #expect(fragments.contains("there might be"))
+        #expect(fragments.contains("it looks like there's"))
+    }
+
+    /// The test that fails if a future change lets detail level reach into
+    /// hedging. `SpokenDetail` never touches `Phrasing` directly — it scales
+    /// how many labels a composer joins into `subject`, not the hedge that
+    /// wraps it — so this exercises the subject shape each level actually
+    /// produces (one label at `.concise`, several joined at `.detailed`)
+    /// against every certainty bucket, in every supported locale, and
+    /// confirms the hedge fragment is there regardless.
+    @Test(arguments: ["en", "es", "vi"])
+    func everyDetailLevelSubjectStaysHedgedAtEveryCertainty(localeIdentifier: String) {
+        let locale = Locale(identifier: localeIdentifier)
+        let subjectsByDetail: [SpokenDetail: String] = [
+            .concise: "a chair",
+            .standard: "a chair and a table",
+            .detailed: "a chair, a table, a lamp, and a doorway"
+        ]
+        let knownFragments = Phrasing.hedgeFragments(locale: locale)
+        for (_, subject) in subjectsByDetail {
+            for certainty in Certainty.allCases {
+                let phrase = Phrasing().describe(subject: subject, certainty: certainty, locale: locale)
+                #expect(
+                    knownFragments.contains { phrase.hasPrefix($0) },
+                    "\"\(phrase)\" must start with a known hedge fragment"
+                )
+            }
+        }
+    }
+
+    @Test func couldNotMeasureIsDistinctFromNothingRecognized() {
+        let phrasing = Phrasing()
+        let couldNotMeasure = phrasing.couldNotMeasure(locale: Locale(identifier: "en"))
+        let nothingRecognized = phrasing.nothingRecognized(locale: Locale(identifier: "en"))
+        #expect(couldNotMeasure != nothingRecognized)
+        #expect(couldNotMeasure.lowercased().contains("measure"))
+    }
+
+    @Test func displayCasingCapitalizesOnlyTheFirstCharacter() {
+        // Title-casing would be wrong in all three shipped languages, and is
+        // what `localizedCapitalized` would have done.
+        #expect(Phrasing.forDisplay("it looks like there's a chair.") == "It looks like there's a chair.")
+        #expect(Phrasing.forDisplay("una silla y una mesa") == "Una silla y una mesa")
+    }
+
+    @Test func displayCasingLeavesSpeechInputUntouched() {
+        // The templates must stay lowercase: they are composed into speech and
+        // embedded mid-sentence, where a capital is wrong.
+        let phrasing = Phrasing()
+        let spoken = phrasing.describe(subject: "a chair", certainty: .medium, locale: Locale(identifier: "en"))
+        #expect(spoken.first?.isLowercase == true)
+        #expect(Phrasing.forDisplay(spoken) != spoken)
+    }
+
+    @Test func displayCasingHandlesEmptyAndNonLatinInput() {
+        #expect(Phrasing.forDisplay("").isEmpty)
+        // Vietnamese has no separate uppercase for this and must pass through
+        // unchanged rather than being mangled.
+        let vietnamese = "một cái ghế"
+        #expect(Phrasing.forDisplay(vietnamese, locale: Locale(identifier: "vi")) == "Một cái ghế")
+    }
+
+    @Test func displayCasingIsIdempotent() {
+        let once = Phrasing.forDisplay("it looks like there's a chair.")
+        #expect(Phrasing.forDisplay(once) == once)
     }
 }

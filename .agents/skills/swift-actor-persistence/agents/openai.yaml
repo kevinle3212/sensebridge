@@ -1,4 +1,0 @@
-interface:
-  display_name: "Swift Actor Persistence"
-  short_description: "building thread-safe local persistence in Swift"
-  default_prompt: "Use $swift-actor-persistence when building thread-safe local persistence in Swift — actor-guarded in-memory cache over file-backed storage, eliminating data races by design."

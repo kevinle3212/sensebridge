@@ -106,8 +106,8 @@ test for that property and runs in CI.
 3. Select your personal Apple ID as the signing team for local, on-device
    builds — free, no Apple Developer Program enrollment needed (App Store
    Connect / TestFlight distribution needs the paid program — see
-   [DISTRIBUTION.md](DISTRIBUTION.md)). `app/project.yml` sets
-   `CODE_SIGN_STYLE: Automatic` and points both configurations at
+   [DISTRIBUTION.md](DISTRIBUTION.md)). `app/SenseBridge.xcodeproj/project.pbxproj`
+   sets `CODE_SIGN_STYLE = Automatic` and points every configuration at
    `app/Config/Signing.xcconfig`, which is committed and deliberately names no
    team — a team ID identifies one person's Apple Developer account, so it
    stays out of tracked files:
@@ -175,6 +175,32 @@ test for that property and runs in CI.
    `scripts/lint.sh`) can also be run directly before committing — see the
    command center below.
 
+### The Xcode project file is the source of truth
+
+`app/SenseBridge.xcodeproj/project.pbxproj` is edited directly and is
+authoritative. There is no XcodeGen spec: `app/project.yml` was removed on
+**2026-08-12** because build settings were being edited in two places and only
+one of them ever shipped. That drift was not theoretical — the spec was once
+missing `INFOPLIST_KEY_UIBackgroundModes`, so a regeneration would have
+silently dropped the spoken "hands-free awareness stopped" announcement, and a
+separate regeneration flattened the test targets' bundle IDs. Nothing in
+`package.json`, `scripts/`, or `.github/workflows/` ever invoked `xcodegen`, so
+the generator was a second unverified copy of the truth rather than a build
+step. Add new source and test files through Xcode, or by hand-editing the
+`PBXBuildFile` / `PBXFileReference` / group / Sources-phase entries — the
+pattern every recent session has used anyway.
+
+The settings that are not self-explanatory, so the reasoning survives the
+spec's deletion:
+
+| Setting | Why |
+| --- | --- |
+| `PRODUCT_BUNDLE_IDENTIFIER = $(BUNDLE_ID_PREFIX:default=com.sensebridge).*` | `com.sensebridge` is registered to this project's team, so a contributor signing with their own free Apple ID overrides one variable instead of editing three targets. Set on the app **and** both test bundles — without it, a contributor gets a signable app and unsignable tests. |
+| `INFOPLIST_KEY_UIBackgroundModes = audio` | Solely so hands-free awareness can say out loud that it stopped when the app leaves the screen (see `AmbientAwarenessSession`). iOS revokes camera access on backgrounding regardless, so this buys no background observation. |
+| `INFOPLIST_KEY_SentryDSN = $(SENTRY_DSN)` | Carried through `Info.plist` rather than a Swift constant so the value never lands in a tracked source file; `CrashReporting` reads it from `Bundle.main`. A DSN is write-only ingest rather than a credential, but it names one deployment's Sentry project, so a fork must not inherit this one. Empty unless `Config/Sentry.local.xcconfig` supplies it. |
+| `LM_FORCE_LINK_GENERATION = YES` | Clears "Metadata extraction skipped. No AppIntents.framework dependency found." on every build. Nothing adopts App Intents, and linking the framework just to quiet the notice would add a dependency for no feature. `LM_FILTER_WARNINGS` does **not** suppress it. |
+| `baseConfigurationReference` → `Config/Signing.xcconfig` on all six configurations | A device test run needs `DEVELOPMENT_TEAM`, and it lives only in the gitignored `Config/Signing.local.xcconfig` this chains to. Missing it on the test targets is exactly the gap found on 2026-08-05. |
+
 ## Command center
 
 Every routine command is an `npm run` script, so `npm run` with no arguments
@@ -197,7 +223,9 @@ markdownlint-cli2 — no heavy dependencies).
 | `app:build` | Simulator build, no code signing (what `pre-push` runs) |
 | `app:package-test` | `xcodebuild test` for every package under `app/Packages/*` |
 | `app:device` | Signed build for the attached iPhone |
+| `app:device-test` | Signed build + test **on** the attached iPhone — the only command that runs the suite against real ARKit, LiDAR, and arm64. **Not green yet:** its first run (2026-08-19) was 24 passed / 8 failed, in three classes tracked in `TODO.md`. Some of those are tests that assert the Simulator's no-camera path, so they cannot pass on a phone; the contrast findings appear to be real. |
 | `app:install` | Device build, then install onto the attached iPhone |
+| `eval` | `swift run eval-harness` — the AI evaluation harness: renders synthetic fixtures through the real OCR/object services and `LabelListSceneComposer`, flags over-claiming compositions via `ReasoningOutputValidator`. See [docs/TESTING.md](TESTING.md) |
 | `app:clean` / `app:open` | Clean build products / open the Xcode project |
 | `lint` | `lint:swift` + `lint:md` + `lint:mjs` |
 | `lint:swift` | SwiftFormat + SwiftLint (`scripts/lint.sh`) |
@@ -209,20 +237,22 @@ markdownlint-cli2 — no heavy dependencies).
 | `format:mjs` / `format:mjs:fix` | Prettier (check / write) over the same `.mjs` files `lint:mjs` covers |
 | `check` | Every non-Swift gate below, in order |
 | `check:sensitive` / `:all` | `tools/check-sensitive-files.mjs` — staged, or the whole tree |
+| `check:contrast` | Every authored color asset clears WCAG AA (4.5:1) against the system backgrounds it renders on, in both appearances (`tools/check-color-contrast.mjs`). Device-free arithmetic that catches the class of contrast defect the on-device `XCUIAccessibilityAudit` reports as a bare "Contrast nearly passed" |
 | `check:skills` | Canonical skill tree, personas, and harness adapters match the hash-lock (`tools/skill-lock.mjs`) |
 | `check:hooks` | `.claude/settings.json` carries no owner-personal or double-registered hook (`tools/check-settings-hooks.mjs`) |
 | `check:bmad` | BMAD's `user_skill_level` still reads `expert` in both config files (`tools/check-bmad-config.mjs`) |
 | `check:links` | Relative Markdown links resolve (`scripts/check-links.sh`) |
 | `check:docs-js` | `docs/assets/js/docs.js` parses — it ships unbundled |
 | `check:env-loader` | `scripts/env.sh` parses `.env` rather than executing it |
-| `check:linguist` | Vendored skill trees stay out of GitHub's language breakdown while first-party JavaScript and TypeScript remain counted (`tools/check-linguist-vendored.mjs`) |
+| `check:linguist` | Vendored skill trees stay out of GitHub's language bar and first-party `.js`/`.mjs`/`.ts` stays in it (`tools/check-linguist-vendored.mjs`) |
+| `check:codegraph` | The local CodeGraph index directory is `0700` (`tools/check-codegraph-perms.mjs`). `.codegraph/codegraph.db` holds the full text of every source file, and a fresh `codegraph init` creates it world-readable. Passes when no index exists |
 | `check:secrets` | `gitleaks detect` (needs `brew install gitleaks`) |
 | `check:deps` | `osv-scanner` over both lockfiles (needs `brew install osv-scanner`) |
 | `docs:build` | Render `docs/` to `tmp/_site` with the `github-pages` gem bundle, containerized (needs Docker) |
 | `docs:a11y` | `docs:build`, then the accessibility gate over the result — installs `pa11y`/`puppeteer` on demand, deliberately not devDependencies, see [`TOOLING.md`](TOOLING.md) |
 | `design:detect` | Impeccable design detectors over `website/` |
 | `sync:skills` | Regenerate the mirrored skill copies from canonical |
-| `todo:sweep` / `:check` | Cut ticked items out of `TODO.md`'s To-Do sections into `## Completed` (`--check` reports without writing) |
+| `todo:sweep` / `:check` | Cut ticked items out of `TODO.md`'s To-Do sections straight into `COMPLETED.todo` (`--check` reports without writing) |
 | `todo:archive` / `logs:condense` / `wiki:home` | The `tools/*.mjs` maintenance jobs |
 | `website:*` | `install`, `dev`, `build`, `check` delegated into `website/` |
 | `website -- <script>` | Any other `website/` script, e.g. `npm run website -- typecheck:debug` |
@@ -247,7 +277,20 @@ markdownlint-cli2 — no heavy dependencies).
 | `check:*` | Disclaimer verbatim, zero-JS posture, `SITE_URL`, audio freshness, drag-to-orbit, bfcache restore |
 | `check:consent` | Drives a real browser over `dist/` and asserts the Sentry chunk is never fetched before consent, that opting in fetches it, and that Global Privacy Control overrides a stored consent. Skips loudly on a build with no `PUBLIC_SENTRY_DSN`. |
 | `test:a11y` | pa11y-ci at WCAG2AA — serves `dist/` itself, building it first if absent |
+| `chrome:install` | Installs the Chrome build Puppeteer expects. Run this if the browser-driven checks fail — see below |
 | `railway:*` / `vercel:*` | Deployment status, logs, and deploys |
+
+**If `check:csp`, `check:consent`, `check:scene-drag`, `check:bfcache`,
+`test:a11y`, and `doctor` all fail at once** with `Could not find Chrome
+(ver. …)`, run `npm --prefix website run chrome:install`. Puppeteer's own
+`browsers install` truncates its unpack on macOS — it writes 41 of the
+archive's 651 entries, omits the `.framework`, and still **exits 0 with a
+success line**, so the failure surfaces six commands away from its cause. The
+download is not the problem and neither is the Node version (Node 22 and 26
+both reproduce it); `website/scripts/install-chrome.mjs` fetches the same
+archive and unpacks it with `ditto`, then verifies by running the binary. A
+*newer* Chrome already in the cache does not satisfy Puppeteer — it wants the
+exact pinned build.
 
 `typecheck:debug` is a diagnostics pass, not a gate. Its `skipLibCheck: false`
 surfaces conflicts inside generated `.astro/*.d.ts` and vendored `node_modules`
@@ -291,6 +334,23 @@ The first run compiles the bundle's native extensions and takes a few minutes;
 the gems persist in `tmp/docs-jekyll/`, so later runs are seconds. Do **not**
 substitute the `jekyll/jekyll` image — it lacks `jekyll-relative-links` and
 renders every in-docs link unrewritten. See [`CI-CD.md`](CI-CD.md).
+
+### `admin/` — `npm --prefix admin run <script>`
+
+The single-owner dashboard, added 2026-08-12. Deliberately **not** wired into
+the root `npm run check`: two of its three tiles read files that exist only on
+the owner's machine, so it is checked when it is touched rather than on every
+build. Full rationale in [`admin/README.md`](../admin/README.md).
+
+| Script | What it does |
+| --- | --- |
+| `dev` / `start` | Next.js dev and production servers, port 4331 |
+| `build` / `typecheck` | Production build; `tsc --noEmit` |
+| `smoke` | Starts the real production server and drives the auth gate over HTTP — 15 cases covering the fail-closed 503, 401s, a near-miss password, the 200, gated API routes, CSP headers, and a fail-soft tile |
+| `check` | `typecheck` + `build` + `smoke` |
+
+It refuses to serve without `ADMIN_PASSWORD` (503, not an open dashboard), so
+copy `admin/.env.example` to `admin/.env.local` before the first run.
 
 ## Secret handling
 

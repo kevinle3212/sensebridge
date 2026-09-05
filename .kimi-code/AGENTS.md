@@ -29,9 +29,10 @@ without any Kimi-specific copy of it. Do not duplicate these into
 
 - Serena (repo `.mcp.json`) provides symbolic navigation and focused
   repository inspection; prefer it over raw text search.
-- `graphify query "<question>"` answers codebase/architecture questions when
-  `graphify-out/graph.json` exists (generated output is gitignored); run
-  `graphify update .` after modifying code.
+- `codegraph explore "<question>"` answers codebase/architecture questions
+  against `.codegraph/` (generated output is gitignored). The `post-commit`
+  hook runs `codegraph sync` for you; run it by hand after changing code
+  outside a commit.
 
 ## Permissions live in the user config, not here
 
@@ -66,7 +67,7 @@ machine with `kimi doctor` before trusting the policy.
 ## Routing
 
 - Invoke the matching skill in `.agents/skills/` before hand-rolling a
-  workflow; persist review findings via `audits/scripts/new-audit.sh`
+  workflow; persist review findings via `tools/new-audit.sh`
   (append-only).
 - After repository changes, run the `update-context` skill so docs and agent
   instructions stay synchronized.

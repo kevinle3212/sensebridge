@@ -15,7 +15,7 @@ vault and Claude's private memory are satellites, not sources of truth.
 | Knowledge | Home | Examples |
 | --- | --- | --- |
 | Conventions, doctrines, gates | `AGENTS.md` + `docs/` | Safety framing rules, quality gates |
-| Current state of the ground | `AGENT-CONTEXT.md` | "app/ has an early scaffold, no distributable build" |
+| Current state of the ground | `AGENT-CONTEXT.md` | "five features run on real capture; no distributable build" |
 | Defects, debt, risks | `GAPS.md` | Missing repo secret |
 | Lessons that changed how we work | `LEARNING.md` (append-only), driven by the [lessons-learned](.agents/skills/lessons-learned/SKILL.md) skill | Why CI no-ops instead of failing |
 | Tooling decisions | `docs/TOOLING.md` | Why there is no ESLint here |

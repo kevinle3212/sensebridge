@@ -51,6 +51,32 @@ final class CameraController {
     private var requestedZoom: Double?
     private var zoomDrainTask: Task<Void, Never>?
 
+    /// Whether this launch was told to behave as though the device has no
+    /// camera, via `-uiTestNoCamera`.
+    ///
+    /// Three UI tests assert the no-camera *error* path — that a capture screen
+    /// says so out loud instead of going silent. They used to get that state
+    /// for free, because the Simulator genuinely has no camera. The first
+    /// device run of the suite (2026-08-19) failed all three for the most
+    /// boring reason available: the phone has a camera, so the error path they
+    /// assert is correctly never entered. Reading the real camera's output
+    /// instead would make them assert whatever the lens happened to be pointed
+    /// at, which is not a test. This flag lets them force the one path they are
+    /// about, identically on both destinations.
+    ///
+    /// Compiled out of release builds entirely. iOS gives no third party a way
+    /// to inject launch arguments into someone else's app, so this is not a
+    /// reachable attack surface either way — but a switch that disables the
+    /// camera has no business existing in a shipped binary, and `#if DEBUG`
+    /// costs nothing to say so.
+    private static var forcesNoCamera: Bool {
+        #if DEBUG
+            ProcessInfo.processInfo.arguments.contains("-uiTestNoCamera")
+        #else
+            false
+        #endif
+    }
+
     /// Creates a controller over `source`; injectable so previews and tests
     /// can supply their own.
     init(source: CameraSource = CameraSource()) {
@@ -85,6 +111,12 @@ final class CameraController {
 
     private func performStart(applying settings: Settings) async {
         guard !isRunning else { return }
+        // Set before any hardware is touched, so the state a view reads is the
+        // same one a camera-less device would produce.
+        guard !Self.forcesNoCamera else {
+            startError = .noCameraAvailable
+            return
+        }
         do {
             _ = try await source.start()
         } catch let error as CameraSource.CameraError {
@@ -135,7 +167,14 @@ final class CameraController {
     }
 
     /// Captures one photo, publishing `isCapturing` around the call.
+    ///
+    /// Honors `-uiTestNoCamera` as well as `start(applying:)` does: a screen
+    /// reached without starting the session would otherwise still capture a
+    /// real frame, and the flag would hold on one path but not the other.
     func capturePhoto() async throws -> Data {
+        guard !Self.forcesNoCamera else {
+            throw CameraSource.CameraError.noCameraAvailable
+        }
         isCapturing = true
         defer { isCapturing = false }
         return try await source.capturePhoto()

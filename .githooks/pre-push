@@ -21,7 +21,7 @@ set -euo pipefail
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
-# Load .env so hook-tuning variables (GRAPHIFY_*, lint toggles) come from the
+# Load .env so hook-tuning variables (lint toggles) come from the
 # repo's own config instead of your shell profile. See scripts/env.sh.
 # shellcheck source=scripts/env.sh
 . "$REPO_ROOT/scripts/env.sh"

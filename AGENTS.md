@@ -84,7 +84,7 @@ Every harness entry point (`CLAUDE.md`, `GEMINI.md`, `.codex/AGENTS.md`,
    which is session-local and vanishes. Genuinely throwaway intermediates — a
    one-shot probe script, a temp file consumed within the same turn — may use
    the harness scratchpad.
-3. **Don't load generated output into context**: `graphify-out/`, `.gitnexus/`,
+3. **Don't load generated output into context**: `.codegraph/`, `.gitnexus/`,
    `node_modules/`, `.build/`. Start from
    [`AGENT-CONTEXT.md`](AGENT-CONTEXT.md)'s "Where to look" table.
 4. **Search before you add.** Never stand up a second implementation of
@@ -108,8 +108,7 @@ Every harness entry point (`CLAUDE.md`, `GEMINI.md`, `.codex/AGENTS.md`,
 - **Reliability priority order (unusual — honour it): correct hedging first,
   then not crashing, then performance.**
 - **No perception or model work on the main thread**; the UI stays responsive to
-  VoiceOver during processing. See
-  [swift-concurrency-6-2](.agents/skills/swift-concurrency-6-2/SKILL.md).
+  VoiceOver during processing.
 
 ## UI and copy conventions
 
@@ -165,7 +164,7 @@ Never edit anything under [`legal/`](legal) without explicit owner approval.
 
 Reviewers persist findings via
 [audit-refresh](.claude/skills/audit-refresh/SKILL.md)
-(`audits/scripts/new-audit.sh <category> "<title>"`). Reports are append-only;
+(`tools/new-audit.sh <category> "<title>"`). Reports are append-only;
 read [`audits/AGENT-GUIDE.md`](audits/AGENT-GUIDE.md) for the severity rubric.
 **Report findings — don't silently fix during an audit.**
 

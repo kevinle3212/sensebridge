@@ -1,14 +1,22 @@
 #!/usr/bin/env node
 /**
- * Render the Graphify knowledge graph as an animated SVG for the README.
+ * Render a codebase knowledge graph as an animated SVG for the README.
  *
  * GitHub renders Markdown with JavaScript disabled, so an interactive graph
  * cannot work there. A declarative animated SVG can: CSS keyframes and SMIL
  * both run inside an `<img>`-referenced SVG, which is why this emits one
  * self-contained file rather than a canvas widget.
  *
- * Input:  graphify-out/graph.json (generated, git-ignored — run `graphify .`)
+ * Input:  a node-link JSON graph — `{ nodes: [...], links: [...] }`. This was
+ *         `graphify-out/graph.json` until graphify was retired on 2026-08-18,
+ *         and that default path is kept only so the flag has a sensible shape.
+ *         **Nothing generates it automatically any more**, so a redraw is a
+ *         deliberate act: point `--graph` at any tool's export of that shape.
  * Output: docs/assets/graph.svg   (committed, since the input never is)
+ *
+ * `--verify` is the half that still runs unattended. It reads the committed
+ * SVGs and nothing else — no graph input, no rebuild — so CI's
+ * `npm run check:graph` keeps working with no graph tool installed at all.
  *
  * Deterministic: a seeded PRNG drives the layout, so an unchanged graph
  * produces a byte-identical SVG and the README asset does not churn.

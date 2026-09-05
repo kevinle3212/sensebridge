@@ -80,12 +80,15 @@ injected once at launch. Owns the persisted `Settings`, the shared
 instances every feature renders through. Defined in
 `app/SenseBridge/App/AppEnvironment.swift`.
 
-**ARKit depth / LiDAR** — planned depth-sensing input for obstacle
-awareness, named in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) as a
-`SensingSource`. Not yet implemented: `ObstacleAwarenessView` currently
-feeds alternating mock depth readings through the real `AwarenessEngine` +
-`Phrasing` + `RenderTarget` pipeline while the real capture source is
-pending.
+**ARKit depth / LiDAR** — the depth-sensing input for obstacle awareness,
+named in [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) as a `SensingSource` and
+implemented by `AmbientSensingSource` (compiled only where
+`canImport(ARKit) && os(iOS)` holds). Frames reduce through the pure
+`DepthGeometry`/`DepthStatistics` helpers, which are deliberately free of
+ARKit so the arithmetic is testable without a LiDAR device attached. The
+continuous path in `AmbientAwarenessSession` is live; the one-shot "check
+once" button in `ObstacleAwarenessView` still evaluates an alternating
+hard-coded depth value — see [`GAPS.md`](../GAPS.md) → "Application".
 
 **Awareness-not-safety** — the project's highest-priority doctrine:
 SenseBridge raises awareness of the environment and never claims to be a
@@ -100,11 +103,11 @@ clear thresholds) so the signal doesn't flap near the boundary. Defined in
 **The blind, deaf, and deaf-blind output profiles** — `OutputProfile`'s
 three cases, each selecting which `RenderChannel`s (`speech`, `caption`,
 `haptic`) a user's output should go through: `.blind` prefers speech,
-`.deaf` prefers captions, `.deafBlind` prefers haptics. As of this writing
-only speech and haptics are implemented — no caption `RenderTarget` exists
-yet, so `.deaf` is not offered as a selectable profile (see
-`AppEnvironment.selectableProfiles`, which derives availability from what's
-actually registered rather than a hardcoded list).
+`.deaf` prefers captions, `.deafBlind` prefers haptics. All three channels
+now have a registered target, so all three profiles are selectable — but
+availability is still derived from what is actually registered rather than a
+hardcoded list (see `AppEnvironment.selectableProfiles`), so a channel added
+without a target names itself instead of failing silently.
 
 **Dynamic Type** — Apple's user-controlled text-size system. SenseBridge
 never hardcodes font sizes so text scales with the user's chosen size,
@@ -182,8 +185,10 @@ Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Reasoning/Phrasing.swift`.
 
 **RenderTarget** — the protocol every output channel conforms to: delivers
-an `OutputMessage` through one sense. Speech and haptics are implemented;
-caption is not yet. Defined in
+an `OutputMessage` through one sense. Speech, caption, and haptic targets are
+all implemented — the caption one lives in the app layer
+(`app/SenseBridge/App/CaptionRenderTarget.swift`) because it owns SwiftUI
+state. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Output/RenderTarget.swift`.
 
 **Rotor** — VoiceOver's mechanism for jumping between elements of a kind
@@ -193,8 +198,9 @@ accessibility traits. See [`docs/ACCESSIBILITY.md`](ACCESSIBILITY.md).
 **SceneComposer** — the protocol for composing a hedged natural-language
 scene description from `PerceptionRecord`s. `LabelListSceneComposer`, the
 only implementation in the codebase today, is an explicit fallback that
-reads back perceived labels directly rather than a Foundation-Models-composed
-sentence. Defined in
+speaks what perception recognized directly rather than a
+Foundation-Models-composed sentence — one hedged sentence per stream, sight →
+sound → text, each with its own modality's hedge. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Reasoning/SceneComposer.swift`.
 
 **SenseBridgeCore** — the SwiftPM package holding all device-agnostic
@@ -208,11 +214,15 @@ sensor data (camera frame, depth map, audio buffer). `CameraSource` is the
 one concrete implementation today. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Sensing/SensingSource.swift`.
 
-**Sound Analysis** — Apple's on-device sound-classification framework,
-named in [`docs/AI-MODELS.md`](AI-MODELS.md) and
-[`docs/ARCHITECTURE.md`](ARCHITECTURE.md) as the planned perception source
-for sound alerts. Not yet implemented: `SoundAlertsView` currently renders a
-canned detection rather than capturing live audio.
+**Sound Analysis** — Apple's on-device sound-classification framework, and
+the perception source for sound alerts. One tap in `SoundAlertsView` records a
+few seconds through `MicrophoneSensingSource.record(duration:)`, then
+`CombinedSoundClassifier` runs `CustomSoundClassifier` (the bundled in-house
+Create ML model) and `BuiltInSoundClassifier` (Apple's taxonomy) concurrently
+on that one capture and keeps the single highest-confidence hit — deliberately
+not a primary/fallback ordering, since the two models are independently
+trained. Both reach the framework through the shared
+`SoundClassificationRunner` enum.
 
 **SpeechRenderTarget** — the `RenderTarget` actor that speaks a message via
 `AVSpeechSynthesizer`, configuring the shared audio session so speech isn't
@@ -220,12 +230,13 @@ silenced by the hardware mute switch. Defined in
 `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Output/SpeechRenderTarget.swift`.
 
 **Apple Vision** — Apple's on-device computer-vision framework. `OCRService`
-uses `VNRecognizeTextRequest` for the Reading feature today; Vision object
-detection for the Identify/Describe features is named in
-[`docs/AI-MODELS.md`](AI-MODELS.md) but not yet implemented —
-`LabelingView` and `SceneDescriptionView` currently hedge a canned
-detection through the real `Phrasing`/`RenderTarget` pipeline. See
-`app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/OCRService.swift`.
+uses `VNRecognizeTextRequest` for the Reading feature;
+`ObjectClassificationService` covers the Identify and Describe features
+(whole-frame classification plus region-based detection, where objectness
+saliency proposes regions and each is classified on its own), feeding
+`LabelingView` and `SceneDescriptionView`. See
+`app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/OCRService.swift`
+and `.../Perception/ObjectClassificationService.swift`.
 
 **Two-stage scene pipeline** — Vision extracts structured labels/text from
 an image, then a `SceneComposer` composes a hedged sentence from those

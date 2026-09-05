@@ -106,5 +106,24 @@ const naturalVoiceAvailable = hasNaturalVoice(locale);
       background: color("surface");
       border-color: color("accent-primary");
     }
+
+    // The pressed state was carried only by `aria-pressed` and by the label
+    // text swapping — nothing a sighted non-AT user perceives as a change in
+    // the *control*. An accent border plus a filled surface makes "this one is
+    // running" visible without relying on reading the label.
+    //
+    // Border and background, not color alone: WCAG 1.4.1 does not accept a
+    // colour-only distinction, and the border weight change is perceivable at
+    // any contrast setting. The label text carries the state in words too, so
+    // this is the third redundant cue rather than the only one.
+    &[aria-pressed="true"] {
+      background: color("surface");
+      border-color: color("accent-primary");
+      border-width: 2px;
+      // Compensate for the extra border so the button does not grow by 2px and
+      // shove its neighbour sideways the moment it starts speaking.
+      padding: calc(#{space("1")} - 1px) calc(#{space("2")} - 1px);
+      font-weight: 600;
+    }
   }
 </style>

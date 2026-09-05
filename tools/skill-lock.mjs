@@ -145,7 +145,7 @@ if (print) {
   const actual = await readFile(lockPath, "utf8").catch(() => "");
   if (actual !== expected) {
     throw new Error(
-      "Canonical skills, personas, or adapters drifted; review changes and run npm run skills:sync",
+      "Canonical skills, personas, or adapters drifted; review the changes, then regenerate with `node tools/skill-lock.mjs --write`.",
     );
   }
   console.log(

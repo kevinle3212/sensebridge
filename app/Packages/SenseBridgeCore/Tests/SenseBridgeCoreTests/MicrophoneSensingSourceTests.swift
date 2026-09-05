@@ -22,7 +22,20 @@ import Testing
 // test on an interactive permission prompt's outcome.
 @Suite(.serialized)
 struct MicrophoneSensingSourceTests {
-    @Test(.enabled(if: MicrophoneSensingSource.authorizationStatus == .authorized))
+    /// Live microphone capture cannot run on a headless CI runner: it has no
+    /// audio input device, and `AVAudioEngine.start()` there blocks indefinitely
+    /// rather than returning or throwing -- the whole test job hangs on it with
+    /// no output, not a fast pass/fail. Gating on `isCaptureAvailable` skips
+    /// these unless real capture hardware is present (which no CI runner has),
+    /// which is more robust than the mic-authorization state alone -- a runner
+    /// can report `.authorized` while still having no device. The `CI` check is
+    /// belt-and-suspenders for a runner that somehow exposes a virtual device.
+    private static var canCaptureMicrophone: Bool {
+        MicrophoneSensingSource.isCaptureAvailable
+            && ProcessInfo.processInfo.environment["CI"] == nil
+    }
+
+    @Test(.enabled(if: canCaptureMicrophone))
     func recordingProducesNonEmptyWAVData() async throws {
         let source = MicrophoneSensingSource()
         // No real sound is expected -- this asserts the capture pipeline
@@ -33,7 +46,7 @@ struct MicrophoneSensingSourceTests {
         #expect(data.prefix(4) == Data("RIFF".utf8))
     }
 
-    @Test(.enabled(if: MicrophoneSensingSource.authorizationStatus == .authorized))
+    @Test(.enabled(if: canCaptureMicrophone))
     func cancellingStopsTheRecordingPromptly() async throws {
         // The regression: the sleep used to run inside an unstructured `Task`
         // created from a `withCheckedThrowingContinuation` closure. That closure

@@ -31,8 +31,12 @@ fastlane/test_output
 # macOS
 .DS_Store
 
-# Generated analysis output (graphify, etc.)
+# Generated analysis output. graphify-out/ stays listed after graphify's
+# retirement on 2026-08-18 purely as a guard: the directory is ~365MB and
+# may still be on an existing clone, and an un-ignored one is a `git add -A`
+# away from disaster. Drop this line once `rm -rf graphify-out` has run.
 graphify-out/
+.codegraph/
 
 # Raw training clips for the sound classifier — only the trained .mlmodel
 # and the attribution manifest are committed, not the source audio. See
@@ -45,6 +49,14 @@ models/sound-classifier/freesound-training-data/*
 # GitNexus knowledge-graph index — local-only, no network calls. Regenerate
 # with `gitnexus analyze`. See docs/TOOLING.md.
 .gitnexus/
+
+# CodeGraph index — same category as .gitnexus/ above: local-only, ~99 MB,
+# regenerate with `codegraph index`. CodeGraph writes its own
+# .codegraph/.gitignore, but that file ignores everything *except itself*, so
+# without this line the directory still surfaces in `git status` and a
+# `git add -A` would commit it. The tracked config is codegraph.json at the
+# repo root, not this directory. See docs/archive/TOOLING-DECISIONS.md.
+.codegraph/
 
 # Claude Code local state
 .claude/worktrees/
@@ -159,7 +171,7 @@ _bmad/**/*.user.toml
 # _bmad/ itself (module core, scripts, config) is tracked — same category as
 # the already-tracked .claude/skills/bmad-*. _bmad-output/ is BMAD's
 # generated planning/implementation artifact scratch space (regenerable,
-# session-specific); keep it local like graphify-out/ and .gitnexus/ above.
+# session-specific); keep it local like .codegraph/ and .gitnexus/ above.
 #
 # Simplified 2026-08-01. This was `_bmad-output/*` plus a
 # `!_bmad-output/project-context.md` negation, so that one hand-authored

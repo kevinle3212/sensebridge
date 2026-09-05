@@ -18,4 +18,4 @@ Copilot variant reads `.github/copilot-instructions.md`; both defer to
 - AGPL and Apple `apple-amlr` licenses are hard blockers.
 - No secrets, tokens, or signing material in instructions, logs, or prompts.
 - Invoke the matching skill in `.agents/skills/` before hand-rolling a
-  workflow; audits are append-only via `audits/scripts/new-audit.sh`.
+  workflow; audits are append-only via `tools/new-audit.sh`.

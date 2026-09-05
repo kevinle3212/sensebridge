@@ -39,7 +39,7 @@ issues for vulnerabilities.
 
 After a review pass, persist findings to `audits/security/` (or `audits/privacy/`
 when the finding is purely a data-handling concern) with the `audit-refresh`
-skill (`audits/scripts/new-audit.sh security "<short title>"`). Reports are
+skill (`tools/new-audit.sh security "<short title>"`). Reports are
 append-only and follow [`audits/AGENT-GUIDE.md`](../../audits/AGENT-GUIDE.md);
 supersede a prior report instead of rewriting it.
 

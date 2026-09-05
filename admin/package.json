@@ -1,0 +1,29 @@
+{
+  "name": "sensebridge-admin",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Single-owner dashboard for SenseBridge project telemetry. Not part of the product, not deployed with the marketing site.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev --port 4331",
+    "build": "next build",
+    "start": "next start --port 4331",
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke.mjs",
+    "check": "npm run typecheck && npm run build && npm run smoke"
+  },
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "26.2.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "typescript": "5.9.3"
+  }
+}

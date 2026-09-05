@@ -23,17 +23,15 @@
     "**/agents/impeccable-*.agent.md",
     "**/skills/seo-schema/**",
     "**/skills/seo-technical/**",
-    "**/skills/bmad-*/**",
-    "**/skills/stripe-best-practices/**",
-    "**/skills/stripe-projects/**",
-    "**/skills/upgrade-stripe/**",
     "**/skills/react-doctor/**",
-    "**/skills/gitnexus/**",
     "**/.impeccable/critique/**",
     ".claude/worktrees/**",
     "CLAUDE.template.md",
     "**/NOTES.local.md",
     "audits/*/[0-9]*.md",
+    // Left behind by graphify, retired 2026-08-18. The ~365MB directory can
+    // still be present on an existing clone and carries thousands of
+    // generated GRAPH_REPORT.md files. Drop once `rm -rf graphify-out` runs.
     "graphify-out/**",
     // Paraglide JS compiler output and the inlang project it compiles from.
     // Both READMEs are written by the tooling ("Auto-generated i18n message
@@ -44,6 +42,9 @@
     "website/project.inlang/**",
     "sessions/**",
     "tmp/**",
+    // Freeform subagent-driven-development artifacts (task briefs, reports,
+    // review packages) — gitignored scratch, same status as sessions/**/tmp/**.
+    ".superpowers/**",
     "LICENSE"
   ]
 }

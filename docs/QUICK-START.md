@@ -36,8 +36,8 @@ distribution to *other people's* phones works, see
 2. In Xcode: **Settings → Accounts → add your personal Apple ID** (not the
    paid Developer Program).
 3. Select the `SenseBridge` target → **Signing & Capabilities** → pick your
-   personal team from the dropdown. `app/project.yml` already sets
-   `CODE_SIGN_STYLE: Automatic`, so Xcode fills in the rest.
+   personal team from the dropdown. The project already sets
+   `CODE_SIGN_STYLE = Automatic`, so Xcode fills in the rest.
 4. Plug in your iPhone, select it as the run destination, and hit **Run**.
    First launch: on the phone, go to **Settings → General → VPN & Device
    Management** and trust your developer certificate.
@@ -115,7 +115,8 @@ functional feature end to end.
 | Settings — Language | **Functional today** | Switch between System, English, Español, and Tiếng Việt; persists across launches |
 
 Camera and microphone permission strings are already configured
-(`app/project.yml`), so the system prompt is ready to appear the moment a
+(as `INFOPLIST_KEY_*` build settings in the Xcode project), so the system
+prompt is ready to appear the moment a
 pipeline starts actually requesting the sensor — you won't see it yet on a
 fresh install.
 

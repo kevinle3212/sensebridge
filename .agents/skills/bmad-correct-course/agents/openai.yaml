@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Correct Course"
-  short_description: "Manage significant changes during sprint execution"
-  default_prompt: "Use $bmad-correct-course for its listed purpose."

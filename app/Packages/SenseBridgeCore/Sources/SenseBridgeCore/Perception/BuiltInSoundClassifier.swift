@@ -23,17 +23,27 @@ public struct BuiltInSoundClassifier: SoundService, Sendable {
         "glass_shatter", "telephone_bell_ringing"
     ]
 
+    /// Language the reported labels are phrased in. Wording only — which
+    /// sounds are recognized and the confidence floor they must clear are
+    /// identical in every language.
+    public let locale: Locale
+
     /// Creates a classifier over Apple's built-in sound taxonomy.
     ///
     /// Cheap and side-effect free — no model is loaded until `process` runs.
-    public init() {
-        // Stateless: the classifier request is built per call in `process`.
+    public init(locale: Locale = .current) {
+        self.locale = locale
     }
 
+    /// Classifies a WAV buffer and returns records only for the curated
+    /// `targetClassNames` subset that clears the runner's confidence floor.
+    /// - Parameter input: WAV-encoded audio; an empty buffer yields no records.
+    /// - Returns: One `.detectedSound` record per surviving match, phrased in `locale`.
+    /// - Throws: Whatever building the request or running the analysis throws.
     public func process(_ input: Data) async throws -> [PerceptionRecord] {
         let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
         return try await SoundClassificationRunner.classify(
-            input, using: request, topClassNames: Self.targetClassNames
+            input, using: request, topClassNames: Self.targetClassNames, locale: locale
         )
     }
 }

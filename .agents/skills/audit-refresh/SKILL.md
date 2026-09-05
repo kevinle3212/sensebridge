@@ -26,13 +26,30 @@ and honesty rules before writing findings.
 
 ## Generate a report
 
+Reports are append-only once they exist — a later `Edit` to the generated file
+is denied by `guard-protected-paths.sh`. Compose the **whole body first**, then
+write the report in a single shot by piping it in:
+
 ```bash
-audits/scripts/new-audit.sh <category> "<short title>"
+tools/new-audit.sh <category> "<short title>" <<'EOF'
+## Scope
+...
+## Issues Found
+| # | Severity | Issue | Location | Status |
+|---|----------|-------|----------|--------|
+| 1 | High     | ...   | path:line | Open |
+
+## Fixes Applied
+...
+EOF
 ```
 
-The script writes `audits/<category>/<UTC-timestamp>-<slug>.md`, prefilled with
-git metadata and the section structure from
-[`audits/templates/audit-template.md`](../../../audits/templates/audit-template.md).
+The script writes `audits/<category>/<UTC-timestamp>-<slug>.md` in one write:
+git metadata prefilled above your body verbatim. Use a **quoted** heredoc
+delimiter (`<<'EOF'`) so prose that merely mentions version-control verbs is
+inert. Without stdin, the script emits the bare template from
+[`audits/templates/audit-template.md`](../../../audits/templates/audit-template.md)
+for interactive authoring outside this repo's guard.
 
 ## Categories
 

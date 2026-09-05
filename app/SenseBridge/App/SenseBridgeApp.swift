@@ -11,7 +11,22 @@ struct SenseBridgeApp: App {
 
     var body: some Scene {
         WindowGroup {
+            // `safeAreaInset` comes *before* the `.environment` modifiers, not
+            // after. Its content is attached as a sibling of the view it is
+            // applied to, not a descendant, so an `.environment` applied first
+            // never reaches it — `CaptionOverlay` read `AppEnvironment` out of
+            // an environment it was not in and trapped on launch.
             RootView()
+                .safeAreaInset(edge: .bottom) {
+                    CaptionOverlay()
+                }
+            #if DEBUG
+                .safeAreaInset(edge: .bottom) {
+                    // Stacks beneath the caption inset, never over content —
+                    // see `DevWatermarkFooter` for why it is dev-only.
+                    DevWatermarkFooter()
+                }
+            #endif
                 .environment(environment)
                 .environment(\.locale, environment.settings.language.locale ?? .autoupdatingCurrent)
         }

@@ -11,17 +11,35 @@ VoiceOver-first, serverless) giving blind and low-vision users spoken awareness
 of their surroundings. Three non-negotiable doctrines constrain every change:
 awareness-not-safety, on-device-by-default, accessibility-is-the-product.
 
-## State: early `app/` scaffold, no feature work yet
+## State: five features built on real perception, not yet distributable
 
-`app/` holds a local Swift package (`app/Packages/SenseBridgeCore`) with the
-`SensingSource` → perception → Reasoning → `RenderTarget` protocol seams and a
-hedged `Phrasing`/`AwarenessEngine`, plus an Xcode project with app,
-unit-test, and UI-test targets. Builds and tests pass. This is scaffolding,
-not the product: real perception (Vision, Sound Analysis, ARKit, Foundation
-Models) and most UI are still unbuilt. Next milestones, in order (see
-`GAPS.md`): vendor the first model through the `model-license-audit`
-skill, then build the real perception/reasoning implementations behind the
-scaffolded protocols.
+`app/` holds a local Swift package (`app/Packages/SenseBridgeCore`) carrying the
+`SensingSource` → perception → Reasoning → `RenderTarget` protocol seams and the
+hedged `Phrasing`/`AwarenessEngine`, plus an Xcode project with app, unit-test,
+and UI-test targets. Builds and tests pass.
+
+The perception layer behind those seams is now real, not canned. Five features
+are wired to live capture:
+
+| Feature | Perception | Frameworks |
+| --- | --- | --- |
+| Reading | `CameraSource` → `OCRService` | AVFoundation, Vision |
+| Labeling | `ObjectClassificationService` | Vision, Core ML |
+| Scene Description | `ObjectClassificationService` → `FoundationModelsSceneComposer` | Vision, Foundation Models (Apple Intelligence) |
+| Obstacle Awareness | `AmbientSensingSource` → `DepthGeometry`/`DepthStatistics` | ARKit (LiDAR `sceneDepth`) |
+| Sound Alerts | `MicrophoneSensingSource` → `CombinedSoundClassifier` (`CustomSoundClassifier` + `BuiltInSoundClassifier`, concurrent) | Sound Analysis, Core ML |
+
+Output runs through `SpeechRenderTarget` (AVFoundation), `CaptionRenderTarget`
+(a high-contrast SwiftUI caption inset for the Deaf profile), and
+`HapticRenderTarget` (Core Haptics). One model is vendored and integrated — an
+in-house Create ML sound classifier over per-clip-licence-verified training
+data, cleared by the `model-license-audit` skill on 2026-08-05.
+
+What still blocks a release, in order (see `GAPS.md` for the full inventory):
+device-only verification of lens switching, zoom, torch, and orientation-correct
+capture; the `ObstacleAwarenessView` "check once" button, which still evaluates a
+hard-coded depth sample rather than a live one; and the paid Apple Developer
+Program, without which no TestFlight or App Store artifact can exist.
 
 ## Layout
 
@@ -30,7 +48,7 @@ scaffolded protocols.
 | Product, architecture, privacy, safety framing, accessibility, testing | `docs/` (index: `WIKI.md`) |
 | Agent instructions | `AGENTS.md` (canonical) + `CLAUDE.md`, `GEMINI.md`, `.cursor/rules/`, `.github/copilot-instructions.md` (pointers) |
 | Skills and reviewer personas | `.agents/`, `.claude/skills/` |
-| Append-only audits | `audits/` (generate via `audits/scripts/new-audit.sh`) |
+| Append-only audits | `audits/` (generate via `tools/new-audit.sh`) |
 | CI/CD and security scanning | `.github/workflows/` |
 | Git hooks (secret scan, lint, commit format) | `.githooks/` (enabled by `scripts/setup.sh`) |
 | Tooling decisions (global vs. project) | `docs/TOOLING.md` |

@@ -47,7 +47,8 @@ public enum SoundClassificationRunner {
         _ audio: Data,
         using request: SNClassifySoundRequest,
         topClassNames: Set<String>,
-        minimumConfidence: Double = defaultMinimumConfidence
+        minimumConfidence: Double = defaultMinimumConfidence,
+        locale: Locale = .current
     ) async throws -> [PerceptionRecord] {
         guard !audio.isEmpty else { return [] }
 
@@ -72,7 +73,10 @@ public enum SoundClassificationRunner {
                   topClassNames.contains(best.identifier),
                   best.confidence >= minimumConfidence else { return nil }
             return PerceptionRecord(
-                kind: .detectedSound(label: subjectPhrase(for: best.identifier), confidence: best.confidence),
+                kind: .detectedSound(
+                    label: subjectPhrase(for: best.identifier, locale: locale),
+                    confidence: best.confidence
+                ),
                 capturedAt: .now
             )
         }
@@ -81,14 +85,19 @@ public enum SoundClassificationRunner {
     /// Turns a bare, underscore-joined Sound Analysis identifier
     /// ("fire_alarm") into the article-first noun phrase
     /// `Phrasing.describe(subject:certainty:)` expects ("a fire alarm") —
-    /// mirrors `ObjectClassificationService.subjectPhrase(for:)` exactly, for
-    /// the same reason: without it, a VoiceOver user hears the raw identifier
-    /// read character-by-character, and the missing article breaks the
-    /// es/vi hedge templates, which assume this shape.
-    static func subjectPhrase(for identifier: String) -> String {
-        let words = identifier.replacing("_", with: " ")
-        guard let first = words.first else { return words }
-        return "aeiou".contains(first.lowercased()) ? "an \(words)" : "a \(words)"
+    /// without it, a VoiceOver user hears the raw identifier read
+    /// character-by-character, and the missing article breaks the es/vi hedge
+    /// templates, which assume this shape. Forwards to `SpokenPhrase`, the
+    /// single implementation this and
+    /// `ObjectClassificationService.subjectPhrase(for:locale:)` both use.
+    ///
+    /// Every identifier in `BuiltInSoundClassifier.targetClassNames` has a
+    /// `SpokenVocabulary` entry in all three languages — unlike Vision's
+    /// vocabulary, this one is small enough to translate completely, and
+    /// several of its classes are safety-adjacent enough that the language gap
+    /// costs the most here.
+    static func subjectPhrase(for identifier: String, locale: Locale = .current) -> String {
+        SpokenPhrase.subject(for: identifier, locale: locale)
     }
 
     /// Collects `SNClassificationResult`s off `SNAudioFileAnalyzer`'s

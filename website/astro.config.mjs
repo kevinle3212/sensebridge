@@ -12,6 +12,7 @@ import { defineConfig } from "astro/config";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import sentry from "@sentry/astro";
+import dropUnhydratedReactRuntime from "./integrations/drop-unhydrated-react-runtime.mjs";
 
 // Deployment origin. Astro needs an absolute one to emit canonical URLs,
 // sitemap entries, robots.txt, and OG/Twitter meta — but which origin is a
@@ -58,6 +59,11 @@ export default defineConfig({
   // until a component actually needs interactivity.
   integrations: [
     react(),
+    // Installing `react()` above makes Vite emit the React DOM client runtime
+    // (~187kB) whether or not anything hydrates, and nothing here does. This
+    // removes it from the build output, and no-ops the moment a component
+    // gains a `client:*` directive — see the integration's own header.
+    dropUnhydratedReactRuntime(),
     sitemap({
       // The HTTP status pages (src/pages/[status].astro and the /not-found
       // alias) are reachable destinations but not discoverable ones — roughly

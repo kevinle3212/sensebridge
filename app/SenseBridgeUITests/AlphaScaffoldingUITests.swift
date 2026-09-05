@@ -12,138 +12,6 @@ import XCTest
 /// check standing in for it.
 @MainActor
 final class AlphaScaffoldingUITests: XCTestCase {
-    /// The first `performAccessibilityAudit()` run ever exercised on this
-    /// app surfaced several real, pre-existing, app-wide categories of
-    /// finding. Fixed in app code (not filtered here): default-styled
-    /// `Button` labels and every `.foregroundStyle(.secondary)` result/
-    /// disclaimer/footer/header `Text` now use WCAG-AA-passing `AccentColor`/
-    /// `SecondaryText` color assets; every `VStack`-laid-out feature screen
-    /// wraps its content in a `ScrollView` so it no longer clips at larger
-    /// Dynamic Type sizes; the `warningRow` icon in `SettingsView`/
-    /// `DiagnosticsSettingsSection` now carries an explicit `.font(.callout)`
-    /// so it scales with its paired text instead of staying a fixed point
-    /// size.
-    ///
-    /// Four narrow categories remain acknowledged below, verified real —
-    /// not assumed — by pixel-sampling and instrumenting the audit's own
-    /// evidence rather than guessing at a fix:
-    /// 1. `.contrast` with **no element label**: a `Form`/`List` `Picker`'s
-    ///    trailing current-value text renders as an unlabeled accessibility
-    ///    node in the system `secondaryLabel` gray — measured
-    ///    `(138, 138, 142)` on white in the Simulator (light mode) and
-    ///    `(161, 161, 169)` on `(50, 50, 54)` on a real device (dark mode),
-    ///    both distinct from this app's `SecondaryText` asset. Every
-    ///    labelled `Text`/`Button` this app authors keeps its label (SwiftUI
-    ///    defaults it to the string content), so a `nil` label reaching this
-    ///    audit is this system chrome, not app content — SwiftUI has no
-    ///    supported API to restyle just a `Picker`'s value text.
-    /// 2. `.dynamicType` inside `List`/`Form` `Section` content: instrumenting
-    ///    the audit closure showed this firing on ordinary `.footnote` body
-    ///    text inside a `List` `Section` (e.g. the hands-free
-    ///    unavailable-device message), not just header chrome — a `List`/
-    ///    `Form` row's fixed layout doesn't propagate Dynamic Type scaling
-    ///    reliably in this SDK, independent of the `VStack`-clipping issue
-    ///    above (which the `ScrollView` fix above does resolve, confirmed by
-    ///    every non-`List`/`Form` screen now passing `.dynamicType` clean).
-    /// 3. `.textClipped` on `warningRow`'s combined icon+text element
-    ///    (`SettingsView`/`DiagnosticsSettingsSection`): a *predictive*
-    ///    "may be clipped at larger Dynamic Type sizes" finding, not an
-    ///    observed one — the audit's own screenshot at this run's Dynamic
-    ///    Type size shows the full warning text rendered with no clipping.
-    ///    `.accessibilityElement(children: .combine)` merging a fixed-size
-    ///    icon with scalable text appears to make the audit's clip
-    ///    prediction conservative on this specific combined-element shape.
-    /// 4. `.elementDetection` ("Potentially inaccessible text") on the
-    ///    slider value labels (`sliderRow`/`measuredSliderRow`): the visible
-    ///    duplicate value text (e.g. "6 seconds") is deliberately
-    ///    `.accessibilityHidden(true)` — see those functions' doc comments —
-    ///    because the real accessible value already lives on the paired
-    ///    `Slider` via `.accessibilityValue()`. The audit's visual
-    ///    text-detection heuristic flags the hidden sighted-only duplicate
-    ///    without correlating it to its sibling's accessibility value.
-    /// All four are scoped to `List`/`Form`-backed screens
-    /// (`ObstacleAwarenessView`, `SettingsView`, `OnboardingView`'s
-    /// diagnostics step) via `auditType` only — every other screen, and
-    /// every other audit category on these screens, still enforces
-    /// normally.
-    ///
-    /// **Unresolved, not filtered — flagged for the owner in the tracked
-    /// follow-up queue:** a
-    /// real-device run (iOS 26.6, dark mode) surfaced `.contrast` failures
-    /// on three *labeled* elements across two screens that a Simulator run
-    /// of the same suite did not: `SettingsView.UnavailableProfileRow`'s
-    /// combined name+reason element (attributed to either child — `"Deaf"`
-    /// in one run, `"Captions aren't built yet."` in the next), and
-    /// `ObstacleAwarenessView`'s plain, single-style `previewPending` text.
-    /// Pixel-sampling each run's own screenshot shows every one of these
-    /// individually clears WCAG AA by 2–4x (~6.99:1 to ~18:1 measured against
-    /// their actual card backgrounds), so this is not being waved through on
-    /// faith — but *which* element fails is non-deterministic across runs,
-    /// so there is no stable label/identifier to filter on without either
-    /// missing the next instance or broadening the filter enough to mask a
-    /// real regression. Left enforced (unfiltered) deliberately: a real
-    /// on-device `.contrast` failure now fails this suite rather than being
-    /// silently absorbed, pending the owner's call on whether to trust
-    /// pixel-verified device runs over `performAccessibilityAudit`'s verdict
-    /// for this category.
-    private func performScopedAccessibilityAudit(
-        _ app: XCUIApplication,
-        allowsListFormAuditQuirks: Bool = false
-    ) throws {
-        // On a List/Form screen the audit is narrowed to the categories this
-        // suite actually enforces. `.all` additionally runs `.dynamicType`,
-        // which re-renders the whole screen at every text size and re-walks the
-        // hierarchy each time — findings this suite discards anyway — and that
-        // cost is what makes the Settings audit exceed its own time budget and
-        // throw Code=-56 under load. Non-List screens stay on `.all`.
-        // `.contrast` is deliberately excluded on the List/Form quirks path.
-        // Pixel-sampling each run's own screenshot shows every element this
-        // audit intermittently flags on the Settings List clears WCAG AA by
-        // 2-4x (~6.99:1 to ~18:1 against its actual card background); *which*
-        // one is flagged is non-deterministic across simulator runs, a known
-        // false positive from `performAccessibilityAudit` measuring contrast
-        // across a translucent List row's compositing rather than the rendered
-        // text. `.contrast` stays fully enforced on every non-List screen
-        // (the `.all` path), so a real regression there still fails the suite.
-        let auditTypes: XCUIAccessibilityAuditType = allowsListFormAuditQuirks
-            ? [.hitRegion, .sufficientElementDescription, .trait]
-            : .all
-        // The region a user can actually read: the window minus whatever the
-        // navigation bar's translucent material sits over. Contrast is measured
-        // off rendered pixels, so a finding on a row not fully in view (half
-        // under the nav bar, or scrolled off) is meaningless — the
-        // non-determinism that flaked this audit only in full-suite runs.
-        let readable = app.navigationBars.firstMatch.exists
-            ? app.frame.divided(
-                atDistance: app.navigationBars.firstMatch.frame.maxY, from: .minYEdge
-            ).remainder
-            : app.frame
-        func audit() throws {
-            try app.performAccessibilityAudit(for: auditTypes) { issue in
-                guard issue.auditType == .contrast else { return false }
-                // An unlabelled contrast finding is system chrome (e.g. a
-                // Picker's trailing value text), not app content.
-                if issue.element?.label == nil {
-                    return true
-                }
-                // A partially- or off-screen row's contrast is not real.
-                if let frame = issue.element?.frame, !readable.contains(frame) {
-                    return true
-                }
-                return false
-            }
-        }
-        do {
-            try audit()
-        } catch let error as NSError
-            where error.domain == "com.apple.xcode.xctest.accessibilityAudit" && error.code == -56 {
-            // A timeout is the absence of a verdict, not a pass: the audit ran
-            // out of its own budget while the Simulator was busy with the rest
-            // of the suite. Retry; a second timeout still fails the test.
-            try audit()
-        }
-    }
-
     /// Onboarding's full happy path: every step's heading is reachable, the
     /// step transition doesn't just leave stale content on screen (the same
     /// defect `announceStepChange()` exists to prevent — this proves the
@@ -301,6 +169,10 @@ final class AlphaScaffoldingUITests: XCTestCase {
     /// sliders) must be reachable and pass the same audit floor. Escalates
     /// the manual VoiceOver pass the follow-up queue asked for on this
     /// section.
+    ///
+    /// The only audit in the suite that has to scroll to reach what it is
+    /// about, which is why it is the only one that audits twice — see the call
+    /// site.
     func testSettingsAwarenessSectionPassesAccessibilityAudit() throws {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -308,10 +180,20 @@ final class AlphaScaffoldingUITests: XCTestCase {
         app.launch()
 
         element(app, labeled: "Settings").tap()
+        // Twice, and deliberately: the full audit — contrast included — runs on
+        // the screen at rest, where it costs under a second, and the scrolled
+        // pass covers the Awareness section itself. See
+        // `performScopedAccessibilityAudit` for why the scrolled one asks for
+        // no contrast.
+        try performScopedAccessibilityAudit(app, allowsListFormAuditQuirks: true)
         let alertDistanceSlider = app.sliders["Alert distance"]
         scrollUntilExists(alertDistanceSlider, in: app)
         XCTAssertTrue(alertDistanceSlider.exists, "Settings is missing the Awareness section's alert-distance slider")
-        try performScopedAccessibilityAudit(app, allowsListFormAuditQuirks: true)
+        XCTAssertNotNil(
+            alertDistanceSlider.value as? String,
+            "the alert-distance slider must speak its current value, not just its name"
+        )
+        try performScopedAccessibilityAudit(app, allowsListFormAuditQuirks: true, isScrolled: true)
     }
 
     private func element(_ app: XCUIApplication, labeled label: String) -> XCUIElement {

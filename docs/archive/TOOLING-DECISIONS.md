@@ -241,7 +241,7 @@ pre-split file.
 
 **Where** — `tools/archive-completed-todo.mjs` (added 2026-07-28), `~/Library/LaunchAgents/com.kevinkhanhle.sensebridge-archive-completed-todo.plist` (machine-global, not tracked)
 
-**Why project-level** — Stdlib-only Node script that moves everything under `TODO.md`'s `## Completed` heading into a new `## Archived <date>` block in [`COMPLETED.todo`](https://github.com/kevinle3212/sensebridge/blob/main/COMPLETED.todo), replacing it with a one-line placeholder so `TODO.md` stays short. Paired with `tools/sweep-done-todo.mjs` (`npm run todo:sweep`, added 2026-07-31), which is the missing first half: it cuts every ticked bullet out of `TODO.md`'s dated To-Do sections into `## Completed`, grouped under the section heading it came from, and moves a section wholesale — preamble included — once all of its bullets are ticked. That step used to depend on remembering, so by 2026-07-31 there were **124 finished items** sitting in To-Do while this archive job reported "nothing to archive" on every run and the file grew to 4,166 lines; `--check` exits 1 if any remain, for use as a gate. Note the `## Archived <date>` stamp is **Pacific, not UTC** — `toISOString()` rolls over at 16:00/17:00 local, so an evening sweep used to file itself under tomorrow's date. The launchd job runs it every 3 days (`StartInterval: 259200`) with `WorkingDirectory` set to the repo root; load it with `launchctl load ~/Library/LaunchAgents/com.kevinkhanhle.sensebridge-archive-completed-todo.plist`. `COMPLETED.todo` carries the same `.vscode/settings.json` `files.associations` entry (`*.todo` → markdown) as any other `.todo` file, and is linted by `markdownlint-cli2` alongside `**/*.md` (both the pre-commit hook and CI's `docs-links` job pass it explicitly, since `.markdownlint-cli2.jsonc`'s own `globs` are overridden by CLI arguments)
+**Why project-level** — `tools/sweep-done-todo.mjs` (`npm run todo:sweep`, added 2026-07-31) cuts every ticked bullet out of `TODO.md`'s dated To-Do sections and writes it straight into a `## Archived <date>` block in [`COMPLETED.todo`](https://github.com/kevinle3212/sensebridge/blob/main/COMPLETED.todo), grouped under the section heading it came from; a section moves wholesale — preamble included — once all of its bullets are ticked. **As of 2026-08-13, TODO.md never carries a `## Completed` section at all** — finished items no longer stage there even briefly. That staging step used to depend on a separate `archive-completed-todo.mjs` sweep to cut it out later, and by 2026-07-31 there were **124 finished items** sitting in To-Do while that job reported "nothing to archive" on every run and the file grew to 4,166 lines; folding the two steps into one closes that gap structurally instead of by discipline. `--check` exits 1 if anything remains unswept, for use as a gate. Note the `## Archived <date>` stamp is **Pacific, not UTC** — `toISOString()` rolls over at 16:00/17:00 local, so an evening sweep used to file itself under tomorrow's date; `pacificDateStamp()` in `tools/archive-completed-todo.mjs` is the shared fix, imported by the sweep script. `tools/archive-completed-todo.mjs` itself is now a defensive backstop: its `main()` no-ops when TODO.md has no `## Completed` heading (the normal state), and only does anything if content is ever hand-pasted under one. It stays wired to the launchd job so that job keeps running harmlessly rather than needing to be unloaded. The launchd job runs it every 3 days (`StartInterval: 259200`) with `WorkingDirectory` set to the repo root; load it with `launchctl load ~/Library/LaunchAgents/com.kevinkhanhle.sensebridge-archive-completed-todo.plist`. `COMPLETED.todo` carries the same `.vscode/settings.json` `files.associations` entry (`*.todo` → markdown) as any other `.todo` file, and is linted by `markdownlint-cli2` alongside `**/*.md` (both the pre-commit hook and CI's `docs-links` job pass it explicitly, since `.markdownlint-cli2.jsonc`'s own `globs` are overridden by CLI arguments)
 
 ---
 
@@ -303,7 +303,21 @@ pre-split file.
 
 ### Graphify
 
-**Status** — installed
+**Status** — **retired 2026-08-18.** Everything below is preserved as the
+record of why it was adopted and how it was configured; none of it describes
+the repository as it stands. Retired as the one genuine redundancy the
+2026-08-12 bake-off found, on a fresh measurement: `graphify-out/` was 365 MB
+against CodeGraph's 28 MB and GitNexus's 86 MB, and once the 4:1 inflation
+from the five mirrored copies of the `impeccable` skill scripts is backed out,
+its real coverage (~4,500 nodes) sat *below* CodeGraph's 6,752. It was also
+the only one of the four with no free-text question verb. What replaced it:
+`codegraph explore`/`node` for architecture questions, Serena for symbol work,
+GitNexus for call chains and blast radius. The one thing it did better —
+self-refreshing after every commit and checkout — was replaced by an
+incremental `codegraph sync` block in the same two hooks. The rendered
+`docs/assets/graph.svg` and `tools/graph-visual.mjs` were deliberately kept:
+the picture is committed and self-contained, and `--verify` reads only the
+committed bytes.
 
 **Use here** — Knowledge-graph queries; output (`graphify-out/`) is gitignored. Auto-rebuilds via versioned `.githooks/post-commit` + `post-checkout` (installed by `graphify hook install`, detached/non-blocking, skips rebases and graph-only changes); optional live mode: `graphify watch .` (needs `watchdog` in graphify's env). CI rebuilds it advisorily on `main` and uploads it as a downloadable artifact (`.github/workflows/graphify.yml`, scope in `.graphifyignore`). `npm run graph` (`PYTHONHASHSEED=0 graphify update .` then `tools/graph-visual.mjs`) renders the graph into the root README's animated `docs/assets/graph.svg` plus its reduced-motion twin `graph-static.svg` — both committed, since the graph itself never is; deterministic (seeded layout) so an unchanged graph re-renders byte-identically, and it excludes the per-harness agent-config mirrors so the picture shows SenseBridge rather than vendored tooling. `npm run graph:visual` redraws from the existing `graph.json` without a graphify rebuild. **Freshness and quality are both enforced.** `.githooks/pre-commit` re-renders and stages the pair whenever a commit touches `docs/`, `app/`, `website/src/`, `tools/`, or `scripts/` (SVG render only — ~1s of node; the graph itself is rebuilt by `post-commit`, so the picture is captioned "at commit &lt;sha&gt;" of the previous commit, by design). CI's `docs-links` job then runs `npm run check:graph` (`tools/graph-visual.mjs --verify`) as a **blocking** gate over the committed bytes: accessible `<title>`/`<desc>`, `role="img"`, a reduced-motion twin that really carries no `@keyframes`/`<animateMotion>`, size ceiling, well-formed XML (balanced groups, no unescaped `&`, not truncated), and both variants rendering the same graph. It lints the artifact rather than rebuilding and diffing, because the source commit is baked into the image — a fresh build at CI's `HEAD` is legitimately different bytes and would fail every PR. `.github/workflows/graphify.yml` stays advisory (`continue-on-error: true`) and is deliberately not the gate
 
@@ -833,3 +847,343 @@ non-negotiable output constraint.
 | --- | --- | --- |
 | ctxlint / cclint / agnix | `YawLabs/ctxlint`, `felixgeelhaar/cclint`, `agnix` | Real projects that lint `CLAUDE.md`/`AGENTS.md`/skills against actual repo state for staleness — a legitimate fit for "drift detection." Not adopted yet: none has verified track record/stability from this pass, and the repo already has two lower-risk mechanisms doing most of the same job — the `update-context` skill (manual, on-demand refresh after repo changes) and the fact that this session's own audit found the instruction-file architecture already duplication-free (see Task 10 of the 2026-07-17 mega-audit). Revisit if drift becomes a recurring real problem, not preemptively |
 | Prompt-injection / security "enforcement" as a single tool | — | No single named tool fits; current best practice (OWASP Agentic Top 10, 2026) is defense-in-depth via primitives already in use here: Claude Code's `PreToolUse`/`PostToolUse` hooks (`.claude/settings.json`, both project and user-global), permission/sandbox allowlists, and MCP server scoping — not a bolt-on product |
+
+### Evaluated 2026-08-12 — twelve candidate repositories
+
+A single pass over twelve repositories the owner asked to be assessed
+blind, for global versus per-project adoption. Verified against the machine
+and this repo rather than from memory. Three were already integrated or
+already decided; one is adopted under trial; the rest are refused, with the
+mechanism spelled out where the refusal is doctrinal rather than a
+preference.
+
+| Repository | Disposition | Reason |
+| --- | --- | --- |
+| `abhigyanpatwari/GitNexus` | **Already integrated** | Binary at `/opt/homebrew/bin/gitnexus`, `gitnexus-cli` skill user-global, six `gitnexus-*` skills, `.gitnexus/` index in this repo only. Its measured value is the **passive `PreToolUse` hook** that injects related symbols into `Grep` calls — not its `query` verb, which returned low-signal process JSON in the 2026-08-12 bake-off |
+| `headroomlabs-ai/headroom` | **Already evaluated, torn down 2026-07-31** | See the `headroom` entry above and `~/.claude/HEADROOM-ROUTING.md`. Routing Claude Code through a local proxy gates Remote Control, on-demand tool loading, and the 1M context window client-side on the default endpoint |
+| `multica-ai/andrej-karpathy-skills` | **Already refused** | The four principles are encoded in the global `~/.claude/CLAUDE.md`; installing the plugin would duplicate them. Independently re-derived this pass. Note the repository is a rename — its own install command still points at `forrestchang/andrej-karpathy-skills` |
+| `PleasePrompto/notebooklm-skill` | **Removed 2026-08-12** | Was parked outside the global skills tree; removed in favour of the overlapping `notebooklm` MCP server, which costs no per-session context because its tools load on demand. Both carry the stealth-Chrome profile `docs/NOTEBOOKLM.md` assesses; the MCP is unauthenticated and inert. See that document |
+| `colbymchenry/codegraph` | **Adopted under trial — CLI only** | The one candidate with a capability not already held. See the subsection below |
+| `MarkusPfundstein/mcp-obsidian` | **Refused — obsolete** | Its own dependency, `obsidian-local-rest-api`, now ships a built-in MCP server. This package is a redundant Python layer over an API that already speaks the protocol |
+| `coddingtonbear/obsidian-local-rest-api` | **Refused** | Not installed in `~/Vault/.obsidian/plugins/`. Its real gain over filesystem access is surgical patch-by-heading; its cost is a new authenticated HTTPS listener on port 27124. The official `obsidian` CLI is already installed at `/usr/local/bin/obsidian` and covers the vault surface without a new listener |
+| `asgeirtj/system_prompts_leaks` | **Refused — not a tool** | A CC0 reference corpus of extracted proprietary system prompts. Nothing to install; no runtime surface |
+| `affaan-m/ecc` | **Refused** | See the subsection below |
+| `ruvnet/ruflo` | **Refused** | Its core value is autonomous multi-agent swarms, federation, and autopilot loops. `CLAUDE.md` restricts delegation to "only when I have asked for subagents," and the harness already has `Workflow`, the `Agent` tool, and superpowers' `dispatching-parallel-agents`. The plugin path is genuinely non-destructive (**zero** workspace files); only `npx ruflo init` writes `.claude/`, `CLAUDE.md`, and settings. Refused for redundancy, not for install risk |
+| `decolua/9router` | **Refused — security** | Routes prompts and source through 40+ third-party inference providers. Incompatible with this project's on-device doctrine (`docs/PRIVACY.md`) |
+| `diegosouzapw/OmniRoute` | **Refused — security** | See the subsection below |
+
+#### CodeGraph — adopted under trial, CLI only, no MCP wiring
+
+**Scope** — user-global binary (`npm install -g @colbymchenry/codegraph`,
+resolved to `/opt/homebrew/bin/codegraph`, v1.5.0); per-project index in
+`.codegraph/`, which writes its own `.gitignore` and so never reaches
+`git status`.
+
+**Provenance** — verified before install rather than trusted from the
+README badge: npm SLSA v1 provenance, GitHub-hosted runner, source
+repository `colbymchenry/codegraph`, workflow `.github/workflows/release.yml`
+at `refs/heads/main`, MIT. The `curl | sh` installer the README offers first
+was **not** used; the npm path is the one with attestation.
+
+**Telemetry** — on by default (`enabled (default)`). Disabled immediately
+with `codegraph telemetry off` before any indexing ran.
+
+**Deliberately not run: `codegraph install`.** That subcommand writes MCP
+server config plus a marker-fenced block into each agent's instruction file
+(`CLAUDE.md` / `AGENTS.md` / `GEMINI.md`). During evaluation the tool is
+driven through its CLI verbs only, so the trial carries **no** permanent
+configuration and nothing to revert beyond `codegraph uninit`.
+
+**Measured 2026-08-12** — indexed 853 files into 20,620 nodes and 61,514
+edges in **1.5s**; index occupies 99 MB on disk. Three-way bake-off on one
+architecture question ("how does depth sensing reach spoken output"),
+same question to each tool:
+
+| Tool | Wall clock | Output | Did it answer? |
+| --- | --- | --- | --- |
+| `codegraph explore` | 0.66s | 19,912 B | **Yes** — exact `file:line` symbols, blast radius with caller counts, the `AppEnvironment → SpeechRenderTarget`/`HapticRenderTarget` chain, plus an unprompted "no covering tests found" flag |
+| `gitnexus query` | 1.20s | 7,739 B | No — process JSON with vague summaries and priority scores |
+| `graphify explain` | 0.86s | 1,787 B | No — returned "Ambiguous: 'depth' matches 12 nodes." It has no free-text question verb; `explain` and `path` both require a node name you must already know |
+
+Every CodeGraph claim in that run was spot-checked against the tree and held:
+`SpeechRenderTarget.swift` exists, `readDepthRegion` is at
+`AmbientSensingSource.swift:305`, and no test file references it.
+
+**The tradeoff is real and is the reason this is a trial, not an adoption.**
+CodeGraph's own benchmark documentation reports roughly **80% more residual
+retrieval context** left resident at end of session versus a file-reading
+agent, because it returns one dense payload that then stays in the window.
+Fewer tokens *processed* and a larger persistent *footprint* are both true at
+once. Long sessions in a small window pay for the precision.
+
+**Consolidation note.** The overlap is narrower than it first appears.
+Serena answers *symbol* questions (where is X, who references it) and is not
+in competition. GitNexus's `query` verb lost the bake-off, but its passive
+`PreToolUse` hook earns its keep independently. The genuine redundancy is
+**graphify versus CodeGraph** on question-level exploration, and graphify's
+index is additionally polluted — it indexes all five mirrored copies of the
+`impeccable` skill scripts under `.agents/`, `.claude/`, `.cursor/`,
+`.gemini/`, and `.github/`.
+
+#### Why ECC specifically is not installed
+
+Never previously evaluated here — an earlier grep appeared to show twelve
+prior mentions, but every one was the substring `ecc` inside *imp**ecc**able*.
+
+Credit where due: the install system is genuinely engineered, not a blob —
+`--profile minimal`, `--without baseline:hooks`, `--with capability:X`,
+backed by JSON schemas, durable install-state, and `doctor`/`repair`/
+`uninstall`. It preserves user-owned skill directories with a conflict
+warning instead of overwriting them.
+
+It is still refused:
+
+- **Scale against the wrong budget.** The full surface is 68 agents, 284
+  skills, and 94 command shims, and Claude manual installs place skills
+  **flat** in `~/.claude/skills/<name>/`. Per-session skill cost is driven by
+  description length across the menu, which is the exact budget being pruned.
+- **Its own tuning advice contradicts this machine's deliberate config.**
+  `docs/token-optimization.md` recommends `model: sonnet` and
+  `MAX_THINKING_TOKENS: 10000`; `~/.claude/settings.json` runs `opus` at
+  `effortLevel: xhigh` on purpose.
+- **Capability overlap is near-total** with superpowers, ponytail, caveman,
+  `council`, BMAD, and the codex plugin.
+
+**AgentShield was assessed separately and also refused.** It is a standalone
+package (`ecc-agentshield`, MIT) needing no ECC install, and it targets a
+real gap — nothing here audits the agent surface itself, only code and
+dependencies (`gitleaks`, `semgrep`, `osv-scanner`, `actionlint`). Static
+inspection of the 1.4.0 tarball was clean: no `preinstall`/`postinstall`
+hook, six reputable dependencies, the bundled `@anthropic-ai/sdk` gated on
+`ANTHROPIC_API_KEY`, and no hardcoded external endpoint. But it is
+**unsigned** — no npm attestation, single maintainer, published from a
+different repository (`affaan-m/agentshield`) than ECC — which is a poor
+property for a tool that reads every secret and config file in a tree.
+
+The scan output settles it. Run locally against this repo with the API key
+unset, it grades **D (57/100)** while scoring Secrets 100, MCP Servers 100,
+and Hooks 85. The two zeros — Permissions and Agents — plus "Instrumented 0
+/ Versioned 0 / Rollback-ready 0" measure conformance to **ECC 2.0's**
+self-amending-skill conventions ("ECC 2.0 self-improving skills need explicit
+observe/feedback hooks"), not security posture. It also discovered only the
+8 skills under `.claude/commands/` and missed all 56 under `.agents/skills/`
+and `.claude/skills/`. Acting on that grade would mean adopting a competing
+framework's conventions. The one-time signal worth keeping — that the
+secret, MCP, and hook surfaces are clean — has been extracted.
+
+#### Why OmniRoute is not wired into any agent here
+
+> **Superseded in part, 2026-08-12 (round 2).** The owner elected to run
+> OmniRoute as a **standalone local server only**, explicitly *not* wired to
+> Claude Code. The second blocker below is therefore avoided rather than
+> accepted: `ANTHROPIC_BASE_URL` remains unset everywhere — verified across
+> `~/.zshrc`, `~/.bashrc`, `~/.profile`, a clean login shell, and every
+> `settings*.json` under `~/Development`. The first blocker (fail-open
+> guardrails) still stands and is why nothing sensitive should route through
+> it. See "OmniRoute — server-only hardening" below for what was changed.
+
+Two independent blockers, either sufficient:
+
+- **Its guardrails are documented fail-open.** `docs/security/GUARDRAILS.md`:
+  "The system is **fail-open**: if a guardrail throws while executing, the
+  registry records the error and continues with the next guardrail rather
+  than failing the request." The global `~/.claude/CLAUDE.md` requires the
+  opposite — "Fail closed. A guard that cannot prove a call is safe must
+  deny it" — and forbids softening a security control to make a task easier.
+- **It is the same client-side base-URL gate that forced the headroom
+  teardown.** Pointing `ANTHROPIC_BASE_URL` at a local proxy disables Remote
+  Control, on-demand tool loading, and the 1M context window. This machine
+  runs `remoteControlAtStartup: true` and `ENABLE_TOOL_SEARCH: true`; both
+  depend on the default endpoint.
+
+Beyond those, the routing premise — 330+ upstream providers, 90+ free tiers —
+sends prompts and source to third parties, which `docs/PRIVACY.md` forbids
+for this project; "local-first" in its documentation describes the proxy, not
+the inference. Its compression layer is RTK plus Caveman, both of which
+already run natively on this machine.
+
+#### OmniRoute — server-only hardening (2026-08-12, round 2)
+
+`omniroute@3.8.48` had in fact been installed globally on **2026-07-28**,
+before the evaluation above was written — the refusal was never enforced on
+disk. Round 2 found its shipped configuration open in four independent ways
+and closed each. The audit is recorded here because the defaults, not the
+routing premise, are the part a future reader will need.
+
+| Setting | Shipped default | Now | Why it mattered |
+| --- | --- | --- | --- |
+| `.env` file mode | `644` — world-readable | `600` | Held `JWT_SECRET` (128 chars) and `API_KEY_SECRET` (64 chars) readable by any local user, inside `/opt/homebrew/lib/node_modules/omniroute/` |
+| `REQUIRE_API_KEY` | `false` | `true` | `/v1/*` accepted unauthenticated requests. Now returns `401` |
+| `STORAGE_ENCRYPTION_KEY` | **empty** | 32 random bytes, hex | Stored provider credentials would have been written unencrypted at rest |
+| `INITIAL_PASSWORD` | `CHANGEME` — the shipped placeholder | 24 random bytes, base64url | Default admin credential on a service that fronts 160+ providers |
+| `ENABLE_SOCKS5_PROXY` | `true` | `false` | A SOCKS5 proxy enabled by default, unused here |
+| `OMNIROUTE_SERVER_HOST` | absent → binds `0.0.0.0` | `127.0.0.1` | Verified reachable from the LAN IP before the change; connection-refused after |
+
+**Verified after hardening** — exactly one listener, on `127.0.0.1:20128`;
+the LAN address refuses the connection; `/v1/models` returns `401` without a
+key; the dashboard `307`-redirects to login.
+
+**Two operational traps found while verifying, both worth knowing:**
+
+- **`omniroute stop` does not stop it.** The supervisor survives and
+  auto-restarts its child (`--max-restarts`), so a child killed by hand comes
+  straight back on the *old* configuration. A stale supervisor started before
+  the `OMNIROUTE_SERVER_HOST` change kept a second `*:20128` listener alive
+  across two restarts. Stop it with `pkill -f "omniroute serve"`, then confirm
+  with `lsof -nP -iTCP:20128 -sTCP:LISTEN` before restarting.
+- **The secrets live inside `node_modules`.** `npm update -g omniroute`
+  will discard every value above and regenerate the file with the shipped
+  defaults — including `INITIAL_PASSWORD=CHANGEME` and an empty
+  `STORAGE_ENCRYPTION_KEY`. A copy is kept at
+  `~/.config/omniroute-env.backup.20260812` (mode `600`). **Re-run this
+  hardening after any upgrade**; the package offers no external config path.
+
+Fail-open guardrails are unchanged in 3.8.48 — `src/lib/quota/enforce.ts` and
+`src/shared/utils/rateLimiter.ts` both still carry the pattern. Nothing
+sensitive should route through this server, and no agent on this machine is
+configured to.
+
+#### CodeGraph — trial hardening and round-2 bake-off (2026-08-12)
+
+Still CLI-only: `codegraph install` remains deliberately unrun, so no MCP
+config and no marker-fenced block exists in any instruction file. What round 2
+added is a **tracked** `codegraph.json` at the repo root — the tool's own
+supported config surface, and the only committed artifact of the trial.
+Reverting is still `rm codegraph.json && codegraph uninit .` plus
+`npm uninstall -g @colbymchenry/codegraph`.
+
+**The index was 65% duplicate.** `impeccable` is mirrored into five harness
+directories, and every one of its scripts was indexed five times — the same
+pollution that discredited graphify's index in round 1. `codegraph.json`
+excludes four of the five copies and keeps `.agents/skills/impeccable/`, the
+canonical tree:
+
+| | Before | After |
+| --- | --- | --- |
+| Files | 853 | **449** |
+| Nodes | 20,620 | **6,733** |
+| Edges | 61,514 | **18,161** |
+| DB size | 98.57 MB | **27.30 MB** |
+
+No capability was lost — `SpeechRenderTarget`, `readDepthRegion`, and the
+`AppEnvironment` chain all still resolve. The stale `app/project.yml` ENOENT
+in `.codegraph/errors.log` is gone and the log no longer regenerates.
+Telemetry remains `disabled`. `.codegraph/` was added to the root
+`.gitignore` — the directory writes its own `.gitignore` that ignores
+everything *except itself*, so it was still surfacing in `git status` and a
+`git add -A` would have committed it.
+
+**Protect the directory, not the database file — and enforce it, don't
+document it.** The index holds the full text of every source file, and
+`codegraph.db` is created world-readable (`644`) under a `022` umask.
+
+Two attempts failed before the third held, and both failures are the
+instructive part:
+
+1. `chmod 600 .codegraph/codegraph.db` **does not hold.** Every
+   `codegraph index` rewrites the database and the new file gets `644` again.
+   Verified by setting `600`, reindexing, and finding `644`.
+2. `chmod 700 .codegraph` holds across `index` and `sync` — neither recreates
+   the directory — but **not across a fresh index.** `codegraph init` after an
+   `uninit`, or a clone that has never been indexed, recreates the directory at
+   `755`. Verified by `rm -rf .codegraph && codegraph init .`.
+
+Leaving that second gap as a line in a document is the thing this repository's
+own `CLAUDE.md` forbids — rules a machine can check are enforced by hooks, not
+prose. So `tools/check-codegraph-perms.mjs` owns it:
+
+| Command | Behaviour |
+| --- | --- |
+| `npm run check:codegraph` | Part of `npm run check`. Exits 1 if `.codegraph/` exists and is not `0700`. A missing index passes — it is local-only, gitignored, and optional |
+| `npm run codegraph` | Reindexes, then `--fix`es the mode, so a fresh index self-heals |
+| `npm run codegraph:sync` | Same self-heal after a sync |
+| `npm run codegraph:perms` | Repair on its own |
+
+Directory mode `0700` blocks traversal for every other local user regardless of
+what mode the files inside carry, which is why it also covers the WAL/SHM
+sidecars, `errors.log`, and any daemon socket — none of which a per-file
+`chmod` would have reached.
+
+**Then the check itself had to be fixed — attempt three followed symlinks.**
+`statSync`/`chmodSync` resolve symlinks, so pointing `.codegraph` at a
+directory outside the repository made `--fix` `chmod 0700` **that** directory
+and report success. Demonstrated, not theorised. Because `npm run codegraph`
+runs `--fix` automatically after every index, a `.codegraph` symlink to any
+real working directory would have silently turned it owner-only — and
+symlinking the index onto an external volume is a plausible thing to do
+deliberately, which makes it a footgun rather than an exotic attack.
+
+The directory is now opened once with `O_NOFOLLOW | O_DIRECTORY`, and every
+operation goes through that file descriptor: a symlink is refused with a
+specific message and nothing is chmod'd, a non-directory is refused (a regular
+file named `.codegraph` previously passed silently), and the path cannot be
+swapped between the check and the chmod. Regression-tested across all seven
+cases — healthy `0700`, world-readable `0755`, `--fix` repair, absent index, a
+regular file named `.codegraph`, the sync self-heal, and the symlink, whose
+target was verified still `0755` afterwards.
+
+**Round-2 bake-off, three questions, indexes fresh for all three tools.**
+Byte counts are output size; the column that decides it is the last one.
+
+| Question | Tool | Time | Bytes | Answered? |
+| --- | --- | --- | --- | --- |
+| depth sensing → spoken output | `codegraph explore` | 0.45s | 24,797 | **Yes** |
+| | `graphify query` | 0.97s | 6,480 | No |
+| | `gitnexus query` | 1.78s | 7,744 | No |
+| what depends on `SpokenPhrase` | `codegraph impact` | 0.29s | 1,538 | **Yes** — 21 symbols |
+| | `graphify explain` | 0.95s | 680 | No — reported degree 3, all inside the same file |
+| | `gitnexus query` | 0.95s | 6,039 | No — returned `CrashReporting.start`, unrelated |
+| sound classification wiring | `codegraph explore` | 0.23s | 9,999 | Yes |
+| | `graphify query` | 0.87s | 6,498 | Partial |
+| | `gitnexus query` | 0.99s | 9,196 | Partial |
+
+**Fewest bytes is not the win condition.** graphify's 680-byte answer to
+question 2 is the cheapest output in the table and the least useful: it found
+3 connections, all within `SpokenPhrase.swift`, and missed every real
+dependent. CodeGraph's 1,538 bytes named 21 affected symbols across 5 files.
+Spot-checked against the tree: `grep -rl SpokenPhrase` returns 5 files,
+CodeGraph named 4 of them plus `ObjectClassificationServiceTests.swift` (a
+correct transitive dependent). The one it "missed", `SpokenVocabulary.swift`,
+references `SpokenPhrase` **only in a doc comment** — so CodeGraph was right
+and the grep was the imprecise instrument. Precision and recall on real code
+dependencies: complete.
+
+Disk cost tells the same story from the other side: `.codegraph` 27 MB,
+`.gitnexus` 86 MB, `graphify-out` **330 MB**.
+
+Discoverability: `npm run codegraph` (full rebuild plus status, ~1.8s) and
+`npm run codegraph:sync`. A post-edit sync hook was considered and **not**
+built — a full reindex takes 1.8 seconds, so a hook would add a gate to the
+`check:hooks` surface to save less time than it costs to maintain.
+
+#### Browser automation — Playwright MCP adopted, Puppeteer MCP refused
+
+The global standard's "gstack `/browse` only" rule was replaced, at the
+owner's direction, with a two-tier rule in `~/.claude/CLAUDE.md`: `/browse`
+for reading and session-bearing work, `mcp__playwright__*` for driving a
+browser. The `mcp__claude-in-chrome__*` prohibition is unchanged.
+
+**Puppeteer MCP was requested and could not be delivered.**
+`@modelcontextprotocol/server-puppeteer@2025.5.12` is npm-deprecated
+("Package no longer supported"), bundles `puppeteer@23.11.1` — itself
+deprecated — and returned **zero tools** on probes at 9 s and 25 s. The
+alternatives are worse: `puppeteer-mcp-server` (last published 2025-03) and
+`@hisma/server-puppeteer` (2025-06) are stale single-maintainer packages, a
+poor property for a tool that drives a browser. Playwright reaches Chromium
+over the same protocol, so the capability is not lost.
+
+`@playwright/mcp@0.0.79` is registered at user scope in all three config
+surfaces — `~/.claude.json` and both cswap profiles. Hardening lives in
+`~/.config/playwright-mcp/config.json`, not in the command line, because
+`claude mcp add` silently swallows `--config` and `--output-dir` even after
+`--`. It sets `isolated` (no browser profile on disk), `headless`,
+`saveSession: false`, `allowUnrestrictedFileAccess: false`, and an
+`outputDir` under `~/.cache/` — that last one matters, since the default
+writes `.playwright-mcp/*.png` into the current working directory, meaning
+into whatever repository the session is in.
+
+One residual risk is **not** closable by config: `browser_run_code_unsafe`
+ships in the `core` capability, and its own description calls it
+"RCE-equivalent." Playwright's documentation says to rely on client-level
+permissions for this. A `permissions.deny` entry in `~/.claude/settings.json`
+is the control; that file is owner-gated.

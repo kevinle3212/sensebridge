@@ -32,33 +32,46 @@ public actor SpeechRenderTarget: RenderTarget {
     /// Rate/pitch/volume applied to every subsequent `render` call.
     private var voiceSettings: SpeechVoiceSettings
 
-    #if os(iOS)
-        /// Kept as a reference so `AVSpeechSynthesizer`'s delegate isn't
-        /// deallocated (`delegate` is a weak reference).
-        private var sessionDeactivator: SpeechSessionDeactivator?
-        /// Whether `configureAudioSessionIfNeeded()` has run yet.
-        private var hasConfiguredAudioSession = false
-    #endif
+    /// Kept as a reference so `AVSpeechSynthesizer`'s delegate isn't
+    /// deallocated (`delegate` is a weak reference).
+    ///
+    /// No longer iOS-only. The delegate now carries `speak(_:)`'s completion
+    /// signal as well as the audio-session deactivation, and a platform without
+    /// it would leave every `speak` caller awaiting a callback that never
+    /// arrives. Only the audio-session work inside the callback is iOS-gated.
+    private var sessionDeactivator: SpeechSessionDeactivator?
+    /// Whether ``configureIfNeeded()`` has run yet.
+    private var hasConfigured = false
+
+    /// Callers waiting on ``speak(_:)``, keyed by the utterance they are
+    /// waiting for.
+    ///
+    /// A dictionary rather than a single continuation because `render` and
+    /// `speak` can interleave: a routine narration can supersede a playback
+    /// segment mid-sentence, and the superseded caller must still be resumed or
+    /// it waits forever. Every path that starts a new utterance drains this
+    /// first — see ``resumePendingCompletions()``.
+    private var pendingCompletions: [ObjectIdentifier: CheckedContinuation<Void, Never>] = [:]
 
     public init(language: AppLanguage = .system, voiceSettings: SpeechVoiceSettings = .init()) {
         self.language = language
         self.voiceSettings = voiceSettings
     }
 
-    #if os(iOS)
-        /// Configures the shared audio session and installs the delegate, once.
-        ///
-        /// Deliberately *not* done in `init`. A non-`async` actor initializer
-        /// runs on the **caller's** context, not the actor's executor — there
-        /// is no `await` to hop through — and this type is constructed by
-        /// `AppEnvironment` on `@MainActor` at app launch. Doing AVAudioSession
-        /// work there would block the main thread during startup, which is
-        /// what docs/ARCHITECTURE.md "Main thread stays free" exists to
-        /// prevent. Running it on first `render()` puts it on the actor.
-        private func configureAudioSessionIfNeeded() {
-            guard !hasConfiguredAudioSession else { return }
-            hasConfiguredAudioSession = true
+    /// Configures the shared audio session and installs the delegate, once.
+    ///
+    /// Deliberately *not* done in `init`. A non-`async` actor initializer
+    /// runs on the **caller's** context, not the actor's executor — there
+    /// is no `await` to hop through — and this type is constructed by
+    /// `AppEnvironment` on `@MainActor` at app launch. Doing AVAudioSession
+    /// work there would block the main thread during startup, which is
+    /// what docs/ARCHITECTURE.md "Main thread stays free" exists to
+    /// prevent. Running it on first `render()` puts it on the actor.
+    private func configureIfNeeded() {
+        guard !hasConfigured else { return }
+        hasConfigured = true
 
+        #if os(iOS)
             // Default session category (.soloAmbient) is silenced by the
             // hardware ring/silent switch — wrong for an app whose entire
             // output is spoken word. .playback/.spokenAudio ignores that switch.
@@ -67,30 +80,85 @@ public actor SpeechRenderTarget: RenderTarget {
             try? AVAudioSession.sharedInstance().setCategory(
                 .playback, mode: .spokenAudio, options: .duckOthers
             )
-            let deactivator = SpeechSessionDeactivator { [weak self] in
-                Task { await self?.handleSpeechEnded() }
-            }
-            sessionDeactivator = deactivator
-            synthesizer.delegate = deactivator
+        #endif
+        let deactivator = SpeechSessionDeactivator { [weak self] utterance in
+            Task { await self?.handleSpeechEnded(utterance) }
         }
+        sessionDeactivator = deactivator
+        synthesizer.delegate = deactivator
+    }
 
-        /// Deactivates the ducking session once speech finishes or is
-        /// cancelled, so the user's music isn't left ducked forever.
-        ///
-        /// Runs **on the actor**, which is the whole point: the delegate
-        /// callback arrives on an arbitrary AVFoundation thread at an
-        /// arbitrary time, and previously raced `render()`'s own
-        /// `setActive(true)`. If the deactivation landed after the
-        /// reactivation, the next utterance could play un-ducked or
-        /// inaudible — a spoken announcement silently not reaching the user,
-        /// which for this app is a real failure, not a cosmetic one. Hopping
-        /// back here lets the actor serialize the two, and the `isSpeaking`
-        /// re-check covers a newer utterance having started in the meantime.
-        private func handleSpeechEnded() {
-            guard !synthesizer.isSpeaking else { return }
+    /// Resumes the caller waiting on this utterance, and deactivates the
+    /// ducking session once nothing is speaking, so the user's music isn't
+    /// left ducked forever.
+    ///
+    /// Runs **on the actor**, which is the whole point: the delegate
+    /// callback arrives on an arbitrary AVFoundation thread at an
+    /// arbitrary time, and previously raced `render()`'s own
+    /// `setActive(true)`. If the deactivation landed after the
+    /// reactivation, the next utterance could play un-ducked or
+    /// inaudible — a spoken announcement silently not reaching the user,
+    /// which for this app is a real failure, not a cosmetic one. Hopping
+    /// back here lets the actor serialize the two, and the `isSpeaking`
+    /// re-check covers a newer utterance having started in the meantime.
+    private func handleSpeechEnded(_ utterance: ObjectIdentifier) {
+        completeUtterance(utterance)
+        guard !synthesizer.isSpeaking else { return }
+        #if os(iOS)
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        #endif
+    }
+
+    /// Resumes the caller waiting on `utterance`, if there is one.
+    ///
+    /// Runs on the actor, hopped to from the delegate's arbitrary AVFoundation
+    /// thread for the same reason `handleSpeechEnded()` does: `pendingCompletions`
+    /// is actor state, and resuming a continuation twice is a crash rather than a
+    /// warning.
+    private func completeUtterance(_ identifier: ObjectIdentifier) {
+        pendingCompletions.removeValue(forKey: identifier)?.resume()
+    }
+
+    /// Resumes every waiting caller, for a new utterance about to supersede
+    /// theirs.
+    ///
+    /// Without this, `stopSpeaking(at: .immediate)` on an utterance that had not
+    /// yet started producing audio can retire it without a `didCancel`, and the
+    /// caller awaiting it never returns — playback would stall silently, which
+    /// on this app's primary channel is indistinguishable from the app having
+    /// crashed.
+    private func resumePendingCompletions() {
+        let waiting = pendingCompletions
+        pendingCompletions.removeAll()
+        for continuation in waiting.values {
+            continuation.resume()
         }
-    #endif
+    }
+
+    /// Speaks `message` and returns when it has finished or been superseded.
+    ///
+    /// The difference from ``render(_:)`` is only that this waits. That is
+    /// exactly what sentence-by-sentence playback needs: a loop that speaks a
+    /// segment, waits, advances, and speaks the next one — cancellable at any
+    /// point by cancelling the task around it, with no timer guessing at how
+    /// long a sentence takes.
+    ///
+    /// Returns immediately for text that is empty or all whitespace.
+    /// `AVSpeechSynthesizer` is not documented to deliver a delegate callback
+    /// for an utterance with nothing to say, and a caller awaiting one that
+    /// never arrives would hang the whole document.
+    ///
+    /// - Note: Returning does **not** promise the text was heard — a superseding
+    ///   utterance resumes the waiter too. A caller that must not be interrupted
+    ///   should not be racing another one for the same synthesizer.
+    public func speak(_ message: OutputMessage) async {
+        guard !message.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let utterance = prepare(message)
+        await withCheckedContinuation { continuation in
+            pendingCompletions[ObjectIdentifier(utterance)] = continuation
+            synthesizer.speak(utterance)
+        }
+    }
 
     /// Whether an utterance is currently being spoken.
     ///
@@ -114,14 +182,35 @@ public actor SpeechRenderTarget: RenderTarget {
         self.voiceSettings = voiceSettings
     }
 
+    /// Speaks `message`, superseding anything already speaking, and returns
+    /// without waiting for it to finish.
+    ///
+    /// Fire-and-forget is right for a one-shot result: the caller has nothing
+    /// left to do, and a capture screen that blocked until the last word would
+    /// leave its button disabled for the length of a page. Playback that has to
+    /// know when a sentence ended uses ``speak(_:)`` instead.
     public func render(_ message: OutputMessage) async {
-        #if os(iOS)
-            configureAudioSessionIfNeeded()
-        #endif
-        // speak() queues rather than replaces — without this, a second
-        // capture taken before the first finishes speaking just gets
+        synthesizer.speak(prepare(message))
+    }
+
+    /// Stops whatever is speaking, readies the audio session, and builds the
+    /// utterance for `message` — everything both ``render(_:)`` and
+    /// ``speak(_:)`` do before handing it to the synthesizer.
+    ///
+    /// Shared rather than duplicated because the ordering in here is load-bearing
+    /// and non-obvious in three places at once (stop before activate, drain
+    /// waiters before starting, apply voice settings after resolving the voice);
+    /// two copies would drift on the first change to any of them.
+    private func prepare(_ message: OutputMessage) -> AVSpeechUtterance {
+        configureIfNeeded()
+        // AVSpeechSynthesizer queues rather than replaces — without this, a
+        // second capture taken before the first finishes speaking just gets
         // appended behind the stale result instead of superseding it.
         synthesizer.stopSpeaking(at: .immediate)
+        // Any waiter whose utterance was just retired is resumed here rather
+        // than left for a `didCancel` that an unstarted utterance may never
+        // produce — see `resumePendingCompletions()`.
+        resumePendingCompletions()
         #if os(iOS)
             // stopSpeaking(at:) above may fire didCancel, whose deactivation
             // now hops back onto this actor (`handleSpeechEnded`) rather than
@@ -134,7 +223,7 @@ public actor SpeechRenderTarget: RenderTarget {
         utterance.rate = Self.mappedRate(from: voiceSettings.rate)
         utterance.pitchMultiplier = Self.mappedPitch(from: voiceSettings.pitch)
         utterance.volume = Float(Self.clampedUnit(voiceSettings.volume))
-        synthesizer.speak(utterance)
+        return utterance
     }
 
     /// Resolves the language to speak with by picking an installed voice:
@@ -188,34 +277,42 @@ public actor SpeechRenderTarget: RenderTarget {
     }
 }
 
-#if os(iOS)
-    /// Bridges `AVSpeechSynthesizerDelegate`'s Objective-C callbacks into a
-    /// single closure, so the actor that owns the synthesizer can decide what
-    /// to do with them on its own executor. It deliberately performs no
-    /// audio-session work itself — doing that here is what previously raced
-    /// `SpeechRenderTarget.render()`. The delegate protocol requires an
-    /// `NSObject` subclass, matching the bridging pattern established by
-    /// `PhotoCaptureDelegate`.
+/// Bridges `AVSpeechSynthesizerDelegate`'s Objective-C callbacks into a
+/// single closure, so the actor that owns the synthesizer can decide what
+/// to do with them on its own executor. It deliberately performs no
+/// audio-session work itself — doing that here is what previously raced
+/// `SpeechRenderTarget.render()`. The delegate protocol requires an
+/// `NSObject` subclass, matching the bridging pattern established by
+/// `PhotoCaptureDelegate`.
+///
+/// Compiled on every platform, not just iOS: `SpeechRenderTarget.speak(_:)`
+/// waits on this callback, and a build without it would hang every caller
+/// rather than merely skipping an audio-session tidy-up.
+///
+/// The `Sendable` conformance is sound only because the single stored
+/// property is an immutable `let`. If you need mutable state here, remove
+/// the state — don't reach for `@unchecked Sendable`.
+private final class SpeechSessionDeactivator: NSObject, AVSpeechSynthesizerDelegate, Sendable {
+    private let onSpeechEnded: @Sendable (ObjectIdentifier) -> Void
+
+    /// Creates a delegate forwarding both finish and cancel to
+    /// `onSpeechEnded` — the caller cannot distinguish them, and doesn't
+    /// need to: both mean "this utterance is over".
     ///
-    /// The `Sendable` conformance is sound only because the single stored
-    /// property is an immutable `let`. If you need mutable state here, remove
-    /// the state — don't reach for `@unchecked Sendable`.
-    private final class SpeechSessionDeactivator: NSObject, AVSpeechSynthesizerDelegate, Sendable {
-        private let onSpeechEnded: @Sendable () -> Void
-
-        /// Creates a delegate forwarding both finish and cancel to
-        /// `onSpeechEnded` — the caller cannot distinguish them, and doesn't
-        /// need to: both mean "nothing is speaking any more".
-        init(onSpeechEnded: @escaping @Sendable () -> Void) {
-            self.onSpeechEnded = onSpeechEnded
-        }
-
-        func speechSynthesizer(_: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
-            onSpeechEnded()
-        }
-
-        func speechSynthesizer(_: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
-            onSpeechEnded()
-        }
+    /// The utterance's identity is passed rather than the utterance itself.
+    /// `AVSpeechUtterance` is not `Sendable`, and the receiver only needs to
+    /// match it against a waiting continuation, never to read it.
+    init(onSpeechEnded: @escaping @Sendable (ObjectIdentifier) -> Void) {
+        self.onSpeechEnded = onSpeechEnded
     }
-#endif
+
+    /// Reports an utterance that finished speaking on its own.
+    func speechSynthesizer(_: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        onSpeechEnded(ObjectIdentifier(utterance))
+    }
+
+    /// Reports an utterance cut short, typically by a newer one superseding it.
+    func speechSynthesizer(_: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        onSpeechEnded(ObjectIdentifier(utterance))
+    }
+}

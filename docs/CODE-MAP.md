@@ -150,7 +150,7 @@ if it touches UI, and it should route through `AppEnvironment.output`
 | Intent | Directory | Protocol seam involved |
 | --- | --- | --- |
 | Add a new sensor (e.g. LiDAR depth, microphone) | `SenseBridgeCore/Sources/SenseBridgeCore/Sensing/` | Conform to `SensingSource` |
-| Add a new output channel (e.g. captions) | `SenseBridgeCore/Sources/SenseBridgeCore/Output/` | Conform to `RenderTarget`; register it in `AppEnvironment.renderTargets` |
+| Add a new output channel (e.g. a watch or glasses channel; speech, caption, and haptic exist) | `SenseBridgeCore/Sources/SenseBridgeCore/Output/`, or `app/SenseBridge/App/` when the target owns SwiftUI state as `CaptionRenderTarget` does | Conform to `RenderTarget`; add the case to `RenderChannel` and register it in `AppEnvironment.renderTargets` |
 | Change what the app says | `SenseBridgeCore/Sources/SenseBridgeCore/Reasoning/Phrasing.swift` (hedge templates) and `Localizable.xcstrings` (translations) | None — `Phrasing` is the single enforcement point; do not compose prose at a call site |
 | Add a screen | `app/SenseBridge/Features/<Feature>/` | Render results through `environment.output` (`MultiRenderTarget`), never a standalone `RenderTarget` |
 | Add a setting | `SenseBridgeCore/Sources/SenseBridgeCore/Storage/Settings.swift` (add the field, extend the custom `Decodable` init with a default for back-compat) and `app/SenseBridge/App/SettingsView.swift` | `SettingsStore` |

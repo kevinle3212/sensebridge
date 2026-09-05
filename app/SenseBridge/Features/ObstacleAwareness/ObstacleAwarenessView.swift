@@ -54,16 +54,36 @@ struct ObstacleAwarenessView: View {
     delivers no camera frames before that.
     """
 
+    /// Shown under the per-zone distances. They are finer-grained than anything
+    /// the spoken path will assert — it names a side only when one zone is
+    /// clearly nearer — so without this the screen reads as a directional
+    /// judgment the app deliberately refuses to make out loud.
+    private let zoneLegend: LocalizedStringKey = """
+    Each zone is a third of what the camera sees, measured from where the \
+    camera points rather than from your body. Spoken alerts name a side only \
+    when one zone is clearly nearer than the rest.
+    """
+
     private let phrasing: Phrasing = .init()
     /// Shared app state — renders through the same output targets every
     /// other feature uses, rather than standing up its own synthesizer.
     @Environment(AppEnvironment.self) private var environment
+
+    /// The language chosen in Settings, for casing the on-screen caption —
+    /// not the process locale, which may differ from what the user picked.
+    private var displayLocale: Locale {
+        environment.settings.language.locale ?? .current
+    }
+
     /// The continuous pipeline. Owned by the view because it holds the camera
     /// and the display-sleep assertion, both of which must be released when
     /// the user leaves this screen.
     @State private var session: AmbientAwarenessSession = .init()
-    @State private var engine: AwarenessEngine = .init()
-    @State private var isNearReading = true
+    /// The one-shot depth source behind "Check once" — a separate instance
+    /// from `session`'s own, so a single check never contends with a
+    /// running continuous session for the camera.
+    @State private var oneShotSource: AmbientSensingSource = .init()
+    @State private var isTakingReading = false
     @State private var lastResult: String?
 
     var body: some View {
@@ -74,6 +94,7 @@ struct ObstacleAwarenessView: View {
                     .accessibilityLabel(disclaimerAccessibilityLabel)
             }
             handsFreeSection
+            AwarenessSensitivitySection()
             singleCheckSection
         }
         .navigationTitle("Awareness")
@@ -126,14 +147,28 @@ struct ObstacleAwarenessView: View {
                 }
                 // Which composer is running changes how the output sounds. Left
                 // unsaid, a user cannot tell the simpler mode from a fault.
-                Text(session.isUsingLanguageModel
-                    ? "Descriptions are composed on-device by Apple Intelligence."
-                    : """
-                    Apple Intelligence is unavailable, so descriptions are read \
-                    out as a plain list of what was recognized.
-                    """)
+                Text(session.activeBackendDescription(settings: environment.settings))
                     .font(.footnote)
                     .foregroundStyle(Color("SecondaryText"))
+                if session.status == .running, let condition = session.deviceConditionDescription() {
+                    // Heat and battery both change what this session can do.
+                    // Thermal backoff answers heat by sampling less often, which
+                    // from the outside is indistinguishable from a session that
+                    // has stopped working.
+                    Text(condition)
+                        .font(.footnote)
+                        .foregroundStyle(Color("SecondaryText"))
+                        .accessibilityAddTraits(.updatesFrequently)
+                }
+                if session.status == .running {
+                    Text(session.zoneSummary(locale: displayLocale))
+                        .font(.footnote)
+                        .foregroundStyle(Color("SecondaryText"))
+                        .accessibilityAddTraits(.updatesFrequently)
+                    Text(zoneLegend)
+                        .font(.footnote)
+                        .foregroundStyle(Color("SecondaryText"))
+                }
             } else {
                 // Named as unavailable rather than hidden, per AGENTS.md
                 // doctrine 4: an absent control teaches the user nothing.
@@ -169,42 +204,27 @@ struct ObstacleAwarenessView: View {
             // evaluation of one depth sample; a user who believes continuous
             // monitoring is running would read the silence between taps as
             // "nothing is there", which is a claim this app never makes.
-            Button("Check once for what may be ahead") {
-                let mockDepthMeters = isNearReading ? 1.0 : 3.0
-                isNearReading.toggle()
-                // The transition is what a *continuous* consumer acts on; a
-                // one-shot check only wants the resulting state.
-                _ = engine.evaluate(depthMeters: mockDepthMeters)
-                let isAlerting = engine.isAlerting
-                let message = isAlerting
-                    ? phrasing.describe(subject: phrasing.somethingAhead(), certainty: .medium)
-                    // Not "the way ahead seems clear": that asserts an absence
-                    // the app cannot observe, and hedging the verb doesn't
-                    // rescue the claim. `nothingRecognized` speaks only about
-                    // this check, and comes pre-translated for es/vi — the raw
-                    // literal that used to sit here did neither.
-                    : phrasing.nothingRecognized()
-                lastResult = message
-                // The signal tracks the branch, not the view. A haptic channel
-                // renders the signal alone and discards the text, so this is
-                // the *entire* message under `.deafBlind`. `.awarenessClear`
-                // would be an unhedgeable tactile "stand down" from one
-                // sample; `.nothingFound` claims only what the prose claims.
-                let signal: OutputSignal = isAlerting ? .awarenessAlert : .nothingFound
-                announceIfUnspoken(message, profile: environment.settings.outputProfile)
-                Task { await environment.output.render(OutputMessage(text: message, signal: signal)) }
+            Button(isTakingReading ? "Measuring…" : "Check once for what may be ahead") {
+                Task { await takeOneShotReading() }
             }
-            .disabled(session.status == .running)
-            // Disabled while the continuous loop holds the camera. Without a
-            // value, a VoiceOver user meets a control that has silently gone
-            // dim with no explanation.
-            .accessibilityValue(session.status == .running ? "Unavailable while hands-free awareness is running" : "")
+            .disabled(session.status == .running || isTakingReading)
+            // Disabled while the continuous loop holds the camera, or while
+            // a reading is already in flight. Without a value, a VoiceOver
+            // user meets a control that has silently gone dim with no
+            // explanation.
+            .accessibilityValue(
+                session.status == .running ? "Unavailable while hands-free awareness is running"
+                    : isTakingReading ? "Measuring" : ""
+            )
             .accessibilityHint("""
             Takes one cautious reading of what may be nearby. It does not keep \
             watching, and it is not a safety feature.
             """)
             if let lastResult {
-                Text(lastResult)
+                // Capitalized for the screen only. The hedge templates are lowercase
+                // because they are built for speech and for mid-sentence embedding;
+                // rendering one verbatim as a caption reads as a typo, not caution.
+                Text(Phrasing.forDisplay(lastResult, locale: displayLocale))
                     .font(.callout)
                     .foregroundStyle(Color("SecondaryText"))
             }
@@ -212,6 +232,66 @@ struct ObstacleAwarenessView: View {
             Text("One reading")
                 .foregroundStyle(Color("SecondaryText"))
         }
+    }
+
+    /// Takes one real depth reading. A **fresh** `AwarenessEngine` per
+    /// call, deliberately: the continuous session's hysteresis band is
+    /// right for a loop and wrong for a one-shot check, where reusing state
+    /// across taps could report "something ahead" from a reading taken in
+    /// a different room minutes earlier.
+    private func takeOneShotReading() async {
+        isTakingReading = true
+        defer { isTakingReading = false }
+        let reading: AwarenessDepthReading
+        do {
+            reading = try await oneShotSource.sampleOnce()
+        } catch {
+            let spoken = phrasing.couldNotMeasure()
+            lastResult = spoken
+            announceIfUnspoken(spoken, profile: environment.settings.outputProfile)
+            await environment.output.render(OutputMessage(text: spoken, signal: .error))
+            return
+        }
+        guard let depthMeters = reading.overallMeters else {
+            // A frame arrived but nothing was measurable — distinct from
+            // "nothing recognized" and never `.awarenessClear`, matching
+            // `DepthStatistics`'s own "could not measure" contract.
+            let spoken = phrasing.couldNotMeasure()
+            lastResult = spoken
+            announceIfUnspoken(spoken, profile: environment.settings.outputProfile)
+            await environment.output.render(OutputMessage(text: spoken, signal: .error))
+            return
+        }
+        var freshEngine = AwarenessEngine(alertThresholdMeters: environment.settings.awarenessAlertDistanceMeters)
+        _ = freshEngine.evaluate(depthMeters: depthMeters)
+        let isAlerting = freshEngine.isAlerting
+        // A side is named only when one zone is clearly nearer than the others —
+        // see `AwarenessZoneReading.significantZone`. Otherwise the sentence is
+        // the unqualified one this screen has always spoken. The qualified form
+        // builds on a directionless subject so the sentence never carries two
+        // directions at once — see `Phrasing.somethingAway(atDistance:)`.
+        let distance = AmbientAwarenessSession.formattedDistance(meters: depthMeters, locale: displayLocale)
+        let subject = if let zone = reading.namedZone {
+            phrasing.subject(
+                phrasing.somethingAway(atDistance: distance, locale: displayLocale),
+                in: zone,
+                locale: displayLocale
+            )
+        } else {
+            phrasing.somethingAhead(atDistance: distance, locale: displayLocale)
+        }
+        // The non-alerting branch used to say "Nothing recognizable was found",
+        // which was false on both halves: recognition never ran here, and the
+        // depth sample plainly succeeded. It reports the measurement instead —
+        // `.resultReady` rather than `.nothingFound`, because a result is
+        // exactly what there is. See `Phrasing.nearestMeasurement(atDistance:)`.
+        let message = isAlerting
+            ? phrasing.describe(subject: subject, certainty: .medium, locale: displayLocale)
+            : phrasing.nearestMeasurement(atDistance: distance, locale: displayLocale)
+        lastResult = message
+        let signal: OutputSignal = isAlerting ? .awarenessAlert : .resultReady
+        announceIfUnspoken(message, profile: environment.settings.outputProfile)
+        await environment.output.render(OutputMessage(text: message, signal: signal))
     }
 }
 

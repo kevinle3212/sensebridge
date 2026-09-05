@@ -25,76 +25,52 @@ argument-hint: "<the decision to review, or a path/doc describing it>"
 If the decision, its alternatives, or what "approval" means here is ambiguous,
 ask one round of high-signal questions first. State assumptions before convening.
 
-# The Council
+# The Council — SenseBridge
 
-An independent multi-perspective review of an architectural decision **before**
-it is approved and built. The point is to catch a decision that is expensive to
-reverse while it is still cheap to change — and to make disagreement visible
-instead of averaging it away. The Council advises; it does not merge, and it does
-not stand in for the [ci-green-gate](../../../.agents/skills/ci-green-gate/SKILL.md)
-or the owner's decision.
+**The process lives in the global `council` skill**
+(`~/.claude/skills/council/SKILL.md`): when to convene, the independent-review
+rule, how disagreement is surfaced, the verdict forms, and the honesty rule.
+Read it first. This file carries only this project's seats and triggers.
 
-## When to convene
+The Council advises. It does not merge, and it does not stand in for
+[ci-green-gate](../ci-green-gate/SKILL.md) or the owner's decision.
 
-Convene for decisions that are **important and hard to reverse**:
+## Additional triggers specific to this project
 
-- A new protocol seam or module boundary, or a change to the
-  `SensingSource → perception → Reasoning → RenderTarget` pipeline shape.
-- A model, runtime, or inference-placement choice (on-device vs. anything else).
-- A dependency, MCP server, or tool that shifts the trust, privacy, or
-  supply-chain boundary.
+Beyond the global list, convene for:
+
+- A change to the `SensingSource → perception → Reasoning → RenderTarget`
+  pipeline shape.
+- An inference-placement choice — on-device versus anything else.
 - Anything touching the on-device / serverless / no-telemetry posture.
 - A change with safety-framing consequences for physical-world output.
 
-Do **not** convene for routine, reversible, or well-specified work — that is
-over-process. A change you can delete tomorrow does not need a council.
+## Seats, mapped to this project's personas
 
-## Members (independent perspectives)
-
-Each member reviews **independently first** — form its own position from the
-decision and the code before reading the others, so the verdict reflects genuine
-agreement, not the loudest voice. Map each to the existing persona so the Council
-reuses project doctrine rather than reinventing it:
+Seat only what the decision touches, and say which you skipped and why.
 
 | Seat | Owns the question | Source |
 | --- | --- | --- |
-| Architecture | Does this respect inward-pointing dependencies and stay replaceable/deletable? | [api-design](../../../.agents/skills/api-design/SKILL.md) |
-| Safety-framing | Can this ever produce a confidently-wrong physical-world statement? | [safety-framing-reviewer](../../../.agents/agents/safety-framing-reviewer.md) |
-| Accessibility | Does every resulting surface stay fully VoiceOver-navigable, zero unlabeled? | [accessibility-reviewer](../../../.agents/agents/accessibility-reviewer.md) |
-| Privacy/Security | Does anything cross the device boundary; is the trust/supply-chain surface sound? | [security-reviewer](../../../.agents/agents/security-reviewer.md), [`docs/PRIVACY.md`](../../../docs/PRIVACY.md) |
-| Performance | Main-thread cost, latency, battery, thermal — realistic on-device? | [performance-reviewer](../../../.agents/agents/performance-reviewer.md) |
-| Licensing | Any AGPL / `apple-amlr` / unverifiable-provenance blocker? | [model-license-audit](../../../.agents/skills/model-license-audit/SKILL.md) |
+| Architecture | Does this respect inward-pointing dependencies and stay replaceable/deletable? | [api-design](../api-design/SKILL.md) |
+| Safety-framing | Can this ever produce a confidently-wrong physical-world statement? | [safety-framing-reviewer](../../agents/safety-framing-reviewer.md) |
+| Accessibility | Does every resulting surface stay fully VoiceOver-navigable, zero unlabeled? | [accessibility-reviewer](../../agents/accessibility-reviewer.md) |
+| Privacy/Security | Does anything cross the device boundary; is the trust/supply-chain surface sound? | [security-reviewer](../../agents/security-reviewer.md), [`docs/PRIVACY.md`](../../../docs/PRIVACY.md) |
+| Performance | Main-thread cost, latency, battery, thermal — realistic on-device? | [performance-reviewer](../../agents/performance-reviewer.md) |
+| Licensing | Any AGPL / `apple-amlr` / unverifiable-provenance blocker? | [model-license-audit](../model-license-audit/SKILL.md) |
 | Simplicity | Is this the smallest change that solves the real problem, or speculative? | global engineering standard |
 
-Not every seat applies to every decision — seat only the ones the decision
-actually touches, and say which you skipped and why.
+A Critical objection from the safety-framing, accessibility, or
+privacy-boundary seat blocks by itself. These are not majority votes.
 
-## Process
+## Recording a verdict here
 
-1. **Frame.** State the decision, the alternatives considered, and what makes it
-   hard to reverse. If alternatives are missing, that is itself a finding.
-2. **Independent review.** Each seated perspective forms a position: `approve` /
-   `approve-with-conditions` / `block`, with a one-line reason grounded in
-   evidence (file:line, doc, or measurement — not vibes). For a genuinely
-   consequential or contested decision, run the seats as independent subagents so
-   positions form without groupthink; for a smaller one, reason each seat
-   yourself but keep them genuinely separate.
-3. **Surface disagreement.** Report where seats conflict verbatim; do not resolve
-   a `block` by outvoting it. A single Critical safety-framing, accessibility, or
-   privacy-boundary objection blocks by itself — these are not majority votes.
-4. **Verdict.** One of:
-   - **Approved** — no seat blocks; list any minor conditions.
-   - **Approved with conditions** — proceed only after the listed conditions are
-     met; name each and who owns it.
-   - **Blocked** — state the blocking objection(s) and the smallest change that
-     would unblock.
-5. **Record.** For a decision worth remembering, persist the verdict and its
-   rationale via [audit-refresh](../audit-refresh/SKILL.md)
-   (category `general`, or the most specific matching category) so the reasoning
-   survives, and capture durable lessons via the `vault-capture` skill.
+Persist the verdict and its rationale via
+[audit-refresh](../audit-refresh/SKILL.md) (category `general`, or the most
+specific matching one) so the reasoning survives, and capture durable
+cross-project lessons via `vault-capture`.
 
-## Honesty rule
+## Honesty rule, applied here
 
-The Council verifies design intent and reviewer judgement. It cannot prove
-on-device latency/battery/thermal or blind-tester validation — state which
-conditions still require device and human validation before real approval.
+The Council cannot prove on-device latency, battery, or thermal behaviour, and
+cannot stand in for blind-tester validation. Name which conditions still require
+device and human verification before the decision is genuinely approved.

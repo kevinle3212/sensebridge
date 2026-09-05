@@ -58,7 +58,7 @@ relevant; adding one before there's a Developer Program account to use it
 with would be premature.
 
 When that changes: enroll in the Apple Developer Program, set the real bundle
-ID in `app/project.yml`, and generate signing certificates/provisioning
+ID in the Xcode project, and generate signing certificates/provisioning
 profiles for the team. The team ID itself belongs in
 `app/Config/Signing.local.xcconfig`, which is gitignored — on CI, write that
 file from a repository secret during the job rather than committing it. See

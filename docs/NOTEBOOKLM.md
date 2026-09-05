@@ -12,13 +12,27 @@ session cookies to disk: a credential-bearing network round-trip, the
 sharpest violation of this project's on-device-by-default doctrine
 (`docs/PRIVACY.md`) in the current tooling landscape.
 
-**Status update 2026-07-17:** on the owner's explicit override, that skill is
-now installed **globally** (`~/.claude/skills/notebooklm/`, files-only — its
-pip/Chrome bootstrap runs on the owner's first use) for personal use outside
-this project; see `docs/TOOLING.md` → "Global skills — installed 2026-07-17"
-(second wave). The project rule is unchanged: SenseBridge work uses the
+**Status update 2026-07-17:** on the owner's explicit override, that skill was
+installed **globally** (files-only — its pip/Chrome bootstrap runs on the
+owner's first use) for personal use outside this project; see
+`docs/TOOLING.md` → "Global skills — installed 2026-07-17" (second wave).
+
+**Status update 2026-08-12:** the skill was later moved out of the global
+skills directory into the parked-skills tree, and then removed altogether
+during a tooling audit, because a second, overlapping integration had been
+wired in the meantime: the `notebooklm` **MCP server** (`notebooklm-mcp`,
+registered user-globally in `~/.claude.json`). The two duplicated each other,
+and the MCP costs no per-session context because its tools load on demand.
+The MCP carries the **same** browser-automation profile the assessment above
+rejected — a headless, stealth-enabled Chrome session against a Google login
+— so it remains an owner-override tool for personal use only, and it is
+currently **unauthenticated** (`get_health` reports `authenticated: false`,
+zero notebooks), therefore inert.
+
+The project rule is unchanged through all of this: SenseBridge work uses the
 manual, five-minute browser workflow below — no scraping, no stored
-credentials, and the skill is never invoked from a SenseBridge session.
+credentials — and neither the skill nor the MCP is ever invoked from a
+SenseBridge session.
 
 ## Setup (manual, ~5 minutes)
 

@@ -73,7 +73,12 @@ overwritten.
 runs. Codex's `Stop` hook expects `{"continue": true|false}`, not Claude's
 `decision: block` schema, so those three gates run as a passthrough there — see
 the comment block atop `dispatch.sh`. `limit-agent-fanout.sh` is the one
-Claude-only hook. MCP servers are declared per-harness in each one's native
+Claude-only hook. DeepSeek Harness needs no shim at all —
+[`.deepseek/cordis.yml`](.deepseek/cordis.yml) points its first-party
+`dsh-hooks-claude-code` bridge straight at `.claude/settings.json`, but only
+`PreToolUse`/`PostToolUse`/`UserPromptSubmit`/`Stop` are documented, so
+`SessionStart` and `PostToolBatch` stay unverified there. MCP servers are
+declared per-harness in each one's native
 config (`.cursor/mcp.json`, `.gemini/settings.json`, `.vscode/mcp.json`);
 Antigravity has no per-project MCP surface, noted in
 [`.agents/rules/skills.md`](.agents/rules/skills.md) rather than faked here.

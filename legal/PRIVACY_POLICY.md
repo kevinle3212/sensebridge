@@ -6,42 +6,46 @@
 > other biometric feature. Biometric and accessibility law is a fast-moving
 > patchwork that varies by jurisdiction.
 
-**Effective date:** 2026-08-01
-**Previous version:** 2026-07-09
+**Effective date:** 2026-08-12
+**Previous version:** 2026-08-01
 **Maintainer:** Kevin K. Le, an individual residing in the State of Oregon,
 United States of America
 **Contact:** <kevinle3212@gmail.com>
 
 For the purposes of the GDPR and the UK GDPR, the maintainer is the **data
-controller**. There is no EU or UK representative appointed, because the
-processing described below is limited to optional crash reports and does not
-meet the threshold in Article 27; if that changes, this section changes with it.
+controller** for the processing SenseBridge itself carries out — currently,
+optional crash reports. Where you opt into a Cloud reasoning backend, you are
+transacting directly with that provider under your own account and key
+(bring-your-own-key); for that path, you are the data exporter and the
+provider is the controller for its own processing, not the maintainer. There
+is no EU or UK representative appointed, because the maintainer's own
+processing is limited to optional crash reports and does not meet the
+threshold in Article 27; if that changes, this section changes with it.
 
 ## What changed in this version
 
-The earlier version of this policy said SenseBridge collects no telemetry at
-all. That is no longer strictly true, and this update exists to say so plainly
-rather than to bury it.
-
-SenseBridge can now send **crash and error reports** — and only crash and error
-reports — to Sentry, a third-party error-monitoring service. It is **off until
-you turn it on**, in the app and on the website alike. If you never turn it on,
-nothing changes for you: the app sends nothing, and the website does not even
-download the monitoring code.
+SenseBridge can now send **recognized object labels** — and only recognized
+object labels — off your device, if and only if you turn on an optional Local
+(a self-hosted endpoint you configure) or Cloud (bring-your-own-key:
+Anthropic, OpenAI, or NVIDIA NIM) reasoning backend. **On-Device reasoning
+remains the default** and stays the only thing running until you change it
+yourself in Settings → Reasoning.
 
 Nothing else about how SenseBridge handles your data has changed. Camera,
-photo, and audio content is still processed on your device and discarded, and
-still never leaves it.
+photo, audio, and depth content are still processed on your device and
+discarded, and still never leave it — only the object labels already derived
+from that content can leave, and only on the path you explicitly chose.
 
 ## The short version
 
 SenseBridge processes your camera, photos, and audio **on your device**. There
 is no server. Nothing you point the camera at is sent anywhere unless you
-explicitly turn on an optional cloud feature yourself.
+explicitly turn on an optional network feature yourself.
 
-The one thing that can leave your device is a crash report, and only if you
-switch it on. It contains diagnostic information about the failure — never
-camera frames, recognized text, audio, or location.
+Two things can leave your device, and only if you switch them on: a crash
+report, and — if you choose a Local or Cloud reasoning backend — the object
+labels already recognized on-device. Neither ever includes camera frames,
+photos, raw audio, depth data, or your location.
 
 ## What SenseBridge does with your data
 
@@ -51,6 +55,12 @@ camera frames, recognized text, audio, or location.
 - **App preferences** (like verbosity settings) may sync across your own
   devices via your Apple iCloud account, if you have iCloud sync enabled.
   Only preferences sync — never camera, photo, or audio content.
+- **Recognized object labels** are processed on-device by default. If you
+  explicitly turn on a Local or Cloud reasoning backend in Settings →
+  Reasoning, those labels — and only those labels, never camera frames,
+  audio, depth data, or location — are sent to the destination you chose, in
+  order to compose a spoken scene description. See "Optional Local and Cloud
+  reasoning" below.
 - **Facial recognition (a future, opt-in feature, not in the app yet):** if
   and when this ships, enrolling a face requires your explicit, informed
   consent. Face data would be stored only on your device, encrypted, never
@@ -101,6 +111,64 @@ Transfer Addendum where the UK GDPR applies. Where a transfer relies on the EU�
 Data Privacy Framework instead, that is noted in
 [`legal/SUBPROCESSORS.md`](SUBPROCESSORS.md).
 
+## Optional Local and Cloud reasoning
+
+This is off by default, on-device is the fallback, and you choose whether to
+turn either backend on. You can turn it back off, or remove a saved key, at
+any time with the same controls.
+
+**In the app:** Settings → Reasoning. Two independent gates must pass before
+anything leaves your device: first, you must switch the backend away from
+On-Device; second, for Cloud, you must acknowledge that specific provider's
+own terms of service, re-shown every time you switch providers — and for
+Local, the equivalent acknowledgment covers sending data to the address you
+yourself entered.
+
+**What is sent, when both gates pass:** recognized object labels only — never
+camera frames, photos, raw audio, depth data, or your location, on either
+backend, under any circumstances.
+
+**Where it goes:**
+
+- **Local:** entirely your own choice — whatever address you typed into
+  Settings. The maintainer has no visibility past that point and no
+  relationship with whatever you pointed it at.
+- **Cloud:** the provider you selected — Anthropic, OpenAI, or NVIDIA NIM —
+  called directly with your own API key (bring-your-own-key). There is no
+  SenseBridge-run server or relay in this path.
+
+**Who receives it:** for Cloud, the provider you chose, under that provider's
+own terms and as its own data controller for that processing — you are
+transacting directly with them, not through the maintainer. For Local,
+whatever destination you configured; the maintainer has no relationship with
+it at all. The full list is in
+[`legal/SUBPROCESSORS.md`](SUBPROCESSORS.md).
+
+**Credentials:** any API key or self-hosted token you supply is written only
+to your device's Keychain, excluded from iCloud Keychain sync and encrypted
+backup, and never logged. Switching a backend off does not delete a saved
+key — removal is your own explicit choice, from a persistent "Remove"
+control in Settings.
+
+**Why we may lawfully do this:** your consent, under the same legal bases as
+crash reporting above — GDPR Article 6(1)(a) and, for the storage of your
+Local endpoint address and reasoning-backend choice on your own device,
+ePrivacy Directive Article 5(3) consent. This is not a sale or a share of
+personal information under the CCPA/CPRA, and it is not used for
+cross-context behavioral advertising.
+
+**How to withdraw:** switch the backend back to On-Device, and remove any
+saved key with the "Remove" control if you want it deleted from your device.
+Withdrawing is exactly as easy as granting, takes effect immediately, and no
+feature of SenseBridge depends on either optional backend remaining on.
+
+**Transfers out of the EEA and the UK:** for Cloud, the transfer is between
+you and the provider you chose, under that provider's own terms — the
+maintainer is not a party to it and does not control it. For Local, the
+transfer, if any, is to a destination you configured yourself. Neither path
+is a transfer the maintainer carries out as controller, unlike the crash
+reports described above.
+
 ## The website
 
 The SenseBridge website is a static, pre-launch information site. It sets no
@@ -128,8 +196,8 @@ Article 5(3) of the ePrivacy Directive until you act.
 - It does not use your data to train any machine-learning model.
 - It does not profile you, score you, or make any automated decision that
   produces legal or similarly significant effects.
-- It does not use cloud AI providers unless you explicitly turn one on
-  yourself in settings.
+- It does not use cloud or local network AI providers unless you explicitly
+  turn one on yourself in settings.
 
 ## Biometric information
 
@@ -173,6 +241,11 @@ becoming aware. Security reporting is covered by [`SECURITY.md`](../SECURITY.md)
   browser's local storage on your own device until you clear it. They are not
   sent anywhere.
 - **Crash reports:** 90 days at Sentry, then deleted.
+- **Recognized object labels sent to a Local or Cloud reasoning backend:** not
+  retained by the maintainer at all — the maintainer runs no server in this
+  path. Retention at the destination is governed by that destination's own
+  policy: the provider's terms for Cloud, or whatever you configured for
+  Local.
 
 ## Your rights
 

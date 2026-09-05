@@ -8,8 +8,8 @@ struct SettingsTests {
         let settings = Settings(
             outputProfile: .deaf,
             speechRate: 0.7,
-            cloudReasoningEnabled: true,
-            language: .vi
+            language: .vi,
+            reasoningBackend: .cloud
         )
 
         let data = try JSONEncoder().encode(settings)
@@ -29,7 +29,7 @@ struct SettingsTests {
         #expect(decoded.language == .system)
         #expect(decoded.outputProfile == .blind)
         #expect(decoded.speechRate == 0.5)
-        #expect(decoded.cloudReasoningEnabled == false)
+        #expect(decoded.reasoningBackend == .onDevice)
     }
 
     @Test
@@ -66,5 +66,90 @@ struct SettingsTests {
         let decoded = try JSONDecoder().decode(Settings.self, from: Data(preOnboardingJSON.utf8))
 
         #expect(decoded.hasCompletedOnboarding == true)
+    }
+
+    @Test func decodingLegacyCloudReasoningEnabledTrueFallsBackToOnDeviceUntilProviderChosen() throws {
+        let legacyCloudEnabledJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"cloudReasoningEnabled":true,"language":"system"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(legacyCloudEnabledJSON.utf8))
+        #expect(decoded.reasoningBackend == .cloud)
+        #expect(decoded.cloudProvider == nil)
+    }
+
+    @Test func decodingUnrecognizedReasoningBackendFallsBackToOnDevice() throws {
+        let unrecognizedBackendJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"reasoningBackend":"somethingFutureBuildsAdded"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(unrecognizedBackendJSON.utf8))
+        #expect(decoded.reasoningBackend == .onDevice)
+    }
+
+    @Test func decodingSettingsPersistedBeforeSpokenDetailExistedYieldsStandard() throws {
+        let preSpokenDetailJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"reasoningBackend":"onDevice"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(preSpokenDetailJSON.utf8))
+        #expect(decoded.spokenDetail == .standard)
+    }
+
+    @Test func decodingUnrecognizedSpokenDetailFallsBackToStandardWithoutResettingOtherFields() throws {
+        let unrecognizedDetailJSON = """
+        {"outputProfile":"deaf","speechRate":0.7,"reasoningBackend":"onDevice","spokenDetail":"gigantic"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(unrecognizedDetailJSON.utf8))
+        #expect(decoded.spokenDetail == .standard)
+        #expect(decoded.outputProfile == .deaf)
+        #expect(decoded.speechRate == 0.7)
+    }
+
+    @Test func roundTripsDetailedSpokenDetailThroughJSON() throws {
+        let settings = Settings(spokenDetail: .detailed)
+        let data = try JSONEncoder().encode(settings)
+        let decoded = try JSONDecoder().decode(Settings.self, from: data)
+        #expect(decoded.spokenDetail == .detailed)
+    }
+
+    @Test func readingHistoryIsOffUntilTheUserTurnsItOn() {
+        // Consent to persist recognized text — a prescription label, a bank
+        // letter — is never assumed. See `ReadingHistoryStore`.
+        #expect(Settings().readingHistoryEnabled == false)
+    }
+
+    @Test func decodingSettingsPersistedBeforeTheReadingFieldsExistedYieldsTheirDefaults() throws {
+        let preReadingJSON = """
+        {"outputProfile":"blind","speechRate":0.5,"reasoningBackend":"onDevice","spokenDetail":"standard"}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(preReadingJSON.utf8))
+
+        #expect(decoded.readingHistoryEnabled == false)
+        #expect(decoded.readingMode == .capture)
+        #expect(decoded.awarenessProximityHapticsEnabled == true)
+    }
+
+    @Test func decodingAnUnrecognizedReadingModeFallsBackToCaptureWithoutResettingOtherFields() throws {
+        // A settings blob written by a future build must not cost this one every
+        // other preference the user set.
+        let unrecognizedModeJSON = """
+        {"outputProfile":"deaf","speechRate":0.7,"readingMode":"telepathy","readingHistoryEnabled":true}
+        """
+        let decoded = try JSONDecoder().decode(Settings.self, from: Data(unrecognizedModeJSON.utf8))
+
+        #expect(decoded.readingMode == .capture)
+        #expect(decoded.readingHistoryEnabled == true)
+        #expect(decoded.outputProfile == .deaf)
+        #expect(decoded.speechRate == 0.7)
+    }
+
+    @Test func roundTripsTheReadingAndAwarenessFieldsThroughJSON() throws {
+        let settings = Settings(
+            readingHistoryEnabled: true,
+            readingMode: .live,
+            awarenessProximityHapticsEnabled: false
+        )
+
+        let decoded = try JSONDecoder().decode(Settings.self, from: JSONEncoder().encode(settings))
+
+        #expect(decoded == settings)
     }
 }

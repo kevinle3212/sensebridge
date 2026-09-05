@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Editorial Review Structure"
-  short_description: "Structural editor that proposes cuts, reorganization, and"
-  default_prompt: "Use $bmad-editorial-review-structure for its listed purpose."

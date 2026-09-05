@@ -329,7 +329,7 @@ function initSignalSpine(): void {
   });
 
   gsap.set(pulse, { top: 0, opacity: 1 });
-  gsap.to(pulse, {
+  const scrollDriven = gsap.to(pulse, {
     top: "100%",
     ease: "none",
     scrollTrigger: {
@@ -341,6 +341,32 @@ function initSignalSpine(): void {
         easeSpeed(gsap.utils.clamp(0, 1, Math.abs(self.getVelocity()) / SPINE_PEAK_VELOCITY));
       },
     },
+  });
+
+  // While the natural-voice narration plays, the spine follows the *narration*
+  // rather than the scroll — DESIGN.md's roadmap item #3. The spine's whole
+  // job is to show where you are in the story; when the page is reading itself
+  // aloud, the audio is where you are, and a spine still tracking the scrollbar
+  // is pointing at the wrong thing.
+  //
+  // Listens for the event `read-aloud.ts` broadcasts, and does nothing if that
+  // script never runs. The scroll driver is disabled rather than killed, so
+  // handing control back is one call and the pulse keeps the position the
+  // narration left it at instead of snapping.
+  document.addEventListener("sensebridge:narration", (event) => {
+    const detail = (event as CustomEvent<{ progress: number; playing: boolean }>).detail;
+    if (detail.playing) {
+      // `false`: keep the current position rather than reverting to the
+      // trigger's start, which would jump the pulse to the top on every play.
+      scrollDriven.scrollTrigger?.disable(false);
+      gsap.set(pulse, { top: `${gsap.utils.clamp(0, 1, detail.progress) * 100}%` });
+      // Narration advances at a steady, slow rate, so the streak reads as a
+      // calm travelling point rather than the stretched smear a fast scroll
+      // produces.
+      easeSpeed(0);
+    } else {
+      scrollDriven.scrollTrigger?.enable();
+    }
   });
 
   // onUpdate stops firing the moment scrolling stops, so without this the

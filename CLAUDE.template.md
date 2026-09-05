@@ -29,8 +29,13 @@ carry project-specific rules only — a rule stated twice drifts into two rules.
 is not written down here, because stating it changes nothing. Neither is
 anything a machine already checks: assistant attribution, commit and branch
 shape, unasked long-running servers, and doc comments on new declarations are
-enforced by `~/.claude/hooks/` (self-checks in `~/.claude/hooks/tests/`).
+checked by `~/.claude/hooks/` (self-checks in `~/.claude/hooks/tests/`).
 Neither is anything the Ponytail or Caveman plugins inject fresh each session.
+
+Security controls are the standing exception to all of that. "Security" keeps its
+lines even where they read as textbook, because a rule everyone knows is still
+the one that gets skipped, and the cost of the miss is asymmetric — do not
+propose trimming it.
 
 Sections are referenced by name, never by number — numbers rot on the first edit.
 
@@ -44,9 +49,11 @@ Sections are referenced by name, never by number — numbers rot on the first ed
 - Apply a final grammar, punctuation, and clarity pass to every prose change —
   comments, docs, UI copy, commit messages. Backtick-wrap code, paths, and
   identifiers.
-- Interview me in one round of high-signal questions when two readings of a
-  request would produce materially different work. Otherwise state the
-  assumption inline and proceed.
+- Interview me in one round of high-signal questions whenever you need context
+  you do not have — a missing constraint, an unstated preference, or two
+  readings of a request that would produce materially different work. Ask
+  before executing, not halfway through. Otherwise state the assumption inline
+  and proceed.
 
 ## Permission and approval
 
@@ -64,36 +71,81 @@ Sections are referenced by name, never by number — numbers rot on the first ed
 
 ## Delegation and routing
 
-Delegate only when work is genuinely parallelizable, needs isolating from this
-context, or needs a different model tier — and only when I have asked for
-subagents. The cheapest subagent is the one you don't spawn.
+Delegate when work is genuinely parallelizable, needs isolating from this
+context, or needs a different model tier. Otherwise work inline. The cheapest
+subagent is the one you don't spawn — the one standing exception is the plan
+draft, which "Plans and durable state" owns.
 
-When you do delegate, pair every task with a model *and* an effort tier:
+Pair every unit of work with a model *and* an effort tier:
 
 | Model | Routes to | Effort |
 | --- | --- | --- |
-| Haiku 4.5 | Mechanical work: copy edits, renames, formatting, boilerplate, one-off scripts, and prose that asserts nothing about behavior. Hand it exact strings and examples so it never infers intent | medium |
-| Sonnet 5 | Default worker: implementation, refactoring, config, tests, and docs that assert how code behaves | high |
-| Opus 5 | Planning, audits, **all security review**, hard debugging, architecture, algorithms, large refactors, performance investigation | high; `xhigh`/`max` only for genuinely hard reasoning |
+| Haiku 4.5 | **Reach here first for anything minor.** Wording and sentence edits, copy edits, renames, formatting, boilerplate, one-off scripts, changelog lines, and any prose that asserts nothing about behavior. Hand it exact strings and examples so it never infers intent | medium; `high` when it drafts a plan |
+| Sonnet 5 | Default worker: implementation, refactoring, config, tests, docs that assert how code behaves — and **drafting the plan file** | high |
+| Opus 5 | **Reviewing the plan draft**, then audits, **all security review**, hard debugging, architecture, algorithms, large refactors, performance investigation | high; `xhigh`/`max` only for genuinely hard reasoning |
 
-**Never dispatch in silence.** Every `Agent`/`Workflow` call names its model,
-effort, and a one-line rationale in the visible reply — a checklist for
-multi-task work, inline for a single call:
-`Dispatching to Sonnet 5 · high (mechanical rename, many call sites).`
+Agent definitions have no effort field — state the tier in the dispatch line and
+in the agent's prompt.
+
+**Never dispatch in silence, and never work in silence.** Announce every unit
+before it starts, in the visible reply — a checklist for multi-task work, one
+line for a single unit:
+
+- Delegated: `<task> — Sonnet 5 · high (<one-line rationale>).`
+- Inline: `<task> — inline (<one-line rationale>).`
+
 If a model is unavailable, use the next best and say you substituted.
 
 ## Plans and durable state
 
-For any task that is large or runs past one step, render a Markdown checklist
-(`- [ ]`) before starting — one item per requested task, each with its
-verification step — and persist that same checklist to `tmp/handoff.md`.
+For any task that is large or runs past one step, a written plan exists before
+the first edit — a Markdown checklist (`- [ ]`), one item per requested task,
+each with its verification step.
 
-`tmp/handoff.md` **is** the plan, not a summary of one. It outlives the
-transcript that a `/clear` or a crash destroys.
+### Where the plan lives
 
-- Write it **before the first edit**, never after. Confirm `tmp/` is gitignored
-  (`git check-ignore -v tmp/handoff.md`). If it already holds a live plan from
-  an earlier session, surface that rather than overwriting it.
+**Locate the project first.** Resolve it as the nearest enclosing git root, or
+failing that the nearest directory holding a `CLAUDE.md` or `AGENTS.md`. When
+the request names or clearly pertains to a project, work from that project's
+root even if the shell started somewhere else.
+
+| Situation | Plan file |
+| --- | --- |
+| Inside a project | `<project>/tmp/handoff.md` |
+| No project — a global or `~`-rooted run | `~/.claude/tmp/handoff.md` |
+
+Create `~/.claude/tmp/handoff.md` up front and leave it on disk at zero bytes
+when idle; the `SessionStart` loader in `.claude/settings.global.json` resolves
+the same way and skips empty files.
+
+If you also run unattended sessions, give them a second file
+(`tmp/handoff-away.md`, resolved identically) and never let either session type
+write the other's. An unattended run that wrote into `tmp/handoff.md` would
+silently destroy a plan you left open.
+
+### How the plan gets written
+
+1. **Draft — Sonnet 5 · high**, or **Haiku 4.5 · high** when the task is minor
+   or purely a wording change. One subagent, writing straight into the plan
+   file. This delegation is standing: it needs no separate ask.
+2. **Review — Opus 5 · high**, the main session, never the drafter. Read the
+   draft against the actual code: close its gaps, fix what it got wrong, add
+   what it missed, and name the risks it did not cover. The reviewed file is
+   the plan; a draft is never executed as written.
+3. **Execute — Opus 5 · high** takes each item at the model and effort it judges
+   right, or does it inline. Either way it is announced per "Delegation and
+   routing".
+
+Skip step 1 only when the plan would be shorter than the dispatch that produced
+it — say so in one line and write it inline instead.
+
+The plan file **is** the plan, not a summary of one. It outlives the transcript
+that a `/clear` or a crash destroys.
+
+- Write it **before the first edit**, never after. In a project, confirm `tmp/`
+  is gitignored (`git check-ignore -v tmp/handoff.md`); `~/.claude/` is not a
+  repository, so that check does not apply there. If the file already holds a
+  live plan from an earlier session, surface that rather than overwriting it.
 - Update it after every step. Flip an item to `- [x]` only when *verified* — a
   passing command, not a landed edit. Write for a cold reader with no session
   context: name files, symbols, and exact commands. A stale plan is worse than
@@ -126,12 +178,10 @@ Size alone picks the route:
   null guard, a stale doc reference. Fix it and name it in one line. Asking
   wastes a round-trip on something I would always approve.
 - **Big → interview me first.** Anything that changes behavior, touches a public
-  API, needs a judgment call between valid approaches, or would grow the diff
-  enough to deserve its own review. Give file:line, what's wrong, the options,
-  and your recommendation.
-
-When unsure: would a reviewer want this in *this* diff or a separate one?
-Separate → interview.
+  API, or needs a judgment call between valid approaches. When unsure, ask
+  whether a reviewer would want it in *this* diff or a separate one — separate
+  means interview. Give file:line, what's wrong, the options, and your
+  recommendation.
 
 ## Security
 
@@ -172,11 +222,13 @@ commit them as tests or scripts so the check reruns instead of being redone.
 
 ## Documentation
 
-- **Every function, method, class, struct, interface, and property gets a doc
-  comment** in its language's idiom (docstrings, `///`/DocC, JSDoc/TSDoc,
-  Javadoc, godoc) — regardless of access level, not just the exported surface.
-  State what it does, key params and returns, and *why* for non-trivial logic.
-  Don't restate the name. Exception: self-documenting test methods.
+- **Doc comments** in the language's idiom (`///`/DocC, JSDoc/TSDoc, docstrings,
+  Javadoc, godoc), at every access level. The hook reports a new function,
+  method, class, struct, enum, protocol, or actor written without one — but it
+  cannot see stored properties, so those are yours to catch, and it judges
+  presence, never quality. Say what it does, key params and returns, and *why*
+  for non-trivial logic; don't restate the name. Self-documenting test methods
+  are exempt.
 - Keep docs in sync in the same change. When files, routes, or commands move,
   purge stale references everywhere — docs, comments, config, tests, agent
   instructions. Stale docs are worse than none.
@@ -247,7 +299,9 @@ To change vendor behaviour durably, use the surface built for it:
 - **`skillOverrides` in `settings.json`** turns a skill off outright.
 - **Plugin config**: `~/.config/caveman/config.json`,
   `~/.config/ponytail/config.json`.
-- **BMAD** ships `bmad-customize` specifically for authoring overrides.
+- **BMAD** ships `bmad-customize` (now at
+  `~/.agents/skills/bmad/references/bmad-customize/`) specifically for authoring
+  overrides.
 - **The Next.js block**: commit it with your work. Deleting it from a diff only
   recreates an uncommitted change.
 

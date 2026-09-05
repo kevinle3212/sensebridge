@@ -34,6 +34,22 @@ while IFS= read -r -d '' file; do
 		if [ ! -e "$target" ] && ! git check-ignore -q "$target" 2>/dev/null; then
 			echo "::error file=$file::broken relative link -> $link"
 			fail=1
+		elif [ -e "$target" ]; then
+			# The target exists — but a link that climbs out of the checkout
+			# resolves against whatever happens to sit beside it, so it can pass
+			# here and fail in CI, where the neighbour is absent. Only checked
+			# for existing targets: a missing one is already reported above, and
+			# `cd` into its parent would fail and misreport every gitignored
+			# path as an escape. Normalizing rather than pattern-matching `../`
+			# keeps a `../` in the middle of an otherwise-inside path legal.
+			normalized="$(cd "$(dirname "$target")" && pwd -P)/$(basename "$target")"
+			case "$normalized" in
+				"$REPO_ROOT"/*) ;;
+				*)
+					echo "::error file=$file::relative link escapes the repository -> $link"
+					fail=1
+					;;
+			esac
 		fi
 	done < <(grep -oE '\]\(([^)#]+)' "$file" | sed -E 's/^\]\(//')
 done < <(find . -path ./.git -prune -o -path '*/skills/*' -prune -o -name '*.md' -print0)

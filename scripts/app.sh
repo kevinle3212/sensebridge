@@ -17,6 +17,7 @@
 #   test           simulator build + test
 #   package-test   test every local package under app/Packages/*
 #   device-build   build for the attached iPhone (signed)
+#   device-test    build + test on the attached iPhone (signed, arm64, real ARKit)
 #   install        device-build, then install onto the attached iPhone
 #   clean          delete the scheme's build products
 #
@@ -51,6 +52,7 @@ usage() {
 		  test           simulator build + test
 		  package-test   test every local package under app/Packages/*
 		  device-build   build for the attached iPhone (signed)
+		  device-test    build + test on the attached iPhone (signed, arm64)
 		  install        device-build, then install onto the attached iPhone
 		  clean          delete the scheme's build products
 	EOF
@@ -135,6 +137,62 @@ cmd_device_build() {
 		-destination "platform=iOS,id=$device" -allowProvisioningUpdates
 }
 
+# The test suite on real hardware. `cmd_test` above runs the same scheme in the
+# Simulator, which CLAUDE.md is explicit does not count for this app: ARKit,
+# LiDAR depth, Apple Intelligence, haptics, and the camera all produce nothing
+# there, and only the device destination exercises signing and arm64.
+#
+# It names one failure that xcodebuild reports badly. When the app installs but
+# will not launch, the cause appears only as "The application could not be
+# launched because the Developer App Certificate is not trusted" inside an
+# IDELaunchReport line, followed by a bare "** TEST FAILED **" — which reads as
+# a broken test suite rather than a device-trust problem. So it is matched and
+# pointed at the fix.
+#
+# Deliberately worded as a suggestion, not a diagnosis. It was seen once on
+# 2026-08-19 and did not recur on the next run with nothing changed in between,
+# so the trust tap is a thing to try rather than a known cause. Asserting more
+# than that would send someone into Settings for a state that may already be
+# fine.
+cmd_device_test() {
+	resolve_project
+	local device log status
+	device="$(resolve_device)"
+	log="$(mktemp -t sensebridge-device-test)"
+	# `tee` so the failure scan below sees the same bytes the user does, and
+	# ${PIPESTATUS[0]} so xcodebuild's status survives the pipe — a plain `|`
+	# would report tee's exit code and turn every failure into a pass.
+	set +e
+	xcodebuild build test "$PROJECT_FLAG" "$PROJECT_PATH" -scheme "$SCHEME" \
+		-destination "platform=iOS,id=$device" -allowProvisioningUpdates 2>&1 |
+		tee "$log"
+	status=${PIPESTATUS[0]}
+	set -e
+	if [ "$status" -ne 0 ]; then
+		if grep -q 'Developer App Certificate is not trusted' "$log"; then
+			echo >&2
+			echo "app.sh: the app installed but could not launch — xcodebuild reports the" >&2
+			echo "        developer certificate as untrusted. Try re-running first: this" >&2
+			echo "        has cleared on its own. If it persists, trust the certificate on" >&2
+			echo "        the phone under Settings → General → VPN & Device Management." >&2
+			echo "        See docs/ENVIRONMENT.md." >&2
+		elif grep -q 'test runner failed to initialize for UI testing' "$log"; then
+			# Reported by xcodebuild as "Authentication canceled. Canceled by
+			# user." with nobody having cancelled anything — the phone locked
+			# itself and the runner could not attach. CLAUDE.md calls out saying
+			# this rather than reporting a bare failure, which is exactly what
+			# the raw output does.
+			echo >&2
+			echo "app.sh: the UI test runner could not start on the device. The usual" >&2
+			echo "        cause is a locked phone — unlock it, keep it awake, and run" >&2
+			echo "        this again. \"Authentication canceled\" in the output above" >&2
+			echo "        does not mean anyone cancelled anything." >&2
+		fi
+	fi
+	rm -f "$log"
+	return "$status"
+}
+
 cmd_install() {
 	resolve_project
 	local device products
@@ -160,6 +218,7 @@ case "${1:-}" in
 	test) cmd_test ;;
 	package-test) cmd_package_test ;;
 	device-build) cmd_device_build ;;
+	device-test) cmd_device_test ;;
 	install) cmd_install ;;
 	clean) cmd_clean ;;
 	*)

@@ -1,8 +1,9 @@
 # TODO
 
-Lightweight personal reminders, grouped by status: **To-Do**, **In Progress**,
-**Completed**. Tracked defects/debt/risks live in [`GAPS.md`](GAPS.md); this
-file is just a short list of things to come back to.
+Lightweight personal reminders, grouped by status: **To-Do**, **In Progress**.
+Finished work lives in [`COMPLETED.todo`](COMPLETED.todo), never here. Tracked
+defects/debt/risks live in [`GAPS.md`](GAPS.md); this file is just a short
+list of things to come back to.
 
 Within To-Do, items stay grouped by the review/audit that produced them and
 ordered so earlier work unblocks later work.
@@ -11,9 +12,9 @@ ordered so earlier work unblocks later work.
 completion date plus what was actually done (and any verification, links, or
 follow-on notes): `**Done/Fixed YYYY-MM-DD** — <what changed, how it was
 verified, anything relevant left over>`. Ticking is all you have to do by
-hand: `npm run todo:sweep` then cuts every ticked bullet out of its To-Do
-dated section into **Completed** below, and `npm run todo:archive` sweeps that
-section out to [`COMPLETED.todo`](COMPLETED.todo). To-Do holds only open work.
+hand: `npm run todo:sweep` cuts every ticked bullet straight out of its To-Do
+dated section into [`COMPLETED.todo`](COMPLETED.todo), grouped by day. To-Do
+holds only open work; TODO.md never holds a completed one.
 
 ## Legend
 
@@ -27,88 +28,634 @@ section out to [`COMPLETED.todo`](COMPLETED.todo). To-Do holds only open work.
 
 ## Open queue (summary)
 
-Snapshot **2026-08-06** (verify/tighten pass) — 131 open across 54 dated
-sections (81 `Needs owner`, 50 other; by priority: 1 P0, 29 P1, 41 P2, 53 P3,
-7 unlabeled). Counted by parsing the **To-Do** region, not by hand;
-`npm run todo:sweep` prints the open total and is the check that it stays true.
-This is a signpost, not a second source of truth: every item is detailed in its
-dated section under **To-Do** below; act from there.
-
-This pass re-verified every item in two line-range batches against current
-repo state (code, config, live `npm run doctor`/build output, `curl`) rather
-than trusting prior text: two items were confirmed done and closed
-(`website/doctor.config.jsonc`'s dead-code suppressions — upstream `react-doctor`
-0.9.2 fixed the blind spot they worked around, removed and re-verified
-zero-findings; and the 2026-07-23 "simulator won't open in Xcode GUI" item —
-re-verified no session has hit it since and the whole device workflow moved
-to `npm run app:install`, then retired on owner confirmation the Xcode GUI
-path isn't in use), one was narrowed after finding 3 of its 4 claimed-open
-items were already done in later sessions and only one button in
-`ObstacleAwarenessView` still uses mock data, and one gained fresh evidence
-its external blocker may have cleared (`sensebridge.vercel.app`'s staleness —
-needs an owner glance at the Vercel dashboard to confirm). The count also
-reflects `npm run todo:sweep` cutting **29 already-ticked items** across two
-runs straight to `## Completed`, and `npm run todo:archive` moving **596
-lines** of those out to [`COMPLETED.todo`](COMPLETED.todo) in the same pass —
-the prior "141" snapshot predates five days of sessions and was never a
-reliable point of comparison. That archive run exposed (and needed a
-hand-fix for) a real gap in `tools/archive-completed-todo.mjs` — same-day
-double-sweeps can produce duplicate `###` headings that fail CI's
-markdownlint gate — now tracked as its own item at the top of **To-Do**
-rather than left silent. Note that **most of the queue (81) is `Needs
-owner`**: it is blocked on decisions, credentials, devices, or human
-testers, not on engineering time.
-
-The 2026-07-25 snapshot's 84 is not comparable — it was counting a To-Do region
-that also held **124 already-finished items** that had been ticked but never
-cut across, so the archive job reported "nothing to archive" on every run while
-the file grew to 4,166 lines. The sweep now does that cut mechanically.
-
-Everything still open falls into buckets a machine cannot close for you:
-
-- **Device & human validation (8× P1)** — on-device latency/battery/thermal +
-  blind/low-vision testers; native-speaker ES/VI review; real VoiceOver/NVDA +
-  keyboard-only passes; Lighthouse mobile; simulator/device Read-flow +
-  tap-through. No CI substitute exists for any of these.
-- **Secrets & security (owner)** — rotate the exposed Stripe test key (P1);
-  add `GITGUARDIAN_API_KEY` to **Dependabot** secrets too (Settings → Secrets
-  and variables → Dependabot), not just Actions — confirmed 2026-07-28 the
-  Actions secret is valid (PR #53, pushed directly, passes both GitGuardian
-  checks with it), but GitHub withholds Actions secrets from
-  Dependabot-triggered `pull_request` runs by design, so every dependabot PR
-  saw `Error: Invalid GitGuardian API key` from an empty value, not a bad
-  one; Stripe dashboard 2FA/Radar (P2).
-- **GitHub / hosting settings (owner web-UI)** — make repo public + full
-  "Protect main" ruleset (P1); confirm `sensebridge.vercel.app` is attached to
-  Production (P1 — `curl` evidence 2026-08-06 suggests this may already be
-  resolved, needs a dashboard glance to confirm); squash-only merges, Actions
-  allowlist, first-time-contributor approval, secret-scanning sub-toggles,
-  mark commitlint/actionlint required (P2); Copilot agent + MCP, CodeRabbit,
-  Discussions, tag/signed-commit rules (P2/P3); `RAILWAY_TOKEN`, custom
-  domain, `og:image` (P2/P3).
-- **Narration & audio assets** — done 2026-07-25: `/audio/main.mp3` is
-  generated from the current copy (Signal Bridge / `#device` / `#future`
-  included) and `npm run check:audio` reports a match. What remains is a real
-  listen-through on device and the per-locale narration decision (P2/P3).
-- **Decisions & design (owner)** — Vision English-label localization approach,
-  JSON-LD-under-CSP, `npm audit` Railway `tar` CVE, `.gitnexus` read access,
-  ADR convention, claude-mem project scope (P2/P3).
-- **App camera + output subsystems (built; owner does git + device)** — the
-  camera/lens/capture stack and the speech + haptic output stack are
-  implemented and machine-verified (build green, 44 Core tests / 9 suites).
-  What remains is genuinely manual: branching and committing off `main`, and
-  device validation of lens switching, torch, real haptic feel, orientation,
-  and thermal/battery — none of which Simulator or CI can prove. See the
-  2026-07-25 07:00 PST section below.
-- **Deferred / conditional (P3, non-blocking)** — wire real depth capture into
-  `ObstacleAwarenessView`'s "Check once" button (the other three
-  real-capture modes are already done, confirmed 2026-08-06), read-aloud
-  per-section segmentation, `impeccable` polish/design-json refresh,
-  e2e-floor propagation to sibling skills, Swift parallelism measurement,
-  and a handful of YAGNI/"only if it proves noisy" notes. Revisit
-  opportunistically.
+**139 open** as of **2026-08-19**, of which **108 are `Needs owner`**
+(blocked on credentials, device access, a human tester, or a decision only
+Kevin can make) and **31 are agent-actionable**. Both halves are counted rather
+than carried forward: the total is `grep -cE '^[[:space:]]*- \[ \] '`, and the
+owner-gated half is `grep -cE '^[[:space:]]*- \[ \] .*Needs owner\]'`. That
+second command replaces a bare `grep -c 'Needs owner]'` less a hand-subtracted
+Legend example, which silently counted completed items and prose mentions too —
+it read 111 against a true 107 the first time an owner-gated item was ticked
+off. Anchoring both figures to the `- [ ]` prefix keeps them one query apart
+from the file itself. This is a signpost, not a second source of truth —
+every item is detailed in its dated section under **To-Do** below; act from
+there. `npm run todo:sweep:check` only reports whether completed items need
+sweeping; it does not reprint the count.
 
 ## To-Do
+
+### First device test run — 8 XCUITest failures (2026-08-19, 01:00 PST)
+
+Signing was fixed on 2026-08-19, which made `scripts/app.sh device-test` (new,
+`npm run app:device-test`) possible for the first time. The suite had only ever
+run in the Simulator. On the iPhone 17 Pro: **24 XCTest cases passed, 8 failed**,
+in three distinct classes. None of them was previously visible, because no gate
+in this repo has ever run the UI suite on hardware.
+
+- [ ] **[P1]** **[Needs owner]** **Four accessibility audits fail on device with
+      `Contrast nearly passed`, and pass in the Simulator.** `AlphaScaffoldingUITests`
+      (`testBackButtonReturnsToPreviousStep`,
+      `testOnboardingWalkthroughAdvancesThroughEveryStepToHome`,
+      `testReplayWalkthroughReturnsToOnboarding`) and
+      `ReadingAndAwarenessUITests.testReadScreenExposesModePickerAndHistoryAndPassesAccessibilityAudit`,
+      all via `AccessibilityAuditSupport.swift:137`.
+
+      **Root cause found and fixed 2026-08-19; awaiting one device re-run to
+      confirm.** It was real, and it was one defect behind all four failures.
+
+      Instrumenting the audit callback to log the element — rather than guessing
+      — named them on the first run: the onboarding `Next` button and the Read
+      screen's `Reading history` link, both default-styled accent-colored labels
+      at body size. `AccentColor`'s **dark** variant was Apple's own systemBlue
+      `#0A84FF`. It clears 4.5:1 against black, which is presumably where it was
+      checked, but measures **3.82:1** against `#2C2C2E` — the dark grouped-row
+      background a `List` actually draws on — and **3.50:1** against the
+      `#323236` this app was pixel-sampled rendering on hardware. Both sit
+      inside the 3.0-4.5 band whose audit message is exactly "Contrast is not
+      high enough for element unless font size is larger". The light variant was
+      fine throughout at 7.04:1, which is why nobody caught it.
+
+      Dark variant is now `#4DA6FF`: 5.45:1 on `#2C2C2E`, 4.99:1 on `#323236`,
+      8.21:1 on black. **This is a visible change to the app's dark-mode accent
+      and is Kevin's to veto** — it is a lighter, less saturated blue than
+      Apple's system default.
+
+      **The class of defect is now gated without hardware.**
+      `npm run check:contrast` (`tools/check-color-contrast.mjs`, tested by
+      `tools/tests/check-color-contrast.test.mjs`) computes the WCAG 2.1 ratio
+      for every authored color asset against each system background it renders
+      on, in both appearances, and fails below 4.5:1. It reproduced the device's
+      finding independently before the fix and passes after. A contrast ratio
+      between two known sRGB colors never needed a phone, an unlocked screen, or
+      six minutes — only the *composited* case does, which is what the device
+      audit stays responsible for.
+
+      **Still open, and now `Needs owner`:** the device audit has not re-run
+      since the fix, so the *composited-pixel* claim is unverified. Two attempts
+      failed for two different reasons, neither of them the code:
+
+      1. The iPhone 17 Pro went `unavailable` mid-verification and by 02:17 was
+         gone from `xcodebuild`'s destination list entirely.
+      2. The iPad Air (M3) was attached and listed, and the four checks were
+         pointed at it — contrast needs only a real display, not LiDAR or a
+         camera. It failed before running a test: `Developer Mode disabled To
+         use Kevin Le's iPad Air (M3) for development, enable Developer Mode in
+         Settings → Privacy & Security.` The same blocker recorded for the
+         iPhone on 2026-07-23.
+
+      **To close it:** `npm run app:device-test` with the phone unlocked and
+      reachable. Confirm the four pass *without*
+      `performScopedAccessibilityAudit` being weakened — a pass bought by
+      loosening the filter is not one. The instrumentation prints `appearance=`
+      beside each finding, so confirm the run was in **dark** mode: the failing
+      variant was the dark one, and a device in light mode passes without
+      exercising the fix at all.
+
+      The iPad is a usable fallback for this specific check once Developer Mode
+      is on, with one caveat — its display is sRGB rather than the iPhone 17
+      Pro's P3, so an iPad pass is good evidence and not a substitute.
+      `scripts/app.sh`'s `resolve_device` matches `/iPhone/` only, so an iPad
+      run needs `xcodebuild -destination "platform=iOS,id=<udid>"` directly.
+
+### Graphify retirement and audit follow-ups (2026-08-18, 16:30 PST)
+
+- [ ] **[P0]** **[Needs owner]** **Confirm on hardware which side "on your
+      left" actually means, before this branch merges.** Raised from the
+      untracked state a stop-time review caught: directional awareness ships on
+      this branch, and the single check that justifies it has never run.
+      `docs/TESTING.md` → "What only a device can settle" already names it, but
+      nothing in `TODO.md` tracked it, so it was invisible at the severity it
+      deserves.
+
+      **What is already right, so this is not a code fix.** The phrasing is
+      hedged to `.medium` certainty — "it looks like", not "likely" — explicitly
+      because the reading comes through an uncalibrated chest mount
+      (`AmbientAwarenessSession+Proximity.swift`). `AwarenessZoneGeometry`
+      widened each zone from ~8° to ~16° precisely so a few degrees of mount yaw
+      cannot move a measurement between zones, and `AwarenessZoneGeometryTests`
+      pins the buffer ordering. A test can only prove the code matches the
+      assumption; it can never prove the assumption matches the hardware.
+
+      **Why P0 rather than P3.** ARKit hands back a landscape buffer while the
+      app is portrait, so left/right comes from a transposition. If that
+      assumption is inverted, the app confidently announces the opposite side —
+      `AwarenessZoneGeometry`'s own comment calls sending someone the wrong way
+      "the worst outcome in this file's remit", and `AGENTS.md` ranks a
+      confidently-wrong claim above a crash. Hedged wording does not rescue an
+      inverted direction: "it looks like something on your left" is just as
+      wrong as "something on your left" when the thing is on the right.
+
+      **Unblocked as of 2026-08-19: the app is installed and launches.** Signing
+      was fixed, `npm run app:install` reaches the iPhone 17 Pro over the
+      CoreDevice tunnel, and a device test run drove real screens on the phone.
+      One caveat worth knowing rather than fearing: the *first* device run
+      failed with `The application could not be launched because the Developer
+      App Certificate is not trusted.`, and the second run launched fine without
+      anyone changing anything. The cause was not established, so if it recurs
+      the fix is the one-time step at
+      [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md) step 5 — on the phone,
+      Settings → General → VPN & Device Management → trust the certificate.
+
+      **The check itself.** Start hands-free awareness, hold something clearly
+      to one side, and confirm the spoken side matches. Then repeat on the other
+      side — a single-sided test passes under a transposition half the time, so
+      one side proves nothing.
+
+      **Grant the camera permission before judging the result.** This is a fresh
+      install, so the first launch prompts for camera access, and a screen that
+      never got it will look broken rather than wrong-handed.
+
+      **Now the last gate on this branch.** The signing blocker that held this
+      is cleared and the app launches, so the physical check above is the only
+      thing left between this branch and merge — the certificate note is a
+      troubleshooting aid if a launch fails, not a step anyone has to perform.
+      Until the check runs, directional awareness is unvalidated on hardware and
+      this branch should not merge on the strength of its green suites.
+
+- [ ] **[P2]** **[Needs owner]** **Delete the retired graphify artifacts and
+      the tool itself.** Held back deliberately: `graphify-out/` is ~365MB, and
+      `CLAUDE.md` forbids an agent deleting a heavy directory (timeout risk).
+      Run `rm -rf graphify-out && pipx uninstall graphify`. Afterwards, three
+      exclusions kept purely as a guard against an un-ignored 365MB directory
+      can come out together: the `graphify-out/` lines in `.gitignore`,
+      `.markdownlintignore`, and `.markdownlint-cli2.jsonc`. Each carries a
+      comment saying so.
+
+- [ ] **[P3]** **[Needs owner]** **`CLAUDE.template.md` still documents
+      `graphify` (lines ~265-266), and must not be edited alone.** The template
+      mirrors the owner-gated `~/.claude/CLAUDE.md`, which also still names
+      graphify under "Tools". Editing only the tracked copy drifts the two
+      apart, against the standing "sync CLAUDE.template.md with global" rule.
+      Update the global file first (owner-only), then mirror it here in the
+      same change.
+
+- [ ] **[P3]** **Decide where CC-BY attribution surfaces in the app.**
+      `CREDITS.md` correctly names the two CC-BY-3.0 training clips
+      ("Car Horn Honk" by etcd_09, "sim police siren.wav" by THE_bizniss); the
+      other 56 are CC0 and need none. That attribution exists in the repository
+      but nowhere in the shipped app, and CC-BY asks for credit in the
+      distributed work. Low risk — the model is a derived work and the credit is
+      public — but a Settings → Acknowledgements row would close it properly.
+      Needs a product/UI call on placement, plus the usual VoiceOver pass.
+
+- [ ] **[P2]** **`check:scene-drag` and `check:bfcache` now verify nothing on
+      this machine.** Both skip because the pinned headless Chrome never
+      delivers an `IntersectionObserver` callback (measured 2026-08-18 against a
+      bare div on a `data:` URL, so it is not site-specific). The skip is loud
+      and honest, but coverage is gone until a runner exists whose Chrome fires
+      IO — options: a different Chrome channel, `headless: "shell"` (needs its
+      own download), or a headed CI run.
+
+### Device install is blocked on Xcode signing (2026-08-18, 13:30 PST)
+
+From [`sessions/2026-08-18/1330-PST.md`](sessions/2026-08-18/1330-PST.md).
+
+- [ ] **[P2]** **[Needs owner]** **Decide whether an on-screen caption should
+      expire.** `CaptionRenderTarget` holds the last text until a capture
+      replaces it, so it survives navigation to another feature — a Deaf user
+      can be looking at a sentence from the screen they left. That matches how
+      each feature's own `lastResult` already behaves, but it is a different
+      semantic from speech, which is transient by nature. Either is defensible;
+      the caption's doc comment should state whichever is chosen.
+
+### Deaf visual captions need owner staging (2026-08-18, 12:00 PST)
+
+- [ ] **[P1]** **[Needs owner]** **Stage the new caption sources before a
+      clean checkout can deliver the Deaf profile.** The implementation adds
+      `app/SenseBridge/App/CaptionRenderTarget.swift` and
+      `app/SenseBridge/App/CaptionOverlay.swift`; both are registered in
+      `app/SenseBridge.xcodeproj/project.pbxproj` but are untracked in the
+      current worktree. Run:
+      `git add app/SenseBridge/App/CaptionRenderTarget.swift app/SenseBridge/App/CaptionOverlay.swift app/SenseBridge.xcodeproj/project.pbxproj app/SenseBridge/App/AppEnvironment.swift app/SenseBridge/App/SenseBridgeApp.swift app/SenseBridge/Features/Labeling/LabelingView.swift app/SenseBridge/Features/SceneDescription/SceneDescriptionView.swift app/SenseBridge/Features/Reading/ReadingSession.swift app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Output/RenderTarget.swift app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Output/MultiRenderTarget.swift app/SenseBridgeTests/AppEnvironmentTests.swift app/SenseBridgeUITests/SenseBridgeUITests.swift docs/ARCHITECTURE.md README.md PROJECT_OVERVIEW.md GAPS.md TODO.md`.
+      Then rerun `xcodebuild -project app/SenseBridge.xcodeproj -scheme SenseBridge -sdk iphonesimulator -configuration Debug build CODE_SIGNING_ALLOWED=NO`; it must end with `BUILD SUCCEEDED`.
+
+### Untracked scripts break `npm run check` on a fresh checkout (2026-08-17, 16:10 PST)
+
+From [`sessions/2026-08-17/1610-PST.md`](sessions/2026-08-17/1610-PST.md). Found
+by the new `check:npm-script-files` gate, which fails on its own repository and
+is meant to. Nothing here is a code defect — every file exists and every test
+passes locally. The defect is that three of them have never been staged, so a
+clone gets a `package.json` invoking modules that are not in the tree. Away mode
+is armed, and `git add` is a repository write, so an agent cannot clear it.
+
+- [ ] **[P1]** **[Needs owner]** **Stage the three untracked scripts that
+      `package.json` already invokes.** `tools/check-npm-script-files.mjs`
+      (referenced by `check:npm-script-files`),
+      `tools/check-deepseek-bridge.mjs` (`check:deepseek-bridge`), and the
+      pre-existing `tools/check-codegraph-perms.mjs` (`check:codegraph`,
+      `codegraph`, `codegraph:perms`, `codegraph:sync`). The last one predates
+      this session — it has been referenced by four npm scripts while untracked
+      for as long as those scripts have existed, so every fresh checkout has had
+      a broken `npm run check:codegraph`. Also stage all three suites under
+      `tools/tests/`: the whole directory is untracked, so on a clone both
+      `check:tools-tests` and `lint:mjs` expand their globs to nothing and pass
+      without running anything. Staging alone fixes the gate, because
+      `git ls-files` counts the index, not just `HEAD`. Copy-paste command in
+      [`tmp/handoff-away.md`](tmp/handoff-away.md) under "Needs you". Verify:
+      `npm run check:npm-script-files` prints `present and tracked` and exits 0,
+      then `npm run check` runs the full chain green.
+
+- [ ] **[P2]** **[Needs owner]** **Decide whether `tools/tests/` belongs in
+      the repository at all.** The gate now fails on it, so this is no longer
+      silent, but the underlying call is still yours: track the directory
+      (recommended — the three suites are real regression coverage and are worth
+      nothing if they never reach CI), or, if they are deliberately local-only,
+      drop `check:tools-tests` from the `check` chain and say so in
+      [`docs/TESTING.md`](docs/TESTING.md), so the chain stops implying coverage
+      it does not have. Verify: whichever you choose,
+      `npm run check:npm-script-files` exits 0.
+
+### OmniRoute provider wiring — blocked on admin auth (2026-08-17, 15:00 PST)
+
+From [`sessions/2026-08-17/1500-PST.md`](sessions/2026-08-17/1500-PST.md). The
+machine-wide `.env` audit is complete and a verified loader script exists; the
+load itself cannot run. This supersedes the "Decide what consumes OmniRoute"
+item below — the consumer is now decided (Claude Code, subscription-first with
+API-key fallback), it is just not built.
+
+- [ ] **[P1]** **[Needs owner]** **Give OmniRoute an admin credential so writes
+      stop returning `401`.** `omniroute keys add` fails for every provider
+      because `/opt/homebrew/lib/node_modules/omniroute/.env` defines no
+      `MANAGEMENT_TOKEN`, `OMNIROUTE_API_KEY`, or `ADMIN_PASSWORD`. Reads work
+      only because the CLI queries `~/.omniroute/storage.sqlite` directly.
+      `doctor` concurs: *"health endpoint returned 401, likely requires
+      MANAGEMENT_TOKEN."* The hardened backup
+      `~/.config/omniroute-env.backup.20260812` does not carry one either, so
+      this is not an upgrade wiping a token that once existed. Options, best
+      first: set `MANAGEMENT_TOKEN` then `omniroute restart` and run the loader;
+      or add providers through `omniroute dashboard` (owner login, manual); or
+      `omniroute setup --password` — untested here, mutates admin state on a
+      running server, and will likely `401` too.
+
+      **Update 2026-08-18:** a fourth option, better than all three above and
+      missed on the first pass — `omniroute connect localhost --scope admin
+      --name default` runs the password flow against the *local* server, mints a
+      scoped access token, and saves it into the `default` context. No `.env`
+      edit, no restart, nothing mutated server-side. It needs only the admin
+      password. `omniroute contexts list` currently shows `default` with
+      `Auth ✗`, which is precisely why every admin route answers `401` while
+      `keys list` and `models` still work.
+
+- [ ] **[P1]** **[Needs owner]** **Do not connect Claude Code / Codex OAuth
+      until the encryption-key item below is settled.** Requested 2026-08-18:
+      wire both subscription CLIs to OmniRoute globally. Blocked on the same
+      `401`, but it carries a sharper version of the at-rest risk: an OAuth
+      connection stores a live **subscription refresh token** for the Anthropic
+      and OpenAI accounts in `~/.omniroute/storage.sqlite`, not a revocable
+      per-service API key. If `STORAGE_ENCRYPTION_KEY` is empty, those land
+      unencrypted in a 1.7 MB SQLite file that is also backed up under
+      `~/.omniroute/db_backups/`. `omniroute oauth providers` confirms both are
+      `device` flow, so each needs a browser approval from the owner regardless.
+      Runnable sequence, re-runnable and verified in `--check` mode:
+      `bash tmp/omniroute-setup.sh`. Verify: `omniroute oauth status` lists both
+      providers without a `401`.
+
+- [ ] **[P1]** **[Needs owner]** **Confirm `STORAGE_ENCRYPTION_KEY` is non-empty
+      *before* loading any provider key.** This gates the item above and is the
+      security-relevant half. The existing P1 below warns that a global upgrade
+      restores shipped defaults including an **empty** `STORAGE_ENCRYPTION_KEY`,
+      which writes provider credentials unencrypted at rest. `doctor` reports
+      that existing encrypted samples decrypt, but that says nothing about what a
+      *new* write would do, and the `.env` deny-rule hook blocked the read needed
+      to check the current value. Loading six provider keys into a store that
+      might not encrypt them is the wrong order of operations.
+
+- [ ] **[P3]** **Report two OmniRoute defects upstream (v3.8.48).**
+      `omniroute setup --list` crashes with `Cannot find package
+      '@omniroute/open-sse' imported from .../src/shared/constants/cliTools.ts`,
+      consistent with a partial global upgrade — `config list` covers the same
+      ground and works. Separately, `doctor` warns dashboard port `20128` is
+      "already in use" when the listener is OmniRoute's own (node PID 33755), a
+      cosmetic self-detection bug.
+
+### Read + Awareness build-out — follow-ups (2026-08-13, 22:00 PST)
+
+Feature work, tests, and docs all landed and are green (`swift test` 318/318,
+`npm run app:test` 31/31, `npm run lint && npm run check` clean). What remains
+needs a person, not a commit.
+
+- [ ] **[P1]** **[Needs owner]** **Native-speaker review of the 69 new `es`
+      and `vi` keys** added for Read playback/history and the awareness
+      direction, proximity, and session-summary copy
+      (`app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Resources/Localizable.xcstrings`
+      and `app/SenseBridge/Resources/Localizable.xcstrings`).
+      `check:catalog-coverage` proves each key *has* a translation; nothing
+      proves the hedges still read as hedges. The doctrine-pinned strings in
+      [`docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md`](docs/superpowers/specs/2026-07-19-LANGUAGE-SUPPORT-DESIGN.md)
+      are the ones that matter most: a hedge that reads as a flat assertion in
+      Spanish or Vietnamese is a safety-framing defect, not a copy nit.
+
+- [ ] **[P2]** **[Needs owner]** **Device validation of the awareness
+      geometry**, per
+      [`docs/TESTING.md`](docs/TESTING.md) "What only a device can settle":
+      which third is really the user's left, whether the proximity pulse reads
+      as "getting nearer" in the hand, whether the auto-torch threshold suits a
+      real dim room, and whether "next" lands between sentences.
+
+### Claude Code URL-handler stub fails Gatekeeper (2026-08-13, 14:00 PST)
+
+From [`sessions/2026-08-13/1400-PST.md`](sessions/2026-08-13/1400-PST.md).
+Diagnosis is complete; nothing was modified, per the read-only ask.
+
+- [ ] **[P3]** **[Needs owner]** **Report the `Claude Code URL Handler.app`
+      signing defect upstream via `/bug`.** `~/Applications/Claude Code URL
+      Handler.app` fails `codesign --verify` with `code has no resources but
+      signature indicates they must be present`: the stub the CLI installer
+      writes has no `Contents/_CodeSignature/CodeResources`, while the binary it
+      symlinks to carries a bundle-style, resource-sealing Developer ID
+      signature. macOS reports it as "damaged" whenever a `claude-cli://` deep
+      link asks LaunchServices to open it; the terminal CLI is unaffected
+      because direct `exec` skips bundle verification. Optional stopgap:
+      `codesign --force --deep -s - "$HOME/Applications/Claude Code URL Handler.app"`,
+      which the next CLI update will undo.
+
+### Global orchestration pipeline — follow-ups (2026-08-13, 12:00 PST)
+
+From [`sessions/2026-08-13/1200-PST.md`](sessions/2026-08-13/1200-PST.md) and
+[`1300-PST.md`](sessions/2026-08-13/1300-PST.md). The doctrine change, the
+SenseBridge sync, and the device-install concurrency fix are done and verified;
+these are what is left.
+
+- [ ] **[P3]** **Confirm the draft → review pipeline earns its extra call.**
+      `~/.claude/CLAUDE.md` → "Plans and durable state" now routes plan-writing
+      through a Sonnet 5 · high drafter before the Opus 5 · high review. Nothing
+      machine-checks that this beats Opus planning directly. On the next few
+      substantive multi-step tasks, note whether the review step actually finds
+      gaps in the draft; if it consistently finds none, collapse step 1.
+
+### Tooling round 2 — CodeGraph, OmniRoute, browser tier (2026-08-12, 23:00 PST)
+
+From [`sessions/2026-08-12/2300-PST.md`](sessions/2026-08-12/2300-PST.md). The
+configuration work is done and verified; these are the decisions left over.
+Note the earlier "Decide whether to retire `graphify`" and "Close out the
+CodeGraph trial" items below now have measured evidence behind them.
+
+- [ ] **[P1]** **Needs owner: disconnect unused `claude.ai` account connectors
+      to cut per-turn token overhead.** Machine/account-level, not SenseBridge
+      code — logged here per `AGENTS.md`'s "any substantive follow-up...
+      also goes into TODO.md." Full audit in `sessions/2026-08-01/2300-PST.md`
+      and `tmp/AWAY-REPORT.md` (this file may be gone by the time you read
+      this — `tmp/` is cleared once work ships).
+
+- [ ] **[P2]** **[Needs owner]** **Retire `graphify`, or keep both — this is
+      the still-open T4.** Round-2 bake-off ran three questions against fresh
+      indexes for all three tools. CodeGraph was fastest on every one
+      (0.23–0.45 s vs 0.87–1.78 s) and the only one that answered. The decisive
+      case, "what depends on `SpokenPhrase`": graphify returned the **fewest
+      bytes in the whole table** (680 B) and was wrong — degree 3, all inside
+      the same file, every real dependent missed — while `codegraph impact`
+      named 21 symbols across 5 files in 1,538 B. Disk: `.codegraph` 27 MB,
+      `.gitnexus` 86 MB, `graphify-out` **330 MB**. Serena and the GitNexus
+      `PreToolUse` hook are unaffected either way. Recommendation: retire it.
+      Removal is the `graph`/`graph:visual` scripts in `package.json`, then
+      `rm -rf graphify-out`, then `pipx uninstall graphify`.
+
+- [ ] **[P2]** **[Needs owner]** **Decide what consumes OmniRoute.** It is
+      installed (since 2026-07-28, before the refusal was written), now
+      hardened, and running on `127.0.0.1:20128` — but nothing points at
+      `/v1`. Claude Code is deliberately not routed through it. Until a
+      consumer exists it is attack surface with no benefit: either give it one
+      or stop it with `pkill -f "omniroute serve"`. Audit table and both
+      operational traps: `docs/archive/TOOLING-DECISIONS.md` →
+      "OmniRoute — server-only hardening".
+
+- [ ] **[P1]** **[Needs owner]** **Re-run the OmniRoute hardening after any
+      `npm update -g omniroute`.** Its secrets live inside
+      `/opt/homebrew/lib/node_modules/omniroute/.env`, so an upgrade discards
+      them and restores the shipped defaults — including
+      `INITIAL_PASSWORD=CHANGEME` and an **empty** `STORAGE_ENCRYPTION_KEY`,
+      which would write stored provider credentials unencrypted at rest. The
+      package offers no external config path. Backup:
+      `~/.config/omniroute-env.backup.20260812` (mode `600`).
+
+- [ ] **[P2]** **[Needs owner]** **Add a `permissions.deny` entry for
+      `mcp__playwright__browser_run_code_unsafe`** in `~/.claude/settings.json`
+      (owner-gated). That tool ships in Playwright MCP's `core` capability,
+      cannot be removed by config, and its own description calls it
+      "RCE-equivalent"; Playwright's docs say to rely on client-level
+      permissions for exactly this.
+
+- [ ] **[P3]** **[Needs owner]** **Decide whether to take four ECC skills, and
+      at what scope.** All are pure guidance with no MCP dependency, and each
+      was checked against this repo rather than assumed:
+      `ios-icon-gen` (strongest — no icon tooling exists in `tools/` and
+      `AppIcon.appiconset` is being edited now), `swiftui-patterns` (the
+      missing sibling to the three ECC Swift skills already credited in
+      `CREDITS.md`), `liquid-glass-design` (target is
+      `IPHONEOS_DEPLOYMENT_TARGET = 26.0`), and `foundation-models-on-device`
+      (moderate — `FoundationModelsSceneComposer`/`@Generable` are already
+      built, so it helps review rather than bootstrap). Recommendation: take
+      the first two **project-scoped** into `.agents/skills/`, matching the
+      precedent already set, for zero global skill-menu cost. Adding any
+      requires extending the ECC attribution in `CREDITS.md`. Ruflo yields
+      nothing portable — every candidate is a shim over its own MCP or CLI.
+
+- [ ] **[P3]** **[Needs owner]** **Puppeteer MCP was requested and refused —
+      override available.** `@modelcontextprotocol/server-puppeteer` is
+      npm-deprecated, bundles a deprecated `puppeteer@23.11.1`, and returned
+      **zero tools** on probes at 9 s and 25 s; the alternatives are stale
+      single-maintainer packages. Playwright MCP drives Chromium over the same
+      protocol, so no capability is lost. To add it anyway:
+      `claude mcp add -s user puppeteer -- npx -y @modelcontextprotocol/server-puppeteer`
+
+### TODO burn-down pass — findings (2026-08-12, 22:00 PST)
+
+Found while closing 26 items from the sections below. These are new, not
+restatements: each was discovered by running something rather than by reading.
+
+- [ ] **[P1]** **[Needs owner]** **Commit and push the burn-down work — it is
+      all uncommitted.** 36 closed items' worth of changes sit in the working
+      tree, machine-verified but unshipped, because agents never run `git` here.
+      Six copy-paste commits, in order, with the diff split already worked out:
+      [`sessions/2026-08-12/2200-PST.md`](sessions/2026-08-12/2200-PST.md)
+      → "Ship commands". **Read the caveat there first:** `TODO.md` is shared
+      with the concurrent 21:00 tooling-evaluation session, so committing it
+      commits both sessions' edits, and that session's `docs/NOTEBOOKLM.md`,
+      `docs/archive/TOOLING-DECISIONS.md`, and `.codegraph/` are deliberately
+      excluded from all six commands.
+
+- [ ] **[P3]** **`.impeccable/design.json` is stale in content, not just in
+      mtime.** The hook warns on every `website/` edit that `DESIGN.md` is
+      newer. Checked directly rather than trusting the timestamp: the sidecar's
+      `narrative.northStar` is still **"The Quiet Signal"** and it was generated
+      `2026-07-11`, while `.agents/context/DESIGN.md` §0 voided that doctrine on
+      2026-07-18 in favour of "First Light". Its `colorMeta` ramps do still
+      match the shipped tokens, so the drift is the narrative and rules, not the
+      palette. Regenerating is `/impeccable document`'s job — an authoring task,
+      not a mechanical one — which is why it was left rather than half-done
+      here. Sharpens the "hook also warns" note below, which assumed the warning
+      was only an in-flight-edit artefact.
+
+### Twelve-repository tooling evaluation (2026-08-12, 21:00 PST)
+
+Twelve candidate repositories assessed blind for global versus per-project
+adoption. All verdicts, with the mechanism spelled out for the doctrinal
+refusals, are in
+[`docs/archive/TOOLING-DECISIONS.md`](docs/archive/TOOLING-DECISIONS.md)
+→ "Evaluated 2026-08-12". Session log:
+`sessions/2026-08-12/2100-PST.md`. Working plan: `tmp/handoff-tooling.md`.
+
+- [ ] **[P2]** **Close out the CodeGraph trial.** Installed 2026-08-12 as a
+      CLI-only trial: no MCP configuration and no marker-fenced block in any
+      instruction file, so reverting is `codegraph uninit .` plus
+      `npm uninstall -g @colbymchenry/codegraph` and nothing else. Adopt if it
+      answers architecture questions that would otherwise cost a multi-file
+      read sweep, **and** long sessions do not start compacting sooner —
+      CodeGraph's own benchmarks report roughly 80% more residual retrieval
+      context left resident at end of session. Revert if compaction arrives
+      noticeably earlier.
+
+- [ ] **[P3]** **Decide whether CodeGraph should also index Salon-OS**
+      (Next.js + React + Supabase, TypeScript). Only SenseBridge is indexed
+      today. Related: whether to run `codegraph install` to wire the MCP once
+      the trial concludes — that step writes agent configuration, which the
+      trial deliberately avoided.
+
+- [ ] **[P3]** **[Needs owner]** Re-enable the `obsidian-cli` skill.
+      `~/.claude/settings.json` is owner-gated, so this is a proposal, not an
+      applied change: delete the line `"obsidian-cli": "off",` from
+      `skillOverrides`. The official `obsidian` CLI is already installed at
+      `/usr/local/bin/obsidian`; this was the stated alternative to installing
+      `obsidian-local-rest-api`, which was refused because it adds an
+      authenticated HTTPS listener on port 27124 for a surface the CLI and
+      filesystem access already cover.
+
+### Awareness feature + reasoning-tier implementation (2026-08-11, 21:00 PST)
+
+Executing the approved, Opus-5-reviewed plan at
+[`docs/superpowers/plans/2026-08-11-awareness-ai-tiers-plan.md`](docs/superpowers/plans/2026-08-11-awareness-ai-tiers-plan.md)
+on `feat/awareness-reasoning-tiers` via `superpowers:subagent-driven-development`
+— one implementer + one reviewer subagent per task, progress tracked in
+`.superpowers/sdd/progress.md` (gitignored) and `tmp/handoff.md`. This entry
+covers findings surfaced mid-execution that aren't this plan's own scope;
+the plan's own Task 19 closes this TODO.md item out fully once all 23 tasks
+land.
+
+- [ ] **[P2]** **`xcodebuild test -scheme SenseBridgeCore -destination
+      'platform=macOS'` fails when run from `app/`** — `xcodebuild: error:
+      Scheme SenseBridgeCore is not currently configured for the test
+      action.` Reproduced directly (not just via subagent report). No shared
+      `SenseBridgeCore.xcscheme` exists under
+      `app/SenseBridge.xcodeproj/xcshareddata/xcschemes/` (only
+      `SenseBridge.xcscheme` does), so the SPM package's auto-generated
+      scheme has no Test action when accessed through the umbrella Xcode
+      project — even though `docs/TESTING.md` names this exact command as
+      the one CI itself uses (`.github/workflows/ci.yml`) for validating
+      String Catalog (`.xcstrings`) compilation, which bare `swift test`
+      cannot do. Workaround confirmed equivalent (real `xcodebuild`, not a
+      simulation): run the identical command from
+      `app/Packages/SenseBridgeCore` instead of `app/` — resolves the
+      package's own scheme, which does carry a Test action, and exercises
+      the same `SenseBridgeCoreTests` target and the same compiled resource
+      bundle. **Needs owner + Xcode GUI**: open the project, select the
+      SenseBridgeCore scheme, Product → Scheme → Edit Scheme, add a Test
+      action targeting `SenseBridgeCoreTests`, check "Shared," and commit
+      the resulting `xcshareddata/xcschemes/SenseBridgeCore.xcscheme` — a
+      CLI-only fix risks hand-authoring scheme XML that Xcode itself would
+      reject or silently ignore. **Confirmed not a CI risk**:
+      `.github/workflows/ci.yml:49-60` already `cd`s into each
+      `app/Packages/*` directory before running `xcodebuild test`, exactly
+      matching the working substitution above — CI was never affected. The
+      imprecision is only in `docs/TESTING.md`'s prose and this plan's own
+      task verification commands, both of which say `cd app &&` without
+      naming the package subdirectory CI actually uses.
+
+- [ ] **[P1]** **[Needs owner]** **Device-validate everything the reasoning-tier
+      plan's own spec names as explicitly unverifiable by a machine** — see
+      "What stays explicitly unverified after this session" in
+      [`docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md`](docs/superpowers/specs/2026-08-11-awareness-ai-tiers-design.md).
+      Specifically: (1) whether `NSAllowsLocalNetworking` actually covers a
+      bare RFC1918 IP literal (`192.168.1.20`) versus only qualified/`.local`
+      addresses, and when the local-network permission prompt fires for a
+      direct `URLSession` connection (Task 18) — if it fails, restrict
+      self-hosted to `https://` only rather than reaching for
+      `NSAllowsArbitraryLoads`; (2) which cloud providers and self-hosted
+      servers (Ollama, LM Studio, vLLM) actually honor the compression-only
+      system prompt in practice versus relying on
+      `ReasoningOutputValidator` to catch drift; (3) real round-trip latency
+      for each network backend against the ~4s hands-free /~8s single-capture
+      timeouts; (4) VoiceOver *experience* — not just accessibility labels —
+      on `ReasoningBackendSettingsView`'s picker/toggle/paste-key flow,
+      including whether the "Test connection" round trip reads naturally
+      with VoiceOver mid-flight; (5) thermal/battery impact of hands-free
+      awareness running against a network composer versus on-device only.
+      None of these can be checked from a machine; needs Kevin's own device
+      pass.
+
+- [ ] **[P2]** **[Needs owner]** **`legal/PRIVACY_POLICY.md` and
+      `legal/SUBPROCESSORS.md` disclosure changes are uncommitted** — Kevin
+      applied the drafted Local/Cloud reasoning-backend disclosure himself
+      (agent was blocked from writing `legal/` by `.claude/settings.json`'s
+      `Edit(legal/**)` deny rule, by design), and the matching
+      `CHANGELOG.md` entry was added in the same working tree. "Which branch"
+      answered 2026-08-12: current branch, `feat/awareness-reasoning-tiers` —
+      still needs Kevin to actually run the commit (see `tmp/handoff-away.md`
+      for the exact command; agents don't run `git` autonomously).
+
+- [ ] **[P1]** **[Needs owner]** **Full-word distance units (2026-08-12,
+      overnight session) are implemented, tested, and installed on-device,
+      but uncommitted** — root cause + fix + regression test + verification
+      commands are all in `tmp/handoff-away.md`. Files: both
+      `MeasurementFormatter` call sites
+      (`AmbientAwarenessSession+Support.swift`,
+      `SettingsSections.swift`) now set `unitStyle = .long` instead of
+      defaulting to `.medium`'s abbreviation ("in"/"ft"), which is what a
+      synthesizer was reading literally. New test:
+      `app/SenseBridgeTests/AmbientAwarenessSessionSupportTests.swift`
+      (required manual `project.pbxproj` registration, also uncommitted).
+      **Still needs your ear on-device** — no CI substitute for confirming
+      the spoken result actually sounds right in your locale/accent.
+
+- [ ] **[P1]** **[Needs owner]** **Review the descriptive-voice /
+      more-comprehensive-AI plan and its execution (2026-08-12, overnight
+      session)** — per your "Opus 5 writes and reviews the plan, Sonnet 5
+      executes" instruction: an Opus 5 agent researched the composer
+      pipeline and wrote (then self-reviewed) a plan at
+      [`docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md`](docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md),
+      constrained to no new dependencies and no fine-tuning/dataset work
+      (those are the "Deferred to Kevin" items below, with options, not
+      built). All 10 of the plan's tasks were then executed inline this
+      session (task-by-task, verified against the plan's own acceptance
+      commands) — see `tmp/handoff-away.md` and the "Configurable
+      spoken-output verbosity" item above for what shipped. Uncommitted, same
+      as everything else tonight. **This is a genuinely large diff for an
+      unattended session to have produced** — worth a closer read than the
+      smaller items above before committing.
+
+- [ ] **[P2]** **[Needs owner]** **Real model/dataset work for more
+      comprehensive on-device descriptions** — deferred by design, not
+      built. Three options with tradeoffs are written out in
+      `docs/superpowers/plans/2026-08-12-descriptive-voice-plan.md`'s
+      "Deferred to Kevin" §1: (A) stay on Apple Vision + Foundation Models
+      (recommended — zero license/bundle/maintenance cost), (B) train a
+      Core ML classifier with Create ML on a vetted dataset (this repo
+      already paid the license-audit cost once on the ESC-50 sound
+      compilation — see `audits/model-license/`), (C) bundle an open
+      vision-language model as the Local reasoning tier (blocked on a full
+      license audit — AGPL/`apple-amlr` are hard blockers per `AGENTS.md`
+      — plus gigabyte-scale bundle growth and thermal testing). Recommended:
+      A now, B only if field testers name specific missed object classes.
+
+- [ ] **[P2]** **Decide the shipped default `SpokenDetail` value** — shipped
+      as `.standard` tonight (no behavior change for anyone who doesn't open
+      Settings). Options in the plan's "Deferred to Kevin" §3. Needs a device
+      listen at both `.standard` and `.detailed` before flipping the default
+      — see the P1 device-validation item above.
+
+- [ ] **[P3]** **Two hook friction points found by tonight's safety-framing
+      review** — (1) **Done 2026-08-25**: `audits/scripts/new-audit.sh` no
+      longer needs a second write; it now takes the report body on stdin and
+      emits the complete file in one invocation (the generator moved to
+      `tools/new-audit.sh`, wired through a `SENSEBRIDGE_AUDITS_DIR` seam so
+      tests can target a temp dir). (2) **Still open, [Needs owner]**: the
+      `away-guard.sh` quoted-delimiter heredoc false-positive — a full fix
+      diff is prepared and awaiting Kevin's review before touching a security
+      control; see tmp/handoff-away.md.
+
+- [ ] **[P2]** **[Needs owner]** **Push `feat/awareness-reasoning-tiers` and
+      open a PR** — 25+ commits ahead of `main` once the two items above are
+      committed; nothing pushed yet. Every `git`/`gh` command needs Kevin's
+      explicit per-command permission per `CLAUDE.md`.
 
 ### Deferred from docs/planning/ (2026-08-07, 14:36 PST)
 
@@ -132,59 +679,6 @@ item that was either still open or worth re-verifying below; the merged
 `SENSEBRIDGE-COMPLETE-PLAN.md` is a section-for-section duplicate of the 7
 numbered files (verified by header diff) and contributed no additional items.
 
-- [ ] **[P2]** **AI evaluation harness for perception quality regressions.**
-      Source: `SENSEBRIDGE-04-ENGINEERING-QUALITY.md` §16 "AI evaluation" (and
-      `docs/TESTING.md`'s "AI evaluation" row, which documents the *target*
-      but nothing implements it yet — no eval folder, script, or fixture set
-      exists under `app/` or `tools/`). Proposed: a small, periodically-run,
-      eyeballed evaluation harness — a folder of real-world images (mail,
-      packaging, rooms) with expected-ish outputs, checked by hand for
-      reading-accuracy regressions and for new over-confident or hallucinated
-      scene claims (the `SceneComposer`/`FoundationModelsSceneComposer`
-      output must never assert something the underlying Vision labels didn't
-      support — see `docs/SAFETY-FRAMING.md`). Why it still matters: this is
-      the one testing layer in `docs/TESTING.md`'s table with no automated or
-      scripted-manual counterpart anywhere in the repo, and it's the layer
-      most likely to catch a silent hedging regression that a passing unit
-      test wouldn't. **[Needs owner]** for the image set itself (real mail/
-      room/packaging photos have to come from an actual device and a real
-      environment), but the harness scaffolding (a `tools/` script that loads
-      a fixture folder, runs it through the existing perception services, and
-      prints a diff-able report) is a plain implementation task an agent can
-      do without the owner.
-
-- [ ] **[P2]** **Structured on-device logging via `OSLog`/`Logger`.** Source:
-      `SENSEBRIDGE-04-ENGINEERING-QUALITY.md` §17 "Observability &
-      Reliability" → "Logging". Proposed: local, structured logging via
-      Apple's unified logging, with privacy-aware redaction (mark recognized
-      text/images/audio content `private` so it's never captured in device
-      logs) and level control for on-device debugging. Current state:
-      grepped `app/Packages/SenseBridgeCore/Sources` and `app/SenseBridge`
-      for `OSLog`/`Logger`/`import os` — zero hits. There is no logging of
-      any kind in the app today, debug or otherwise. Not `Needs owner` — this
-      is a self-contained implementation task, and the redaction rule
-      (**never log recognized text, images, or audio content — events and
-      states only**) should be enforced the same way `docs/PRIVACY.md`
-      already enforces "no user content persisted."
-
-- [ ] **[P2]** **Thermal-state backoff for sustained camera/depth/inference
-      use.** Source: `SENSEBRIDGE-04-ENGINEERING-QUALITY.md` §17
-      "Observability & Reliability" → "Performance monitoring": "Watch
-      thermal state (`ProcessInfo.thermalState`) and back off sustained
-      processing if the device is heating, to protect battery and prevent
-      throttling mid-session." Current state: grepped the same directories
-      for `thermalState`/`ProcessInfo` — no hits outside an unrelated UI-test
-      helper. The existing "Battery and thermal, re-measured..." and
-      "Battery and thermal over a real walk" items elsewhere in this file
-      (search `battery and thermal`) are about *measuring* drain and
-      throttling on a real walk — device validation, not code. This item is
-      the missing code-side mitigation those measurements would validate:
-      nothing today reduces camera/depth/inference workload when
-      `ProcessInfo.thermalState` reports `.serious`/`.critical`. Reasonable
-      to scope together with those existing device-validation items once
-      someone is holding the device, but the behavior itself doesn't exist to
-      validate yet.
-
 - [ ] **[P3]** **[Needs owner]** **Consent-based facial-enrollment
       *framework* (not full facial recognition).** Source:
       `SENSEBRIDGE-02-FEATURES-AND-SCOPE.md` §9 "Roadmap" (listed as part of
@@ -205,57 +699,6 @@ numbered files (verified by header diff) and contributed no additional items.
       `GOVERNANCE.md` itself says biometric-data decisions are the
       maintainer's call, consulting counsel — this needs an explicit
       go/no-go before any code, not just an implementation ticket.
-
-- [ ] **[P3]** **Configurable spoken-output verbosity.** Source:
-      `SENSEBRIDGE-06-MISCELLANEOUS-AND-REMARKS.md` "Open questions" #5 and
-      the identical open question in `docs/ROADMAP.md` today: "How much
-      verbosity do blind users actually want from spoken output? ...
-      verbosity should be configurable from the start rather than guessed
-      at." Current state: `Settings.swift` has `speechRate`, `speechPitch`,
-      and `speechVolume` (how fast/how it sounds) but nothing controlling how
-      much is said — no detail-level or description-length knob for
-      `SceneComposer`/`FoundationModelsSceneComposer` output. Since the
-      shipped `SceneDescription` feature already produces composed sentences
-      without this control, the "configurable from the start" bar in the
-      plan was missed for the feature as built. Not blocking — the plan
-      itself frames this as a tuning question only real testers can answer —
-      but worth having a setting to tune once field-testing (already tracked
-      via the "Discord" and "Recruiting field testers" items) produces
-      feedback, rather than adding it under pressure later.
-
-### TODO.md verify/tighten pass — batches (2026-08-06)
-
-Re-verified every item in two line-range batches (originally lines
-1053-1442 and 1634-1975; line numbers have since shifted from the edits
-below) against current repo state — code, config, live tool output, `curl`
-— rather than trusting the existing text. Findings and fixes are folded
-into their original dated sections above/below rather than duplicated here.
-One process gap surfaced along the way that needs its own entry:
-
-- [ ] **[P3]** **`tools/archive-completed-todo.mjs` can produce duplicate
-      `###` headings on a same-day double-sweep, failing the `docs-links`
-      CI job's markdownlint MD024 gate.** The script already handles two
-      same-day runs producing a duplicate outer `## Archived <date>`
-      heading (comment in the file: "fired for real on 2026-08-01, merged
-      by hand") by appending under the existing date heading instead of a
-      new one — but it does not check whether the section it's appending
-      shares an `### <heading>` with a section already archived earlier
-      that same day under that heading. Two sweeps landed under `##
-      Archived 2026-08-06` in this session and produced exactly that: 6
-      duplicate `###` headings (e.g. "Safety-framing verdict on
-      `fire_alarm`/`siren`..." at both line 3535 and 4333), which failed
-      `npx markdownlint-cli2 COMPLETED.todo` with 6× MD024 errors. Fixed by
-      hand this time (merged each duplicate pair, verified 0 markdownlint
-      issues after). A same-heading-level merge fix was attempted in the
-      script itself and reverted — a first pass corrupted unrelated content
-      elsewhere in the file (verified via an isolated test copy in
-      `tmp/archive-test/`, not the real file) — so it needs someone to get
-      the section-merge logic right and prove it with a real same-day
-      double-sweep test before landing, not just a plausible diff. **How to
-      reproduce:** run `npm run todo:sweep && npm run todo:archive` twice in
-      one day where both runs archive a section with the same `###` title.
-      **Verify a fix:** after reproducing, `npx markdownlint-cli2
-      COMPLETED.todo` reports 0 issues.
 
 ### Safety-framing verdict on `fire_alarm`/`siren` alpha readiness (2026-08-06, 06:42 UTC)
 
@@ -306,22 +749,6 @@ uncommitted for owner review). Plan and full 166-item catalog in
 `tmp/handoff.md`. This section accumulates findings/completions as the sweep
 runs; see also `sessions/2026-08-05/1300-PST.md` (to be written at session end).
 
-- [ ] **[P2]** `app/SenseBridge/App/SettingsView.swift` already violated
-      SwiftLint's `file_length` (404/400 lines) and `type_body_length`
-      (207/200 lines) **before** this session touched it — confirmed via the
-      file's line count at first read, prior to any edit here. This session's
-      contrast fix (below) added explicit `.foregroundStyle` to every
-      Section header/footer, growing it to 418/400 and 219/200 — a real
-      accessibility fix, kept despite worsening a pre-existing lint budget
-      overage. Not restructured here: splitting `SettingsView` into smaller
-      pieces is a real call (which sections move where), not a one-line fix,
-      so it's logged rather than done unilaterally per the global
-      `CLAUDE.md`'s Opportunistic Fixes bar ("Big → interview me first"). **How
-      to close:** owner decides which sections move to a new file (e.g. split
-      account/profile settings out from awareness/accessibility settings), an
-      agent implements the split. **Verify:** `scripts/lint.sh` reports no
-      `file_length`/`type_body_length` violations on `SettingsView.swift`.
-
 - [ ] **[P1]** **[Needs owner]** Resumed the Phase 0 on-device
       `AlphaScaffoldingUITests` blocker (2026-08-05, ~23:15 PST, device
       reattached): 4/8 tests fail on Kevin's iPhone 17 Pro
@@ -347,8 +774,12 @@ runs; see also `sessions/2026-08-05/1300-PST.md` (to be written at session end).
       on consecutive runs), so a label-match exemption narrow enough not to
       mask a real regression would also miss the next instance. Full
       reasoning and the four already-acknowledged categories this joins:
-      `app/SenseBridgeUITests/AlphaScaffoldingUITests.swift`'s
-      `performScopedAccessibilityAudit` doc comment. **Needs an owner call**:
+      `app/SenseBridgeUITests/AccessibilityAuditSupport.swift`'s
+      `performScopedAccessibilityAudit` doc comment (moved there 2026-08-13,
+      when the two duplicate copies of the helper were merged; that change also
+      exempts contrast findings on elements that are not fully in view, which
+      may account for some — not all — of these device-run findings).
+      **Needs an owner call**:
       trust pixel-verified device runs over `performAccessibilityAudit`'s
       `.contrast` verdict for this class of finding (and filter it), or
       treat this as a `performAccessibilityAudit` reliability problem on
@@ -380,86 +811,6 @@ generated `project.pbxproj`), regenerated via `xcodegen generate`, verified:
       (2026-08-04, 17:00 PST — "Nothing from this implementation is
       committed yet"). No separate branch/commit needed — just make sure
       this fix is included when that diff is reviewed and committed.
-
-### Reasoning backend: on-device tiers + opt-in cloud AI (2026-08-04, 23:30 PST)
-
-Two-round interview with the owner on SenseBridge's reasoning step. Round 1
-weighed local AI (Ollama), cloud AI, or the "basic" AI already in use, or a
-hybrid — prompted by Foundation Models' hardware gap. Round 2: owner confirmed
-they want an **opt-in, opt-out-anytime cloud AI tier** in addition to the
-on-device path (motivation: both the device-gap fallback and a quality
-upgrade), with data kept minimal + encrypted + a user-facing prompt, BYOK
-billing, and Anthropic/OpenAI/NVIDIA NIM as candidate providers. Current state:
-`docs/ARCHITECTURE.md` already names Foundation Models
-(`SystemLanguageModel`/`LanguageModelSession`) as the reasoning engine — free,
-on-device, license-clean, text-only — but it requires Apple Intelligence
-(iPhone 15 Pro+), and the doc's own fallback note ("implement availability
-checks and a graceful fallback — label lists instead of composed sentences")
-isn't built yet.
-
-- [ ] **[P2]** **[Needs owner]** **Decide and scope the three-tier reasoning
-      strategy.** Recommended shape, synthesized from the interview: **(1)
-      Foundation Models** on-device where supported (default, free, private) →
-      **(2) deterministic label-list composition** on-device where unsupported
-      or cloud is declined (default, no AI, no network — the fallback
-      `docs/ARCHITECTURE.md` already calls for) → **(3) opt-in Cloud AI**, any
-      device, only once the user turns it on and supplies their own key. Cloud
-      is always a layer on top of the free default, never a replacement — so
-      declining consent never leaves a user with nothing. Design constraints
-      from the interview:
-      - **Data minimization**: send only already-derived text (recognized
-        labels/OCR/transcribed speech) as the prompt — never raw camera
-        frames, depth data, or audio waveforms.
-      - **Transport/storage**: TLS in transit (already required by `CLAUDE.md`
-        §10); API key in Keychain, never UserDefaults/plaintext/logs.
-      - **Consent UX**: default OFF; one-time explicit opt-in screen naming
-        exactly what leaves the device; a persistent Settings toggle to turn
-        it off anytime (the owner's "opt-in and opt-out whenever they decide"
-        requirement); an always-on VoiceOver/caption cue *while* a cloud
-        round-trip is actually in flight, so it's never silent — not a
-        blocking per-request confirmation dialog, which would break the
-        real-time accessibility flow this app exists for.
-      - **Third-party terms acceptance**: because this is BYOK, the opt-in
-        screen sends data straight to Anthropic/OpenAI/NVIDIA under *their*
-        ToS and privacy policy, not SenseBridge's — the SenseBridge-side
-        consent toggle alone doesn't cover that. The one-time opt-in screen
-        needs an explicit acknowledgment (checkbox or equivalent, not
-        pre-checked) that the user has read and agrees to the selected
-        provider's terms, with a link to that provider's current ToS/privacy
-        page, before the toggle can be turned on. Re-prompt if the user
-        switches providers, since each has its own terms.
-      - **Access model**: BYOK confirmed by owner — user supplies their own
-        Anthropic/OpenAI/NVIDIA API key; the app calls the provider directly.
-        Zero cost to SenseBridge, no SenseBridge-run backend — matches the
-        existing "no backend" invariant exactly (a metered relay was
-        considered and rejected because it would stand up the app's first
-        real server).
-      - **Providers**: build a provider-agnostic interface (fits the existing
-        `SensingSource → perception → Reasoning → RenderTarget` protocol-seam
-        architecture). Anthropic and OpenAI both fit BYOK cleanly and can ship
-        first. NVIDIA NIM is normally an enterprise self-hosted endpoint, not
-        a consumer API key — it needs its own "point at your own endpoint" UX
-        before it's a real candidate, not just a key field; scope that
-        separately or defer it.
-      - **Safety-framing**: a cloud-composed sentence must pass the same
-        hedged-language doctrine (`docs/SAFETY-FRAMING.md`) as the on-device
-        output — needs a per-provider system-prompt constraint, and review by
-        the `safety-framing-reviewer` agent before it ships. This is the
-        highest-severity review surface in the repo; do not skip it because
-        the composition moved off-device.
-      - **Docs/legal**: this widens what leaves the device, so it needs
-        `docs/PRIVACY.md`, `legal/PRIVACY_POLICY.md`, and the website's
-        `/privacy` notice updated in the same change — same precedent as the
-        Sentry opt-in rollout. `legal/` edits need explicit owner approval
-        per `CLAUDE.md`; an agent should draft, not commit, those changes.
-      This whole shape fits the architecture invariant's own consent-based
-      exception clause (`CLAUDE.md` — "anything leaving the device needs
-      explicit, revocable consent and a privacy-doc update") — it is
-      compatible with doctrine, not a violation, as long as it's built to that
-      bar. Acceptance: owner confirms the tier order and provider launch list,
-      then it becomes a scoped implementation ticket — plan with Opus 5
-      (architecture/security-adjacent), execute with Sonnet 5, per `CLAUDE.md`
-      §3.
 
 ### Dead-weight plugins/connectors follow-through (2026-08-04, 23:00 PST)
 
@@ -496,23 +847,18 @@ committed — no `git` command has run this session.
       copy-paste once reviewed, though several no longer match the plan's
       original file lists (see each task's "STATUS: DONE" deviation notes).
 
-- [ ] **[P2]** **Validation error (~21–24%) on `fire_alarm`/`siren` is a
-      real generalization gap, flagged by the second re-audit as
-      out-of-scope for a licensing check but worth a dedicated read.**
-      Both are safety-adjacent classes trained on only 8–15 clips per
-      class. Get a safety-framing/QA opinion on whether this accuracy is
-      acceptable for alpha before trusting `CustomSoundClassifier` beyond
-      internal testing, independent of the built-in classifier it's
-      combined with.
-
 - [ ] **[P3]** **Device-only validation the build/reviews can't prove:**
       Sound Alerts' real classification accuracy for both classifiers on
       real-world sound, onboarding's actual system permission-prompt
       sequencing, lens/torch/haptic behavior on the two newly-wired camera
-      screens (Identify/Describe). Unlike the VoiceOver/label pass above,
-      classification accuracy and physical camera/haptic behavior aren't
-      things an XCUITest accessibility audit can exercise — these remain
-      genuinely manual, subjective calls for the owner.
+      screens (Identify/Describe), and the Deaf profile's visual caption
+      output. For captions: select Settings → Output → Deaf, run each capture
+      feature, and confirm the newest hedged result is readable at the largest
+      Dynamic Type size while a signal-only capture-start message clears the
+      old caption. Unlike the VoiceOver/label pass above, classification
+      accuracy and physical camera/haptic behavior aren't things an XCUITest
+      accessibility audit can exercise — these remain genuinely manual,
+      subjective calls for the owner.
 
 ### React Doctor 100/100 gate + privacy/cookie consent banner (2026-08-04, 02:00 PST, away mode)
 
@@ -644,6 +990,8 @@ do not apply — the schema was derived from the binary. Full detail in
       upgrade has happened), and `kimi --help` exposes no config-scope flag, so
       the finding stands unchanged. Standing item; re-check after
       `kimi upgrade`.
+      **2026-08-12** — re-checked again: `kimi --version` still reports
+      `0.32.0`. No upgrade, so nothing has changed. Still open.
 
 ### Repo stabilization pass — deferred items (2026-08-04, 06:15 PST)
 
@@ -825,6 +1173,10 @@ it's genuinely blocked upstream, not just skipped — see
       `gemini`/`antigravity` `--client` value, or `npx impeccable update`
       shipping a `.gemini/skills/impeccable/scripts/hook.mjs`. Neither exists
       today (checked 2026-07-28) — don't hand-roll around either gap.
+      **Re-checked 2026-08-12** — both upstreams still absent:
+      `~/.gemini/skills/impeccable/scripts/hook.mjs` does not exist, and
+      `serena-hooks` exposes no `gemini`/`antigravity` client value. Still open,
+      still not worth hand-rolling around.
 
 **Addendum (2026-07-30):** the tools this project-level config targets are now
 actually installed on this machine, not just configured for. `npm install -g
@@ -971,20 +1323,6 @@ fresh look now that the fix is live, not more static reading.
       genuinely missing, it's most likely something JS-driven or
       page-specific, not the shared `main`/`.signal-hero` rules already read.
 
-### Contributor-configurable deployment (`SITE_URL`) (2026-07-27, 23:50 PST)
-
-The site's deployment origin now comes from `SITE_URL` (untracked
-`website/.env`, the Dockerfile's `SITE_URL` build arg, or the host's project
-settings) with a `http://localhost:4321` fallback, so a fork builds green and
-can never point at this project's Vercel or Railway. `npm run check:site-url`
-is the gate. The app side uses the same seam: `BUNDLE_ID_PREFIX` in the
-gitignored `app/Config/Signing.local.xcconfig`, defaulting to
-`com.sensebridge`.
-
-- [ ] **[P3]** Optional: set the `RAILWAY_SERVICE` / `RAILWAY_ENVIRONMENT`
-      repository *variables* if those names ever diverge from `sensebridge` /
-      `preview`; the workflow falls back to today's names.
-
 ### `.env` auto-loading (2026-07-28, 00:00 PST)
 
 `.env` is now read automatically by every entry point — `scripts/env.sh` for
@@ -1004,74 +1342,6 @@ the parse-don't-source property and runs in CI. Details in
       *transport/API* failure as advisory while keeping a real finding
       blocking. Not fixed unilaterally — it weakens a security gate, so it is
       your call.
-
-### Admin dashboard setup — Next.js + WakaTime (2026-07-27)
-
-**Decision (2026-07-27):** Next.js, not Astro, for the admin dashboard.
-`website/` is deliberately static/zero-JS/content-first (see
-[`docs/TOOLING.md`](docs/TOOLING.md)); an admin dashboard is the opposite
-profile — dynamic, behind auth, all interactive widgets, no SEO/zero-JS
-constraint — so it should be a **separate app**, not bolted onto `website/`.
-Next.js API routes/middleware handle auth and keep the WakaTime API key
-server-side.
-
-- [ ] **[P3]** Scaffold a new Next.js app (outside `website/`, e.g.
-      `admin/`) for the dashboard — decide hosting (Vercel, same as
-      `website/`?) and auth approach (single-owner login) before scaffolding.
-
-- [ ] **[P3]** Wire in WakaTime: start with the public embed/share widgets
-      (`wakatime.com/share/@user/...` — SVG badges/charts, no API key
-      needed) before building a custom API-route + chart integration. The
-      WakaTime API key already lives at `~/.wakatime.cfg`
-      ([`docs/TOOLING.md`](docs/TOOLING.md)) — if a custom integration is
-      built later, read it server-side only, never in a client bundle.
-
-- [ ] **[P3]** Decide dashboard scope (WakaTime stats only vs. TODO/session-log
-      surfacing, CI status, etc.) before scaffolding — affects whether a
-      backend/DB is needed at all or if this stays a thin read-only view.
-
-- [ ] **[P3]** Surface Sentry analytics in the dashboard — issue counts, crash-free
-      rate, release health, and error trend for **both** reporting surfaces: the
-      `website/` browser SDK and the `app/` iOS SDK. (This item originally said the
-      iOS app was out of scope, on the no-telemetry doctrine. The owner reversed
-      that doctrine on 2026-07-31 and the app now reports, opt-in and off by
-      default — see the environment-variable section below.)
-      Read Sentry's Web API server-side only, from a Next.js route handler holding a
-      **read-scoped** auth token (`event:read`, `project:read`, `org:read` — never
-      `project:write` or `org:admin`). The token is server-side secret material: it
-      goes in the host's env store and `admin/.env.example` as a placeholder only,
-      never in a client bundle, never in `NEXT_PUBLIC_*`, never committed. Cache
-      responses (Sentry rate-limits per-org) and fail soft — a dashboard tile that
-      cannot reach Sentry renders "unavailable", it does not break the page.
-      Blocked on the scaffold item above; there is nothing to add a page to yet.
-
-- [ ] **[P3]** Surface dev-tooling stats (rtk, caveman, ponytail) on the
-      dashboard. Checked what real data exists per tool (2026-08-06) before
-      committing to this — feasibility differs:
-      - **rtk**: real and cheap. `rtk gain --format json` (add `-p` to scope
-        to one project) already returns machine-readable lifetime totals
-        (`total_commands`, `total_saved`, `avg_savings_pct`, etc.) — shell
-        out from a server-side route handler and cache, same pattern as the
-        Sentry tile above.
-      - **caveman**: real data exists but is local-machine only. Per-session
-        history lives at `~/.claude/.caveman-history.jsonl` (JSONL: one row
-        per session with `output_tokens`, `est_saved_tokens`,
-        `est_saved_usd`) — there's no hosted API to read it from a Vercel
-        deployment, so this needs either the dashboard running locally or a
-        sync step (e.g. a cron pushing the file/an aggregate to the host).
-        Decide the sync approach before wiring; don't skip it silently.
-      - **ponytail**: no real per-repo savings number to show. Its own
-        `ponytail-gain` skill explicitly refuses to print one — the figures
-        it displays are fixed benchmark medians, not measured against this
-        repo, since the unbuilt/no-skill version was never written to diff
-        against. The one real per-repo figure is a debt count, not a
-        savings figure: `grep -rnE '(#|//) ?ponytail:' .` counts deliberate
-        shortcut markers left in the code (`ponytail-debt`'s ledger). If a
-        ponytail tile is wanted, show that count ("N deferred shortcuts, M
-        with no upgrade trigger") rather than a fabricated savings percent —
-        or skip the tile entirely if a debt counter isn't the kind of stat
-        the dashboard is for.
-      Blocked on the scaffold item above.
 
 ### Logo system — "First Light" mark, generated to `tmp/logo/` (2026-07-27)
 
@@ -1132,26 +1402,6 @@ re-briefed from scratch:
       If rejected, say what to change (the bridging chord is the only new
       element and is the easiest thing to drop or redraw).
 
-- [ ] **[P2]** If approved, wire the assets in: replace
-      `website/public/favicon.svg` with `tmp/logo/svg/favicon-adaptive.svg`,
-      add `favicon.ico` + `apple-touch-icon-180.png` + `icon-192/512`, and
-      populate the empty
-      `app/SenseBridge/Resources/Assets.xcassets/AppIcon.appiconset/` (it
-      currently holds only `Contents.json` — the app has no icon at all).
-      Move the masters out of `tmp/` to a tracked home first; `tmp/*` is
-      gitignored, so nothing there survives a clean.
-
-- [ ] **[P3]** If approved, decide where the masters live long-term
-      (`website/public/brand/` vs a top-level `assets/brand/`) and whether the
-      three build scripts ship with them. They depend on `website/node_modules`
-      and on the self-hosted Fraunces woff2 — both already in-repo, but the
-      `sharp`/`puppeteer` paths are hard-coded absolute and need relativizing
-      before the scripts are tracked.
-
-- [ ] **[P3]** Add the mark to `CREDITS.md` / brand docs if it ships, and note
-      that the wordmark is Fraunces (SIL OFL 1.1, already vendored under
-      `website/public/fonts/` with its licence).
-
 ### Awareness camera preview + object highlights (2026-07-27, 00:30 PST)
 
 Live ARKit camera feed on the awareness screen with a yellow outline around
@@ -1211,12 +1461,6 @@ swift-testing + 8 UI), `scripts/lint.sh` 0 violations in 62 files. Session logs:
       varying size and distance and note where outlines under- or
       over-trigger; adjust `minimumRegionArea` and rerun if consistently
       wrong.
-
-- [ ] **[P2]** **Detected-object labels are still English-only.** The outline
-      captions inherit the same Vision-identifier limitation already documented
-      on `ObjectClassificationService` — a user running the app in Spanish or
-      Vietnamese now *reads* the English noun as well as hearing it. Same root
-      cause, same open question, no new work needed until that one is answered.
 
 ### Hands-free worn awareness ("walk mode") (2026-07-26, 20:00 PST)
 
@@ -1287,30 +1531,18 @@ or a native speaker.
       `"something about %@ ahead"`, and
       `"The nearest measured distance is further away now."` These are
       doctrine-pinned physical-world language, written without a native speaker.
-
-- [ ] **[P2]** **Vision classifier labels are English only.** A user running the
-      app in Spanish or Vietnamese hears an English noun inside a translated
-      hedge. ~1,300 Vision identifiers have no reviewed translation; naming the
-      object *wrongly* would be worse than naming it in the wrong language. This
-      is the same open decision already logged under "Decisions & design".
-
-- [ ] **[P3]** **Auto-resume after backgrounding.** The session currently stops
-      and announces when the app leaves the screen, and the user must restart it
-      by hand — awkward for someone whose phone is strapped to their chest, but
-      resuming a camera session unattended is a decision worth making
-      deliberately rather than by default.
-
-- [ ] **[P2]** **Nothing checks that `app/project.yml` matches
-      `app/SenseBridge.xcodeproj/project.pbxproj`.** Found 2026-07-27: the spec
-      was missing `INFOPLIST_KEY_UIBackgroundModes: audio`, which had been added
-      straight to the pbxproj the day before. Regenerating with XcodeGen would
-      have silently dropped the background mode, and with it the spoken
-      "hands-free awareness stopped" announcement — a failure a user with the
-      phone on their chest cannot see. Fixed for this one setting, but the class
-      of bug is open: build settings are edited in two places and only one is
-      the source of truth. Options are a CI step that regenerates into a temp
-      directory and diffs the build settings, or dropping XcodeGen and making
-      the pbxproj authoritative. Either is a decision, not a mechanical fix.
+      **Scope grew 2026-08-12** — the same reviewer should now also cover, in
+      one pass: (a) the ~75 `es`/`vi` entries in `SpokenVocabulary.swift`, which
+      are seeded but unreviewed, and where Vietnamese classifier choice
+      (`cái`/`con`/`chiếc`/`quyển`) is the part most likely to be wrong; (b) the
+      five new lifecycle/thermal strings in the Core catalog ("the phone is
+      warm/hot", the two hands-free stop/resume sentences, and the back-to-normal
+      one); (c) the new `read_aloud_now_section` website message; and (d) the
+      `DetailLevelSettingsSection` footer copy. Nothing in (a) is derived from
+      anything else, so a reviewer changing one entry changes only that entry.
+      Mis-naming a physical object is ranked above a crash in
+      [`docs/SAFETY-FRAMING.md`](docs/SAFETY-FRAMING.md), which is why the
+      lookup falls back to the English phrase rather than guessing.
 
 ### `docs/` accuracy overhaul + designed Pages site (2026-07-26, 05:00 PST)
 
@@ -1340,23 +1572,6 @@ are. Session log: `sessions/2026-07-26/0500-PST.md`.
       job's problem, not the site's — the site itself is verified green
       locally.
 
-- [ ] **[P3]** **Five `impeccable` findings on `docs/assets/css/docs.css` are
-      deliberate — do not "fix" them in a future audit.** Two are `font-size:
-      1rem` on `body` and `li`: 1rem **is** the documented body size, written
-      in `.agents/context/DESIGN.md` as `clamp(1rem, …, 1.0625rem)`, and the
-      detector cannot reduce a `clamp()`, so its allowed set is only the two
-      fixed steps `0.875rem`/`0.8125rem`. Shrinking body copy to satisfy the
-      tool would be a real readability regression. The other three are
-      `#fff`/`#000` inside `@media print`, where pure black on white is
-      correct. Not suppressed via `ignore-value`, so they stay visible; this
-      entry exists so the next reader knows they were considered, not missed.
-
-- [ ] **[P3]** The hook also warns that `.agents/context/DESIGN.md` is newer
-      than `.impeccable/design.json` and asks for `/impeccable document`. Left
-      alone deliberately: `DESIGN.md` was already modified before this work
-      started, so regenerating the sidecar would pull an unrelated in-flight
-      change into this diff.
-
 - [ ] **[P2]** **[Needs owner]** A real screen-reader pass over the rendered
       docs site — VoiceOver on Safari and NVDA on Windows — covering the
       sidebar nav, the scroll-spy table of contents, the command-palette
@@ -1372,48 +1587,6 @@ are. Session log: `sessions/2026-07-26/0500-PST.md`.
       gone — the Docker daemon isn't running on this machine and starting it
       just to check is out of scope. How to verify: `docker images | grep
       jekyll` should return nothing after the removal.
-
-### Website motion pass — remaining candidates (2026-07-25)
-
-Surfaced while auditing for further motion candidates. None is a defect; each
-is a judgment call left for the owner rather than decided unilaterally inside a
-motion pass.
-
-- [ ] **[P3]** `aria-pressed` on the two `.read-aloud-toggle` buttons has no
-      **visual** counterpart — the pressed state is carried only by the label
-      text swapping and by `aria-pressed` itself. A sighted non-AT user sees a
-      label change and no change in the control. Not fixed here because it is a
-      visual-design decision (a filled or accent-bordered active treatment)
-      rather than motion. Next step: pick the treatment, then apply it to
-      `[aria-pressed="true"]` in `ReadAloud.astro`'s style block.
-
-- [ ] **[P3]** The header scroll-progress bar could take the same
-      velocity reaction as the Signal Spine pulse. **Deliberately not done:**
-      two velocity-reactive elements on screen at once compete, and the spine
-      is the one carrying the story. Revisit only if the spine treatment is
-      ever dropped.
-
-- [ ] **[P3]** The skip link has no transition on appear. **Deliberately not
-      done:** a focus indicator should be instant, and easing one in delays
-      the feedback a keyboard user is waiting on. Recorded so it is not
-      "fixed" later by someone reading the gap as an oversight.
-
-- [ ] **[P3]** `prefers-reduced-transparency` and `prefers-contrast` are not
-      handled anywhere in `website/src`. Out of scope for a motion pass and not
-      a WCAG 2.2 AA requirement, but the site's screen-reader-first posture
-      makes them worth a look. Next step: audit `glass-slate` and the loader
-      panels against `prefers-reduced-transparency: reduce`.
-
-- [ ] **[P3]** `website/src/styles/global/_base.scss:160-161` (the `h2` block
-      comment) still cites **"The One Display Face Rule"** as an active
-      constraint ("sanctioned second use") even though
-      `.agents/context/DESIGN.md` §0 voided it on 2026-07-18 — there's no rule
-      left to sanction anything under. (`.agents/skills/capitalization/SKILL.md`
-      no longer mentions it — already resolved there; the original claim about
-      that file is stale.) How to fix: reword the `_base.scss` comment to
-      describe the h2/hero Fraunces pairing as a design decision, not a
-      rule-derived exception — drop "Rule" and "sanctioned." How to verify:
-      `grep -rn "One Display Face Rule" website/src` returns nothing.
 
 ### Dev-environment fixes: SweetPad timeout + WakaTime + shell error (2026-07-25, 16:00 PST)
 
@@ -1447,10 +1620,6 @@ key into any client config.** `wakatime-cli` is at `~/.wakatime/wakatime-cli`.
       `~/.wakatime/wakatime-cli --today` and confirm coding time is
       incrementing (or check the WakaTime dashboard for a fresh
       `claude-code/1.0` heartbeat).
-
-- [ ] **[P3]** `~/.openclaw/completions/openclaw.zsh:3874` calls `compdef`
-      before `compinit`, printing `command not found: compdef` on every shell
-      exit. Not fixed — it is outside this repo and harmless, but noisy.
 
 ### Composio: connect the rest of the project's tool surface (2026-07-25, 16:00 PST)
 
@@ -1535,28 +1704,6 @@ are explicitly cleared.
       copy for owner review, and must never post it. Any copy still clears the
       honesty-over-hype and safety-framing guardrails.
 
-### Secrets inventory + React Doctor zero-findings gate (2026-07-25, 14:00 PST)
-
-Session log: [`1400-PST.md`](sessions/2026-07-25/1400-PST.md). Added
-[`docs/SECRETS.md`](docs/SECRETS.md) (every CI/deploy/local credential), took
-React Doctor to zero findings, and raised its CI gate to `blocking: warning`.
-A follow-up pass fixed the font-license defect below plus a cluster of
-docker/docs claims that had drifted from reality.
-
-- [ ] **[P3]** `dist/_astro/client.*.js` — the React DOM client runtime — is
-      emitted into the build output even though **no page references it**.
-      It is dead weight in the deployed artifact, not shipped to visitors.
-      Pre-existing and **not** caused by `StructuredData.tsx`: a baseline
-      build with that component removed still emits the chunk, so it comes
-      from the `@astrojs/react` integration itself. Worth an
-      `astro.config.mjs` / Vite look to stop emitting it while no island
-      hydrates; harmless to visitors either way.
-      **Re-verified 2026-08-06** — still present: `npm run build` in
-      `website/` emits `dist/_astro/client.CgrUh1jI.js` (187.1K), and
-      `grep -rl "client\.[A-Za-z0-9_-]*\.js" dist --include="*.html"` matches
-      0 of the 51 built HTML pages. Not stale, no fix attempted — still an
-      open `astro.config.mjs`/Vite investigation.
-
 ### CI/CD security audit — CodeQL fix, dependency review, branch ruleset, Vercel alias gap (2026-07-24, late session)
 
 Full session log: [`sessions/2026-07-24/2200-PST.md`](sessions/2026-07-24/2200-PST.md).
@@ -1616,26 +1763,33 @@ speech played on Capture. Full write-up in the addendum to
       `app/Packages/SenseBridgeCore/Sources/SenseBridgeCore/Perception/OCRService.swift`
       (currently a plain `VNRecognizeTextRequest`, no line/paragraph
       grouping or confidence filtering).
-
-### Basic screen functionality wired to mock data (2026-07-23)
-
-Owner couldn't open/simulate `app/` at all and asked for some basic
-functionality. Build/install/launch pipeline turned out to work fine via
-CLI (`xcodebuild build` → `simctl install` → `simctl launch`, confirmed with
-a screenshot) — the real gap found was all 5 feature screens' capture
-buttons being empty no-op closures. Wired `ReadingView`, `LabelingView`,
-`SceneDescriptionView`, `ObstacleAwarenessView`, and `SoundAlertsView` to
-the existing, unit-tested `SenseBridgeCore` Reasoning/Output layer
-(`Phrasing`, `LabelListSceneComposer`, `AwarenessEngine`,
-`SpeechRenderTarget`) using canned `PerceptionRecord` data in place of the
-not-yet-built camera/mic/depth capture layer. Full write-up in
-`sessions/2026-07-23/2100-PST.md`.
-
-- [ ] **[P2]** Confirm on an actual simulator tap-through that each of the 5
-      screens speaks/shows its canned sentence — this session verified via
-      `xcodebuild build`/`test` and `swift test` only; the live on-tap
-      behavior was never visually confirmed (computer-use hit an unrelated
-      macOS notification-layer click-blocking issue mid-session).
+      **Engineering half done 2026-08-12; the examples half still needs you.**
+      Both improvements this item names are now implemented, without waiting on
+      specifics, because neither depends on which examples you bring:
+      - **Reading order is banded, not `y`-sorted.** Two words on one printed
+        row almost never share an exact `y` — glyph heights, a dipping comma,
+        any camera tilt — so the old strict sort interleaved columns and read a
+        receipt's item and its price as separate lines far apart. Boxes whose
+        vertical centre falls inside a row's span now group into that row and
+        order by `x`. Centre-in-span rather than any-overlap, so a tall heading
+        brushing the line beneath it does not swallow it.
+      - **Low-confidence lines are dropped, not spoken.** Vision returns a
+        plausible string for a smudge; speaking it is a claim about text that
+        may not exist. Floor is `0.3` and deliberately low — a floor against
+        garbage, not a quality bar, since legitimate text shot at an angle
+        scores mid-range and a silent omission is worse than a visible mistake
+        for someone who cannot see that anything was missed.
+      The ordering logic was extracted as a generic `inReadingOrder(_:boundingBox:)`
+      specifically so it could be tested against plain rectangles — Vision's
+      observation types cannot be constructed in a test, which is why the old
+      ordering was only ever exercised through a rendered image. **Verified:**
+      5 new unit tests (same-row unequal `y`, top-to-bottom rows, the tall
+      heading, empty/single input, three columns) plus the existing
+      rendered-image tests; package suite 183/183.
+      **Still open, and genuinely yours:** the concrete examples. If the
+      remaining complaint is garbled *words* rather than order or noise, the
+      next lever is `recognitionLanguages`, and picking it needs to know
+      whether you are reading English or something else.
 
 ### Read/OCR wiring follow-ups (2026-07-23)
 
@@ -1643,29 +1797,6 @@ not-yet-built camera/mic/depth capture layer. Full write-up in
       launch the app, grant camera permission, aim at real printed text, tap
       Capture, and confirm the recognized text is spoken correctly. This is
       the first real (non-simulator) exercise of `CameraSource`/`OCRService`.
-
-- [ ] **[P3]** **Narrowed 2026-08-06 — three of four modes are already done.**
-      Read the file, don't trust this item's original scope. Verified by
-      reading each view directly: `LabelingView`/`SceneDescriptionView`
-      (Identify/Describe) call the real `ObjectClassificationService`/
-      `FoundationModelsSceneComposer` on a captured photo (no canned data);
-      `SoundAlertsView` (Sounds) records through `MicrophoneSensingSource`
-      into `CombinedSoundClassifier` (no mock); `ObstacleAwarenessView`'s
-      **hands-free** mode runs real ARKit depth via `AmbientSensingSource`
-      (built in the 2026-07-26/07-27 walk-mode sessions below). What's left:
-      that same screen's **"Check once for what may be ahead"** button
-      (`ObstacleAwarenessView.swift:173`, `singleCheckSection`) still calls
-      `engine.evaluate(depthMeters:)` with a hardcoded `mockDepthMeters =
-      isNearReading ? 1.0 : 3.0` that just toggles on tap — a one-shot ARKit
-      depth read (or a static AVFoundation LiDAR sample) was never wired in
-      for that path. **Verify:** `grep -n mockDepthMeters
-      app/SenseBridge/Features/ObstacleAwareness/ObstacleAwarenessView.swift`
-      returns nothing once fixed.
-
-- [ ] **[P3]** `ReadingView`'s camera-permission-denied message is a plain
-      string with no deep link to Settings — consider
-      `UIApplication.openSettingsURLString` once a second permission-gated
-      feature makes the pattern worth extracting.
 
 ### Git/CI cleanup, history purge, impeccable CodeQL remediation (2026-07-23)
 
@@ -1690,21 +1821,6 @@ ended up different from the one being hand-edited (`.claude`'s).
       filesystem, which already prove the symlinks materialize and read
       correctly) — invoke each tool's version of the skill once and confirm
       it behaves identically to before the symlink conversion.
-
-- [ ] **[P3]** The single→double quote conversion (`eslint --rule quotes`)
-      only covers the 24 files touched by the CodeQL fix, not the rest of
-      `impeccable/scripts/`'s real files (now only one copy to edit, at
-      `.github/skills/impeccable/scripts/`, since the other 4 are symlinks) —
-      extend it for full-skill consistency whenever there's a reason to touch
-      the rest of the skill anyway.
-
-- [ ] **[P3]** `core.symlinks` is unset in both local and global git config
-      (defaults to `true` on this filesystem, proven by the symlinks above
-      materializing and resolving correctly) — no action needed on this
-      machine, but flag it if this repo is ever cloned on Windows: that
-      machine needs `git config core.symlinks true` (and Developer
-      Mode/admin rights) for these symlinks to check out as real symlinks
-      rather than placeholder text files.
 
 ### actionlint + commitlint setup (2026-07-23)
 
@@ -2021,24 +2137,6 @@ these items outlive it regardless.
       quality, and the hedge semantics are safety-framing doctrine; treat
       like device validation.
 
-- [ ] **[P2]** Vision detector labels arrive in English, so the fallback
-      composer can localize the hedge around an English noun (documented
-      known limitation in the spec). Resolve via the Foundation-Models
-      composer (compose directly in the target language) or a label
-      translation layer.
-
-### e2e test floor (2026-07-19)
-
-The tracked change is the e2e testing floor (≥3 e2e per feature — happy
-path / error / edge case — and all code tested) added to
-`docs/TESTING.md`, the `testing` + `ci-green-gate` skills, project
-`CLAUDE.md`, `audits/README.md`, and `WIKI.md`.
-
-- [ ] **[P3]** Propagate the e2e floor to `sc:test` (the other
-      testing-flavored skill still standing after the 2026-08-06 BMAD cleanup
-      removed `bmad-qa-generate-e2e-tests` in favor of `testing`) at the next
-      weekly skill review — logged as task-observer observation #5.
-
 ### Flagship website evolution — "First Light" 3D batch follow-ups (2026-07-19)
 
 Overnight autonomous run on `feat/website-first-light` (tracker:
@@ -2111,17 +2209,6 @@ remaining open items.
       following the pointer at unchanged intensity, but the final call is the
       owner's. Pull it (ship the static glow) if it reads as gimmick.
 
-- [ ] **[P3]** Audio-narration ↔ spine-pulse sync (design roadmap #3):
-      drive the Signal Spine pulse from narration progress while the
-      natural-voice player runs. **Unblocked 2026-07-25** — `/audio/main.mp3`
-      now exists and the natural-voice control renders on `/`.
-
-- [ ] **[P3]** Read-aloud per-section segmentation + polite stage
-      announcements ("Now: what it does today" etc., derived from h2 text) in
-      the existing `#read-aloud-status` live region. Skipped in the motion
-      batch because `read-aloud.ts` speaks one monolithic utterance —
-      requires restructuring it into per-section segments first.
-
 ### Website rebuild ("First Light" Astro site) follow-ups (2026-07-18)
 
 - [ ] **[P1]** **[Needs owner]** Manual accessibility pass on the rebuilt
@@ -2142,12 +2229,6 @@ remaining open items.
 - [ ] **[P2]** **[Needs owner]** Re-verify the Railway deploy after merge:
       service Root Directory still `website`, new multi-stage Dockerfile
       builds on Railway, site serves on `$PORT`.
-
-- [ ] **[P3]** Refresh `.impeccable/design.json` from the rewritten
-      `.agents/context/DESIGN.md` ("First Light" superseded "Quiet Signal"),
-      then re-run `impeccable detect website` so its design-system detectors
-      key off the current tokens, and revisit the deferred
-      `/impeccable polish website` pass.
 
 ### Website read-aloud follow-ups (from the 1400 PST session, 2026-07-17 — backfilled; the session log had these but this file never did)
 
@@ -2344,26 +2425,21 @@ remaining open items.
       repos/kevinle3212/sensebridge/code-scanning/alerts/93 --jq .state`
       returns `dismissed`.
 
+### Overnight session leftovers (2026-08-25)
+
+- [ ] **[P2]** **[Needs owner]** Confirm the ElevenLabs account's current plan
+      tier: CREDITS.md's narration paragraph still says the site audio was
+      generated "on ElevenLabs' free plan", written for the original
+      generation. Tonight's regeneration (`main.mp3`, ~4,400 credits) used the
+      configured key, whose tier could not be checked (`.env` reads are
+      hook-blocked). If the plan changed, reword that paragraph and the footer
+      attribution rationale (paid plans drop the credit requirement). Full
+      note in tmp/handoff-away.md.
+- [ ] **[P3]** `npm run prettier` flags 7 pre-existing `tools/*.mjs` files —
+      formatting drift only; `npm run format:mjs:fix` clears them but churns
+      diffs unrelated to any given change. Fold into the next tools-touching
+      change rather than a standalone formatting commit.
+
 ## In Progress
 
-- **[P2]** **Full TODO.md hygiene pass (2026-08-06, 13:00 PST).** Kevin asked
-  to (1) confirm every completed item is out of To-Do, (2) for every item that
-  remains, actually try to verify/close it programmatically rather than
-  assuming it's owner-only, (3) cut stale narrative/flutter, and (4) make sure
-  every surviving item has concrete steps + a verification method. Already
-  done this session: `npm run todo:sweep` moved 29 ticked items to Completed,
-  `npm run todo:archive` moved 797 lines to `COMPLETED.todo` (2026-08-06
-  archive block). Dispatched 8 parallel Sonnet implementer agents, each
-  scoped to a non-overlapping line range of the (post-sweep) To-Do region, to
-  verify-or-tighten every remaining open item. Still open when this session
-  paused: those 8 agents were still running. Resume by picking up their
-  results, then: re-run `npm run todo:sweep && npm run todo:archive` to cut
-  anything the batches closed, rewrite the `## Open queue (summary)` section
-  above (it's currently the 2026-08-01 snapshot and is now stale/wrong), and
-  spot-check a few edited sections for format drift before calling it done.
-  Verify: `npm run todo:sweep:check` exits 0 (nothing left to sweep) and the
-  summary counts match `grep -c '^- \[ \]' TODO.md`.
-
-## Completed
-
-*Nothing archived since the last sweep — see [`COMPLETED.todo`](COMPLETED.todo) for history.*
+*Nothing in progress.*

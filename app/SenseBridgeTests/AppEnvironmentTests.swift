@@ -12,41 +12,35 @@ struct AppEnvironmentTests {
 
     @MainActor
     @Test
-    func doesNotOfferProfilesWhoseChannelsHaveNoTarget() {
+    func offersEveryProfileWhoseChannelHasATarget() {
         let environment = AppEnvironment(settingsStore: InMemorySettingsStore())
-        #expect(!environment.selectableProfiles.contains(.deaf))
+        #expect(environment.selectableProfiles.contains(.deaf))
         #expect(environment.selectableProfiles.contains(.blind))
     }
 
     @MainActor
     @Test
-    func namesUndeliverableProfilesRatherThanHidingThem() {
+    func hasNoUndeliverableProfilesWhenEveryChannelIsRegistered() {
         let environment = AppEnvironment(settingsStore: InMemorySettingsStore())
-        // Doctrine 4: a profile that simply never appears teaches the user
-        // nothing. It is listed as unavailable, with its missing channel.
-        #expect(environment.unavailableProfiles == [.deaf])
-        #expect(environment.undeliverableChannels(for: .deaf) == [.caption])
+        #expect(environment.unavailableProfiles.isEmpty)
+        #expect(environment.undeliverableChannels(for: .deaf).isEmpty)
         #expect(environment.undeliverableChannels(for: .deafBlind).isEmpty)
     }
 
     @MainActor
     @Test
-    func doesNotListTheUsersOwnProfileAsUnavailable() {
+    func keepsTheDeafProfileAvailableWhenItIsStored() {
         let environment = AppEnvironment(settingsStore: InMemorySettingsStore(Settings(outputProfile: .deaf)))
-        // It stays in the picker with a warning row instead — listing it in
-        // both places would state the same gap twice.
         #expect(environment.unavailableProfiles.isEmpty)
         #expect(environment.outputProfileOptions.contains(.deaf))
     }
 
     @MainActor
     @Test
-    func keepsAnUndeliverableStoredProfileInThePickerOptions() {
+    func deafProfileHasNoMissingChannels() {
         let environment = AppEnvironment(settingsStore: InMemorySettingsStore(Settings(outputProfile: .deaf)))
-        // Dropping it would render the picker blank, which reads as "unset"
-        // when the truth is "unsupported".
         #expect(environment.outputProfileOptions.contains(.deaf))
-        #expect(environment.undeliverableChannels == [.caption])
+        #expect(environment.undeliverableChannels.isEmpty)
     }
 
     @MainActor
@@ -97,6 +91,35 @@ struct AppEnvironmentTests {
         let environment = AppEnvironment(settingsStore: InMemorySettingsStore())
         #expect(!environment.deliversCuesWithoutText)
         #expect(!environment.deliversNoOutput)
+    }
+
+    @MainActor
+    @Test
+    func captionTargetReplacesAndClearsTheCurrentCaption() async {
+        let target = CaptionRenderTarget()
+
+        await target.render(OutputMessage(text: "It looks like a chair.", signal: .resultReady))
+        #expect(target.text == "It looks like a chair.")
+
+        await target.render(OutputMessage(text: " ", signal: .captureTaken))
+        #expect(target.text == nil)
+
+        await target.render(OutputMessage(text: "  Padded.\n", signal: .resultReady))
+        #expect(target.text == "Padded.")
+    }
+
+    @MainActor
+    @Test
+    func captionOverlayGateMatchesTheChannelThatReceivesTheText() {
+        // `CaptionOverlay` shows itself on this condition rather than on a
+        // hardcoded profile list, so a profile that starts receiving caption
+        // text can never be one the overlay declines to draw.
+        for profile in OutputProfile.allCases {
+            let environment = AppEnvironment(settingsStore: InMemorySettingsStore(Settings(outputProfile: profile)))
+            let wantsCaptions = profile.preferredChannels.contains(.caption)
+            #expect(wantsCaptions == (profile == .deaf))
+            #expect(environment.undeliverableChannels.isEmpty)
+        }
     }
 }
 

@@ -47,4 +47,4 @@ license cannot ship, no matter how good its output. See
 
 Cross-check the recorded license against the blocker list above and note the
 verification in the `dependencies` or `model-license` audit report
-(`audits/scripts/new-audit.sh model-license "<short title>"`).
+(`tools/new-audit.sh model-license "<short title>"`).

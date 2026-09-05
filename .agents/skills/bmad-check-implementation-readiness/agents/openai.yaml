@@ -1,4 +1,0 @@
-interface:
-  display_name: "BMAD Check Implementation Readiness"
-  short_description: "Validate PRD, UX, Architecture and Epics specs are complete"
-  default_prompt: "Use $bmad-check-implementation-readiness when the user says 'check implementation readiness'."

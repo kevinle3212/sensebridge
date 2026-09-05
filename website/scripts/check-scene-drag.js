@@ -15,6 +15,7 @@
 // never leaves a server holding a port behind.
 import puppeteer from "puppeteer";
 import { startDistServer } from "./lib/dist-server.js";
+import { intersectionObserverDelivers, waitForSceneMount } from "./lib/scene-mount.js";
 
 // Generous, because a CI runner renders this scene through software WebGL.
 const SCENE_MOUNT_TIMEOUT_MS = 30_000;
@@ -84,7 +85,7 @@ const browser = await puppeteer.launch({
 // Distinct from "passed": set when the runner cannot provide WebGL2 at all, in
 // which case the site correctly declines to mount the scene and there is no
 // gesture to exercise. Reported loudly rather than dressed up as a pass.
-let skipped = false;
+let skipped = null;
 
 try {
   const page = await browser.newPage();
@@ -109,28 +110,38 @@ try {
     element.scrollIntoView({ block: "center" });
   });
 
-  let sceneMounted = true;
-  try {
-    await page.waitForSelector(`${STAGE}.scene-active canvas`, {
-      timeout: SCENE_MOUNT_TIMEOUT_MS,
-    });
-  } catch {
-    sceneMounted = false;
-  }
+  // Every scene mounts from an IntersectionObserver callback
+  // (src/scripts/scenes/index.ts), so a runner that never delivers one can
+  // never mount a scene. Reporting that as "the scene failed to mount, and
+  // WebGL2 is available so this is real" would be a false accusation rather
+  // than a finding, so the capability is established before the result is
+  // trusted.
+  const observerDelivers = await intersectionObserverDelivers(page);
+  const sceneMounted =
+    observerDelivers &&
+    (await waitForSceneMount(page, `${STAGE}.scene-active canvas`, SCENE_MOUNT_TIMEOUT_MS));
 
-  if (sceneMounted) {
+  if (!observerDelivers) {
+    skipped =
+      "this Chrome never delivers IntersectionObserver callbacks, so no scene can mount here " +
+      "and the scene behaviour cannot be exercised";
+  } else if (sceneMounted) {
     expect(true, "glasses stage mounts its WebGL scene");
   } else {
     const hasWebgl2 = await page.evaluate(
       () => document.createElement("canvas").getContext("webgl2") !== null,
     );
     if (hasWebgl2) {
-      expect(false, "glasses stage mounts its WebGL scene (WebGL2 is available, so this is real)");
+      expect(
+        false,
+        "glasses stage mounts its WebGL scene (WebGL2 is available and it failed twice, so this is real)",
+      );
       if (pageErrors.length > 0) {
         console.error(`  page errors: ${pageErrors.join("; ")}`);
       }
     } else {
-      skipped = true;
+      skipped =
+        "this runner has no WebGL2 context, so the site correctly declines to mount the scene";
     }
   }
 
@@ -161,12 +172,8 @@ try {
   server.close();
 }
 
-if (skipped) {
-  console.warn(
-    "check-scene-drag: SKIPPED — this runner has no WebGL2 context, so the site " +
-      "correctly declines to mount the scene and the drag cannot be exercised " +
-      "here. This is not a pass.",
-  );
+if (skipped !== null) {
+  console.warn(`check-scene-drag: SKIPPED — ${skipped}. This is not a pass.`);
   process.exit(0);
 }
 if (failures.length > 0) {

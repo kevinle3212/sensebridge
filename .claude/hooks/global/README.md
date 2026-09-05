@@ -26,7 +26,6 @@ chmod +x ~/.claude/hooks/*.sh
 | `guard-attribution.sh` | Assistant attribution (`Co-Authored-By`, `Generated with [Claude]`, session URLs, 🤖) in any command that writes git or GitHub history. The harness prompt asks for these trailers; this guard is what makes the standing rule against them stick. |
 | `guard-commit-shape.sh` | Commit headers that are not `type(scope): subject`, and branch names that are not `<type>/<subject>`. Skips commands that take the message from a file or reuse an existing one, since it cannot see that text. |
 | `guard-long-running-server.sh` | Unasked dev/preview servers (`npm run dev`, `astro preview`, `vite`, `python -m http.server`, …), which outlive the turn and hold a port. Owner hatch: append `--force-server`. |
-| `require-doc-comments.mjs` | Nothing — it is a `PostToolUse` reporter, not a gate. Names declarations an edit introduced without a doc comment, capped at 8 per report and deduplicated within 60 s. |
 
 Self-checks live in [`tests/`](tests) and run under `npm run check:hook-tests`
 from this checkout, so a change here is verified here before it is copied out.

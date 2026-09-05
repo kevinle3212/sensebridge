@@ -37,7 +37,7 @@ cannot substitute for that; say so when reporting.
 ## Audit Output <!-- audit-output -->
 
 After a review pass, persist findings to `audits/accessibility/` with the
-`audit-refresh` skill (`audits/scripts/new-audit.sh accessibility "<short
+`audit-refresh` skill (`tools/new-audit.sh accessibility "<short
 title>"`) rather than an ad-hoc note. Reports are append-only and follow
 [`audits/AGENT-GUIDE.md`](../../audits/AGENT-GUIDE.md); supersede a prior report
 instead of rewriting it. Skip only a trivial, zero-finding pass.

@@ -3,7 +3,11 @@
   "canonical_root": ".agents/skills",
   "project": "sensebridge",
   "harnesses": {
-    "canonical": ["codex", "copilot", "kimi"],
+    "canonical": [
+      "codex",
+      "copilot",
+      "kimi"
+    ],
     "adapters": {
       "claude": ".claude/skills/sensebridge-router/SKILL.md",
       "cursor": ".cursor/rules/sensebridge-skills.mdc",
@@ -26,106 +30,6 @@
       "name": "audit-refresh",
       "path": ".agents/skills/audit-refresh/SKILL.md",
       "kind": "maintenance"
-    },
-    {
-      "name": "bmad-advanced-elicitation",
-      "path": ".agents/skills/bmad-advanced-elicitation/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-check-implementation-readiness",
-      "path": ".agents/skills/bmad-check-implementation-readiness/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-checkpoint-preview",
-      "path": ".agents/skills/bmad-checkpoint-preview/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-correct-course",
-      "path": ".agents/skills/bmad-correct-course/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-create-epics-and-stories",
-      "path": ".agents/skills/bmad-create-epics-and-stories/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-create-story",
-      "path": ".agents/skills/bmad-create-story/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-customize",
-      "path": ".agents/skills/bmad-customize/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-dev-auto",
-      "path": ".agents/skills/bmad-dev-auto/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-editorial-review-prose",
-      "path": ".agents/skills/bmad-editorial-review-prose/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-editorial-review-structure",
-      "path": ".agents/skills/bmad-editorial-review-structure/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-forge-idea",
-      "path": ".agents/skills/bmad-forge-idea/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-help",
-      "path": ".agents/skills/bmad-help/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-party-mode",
-      "path": ".agents/skills/bmad-party-mode/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-prfaq",
-      "path": ".agents/skills/bmad-prfaq/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-product-brief",
-      "path": ".agents/skills/bmad-product-brief/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-shard-doc",
-      "path": ".agents/skills/bmad-shard-doc/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-spec",
-      "path": ".agents/skills/bmad-spec/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-sprint-planning",
-      "path": ".agents/skills/bmad-sprint-planning/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-sprint-status",
-      "path": ".agents/skills/bmad-sprint-status/SKILL.md",
-      "kind": "bmad"
-    },
-    {
-      "name": "bmad-ux",
-      "path": ".agents/skills/bmad-ux/SKILL.md",
-      "kind": "bmad"
     },
     {
       "name": "capitalization",
@@ -163,44 +67,9 @@
       "kind": "dependency"
     },
     {
-      "name": "docker-clean",
-      "path": ".agents/skills/docker-clean/SKILL.md",
-      "kind": "maintenance"
-    },
-    {
       "name": "documentation",
       "path": ".agents/skills/documentation/SKILL.md",
       "kind": "maintenance"
-    },
-    {
-      "name": "gitnexus-cli",
-      "path": ".agents/skills/gitnexus/gitnexus-cli/SKILL.md",
-      "kind": "code-graph"
-    },
-    {
-      "name": "gitnexus-debugging",
-      "path": ".agents/skills/gitnexus/gitnexus-debugging/SKILL.md",
-      "kind": "code-graph"
-    },
-    {
-      "name": "gitnexus-exploring",
-      "path": ".agents/skills/gitnexus/gitnexus-exploring/SKILL.md",
-      "kind": "code-graph"
-    },
-    {
-      "name": "gitnexus-guide",
-      "path": ".agents/skills/gitnexus/gitnexus-guide/SKILL.md",
-      "kind": "code-graph"
-    },
-    {
-      "name": "gitnexus-impact-analysis",
-      "path": ".agents/skills/gitnexus/gitnexus-impact-analysis/SKILL.md",
-      "kind": "code-graph"
-    },
-    {
-      "name": "gitnexus-refactoring",
-      "path": ".agents/skills/gitnexus/gitnexus-refactoring/SKILL.md",
-      "kind": "code-graph"
     },
     {
       "name": "impeccable",
@@ -269,31 +138,6 @@
       "kind": "maintenance"
     },
     {
-      "name": "stripe-best-practices",
-      "path": ".agents/skills/stripe-best-practices/SKILL.md",
-      "kind": "stripe"
-    },
-    {
-      "name": "stripe-projects",
-      "path": ".agents/skills/stripe-projects/SKILL.md",
-      "kind": "stripe"
-    },
-    {
-      "name": "swift-actor-persistence",
-      "path": ".agents/skills/swift-actor-persistence/SKILL.md",
-      "kind": "swift"
-    },
-    {
-      "name": "swift-concurrency-6-2",
-      "path": ".agents/skills/swift-concurrency-6-2/SKILL.md",
-      "kind": "swift"
-    },
-    {
-      "name": "swift-protocol-di-testing",
-      "path": ".agents/skills/swift-protocol-di-testing/SKILL.md",
-      "kind": "swift"
-    },
-    {
       "name": "testing",
       "path": ".agents/skills/testing/SKILL.md",
       "kind": "maintenance"
@@ -309,11 +153,6 @@
       "kind": "maintenance"
     },
     {
-      "name": "upgrade-stripe",
-      "path": ".agents/skills/upgrade-stripe/SKILL.md",
-      "kind": "stripe"
-    },
-    {
       "name": "website-design",
       "path": ".agents/skills/website-design/SKILL.md",
       "kind": "web"
@@ -322,12 +161,12 @@
   "provenance": {
     "migration": {
       "date": "2026-08-07",
-      "note": "Migrated from a split .claude/skills (Claude-authored canonical) + .agents/skills (Codex-visible) layout with 4 hand-mirrored skills (council, website-design, seo-schema, seo-technical) copied into .cursor/.gemini/.github, into a single .agents/skills canonical tree with thin harness adapters — replacing tools/sync-skills.mjs's mirror model. council and website-design's content came from the prior .claude/skills canonical copy; seo-schema, seo-technical, react-doctor, stripe-best-practices, stripe-projects, and upgrade-stripe were already symlinked from .agents/skills and needed no content move."
+      "note": "Migrated from a split .claude/skills (Claude-authored canonical) + .agents/skills (Codex-visible) layout with 4 hand-mirrored skills (council, website-design, seo-schema, seo-technical) copied into .cursor/.gemini/.github, into a single .agents/skills canonical tree with thin harness adapters \u2014 replacing tools/sync-skills.mjs's mirror model. council and website-design's content came from the prior .claude/skills canonical copy; seo-schema, seo-technical, react-doctor, stripe-best-practices, stripe-projects, and upgrade-stripe were already symlinked from .agents/skills and needed no content move."
     },
     "local_references": [
       {
         "source": "local-reference:salon-os/.agents/manifest.json, salon-os/scripts/maintenance/sync-skills.mjs",
-        "use": "manifest schema, canonical-root/adapter/skill-lock pattern — no upstream body copied, this repo's own skill bodies are unchanged by the migration"
+        "use": "manifest schema, canonical-root/adapter/skill-lock pattern \u2014 no upstream body copied, this repo's own skill bodies are unchanged by the migration"
       }
     ]
   }

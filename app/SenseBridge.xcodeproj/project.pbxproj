@@ -8,13 +8,22 @@
 
 /* Begin PBXBuildFile section */
 		014FE2F386758C6DE6A26599 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73B9444B53F2DD88AD973EA /* HomeView.swift */; };
+		C4A7E91B2D3F4A5B6C7D8E9F /* CaptionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A7E91B2D3F4A5B6C7D8E9D /* CaptionOverlay.swift */; };
+		A1B2C3D4E5F60718293A4B5D /* DevWatermark.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* DevWatermark.swift */; };
+		C4A7E91B2D3F4A5B6C7D8EA0 /* CaptionRenderTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A7E91B2D3F4A5B6C7D8E9E /* CaptionRenderTarget.swift */; };
 		0EC253358BB6592F0066F3A3 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 0C7C04C5AB2A89D896C5A4A4 /* Sentry */; };
 		0FC9712197828F50E15A7423 /* SettingsSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = B659E56450AFF17FFC6D075A /* SettingsSections.swift */; };
+		0405C1021FDEA07302F85A0C /* OpenSettingsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3FFD11121E1DCB2645634F7 /* OpenSettingsButton.swift */; };
 		1CAA3958ACD6EBEF05E24464 /* AwarenessPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */; };
 		1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */; };
 		268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */; };
+		F0E1D2C3B4A594837261504F /* DevWatermarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0E1D2C3B4A594837261504E /* DevWatermarkTests.swift */; };
 		2F02E08A4B22B4E8836E8DDD /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3030507FD05945D3B89734B5 /* SenseBridgeCore */; };
 		311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */; };
+		3BF3CC3E277CE1D9397384FC /* DescriptionDetailUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607B51794FC974DA69389D4F /* DescriptionDetailUITests.swift */; };
+		A1B2C3D4E5F60718293A4B12 /* ReadingAndAwarenessUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B11 /* ReadingAndAwarenessUITests.swift */; };
+		A1B2C3D4E5F60718293A4B22 /* AccessibilityAuditSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B21 /* AccessibilityAuditSupport.swift */; };
+		3F42091388F2209BE1D58630 /* LiveTapThroughUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A19D7F67ADF141826DD2880 /* LiveTapThroughUITests.swift */; };
 		3310BF73FB5557F408A36388 /* FoundationModelsSceneComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 711F69574DFEC999FAF004AF /* FoundationModelsSceneComposer.swift */; };
 		3F02B88DA178392F7EEB35EF /* CameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F25B799EEB369166FD737AEA /* CameraController.swift */; };
 		45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */; };
@@ -22,26 +31,38 @@
 		682E27D38574104D02AD5E83 /* CustomSoundClassifierOODTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */; };
 		6BD59D76920B98A3444D4972 /* CustomSoundClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B39F5A26EF1C431714DEF58F /* CustomSoundClassifier.swift */; };
 		6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A609680B79ECF22EB121BCAA /* CrashReporting.swift */; };
+		D770B47116B3722E99E9DED7 /* KeychainCredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */; };
 		75103B4FD7ACCB429708A1F6 /* SenseBridgeSoundClassifier.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */; };
 		76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */; };
+		D118395480E4EBA3F1174DE9 /* AmbientAwarenessSessionSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B764484B17EFEBC4BA59EA /* AmbientAwarenessSessionSupportTests.swift */; };
 		774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */; };
 		82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */; };
 		843C2D8C082A6B1538F573FD /* AwarenessPreviewFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */; };
 		8E0DBCD0890C974B156BDFFB /* CameraControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C66C23119670006B9FEC57 /* CameraControlsView.swift */; };
 		97465151AB4FA48835E0174E /* SenseBridgeCore in Frameworks */ = {isa = PBXBuildFile; productRef = E70D68D0B370ED7E8E0F7A2D /* SenseBridgeCore */; };
 		9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03597A1D36C216848B88E81D /* ReadingView.swift */; };
+		A1B2C3D4E5F60718293A4B02 /* ReadingSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B01 /* ReadingSession.swift */; };
+		A1B2C3D4E5F60718293A4B04 /* ReadingSession+Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B03 /* ReadingSession+Live.swift */; };
+		A1B2C3D4E5F60718293A4B06 /* ReadingPlaybackControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B05 /* ReadingPlaybackControls.swift */; };
+		A1B2C3D4E5F60718293A4B08 /* ReadingHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B07 /* ReadingHistoryView.swift */; };
 		A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */; };
 		A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */; };
 		A4130055EDBE13F4F595E785 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = FFFD6FE4CDF816D421D854D8 /* Localizable.xcstrings */; };
 		A77B1E597451AF780CA8A3A8 /* LabelingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66C553969EFB2A7DED18325B /* LabelingView.swift */; };
 		B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */; };
 		B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */; };
+		C7C9B1F057091B41E9D1D132 /* ReasoningBackendSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8257130E7E3AAF2761AA8E4 /* ReasoningBackendSettingsView.swift */; };
 		B616562B724CF082D62A1B28 /* DiagnosticsSettingsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */; };
 		B62B6F726B5A68E041AADB00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */; };
 		CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */; };
 		D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */; };
 		F291E9E90D67D7F2F4E634DA /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86D1BA5F897BD45FD1CCDC6 /* OnboardingView.swift */; };
 		F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */; };
+		BA7038AC2272B6CE3BB8AA62 /* AmbientAwarenessSession+Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09E25EC1F88197036CF93E3B /* AmbientAwarenessSession+Support.swift */; };
+		A1B2C3D4E5F60718293A4B16 /* AwarenessSensitivitySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B15 /* AwarenessSensitivitySection.swift */; };
+		A1B2C3D4E5F60718293A4B14 /* AmbientAwarenessSession+Composition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B13 /* AmbientAwarenessSession+Composition.swift */; };
+		A1B2C3D4E5F60718293A4B10 /* AmbientAwarenessSession+Proximity.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B09 /* AmbientAwarenessSession+Proximity.swift */; };
+		24340F6B2DA4E502553AF857 /* AmbientAwarenessSession+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D983162DC9774036A7C846A /* AmbientAwarenessSession+Lifecycle.swift */; };
 		F7FA11AE4011CC7899DA53DF /* AlphaScaffoldingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */; };
 		FBE1008D99DC64D5C2F7B689 /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 6F8902BD3171C6B275867212 /* Sentry */; };
 /* End PBXBuildFile section */
@@ -65,18 +86,32 @@
 
 /* Begin PBXFileReference section */
 		03597A1D36C216848B88E81D /* ReadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B01 /* ReadingSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReadingSession.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B03 /* ReadingSession+Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReadingSession+Live.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B05 /* ReadingPlaybackControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReadingPlaybackControls.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B07 /* ReadingHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReadingHistoryView.swift"; sourceTree = "<group>"; };
 		0E3A5C12D1866CAEEC746A36 /* VoiceOverAnnouncement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOverAnnouncement.swift; sourceTree = "<group>"; };
 		1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeApp.swift; sourceTree = "<group>"; };
+		C4A7E91B2D3F4A5B6C7D8E9D /* CaptionOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptionOverlay.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* DevWatermark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevWatermark.swift; sourceTree = "<group>"; };
+		C4A7E91B2D3F4A5B6C7D8E9E /* CaptionRenderTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptionRenderTarget.swift; sourceTree = "<group>"; };
 		1FF8E34BAAF2ADAE22AA2A47 /* SenseBridgeUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E8257130E7E3AAF2761AA8E4 /* ReasoningBackendSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReasoningBackendSettingsView.swift; sourceTree = "<group>"; };
 		274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironmentTests.swift; sourceTree = "<group>"; };
+		B6B764484B17EFEBC4BA59EA /* AmbientAwarenessSessionSupportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAwarenessSessionSupportTests.swift; sourceTree = "<group>"; };
 		2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewFeed.swift; sourceTree = "<group>"; };
 		309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsSettingsSection.swift; sourceTree = "<group>"; };
 		385EFBD29F1DF7968BC9A4E0 /* SenseBridgeSoundClassifier.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = SenseBridgeSoundClassifier.mlmodel; sourceTree = "<group>"; };
 		38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportingTests.swift; sourceTree = "<group>"; };
+		F0E1D2C3B4A594837261504E /* DevWatermarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevWatermarkTests.swift; sourceTree = "<group>"; };
 		3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlphaScaffoldingUITests.swift; sourceTree = "<group>"; };
 		509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SenseBridgeUITests.swift; sourceTree = "<group>"; };
 		50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSelectionUITests.swift; sourceTree = "<group>"; };
+		607B51794FC974DA69389D4F /* DescriptionDetailUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DescriptionDetailUITests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B11 /* ReadingAndAwarenessUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingAndAwarenessUITests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B21 /* AccessibilityAuditSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityAuditSupport.swift; sourceTree = "<group>"; };
+		5A19D7F67ADF141826DD2880 /* LiveTapThroughUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTapThroughUITests.swift; sourceTree = "<group>"; };
 		53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		60602C61EB43396734122316 /* SenseBridgeTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SenseBridgeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		66C553969EFB2A7DED18325B /* LabelingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LabelingView.swift; sourceTree = "<group>"; };
@@ -88,16 +123,23 @@
 		96E5E2008D300AAE38C99D8A /* SoundAlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundAlertsView.swift; sourceTree = "<group>"; };
 		9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientPreviewImageTests.swift; sourceTree = "<group>"; };
 		A609680B79ECF22EB121BCAA /* CrashReporting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReporting.swift; sourceTree = "<group>"; };
+		0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainCredentialStore.swift; sourceTree = "<group>"; };
 		A86D1BA5F897BD45FD1CCDC6 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		B00C969F4545BEF9B8A72A3F /* CameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPreviewView.swift; sourceTree = "<group>"; };
 		B39F5A26EF1C431714DEF58F /* CustomSoundClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSoundClassifier.swift; sourceTree = "<group>"; };
 		B4439B9E36ACA7B26F6FFBED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B659E56450AFF17FFC6D075A /* SettingsSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSections.swift; sourceTree = "<group>"; };
+		D3FFD11121E1DCB2645634F7 /* OpenSettingsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSettingsButton.swift; sourceTree = "<group>"; };
 		C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObstacleAwarenessView.swift; sourceTree = "<group>"; };
 		D73B9444B53F2DD88AD973EA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		D863B3D0A276D8D92A986648 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		E9006685A5D49AA4F9476450 /* SceneDescriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDescriptionView.swift; sourceTree = "<group>"; };
 		EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientAwarenessSession.swift; sourceTree = "<group>"; };
+		09E25EC1F88197036CF93E3B /* AmbientAwarenessSession+Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AmbientAwarenessSession+Support.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B15 /* AwarenessSensitivitySection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AwarenessSensitivitySection.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B13 /* AmbientAwarenessSession+Composition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AmbientAwarenessSession+Composition.swift"; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B09 /* AmbientAwarenessSession+Proximity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AmbientAwarenessSession+Proximity.swift"; sourceTree = "<group>"; };
+		3D983162DC9774036A7C846A /* AmbientAwarenessSession+Lifecycle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AmbientAwarenessSession+Lifecycle.swift"; sourceTree = "<group>"; };
 		EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AwarenessPreviewView.swift; sourceTree = "<group>"; };
 		F25B799EEB369166FD737AEA /* CameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraController.swift; sourceTree = "<group>"; };
 		F590D9D32D5528105C06EC89 /* SenseBridgeCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SenseBridgeCore; path = Packages/SenseBridgeCore; sourceTree = SOURCE_ROOT; };
@@ -130,12 +172,18 @@
 			isa = PBXGroup;
 			children = (
 				53AA9FFE7C90ABA73A68A715 /* AppEnvironment.swift */,
+				C4A7E91B2D3F4A5B6C7D8E9D /* CaptionOverlay.swift */,
+				A1B2C3D4E5F60718293A4B5C /* DevWatermark.swift */,
+				C4A7E91B2D3F4A5B6C7D8E9E /* CaptionRenderTarget.swift */,
 				F25B799EEB369166FD737AEA /* CameraController.swift */,
 				A609680B79ECF22EB121BCAA /* CrashReporting.swift */,
 				309982B5F570E95780A666BC /* DiagnosticsSettingsSection.swift */,
+				0AF7D1E3785A19037EE37B45 /* KeychainCredentialStore.swift */,
 				D73B9444B53F2DD88AD973EA /* HomeView.swift */,
 				1FDB331527510BCC1A9E6CFB /* SenseBridgeApp.swift */,
+				E8257130E7E3AAF2761AA8E4 /* ReasoningBackendSettingsView.swift */,
 				B659E56450AFF17FFC6D075A /* SettingsSections.swift */,
+				D3FFD11121E1DCB2645634F7 /* OpenSettingsButton.swift */,
 				212A2A9C0BDFD7545ADD6160 /* SettingsView.swift */,
 			);
 			path = App;
@@ -154,6 +202,11 @@
 			isa = PBXGroup;
 			children = (
 				EE57F3786C8442C6388F9D88 /* AmbientAwarenessSession.swift */,
+				09E25EC1F88197036CF93E3B /* AmbientAwarenessSession+Support.swift */,
+				A1B2C3D4E5F60718293A4B15 /* AwarenessSensitivitySection.swift */,
+				A1B2C3D4E5F60718293A4B13 /* AmbientAwarenessSession+Composition.swift */,
+				A1B2C3D4E5F60718293A4B09 /* AmbientAwarenessSession+Proximity.swift */,
+				3D983162DC9774036A7C846A /* AmbientAwarenessSession+Lifecycle.swift */,
 				2904A8F778679CE039009C43 /* AwarenessPreviewFeed.swift */,
 				EFDE9345A2DF2F0B65101F37 /* AwarenessPreviewView.swift */,
 				C1F6D0F2BB84503C5B1C0EF4 /* ObstacleAwarenessView.swift */,
@@ -204,6 +257,10 @@
 			isa = PBXGroup;
 			children = (
 				3A8CC9AC5E288AB2D157198A /* AlphaScaffoldingUITests.swift */,
+				607B51794FC974DA69389D4F /* DescriptionDetailUITests.swift */,
+				A1B2C3D4E5F60718293A4B11 /* ReadingAndAwarenessUITests.swift */,
+				A1B2C3D4E5F60718293A4B21 /* AccessibilityAuditSupport.swift */,
+				5A19D7F67ADF141826DD2880 /* LiveTapThroughUITests.swift */,
 				50E207E97519889635B5E48F /* LanguageSelectionUITests.swift */,
 				509CBF6AB1EA6EBD514D14C6 /* SenseBridgeUITests.swift */,
 			);
@@ -254,8 +311,10 @@
 			isa = PBXGroup;
 			children = (
 				9FB4989B37ED0A47BA743786 /* AmbientPreviewImageTests.swift */,
+				B6B764484B17EFEBC4BA59EA /* AmbientAwarenessSessionSupportTests.swift */,
 				274ADC75BEB570F970BACF82 /* AppEnvironmentTests.swift */,
 				38CAB0061A17965BE23772A9 /* CrashReportingTests.swift */,
+				F0E1D2C3B4A594837261504E /* DevWatermarkTests.swift */,
 				80F929008BFFB7565DD71EC3 /* CustomSoundClassifierOODTests.swift */,
 			);
 			path = SenseBridgeTests;
@@ -302,6 +361,10 @@
 			isa = PBXGroup;
 			children = (
 				03597A1D36C216848B88E81D /* ReadingView.swift */,
+				A1B2C3D4E5F60718293A4B01 /* ReadingSession.swift */,
+				A1B2C3D4E5F60718293A4B03 /* ReadingSession+Live.swift */,
+				A1B2C3D4E5F60718293A4B05 /* ReadingPlaybackControls.swift */,
+				A1B2C3D4E5F60718293A4B07 /* ReadingHistoryView.swift */,
 			);
 			path = Reading;
 			sourceTree = "<group>";
@@ -432,6 +495,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7FA11AE4011CC7899DA53DF /* AlphaScaffoldingUITests.swift in Sources */,
+				3BF3CC3E277CE1D9397384FC /* DescriptionDetailUITests.swift in Sources */,
+				A1B2C3D4E5F60718293A4B12 /* ReadingAndAwarenessUITests.swift in Sources */,
+				A1B2C3D4E5F60718293A4B22 /* AccessibilityAuditSupport.swift in Sources */,
+				3F42091388F2209BE1D58630 /* LiveTapThroughUITests.swift in Sources */,
 				311F6843425F1213E1997A95 /* LanguageSelectionUITests.swift in Sources */,
 				45E2710E5702544C1D7737E4 /* SenseBridgeUITests.swift in Sources */,
 			);
@@ -442,8 +509,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				82CA32885F0DF329852B2415 /* AmbientPreviewImageTests.swift in Sources */,
+				D118395480E4EBA3F1174DE9 /* AmbientAwarenessSessionSupportTests.swift in Sources */,
 				76E734B24DA26B498F493C60 /* AppEnvironmentTests.swift in Sources */,
 				268C096CFDB8BEB5B9307171 /* CrashReportingTests.swift in Sources */,
+				F0E1D2C3B4A594837261504F /* DevWatermarkTests.swift in Sources */,
 				682E27D38574104D02AD5E83 /* CustomSoundClassifierOODTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -452,7 +521,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C4A7E91B2D3F4A5B6C7D8E9F /* CaptionOverlay.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5D /* DevWatermark.swift in Sources */,
+				C4A7E91B2D3F4A5B6C7D8EA0 /* CaptionRenderTarget.swift in Sources */,
 				F77C5EE09AE943AA3A50DF9C /* AmbientAwarenessSession.swift in Sources */,
+				BA7038AC2272B6CE3BB8AA62 /* AmbientAwarenessSession+Support.swift in Sources */,
+				A1B2C3D4E5F60718293A4B16 /* AwarenessSensitivitySection.swift in Sources */,
+				A1B2C3D4E5F60718293A4B14 /* AmbientAwarenessSession+Composition.swift in Sources */,
+				A1B2C3D4E5F60718293A4B10 /* AmbientAwarenessSession+Proximity.swift in Sources */,
+				24340F6B2DA4E502553AF857 /* AmbientAwarenessSession+Lifecycle.swift in Sources */,
 				1CF3074C3E9A45F661E64AD4 /* AppEnvironment.swift in Sources */,
 				843C2D8C082A6B1538F573FD /* AwarenessPreviewFeed.swift in Sources */,
 				1CAA3958ACD6EBEF05E24464 /* AwarenessPreviewView.swift in Sources */,
@@ -460,6 +537,7 @@
 				8E0DBCD0890C974B156BDFFB /* CameraControlsView.swift in Sources */,
 				D72BA7FDF82F8F3C452D803C /* CameraPreviewView.swift in Sources */,
 				6C028A453DEAE557F07FBB7E /* CrashReporting.swift in Sources */,
+				D770B47116B3722E99E9DED7 /* KeychainCredentialStore.swift in Sources */,
 				6BD59D76920B98A3444D4972 /* CustomSoundClassifier.swift in Sources */,
 				B616562B724CF082D62A1B28 /* DiagnosticsSettingsSection.swift in Sources */,
 				3310BF73FB5557F408A36388 /* FoundationModelsSceneComposer.swift in Sources */,
@@ -468,10 +546,16 @@
 				774DAEDA74D4C6F53D90E041 /* ObstacleAwarenessView.swift in Sources */,
 				F291E9E90D67D7F2F4E634DA /* OnboardingView.swift in Sources */,
 				9F588CBDCC74DB281A1C6458 /* ReadingView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B02 /* ReadingSession.swift in Sources */,
+				A1B2C3D4E5F60718293A4B04 /* ReadingSession+Live.swift in Sources */,
+				A1B2C3D4E5F60718293A4B06 /* ReadingPlaybackControls.swift in Sources */,
+				A1B2C3D4E5F60718293A4B08 /* ReadingHistoryView.swift in Sources */,
 				A1B6D9BCE78B03FF0B1BEECA /* SceneDescriptionView.swift in Sources */,
 				B1C4264AE2E3217A28F99984 /* SenseBridgeApp.swift in Sources */,
 				75103B4FD7ACCB429708A1F6 /* SenseBridgeSoundClassifier.mlmodel in Sources */,
 				0FC9712197828F50E15A7423 /* SettingsSections.swift in Sources */,
+				0405C1021FDEA07302F85A0C /* OpenSettingsButton.swift in Sources */,
+				C7C9B1F057091B41E9D1D132 /* ReasoningBackendSettingsView.swift in Sources */,
 				B33EFF43C558AEC1FBFF405F /* SettingsView.swift in Sources */,
 				CAC4F8BDB83BDB567DDEA088 /* SoundAlertsView.swift in Sources */,
 				A084CC04839ED414AFEC2366 /* VoiceOverAnnouncement.swift in Sources */,
@@ -503,7 +587,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SenseBridge/Resources/InfoPlist-Additions.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "SenseBridge connects to your self-hosted reasoning server, if you set one up. Nothing else on your network is contacted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
 				INFOPLIST_KEY_SentryDSN = "$(SENTRY_DSN)";
 				INFOPLIST_KEY_UIBackgroundModes = audio;
@@ -690,7 +776,9 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SenseBridge/Resources/InfoPlist-Additions.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SenseBridge uses the camera to read text and describe scenes for you. Nothing leaves your device.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "SenseBridge connects to your self-hosted reasoning server, if you set one up. Nothing else on your network is contacted.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "SenseBridge uses the microphone to recognize nearby sounds and announce them. Nothing leaves your device.";
 				INFOPLIST_KEY_SentryDSN = "$(SENTRY_DSN)";
 				INFOPLIST_KEY_UIBackgroundModes = audio;
