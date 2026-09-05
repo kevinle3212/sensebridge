@@ -187,11 +187,22 @@ final class LiveTapThroughUITests: XCTestCase {
             app.launch()
             element(app, labeled: mode).tap()
 
-            // Everything currently rendered on the screen, after it has settled.
-            let texts = app.staticTexts.allElementsBoundByIndex.map { $0.label.lowercased() }
+            // Wait for the screen to render before asserting on its text.
+            // Snapshotting `allElementsBoundByIndex` mid-transition raced the
+            // changing element set and intermittently threw "No matches found
+            // for Element at index N"; a per-phrase predicate query on the
+            // settled screen makes the same absence assertion without iterating
+            // a live index.
+            XCTAssertTrue(
+                app.staticTexts.firstMatch.waitForExistence(timeout: 10),
+                "\(mode) rendered no text at all"
+            )
             for phrase in forbidden {
+                let claim = app.staticTexts.matching(
+                    NSPredicate(format: "label CONTAINS[c] %@", phrase)
+                ).firstMatch
                 XCTAssertFalse(
-                    texts.contains(where: { $0.contains(phrase) }),
+                    claim.exists,
                     "\(mode) renders a clear-path claim: \(phrase)"
                 )
             }
