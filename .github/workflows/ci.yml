@@ -132,7 +132,7 @@ jobs:
           status="${PIPESTATUS[0]}"
           if [ "$status" -ne 0 ]; then
             echo "::group::Accessibility audit detail"
-            grep -aE "\[a11y-contrast\]|Contrast failed|Dynamic Type|Accessibility audit" /tmp/app-raw.log | tail -80
+            grep -aE "\[a11y-contrast\]|\[a11y-audit\]|Contrast failed|Dynamic Type|Accessibility audit" /tmp/app-raw.log | tail -80
             echo "::endgroup::"
           fi
           exit "$status"

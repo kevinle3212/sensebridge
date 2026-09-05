@@ -17,8 +17,17 @@ import SwiftUI
 // controls — see `CaptionOverlay`, which owns the inset above this one.
 #if DEBUG
     struct DevWatermarkFooter: View {
+        /// The UI-test harness launches every screen with `-uiTestReset`. This
+        /// footer is a developer-only visual aid with no bearing on the
+        /// user-facing accessibility the UI-test audit asserts — it never ships
+        /// (DEBUG-only) and users never see it — so it is not rendered under
+        /// test, where it would only add audit noise from its own chrome.
+        private var isUITesting: Bool {
+            ProcessInfo.processInfo.arguments.contains("-uiTestReset")
+        }
+
         var body: some View {
-            if let installed = Self.lastDownloadedDate(at: Bundle.main.bundlePath) {
+            if !isUITesting, let installed = Self.lastDownloadedDate(at: Bundle.main.bundlePath) {
                 Text("Last Downloaded: \(Self.formatted(installed))")
                     // `.system(.caption2, design: .monospaced)` keeps the text
                     // style's Dynamic Type scaling, which `.caption2.monospaced()`
