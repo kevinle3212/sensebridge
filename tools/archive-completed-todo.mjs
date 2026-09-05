@@ -177,7 +177,10 @@ function main() {
     return;
   }
 
-  writeFileSync(ARCHIVE_PATH, archiveWith(readFileSync(ARCHIVE_PATH, "utf8"), body, pacificDateStamp()));
+  writeFileSync(
+    ARCHIVE_PATH,
+    archiveWith(readFileSync(ARCHIVE_PATH, "utf8"), body, pacificDateStamp()),
+  );
 
   const rest = todo.slice(contentEnd);
   writeFileSync(TODO_PATH, `${todo.slice(0, contentStart)}\n${PLACEHOLDER}\n${rest}`);

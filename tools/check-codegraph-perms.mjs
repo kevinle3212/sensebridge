@@ -41,7 +41,15 @@
 // gitignored, and optional, so a clone that has never been indexed must not go
 // red. Stdlib only, matching the other tools/ scripts.
 
-import { closeSync, constants, fchmodSync, fstatSync, lstatSync, openSync, realpathSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  fchmodSync,
+  fstatSync,
+  lstatSync,
+  openSync,
+  realpathSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 

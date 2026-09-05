@@ -105,12 +105,7 @@ test("a referenced file that exists and is tracked passes", () => {
 });
 
 test("every guarded directory is covered, not just tools/", () => {
-  const files = [
-    "tools/a.mjs",
-    "scripts/b.sh",
-    ".claude/hooks/c.sh",
-    ".githooks/d.sh",
-  ];
+  const files = ["tools/a.mjs", "scripts/b.sh", ".claude/hooks/c.sh", ".githooks/d.sh"];
   const r = run({
     scripts: {
       a: "node tools/a.mjs",
@@ -162,7 +157,9 @@ test("a failure names every npm script that would break", () => {
 // --- What must NOT fail ----------------------------------------------------
 
 test("a glob matching nothing passes, because it names a set", () => {
-  const r = run({ scripts: { "check:tests": "for f in tools/tests/*.test.mjs; do node $f; done" } });
+  const r = run({
+    scripts: { "check:tests": "for f in tools/tests/*.test.mjs; do node $f; done" },
+  });
   assert.equal(r.status, 0, r.out);
   assert.match(r.out, /valid empty set/);
 });

@@ -256,7 +256,10 @@ test("a resolve failure names both causes, so the wrong thing does not get fixed
   // definitely at fault.
   const r = run({ bin: (dir) => writeDshStub(dir, { exit: 3, stdout: "boom\n" }) });
   assert.match(r.out, /Two causes are possible/);
-  assert.match(r.out, /never been\s+run against a real install|never been run against a real install/);
+  assert.match(
+    r.out,
+    /never been\s+run against a real install|never been run against a real install/,
+  );
 });
 
 test("layer 3 fails when the resolved config omits the bridge plugin", () => {
