@@ -49,12 +49,7 @@ const BRIDGE_COVERED_EVENTS = ["PreToolUse", "PostToolUse", "UserPromptSubmit", 
 const KNOWN_UNCOVERED_EVENTS = ["PostToolBatch", "SessionStart"];
 
 /** Files that describe the coverage gap and must be revised when it moves. */
-const DOCS_RECORDING_THE_GAP = [
-  OVERLAY,
-  ".deepseek/AGENTS.md",
-  "docs/TOOLING.md",
-  "CLAUDE.md",
-];
+const DOCS_RECORDING_THE_GAP = [OVERLAY, ".deepseek/AGENTS.md", "docs/TOOLING.md", "CLAUDE.md"];
 
 const failures = [];
 const notes = [];
@@ -87,9 +82,18 @@ const overlay = readFileSync(OVERLAY, "utf8");
 // safe direction for a guard-reuse assertion.
 const overlayChecks = [
   [/^\s*-\s*dsh-hooks-claude-code:/m, "declare the `- dsh-hooks-claude-code:` plugin"],
-  [/^\s*configPath:\s*\.\/\.claude\/settings\.json\s*$/m, "point configPath at ./.claude/settings.json"],
-  [/^\s*projectDir:\s*\.\s*$/m, "set projectDir (substitutes ${CLAUDE_PROJECT_DIR} for every hook)"],
-  [/^\s*defaultTimeoutMs:\s*600000\s*$/m, "set defaultTimeoutMs to 600000, matching Claude Code's default"],
+  [
+    /^\s*configPath:\s*\.\/\.claude\/settings\.json\s*$/m,
+    "point configPath at ./.claude/settings.json",
+  ],
+  [
+    /^\s*projectDir:\s*\.\s*$/m,
+    "set projectDir (substitutes ${CLAUDE_PROJECT_DIR} for every hook)",
+  ],
+  [
+    /^\s*defaultTimeoutMs:\s*600000\s*$/m,
+    "set defaultTimeoutMs to 600000, matching Claude Code's default",
+  ],
 ];
 for (const [pattern, expectation] of overlayChecks) {
   assert(pattern.test(overlay), `${OVERLAY} must ${expectation}.`);

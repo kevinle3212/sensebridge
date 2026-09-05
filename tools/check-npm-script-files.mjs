@@ -103,7 +103,10 @@ let literalCount = 0;
 let globCount = 0;
 
 for (const [path, callers] of [...referenced].sort(([a], [b]) => a.localeCompare(b))) {
-  const via = [...callers].sort().map((n) => `\`${n}\``).join(", ");
+  const via = [...callers]
+    .sort()
+    .map((n) => `\`${n}\``)
+    .join(", ");
 
   if (path.includes("*")) {
     globCount += 1;

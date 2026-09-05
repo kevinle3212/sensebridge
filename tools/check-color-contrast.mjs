@@ -40,8 +40,7 @@ import { join } from "node:path";
  * but not *tested*, and a gate nobody can prove goes red is a gate nobody
  * should trust. Same seam as `GIT_BIN` in `check-npm-script-files.mjs`.
  */
-const ASSET_DIR =
-  process.env.COLOR_ASSET_DIR ?? "app/SenseBridge/Resources/Assets.xcassets";
+const ASSET_DIR = process.env.COLOR_ASSET_DIR ?? "app/SenseBridge/Resources/Assets.xcassets";
 
 /**
  * WCAG AA for normal-size text. Deliberately not the 3:1 large-text figure:
@@ -81,9 +80,7 @@ const BACKGROUNDS = {
  */
 function linearize(channel) {
   const normalized = channel / 255;
-  return normalized <= 0.04045
-    ? normalized / 12.92
-    : ((normalized + 0.055) / 1.055) ** 2.4;
+  return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
 }
 
 /**
@@ -180,8 +177,7 @@ function readColorSet(dir) {
       b: parseComponent(blue),
     };
     const isDark = (entry.appearances ?? []).some(
-      (appearance) =>
-        appearance.appearance === "luminosity" && appearance.value === "dark",
+      (appearance) => appearance.appearance === "luminosity" && appearance.value === "dark",
     );
     if (isDark) {
       dark = color;
@@ -242,6 +238,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(
-  `check-color-contrast: ${checked} color/background pair(s) clear ${FLOOR}:1.`,
-);
+console.log(`check-color-contrast: ${checked} color/background pair(s) clear ${FLOOR}:1.`);
