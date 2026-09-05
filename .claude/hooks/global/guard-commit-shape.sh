@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# PreToolUse hook (matcher: Bash): enforces the two shape rules that CLAUDE.md
+# PreToolUse hook (matcher: Bash): enforces the two shape rules that AGENTS.md
 # states for history — conventional commit headers (`type(scope): subject`) and
 # branch names prefixed with a conventional type. Both are mechanical checks on
 # a string, which is exactly the kind of rule that should not cost prose.
 #
 # Scope note: this guards the *shape* of a commit or branch name, nothing else.
 # Whether a commit may happen at all is a project-level hook where one exists
-# (SenseBridge ships `guard-main-commit.sh` — never on main), plus CLAUDE.md's
+# (SenseBridge ships `guard-main-commit.sh` — never on main), plus AGENTS.md's
 # "Git" section requiring an explicit per-command grant from the owner.
 # Whether it carries an attribution trailer is `guard-attribution.sh`.
 #
@@ -53,8 +53,26 @@ strip_heredoc_bodies() {
   done <<< "$raw"
 }
 
+# Fail closed on anything this guard cannot read — see guard-attribution.sh for
+# the full rationale. A failing `jq` under `set -e` exits 5, which the harness
+# treats as a warning rather than a block, so an unreadable payload used to
+# bypass the shape check entirely.
+deny_unreadable() {
+  jq -n --arg why "$1" '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
+      permissionDecisionReason: ("guard-commit-shape could not read this tool call (" + $why + "), so it cannot prove the commit header or branch name is conventional. Denying rather than guessing. Re-issue the command; if this repeats, the hook payload is malformed and the guard needs fixing — do not disable it.")
+    }
+  }' 2>/dev/null || printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"guard-commit-shape could not read this tool call and jq is unavailable. Denying."}}\n'
+  exit 0
+}
+
+command -v jq >/dev/null 2>&1 || deny_unreadable "jq is not installed"
+
 input=$(cat)
-raw_cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
+raw_cmd=$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null) \
+  || deny_unreadable "the payload is not valid JSON"
 [ -n "$raw_cmd" ] || exit 0
 
 # Detection runs against a copy with quoted literals blanked, so prose that
@@ -228,7 +246,7 @@ check_header() {
   # `!` marks a breaking change and is part of the convention; the scope is
   # optional. The subject must be non-empty after the colon and space.
   if ! [[ $header =~ ^($TYPES)(\([a-z0-9._/-]+\))?!?:[[:space:]]+.+ ]]; then
-    deny "Commit header \"$header\" is not a conventional message (CLAUDE.md → Branching and committing). Use type(scope): subject — types: $TYPES. Example: fix(sound-alerts): stop classifier on background transition."
+    deny "Commit header \"$header\" is not a conventional message (AGENTS.md → Git). Use type(scope): subject — types: $TYPES. Example: fix(sound-alerts): stop classifier on background transition."
   fi
 }
 
@@ -252,7 +270,7 @@ while [ "$seg_idx" -lt "${#seg_raw[@]}" ]; do
   if [[ $seg_detect =~ git[[:space:]]+(checkout[[:space:]]+-b|switch[[:space:]]+-c)[[:space:]]+([^[:space:]]+) ]]; then
     branch="${BASH_REMATCH[2]}"
     if ! [[ $branch =~ ^($TYPES)/.+ ]]; then
-      deny "Branch \"$branch\" does not carry a conventional prefix (CLAUDE.md → Branching and committing). Name it <type>/<subject>, e.g. feat/sound-alerts or fix/voiceover-label — types: $TYPES."
+      deny "Branch \"$branch\" does not carry a conventional prefix (AGENTS.md → Git). Name it <type>/<subject>, e.g. feat/sound-alerts or fix/voiceover-label — types: $TYPES."
     fi
   fi
 
