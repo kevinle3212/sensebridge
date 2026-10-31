@@ -115,7 +115,7 @@
   },
   "overrides": {
     "brace-expansion": "^5.0.8",
-    "fast-uri": "^3.1.7"
+    "fast-uri": "^3.1.9"
   },
   "allowScripts": {
     "@parcel/watcher@2.5.6": true,
