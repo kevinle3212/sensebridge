@@ -52,7 +52,7 @@ RUN npm run build
 # unpinned, unlocked dependency tree into the final image at build time,
 # which was the source of the "high" vulnerability scan findings this setup
 # replaces.
-FROM nginxinc/nginx-unprivileged:alpine@sha256:aa8c9087d36d93e9d650c5365f883b421e8214aedbad24ade52b844c583358f1
+FROM nginxinc/nginx-unprivileged:alpine@sha256:b5047b9b76845eac124358373c6852377c52e4b05834a47647e955dd91cb8f1e
 
 # Railway injects PORT at runtime; default here only matters for `docker run`
 # without -e PORT=. The image's own entrypoint scripts (20-envsubst-on-
